@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0E0C0A" />
+<title>Privacy Policy – Mealie Recipes</title>
+<meta name="description" content="Privacy Policy for the Mealie Recipes app – no data collection, no accounts, no tracking, no ads." />
+<link rel="icon" href="https://raw.githubusercontent.com/Walfrosch92/Mealie-Recipes-APP/main/MealieRecipes/MealieRecipes/Assets/Assets.xcassets/LogoClassicPreview.imageset/AppIcon-1024pt%401x%201.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ───────────────────────────────────────────────────────────────────
+     Design tokens – taken 1:1 from the app (lib/shared/theme/app_colors.dart,
+     lib/shared/widgets/liquid_glass.dart, lib/app.dart).
+     Dark-theme variant of the warm premium palette.
+  ──────────────────────────────────────────────────────────────────── */
+  :root {
+    --bg:           #0E0C0A;
+    --card:         #1A1714;
+    --surface2:     #231F1B;
+    --separator:    #2A2521;
+
+    --fg:           #F5F1EA;
+    --fg-sub:       #B6AB9C;
+    --fg-tertiary:  #7D7468;
+
+    --accent:       #FF8A00;
+    --accent-deep:  #FF6A00;
+    --accent-light: #FFB23E;
+    --gradient:     linear-gradient(135deg, #FFB23E 0%, #FF8A00 45%, #FF6A00 100%);
+    --glow:         rgba(255, 120, 0, 0.35);
+
+    --r-sm: 14px;
+    --r-md: 18px;
+    --r-lg: 22px;
+    --r-xl: 26px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--fg);
+    background-color: var(--bg);
+    line-height: 1.65;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Warm dark background with soft orange glows (signature accent glow). */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(620px 460px at 78% -6%,  rgba(255, 138, 0, 0.20), transparent 70%),
+      radial-gradient(520px 420px at 8% 8%,    rgba(255, 106, 0, 0.14), transparent 72%),
+      radial-gradient(680px 600px at 50% 112%, rgba(255, 178, 62, 0.10), transparent 70%);
+    pointer-events: none;
+  }
+
+  a {
+    color: var(--accent-light);
+    text-decoration: none;
+    font-weight: 600;
+    word-break: break-word;
+  }
+  a:hover { text-decoration: underline; }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 22px 80px;
+  }
+
+  /* ── Header ──────────────────────────────────────────────────────── */
+  header { text-align: center; margin-bottom: 44px; }
+
+  .logo {
+    width: 92px;
+    height: 92px;
+    border-radius: var(--r-xl);
+    object-fit: cover;
+    display: block;
+    margin: 0 auto 22px;
+    box-shadow:
+      0 18px 40px rgba(40, 28, 12, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 0 36px var(--glow);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--fg);
+    /* Liquid-glass pill */
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    margin-bottom: 20px;
+  }
+  .pill .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gradient);
+    box-shadow: 0 0 12px var(--glow);
+  }
+
+  h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: clamp(34px, 8vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  h1 .grad {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .lead {
+    color: var(--fg-sub);
+    font-size: 16.5px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .stamp {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--fg-tertiary);
+  }
+
+  /* ── Glass card (mirrors LiquidGlass) ────────────────────────────── */
+  .card {
+    position: relative;
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,0.10), rgba(255,255,255,0.03)),
+      rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--r-lg);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    padding: 26px 26px 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.30);
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .badge {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: #fff;
+    background: var(--gradient);
+    box-shadow: 0 8px 20px var(--glow);
+  }
+
+  h2 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+  }
+
+  .card p { color: var(--fg-sub); }
+  .card p + p { margin-top: 12px; }
+
+  .card ul {
+    list-style: none;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .card li {
+    position: relative;
+    padding-left: 26px;
+    color: var(--fg-sub);
+  }
+  .card li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 10px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gradient);
+    box-shadow: 0 0 10px var(--glow);
+  }
+  .card li strong { color: var(--fg); font-weight: 600; }
+
+  /* ── Highlight card (the key statement) ──────────────────────────── */
+  .highlight {
+    background:
+      linear-gradient(135deg, rgba(255, 178, 62, 0.16), rgba(255, 106, 0, 0.10)),
+      rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 138, 0, 0.40);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.30), 0 0 50px rgba(255, 120, 0, 0.14);
+  }
+  .highlight .badge { border-radius: 50%; }
+  .highlight h2 { color: var(--fg); }
+  .highlight p { color: rgba(245, 241, 234, 0.92); font-size: 16.5px; }
+
+  /* ── Accent box (technical / SDK notes) ──────────────────────────── */
+  .accent-box {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: var(--r-md);
+    background: rgba(255, 138, 0, 0.08);
+    border: 1px solid rgba(255, 138, 0, 0.22);
+    border-left: 3px solid var(--accent);
+  }
+  .accent-box .ab-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--accent-light);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .accent-box p, .accent-box li { color: var(--fg-sub); font-size: 14.5px; }
+  .accent-box .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .accent-box .chip {
+    font-family: 'Inter', monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--fg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--separator);
+    border-radius: 10px;
+    padding: 5px 10px;
+  }
+
+  /* ── Footer ──────────────────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--separator);
+    color: var(--fg-tertiary);
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+  footer .mail { color: var(--accent-light); }
+
+  @media (max-width: 540px) {
+    .wrap { padding: 40px 16px 64px; }
+    .card { padding: 22px 18px 20px; }
+    .card-head { gap: 11px; }
+    h2 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ── Header ─────────────────────────────────────────────────── -->
+    <header>
+      <img class="logo"
+           src="https://raw.githubusercontent.com/Walfrosch92/Mealie-Recipes-APP/main/MealieRecipes/MealieRecipes/Assets/Assets.xcassets/LogoClassicPreview.imageset/AppIcon-1024pt%401x%201.png"
+           alt="Mealie Recipes app icon" />
+      <div class="pill"><span class="dot"></span> Privacy Policy</div>
+      <h1>Privacy Policy<br /><span class="grad">Mealie Recipes</span></h1>
+      <p class="lead">Your data belongs to you. Mealie Recipes is an open-source third-party client for your <strong>own</strong> Mealie server – no accounts, no tracking, no ads.</p>
+      <p class="stamp">Last updated: June 16, 2026</p>
+    </header>
+
+    <!-- ── Highlight: no personal data ───────────────────────────────── -->
+    <section class="card highlight">
+      <div class="card-head">
+        <div class="badge">✓</div>
+        <h2>We don't collect any personal data</h2>
+      </div>
+      <p>Mealie Recipes does not collect, store, or transmit <strong>any personal data</strong> to the developer or to third parties. There are no user accounts with the developer, no analytics tool, no crash reporting, and no advertising networks. All your recipes, meal plans, and shopping lists live exclusively on your own Mealie server.</p>
+    </section>
+
+    <!-- ── 1. Developer ──────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">1</div>
+        <h2>Developer &amp; Controller</h2>
+      </div>
+      <p>This app is developed by <strong>Walfrosch92</strong> as a private, open-source project. Mealie Recipes is an unofficial third-party client for the self-hosted recipe manager “Mealie” and is not affiliated with the official Mealie project.</p>
+      <p>Contact: <a href="mailto:walfrosch92@gmail.com">walfrosch92@gmail.com</a></p>
+    </section>
+
+    <!-- ── 2. Self-hosted server ─────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">2</div>
+        <h2>Connection to your own server</h2>
+      </div>
+      <p>Mealie Recipes connects only to the Mealie server address that you enter yourself. All content – recipes, meal plans, shopping lists, and images – is exchanged directly between your device and your own server.</p>
+      <p>There is <strong>no developer-operated server</strong> through which this traffic passes. What data your Mealie server stores and how it processes it is entirely up to you as the operator of that server.</p>
+    </section>
+
+    <!-- ── 3. Local storage ──────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">3</div>
+        <h2>Local storage on your device</h2>
+      </div>
+      <p>So you don't have to sign in again on every launch, the app stores the following information locally on your device:</p>
+      <ul>
+        <li><strong>Server address and access token</strong> of your Mealie instance – encrypted in the secure system storage (iOS Keychain / Android Keystore).</li>
+        <li><strong>App settings</strong> (e.g. language, appearance) in local preferences.</li>
+        <li><strong>Cached recipe data and images</strong>, so the app loads faster and works partly offline.</li>
+      </ul>
+      <p>This data does not leave your device (other than the direct communication with your own server) and can be removed completely by uninstalling the app.</p>
+    </section>
+
+    <!-- ── 4. No tracking ────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">4</div>
+        <h2>No tracking, no ads, no analytics</h2>
+      </div>
+      <p>The app contains no analytics, tracking, or advertising components. No usage statistics are collected, no advertising IDs are read, and no behavior is logged.</p>
+    </section>
+
+    <!-- ── 5. No data sharing ────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">5</div>
+        <h2>No data sharing</h2>
+      </div>
+      <p>Because no personal data is collected, no data is sold, rented, or shared with third parties.</p>
+    </section>
+
+    <!-- ── 6. Permissions & technologies ─────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">6</div>
+        <h2>Permissions &amp; technologies used</h2>
+      </div>
+      <p>The app only requests the permissions it needs for its features, each for a specific purpose:</p>
+      <ul>
+        <li><strong>Network / Internet:</strong> to connect to your Mealie server.</li>
+        <li><strong>Local network (Bonjour / mDNS):</strong> to discover other devices on your Wi-Fi for “Cook Friends” and “Recipe Send” (peer-to-peer) – without any internet or cloud connection.</li>
+        <li><strong>Camera &amp; Photos / Media:</strong> only when you take or pick a photo for recipe import.</li>
+        <li><strong>Notifications, exact alarms &amp; full-screen intent:</strong> for cooking timers and their alarm.</li>
+        <li><strong>Foreground service (Android):</strong> so timers keep running reliably.</li>
+        <li><strong>Biometrics (Face ID / Touch ID / fingerprint):</strong> optional app lock. The check is performed solely by the operating system; no biometric data is transmitted to the app or the developer.</li>
+        <li><strong>Keep screen awake:</strong> so the screen doesn't turn off while in cooking mode.</li>
+        <li><strong>Microphone (iOS):</strong> The app does <strong>not</strong> record any audio. This entry is only technically required because the audio framework used for the timer alarms references the microphone API – it is never requested.</li>
+      </ul>
+
+      <div class="accent-box">
+        <div class="ab-title">Technology used</div>
+        <p>Mealie Recipes is built with Flutter and uses well-established open-source components that work exclusively locally or for the connection to your own server – including:</p>
+        <div class="chips">
+          <span class="chip">HTTP (dio)</span>
+          <span class="chip">Secure Storage</span>
+          <span class="chip">Local Notifications</span>
+          <span class="chip">Biometrics</span>
+          <span class="chip">mDNS (Bonsoir)</span>
+          <span class="chip">Image Cache</span>
+        </div>
+        <p style="margin-top:12px;">There are <strong>no</strong> analytics, advertising, or crash-reporting SDKs included.</p>
+      </div>
+
+      <div class="accent-box">
+        <div class="ab-title">Optional third-party features</div>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:10px;">
+          <li><strong>Apple Reminders (iOS):</strong> If you import shopping items from Apple Reminders, the app accesses your lists locally through Apple. None of this data is sent to the developer.</li>
+          <li><strong>Google Tasks / Google Sign-In:</strong> If you choose to sync your shopping list with Google&nbsp;Tasks, you sign in with your Google account and the app communicates with the Google Tasks API. In that case <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a> additionally applies. This feature is optional and active only when you explicitly use it.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── 7. Open Source ────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">7</div>
+        <h2>Open Source</h2>
+      </div>
+      <p>Mealie Recipes is open source. The full source code is publicly available at:<br />
+      <a href="https://github.com/Walfrosch92/Mealie-Recipes-APP" target="_blank" rel="noopener">github.com/Walfrosch92/Mealie-Recipes-APP</a></p>
+    </section>
+
+    <!-- ── 8. Children ───────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">8</div>
+        <h2>Children</h2>
+      </div>
+      <p>This app is intended for adults who cook and is not designed for children. No data from children is knowingly collected – the app does not collect any personal data at all.</p>
+    </section>
+
+    <!-- ── 9. Changes ────────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">9</div>
+        <h2>Changes to this Privacy Policy</h2>
+      </div>
+      <p>This Privacy Policy may be updated when needed, for example when new features are added. The current version is always available on this page; the date shown under “Last updated” above is authoritative.</p>
+    </section>
+
+    <!-- ── 10. Contact ───────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">10</div>
+        <h2>Contact</h2>
+      </div>
+      <p>If you have any questions about privacy, you can reach the developer at:<br />
+      <a href="mailto:walfrosch92@gmail.com">walfrosch92@gmail.com</a></p>
+    </section>
+
+    <!-- ── Footer ────────────────────────────────────────────────────── -->
+    <footer>
+      Mealie Recipes · Developed by Walfrosch92<br />
+      <a class="mail" href="mailto:walfrosch92@gmail.com">walfrosch92@gmail.com</a><br />
+      Last updated: June 16, 2026
+    </footer>
+
+  </div>
+</body>
+</html>
