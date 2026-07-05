@@ -343,7 +343,7 @@ Die App verwandelt deine Rezeptdatenbank in ein interaktives Kocherlebnis.
 
 | Rezept hinzufügen | Essensplan | Cook Friends |
 |:---:|:---:|:---:|
-| ![Rezept hinzufügen](Screenshots/screenshot-4.png) | ![Essensplan](Screenshots/screenshot-5.png) | ![Cook Friends](screenshots/screenshot-3.png) |
+| ![Rezept hinzufügen](Screenshots/screenshot-4.png) | ![Essensplan](Screenshots/screenshot-5.png) | ![Cook Friends](Screenshots/screenshot-3.png) |
 
 | &nbsp; | Einkaufsliste & Apple Watch | &nbsp; |
 |:---:|:---:|:---:|
