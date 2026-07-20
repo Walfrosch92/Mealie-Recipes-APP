@@ -1,0 +1,363 @@
+/*
+  Localizable.strings (Slovenian)
+  MealieRecipes - Complete Localization
+  Created: 2026-07-17
+  Includes all keys from previous versions
+*/
+
+// MARK: - Navigation & Common
+"initial_setup" = "Začetna nastavitev";
+"settings" = "⚙️ Nastavitve";
+"cancel" = "Prekliči";
+"done" = "Narejeno";
+"ok" = "V redu";
+"save" = "Shrani";
+"save_and_start" = "Shrani in zaženi";
+"save_changes" = "Shrani spremembe";
+"reset_app" = "Ponastavi aplikacijo";
+"reset" = "Ponastavi";
+"confirm" = "Potrdi";
+"back" = "Nazaj";
+"close" = "Zapri";
+"edit" = "Uredi";
+"delete" = "Zbriši";
+"start" = "Zaženi";
+"change" = "Spremeni";
+"apply" = "Uporabi";
+"minimize" = "Zmanjšaj";
+"home" = "Domov";
+"select_option" = "Izberi možnost:";
+"all" = "Vse";
+"plan_meal" = "Planiraj";
+"continue" = "Nadaljuj";
+"loading" = "Nalagam...";
+"please_wait" = "Prosim počakaj...";
+"share" = "Deli";
+"copy" = "Kopiraj";
+"add" = "Dodaj";
+"remove" = "Odstrani";
+"retry" = "Ponovi";
+"dismiss" = "Zavrni";
+"select_all" = "Označi vse";
+"deselect_all" = "Odznači vse";
+
+// MARK: - Setup & Configuration
+"send_optional_headers" = "Pošlji izbirne glave";
+"language" = "Jezik";
+"confirm_reset" = "Ponastavi aplikacijo?";
+"reset_warning" = "To bo ponastavilo vse nastavitve. Želiš nadaljevati?";
+"app_logo" = "Logotip aplikacije";
+"show_recipe_images" = "Prikažem slike receptov?";
+"show_recipe_images_description" = "Prikažem slike v seznamu receptov?";
+"enable_logging" = "Vključi dnevnik";
+"enable_logging_description" = "Shrani zadnjih 500 vrstic iz dnevnika lokalno";
+"icon_switch_not_supported" = "Menjava ikone ni podprta";
+"icon_switch_failed" = "Menjava ikone spodletela";
+"icon_switched_to" = "Ikona zamenjana na";
+"standard_icon" = "Standard";
+"welcome_subtitle" = "Poveži se na tvoj Mealie Strežnik";
+"server_url_placeholder" = "https://mealie.example.com";
+"token_placeholder" = "Tvoj API žeton";
+"household_placeholder" = "Družina";
+"api_version_label" = "Mealie API različica";
+"header_name_placeholder" = "Ime";
+"header_value_placeholder" = "Vrednost";
+"file_size" = "Velikost datoteke";
+"connection" = "Povezava";
+"advanced_options" = "Napredne možnosti";
+"personalization" = "Personalizacija";
+"developer" = "Razvijalec";
+
+// MARK: - Logging
+"log_file_section" = "Dnevnik (zadnjih 500 vrstic)";
+"log_entries" = "Vnosi";
+"log_last_500" = "Zadnjih 500";
+"log_empty" = "Prazno";
+"log_show" = "Prikaži";
+"log_share" = "Deli";
+"log_clear" = "Počisti";
+"log_show_title" = "Dnevnik (zadnjih 500)";
+"log_copy" = "Kopiraj";
+"log_close" = "Zapri";
+"log_cleared" = "Dnevnik počiščen";
+"log_cleared_message" = "Vsi vnosi v dnevnik so bili izbrisani";
+
+// MARK: - Main Navigation
+"show_recipes" = "📖 Prikaži recepte";
+"shopping_list" = "🛒 Nakupovalni seznam";
+"archived_lists" = "🗂️  Arhivirani seznami";
+"recipes" = "📖 Recepti";
+"meal_plan" = "📅 Načrt obrokov";
+"leftover.title" = "🥘 Poraba ostankov";
+"section_shopping" = "Nakupovanje";
+"section_planning" = "Načrtovanje";
+"section_recipes" = "Recepti";
+"section_other" = "Drugo";
+
+// MARK: - Welcome & Loading
+"welcome_title" = "Dobrodošel pri Mealie Receptih! 👋";
+"loading_shopping_list_id" = "Nalagam nakupovalni seznam...";
+"loading_recipes" = "Nalagam recepte...";
+"loading_recipe" = "Nalagam recept...";
+"no_lists_loaded" = "Noben seznam ni naložen";
+
+// MARK: - Error Messages
+"error" = "Napaka";
+"success" = "Uspeh";
+"error_loading_recipes" = "Napaka: %@";
+"error_loading_recipe" = "Nalaganje recepta spodletelo.";
+"invalid_recipe_id" = "Napačen ID recepta";
+"upload_error" = "Napaka";
+"upload_http_error" = "Nalaganje datoteke je spodletelo s statusno kodo %d";
+"error_invalid_json" = "Napačna JSON vsebina";
+"error_payload_encoding" = "Napaka pri kodiranju tovora";
+"error_image_conversion" = "Pretvorba slike je spodletela";
+"error_upload_failed" = "Nalaganje spodletelo";
+"error_image_upload_failed" = "Nalaganje slike spodletelo";
+"error_missing_base_url" = "Strežnikov URL ali žeton manjka.";
+"error_invalid_shopping_list_id" = "Napačen ID nakupovalnega seznama.";
+"leftover.invalid_recipe_id" = "Napačen ID recepta";
+"saveErrorTitle" = "Napaka";
+"saveErrorMessage" = "Napaka se je pojavila med shranjevanjem.";
+"validationError" = "Napaka pri validaciji";
+"errorEmptyTitle" = "Prosim vnesi naslov";
+"errorNoIngredients" = "Prosim dodaj vsaj eno sestavino";
+"errorNoInstructions" = "Prosim dodaj vsaj en korak";
+"errorEmptyInstructions" = "Nekateri koraki so prazni. Prosim zapolni jih ali odstrani prazne.";
+"noInternetConnection" = "Ni povezave z internetom. Prosim preveri omrežne nastavitve.";
+"uploadTimeout" = "Časovna omejitev se je iztekla. Prosim poskusi znova.";
+"reminders_access_denied" = "Ni dostopa do opomnikov. Prosim dovoli dostop v nastavitvah.";
+"reminders_calendar_not_found" = "Označenega seznama opomnikov ne najdem.";
+"postimport_failed_generic" = "Naknadna obdelava opomnikov je spodletela za nekatere elemente.";
+"sync_alert_title" = "Spremembe brez povezave zaznane";
+"sync_alert_message" = "Želiš sinhronizirati spremembe v nakupovalnem seznamu na strežnik takoj?";
+
+// MARK: - Timer
+"timer_title" = "Časovnik";
+"duration" = "Trajanje: %d minut";
+"new_duration" = "Novo trajanje: %d minut";
+"remaining_time" = "%d minut %d sekund preostane";
+"display_always_on" = "Pusti zaslon vklopljen";
+"start_timer" = "Zaženi časovnik";
+"running_timer" = "Časovnik teče: %dm %ds";
+"timer_finished" = "Časovnik končan";
+"timer_live_activity_title" = "Časovnik recepta";
+"timer_remaining_time" = "Preostanek časa";
+"timer_completed" = "Čas je potekel!";
+"timer_recipe_timer" = "Časovnik recepta";
+
+// MARK: - Shopping List
+"select_shopping_list" = "Izberi nakupovalni seznam";
+"unlabeled_category" = "Nekategorizirano";
+"add_success" = "Dodano ✅";
+"list_done_title" = "Seznam zaključen 🎉";
+"list_done_message" = "Nakupovalni seznam je bil arhiviran.";
+"complete_shopping_confirm" = "Potrdi";
+"completed_category_title" = "Zaključeno";
+"add_item_placeholder" = "Nov izdelek…";
+"complete_shopping" = "Zaključi nakupovanje";
+"shopping_done_title" = "Nakupovanje zaključeno";
+"shopping_done_subtitle" = "Vse je v vozičku! 🎉";
+"change_category" = "Zamenjaj kategorijo";
+"select_category" = "Izberi kategorijo";
+"delete_item_title" = "Odstrani izdelek";
+"delete_item_confirm" = "Ali res želiš odstraniti ta izdelek?";
+"note_saved" = "Uspešno shranjeno";
+"note_placeholder" = "Vnesi opombo za izdelek...";
+"edit_note" = "Uredi opombo izdelka";
+"sync_now" = "Sinhroniziraj zdaj";
+"reorder_categories" = "Razvrsti kategorije";
+"list_done_title" = "Zaključi nakupovanje?";
+"list_done_message" = "Želiš označiti vse izdelke kot zaključene?";
+
+// MARK: - Recipe Detail View
+"details" = "Podrobnosti";
+"add_all_ingredients" = "Dodaj vse sestavine";
+"add_selected_ingredients" = "Dodaj le označene sestavine";
+"add_ingredients_title" = "Sestavine dodane";
+"add_ingredients_message" = "Sestavine so bile uspešno dodane na nakupovalni seznam.";
+"ingredients" = "Sestavine";
+"adjust_quantity" = "Nastavi količinski faktor za ta recept:"
+"instructions" = "Navodila";
+"recipe_details" = "Podrobnosti recepta";
+"preparation_time" = "Čas priprave";
+"prep_time" = "Priprava";
+"cook_time" = "Čas kuhanja";
+"total_time_label" = "Skupen čas";
+"total_time" = "Skupen čas";
+"rating" = "Ocena";
+"servings_label" = "Porcije";
+"servings" = "Porcije";
+"share_recipe" = "Deli recept";
+"add_to_shopping_list" = "Dodaj na nakupovalni seznam";
+"view_original" = "Oglej izvirnik";
+
+// MARK: - Recipe List & Search
+"search_recipe" = "Išči recept";
+"search_recipes" = "Išči recepte...";
+"no_recipes_found" = "Ne najdem nobenega recepta";
+"all_categories" = "Vse kategorije";
+"no_recipes_for_category" = "Ne najdem nobenega recepta v tej kategoriji.";
+"refresh_recipes" = "Posodobi recepte";
+"filter_by_category" = "Filtriraj po kategoriji";
+"filter_by_tag" = "Filtriraj po oznaki";
+"sort_by" = "Uredi po";
+"sort_by_name" = "imenu";
+"sort_by_date" = "datumu";
+"sort_rating_highest" = "najboljši oceni";
+
+// MARK: - Edit Recipe
+"editRecipe" = "Uredi recept";
+"title" = "Naslov";
+"saving" = "Shranjujem...";
+"changeImageWarningTitle" = "Zamenjam sliko?";
+"changeImageWarningMessage" = "Menjava slike bo prepisala trenutno sliko recepta.";
+"unsavedChanges" = "Neshranjene spremembe";
+"unsavedChangesMessage" = "Imaš neshranjene spremembe. Jih želiš zavreči?";
+"discard" = "Zavrži";
+"keepEditing" = "Nadaljuj urejanje";
+"organization" = "Oznake in kategorije";
+"tags" = "Oznake";
+"categories" = "Kategorije";
+"servingsHint" = "npr. 4";
+"portionUnit" = "porcije";
+"min" = "min";
+"step" = "Korak";
+"noneSelected" = "Noben označen";
+"saveSuccessTitle" = "Shranjeno!";
+"recipeUpdatedSuccessfully" = "Recept je bil uspešno posodobljen!";
+"imageUploadFailed" = "Nalaganje slike je spodletelo";
+"parsed" = "Strukturirano";
+"mixed" = "Mešano";
+"quantity" = "Količina";
+"unit" = "Enota";
+
+// MARK: - Ingredients Section (Edit)
+"noIngredientsYet" = "Ni še nobenih sestavin";
+"tapBelowToAdd" = "Tapni spodaj za dodajanje";
+"addIngredient" = "Dodaj sestavino";
+"addIngredientAccessibility" = "Dodaj sestavino";
+"tapToAddNewIngredient" = "Tapni za dodajanje nove sestavine";
+"ingredient" = "Sestavina";
+
+// MARK: - Instructions Section (Edit)
+"noInstructionsYet" = "Ni še nobenih korakov";
+"stepPlaceholder" = "Opiši ta korak...";
+"addStep" = "Dodaj korak";
+"addStepAccessibility" = "Dodaj korak";
+"tapToAddNewStep" = "Tapni za dodajanje novega koraka";
+
+// MARK: - Recipe Upload
+"recipe_upload" = "➕ Dodaj recept";
+"image_placeholder_url" = "https://example.com/recipe";
+"uploading_image" = "Nalagam sliko...";
+"enter_recipe_url_hint" = "Vnesi URL recepta da ga shranim na tvoj strežnik";
+"upload_result" = "Naloži rezultat";
+"image_load_error" = "❌ Nalaganje datoteke spodletelo.";
+"image_conversion_error" = "Pretvorba slike spodletela.";
+"image_upload_hint" = "Naložiš lahko tudi sliko ali PDF recepta. Ta bo avtomatsko analiziran in uvožen z uporabo umetne inteligence.";
+"openai_hint_title" = "Informacija analize datoteke";
+"openai_hint_message" = "Analiza recepta je izvedena z uporabo OpenAI API. Zagotovi, da je tvoj API ključ nastavljen v nastavitvah Mealie strežnika.";
+"upload_from_url" = "Uvozi recept iz URLja";
+"upload_url_section_title" = "Uvozi preko URLja recepta";
+"upload_image_section_title" = "Uvozi preko OpenAI iz datoteke";
+"upload_recipe" = "Naloži nov recept";
+"select_image" = "Izberi sliko";
+"select_pdf" = "Izberi PDF";
+"upload_success" = "Nalaganje uspešno!";
+"create_recipe" = "Ustvari recept";
+
+// MARK: - Meal Plan
+"meal_plan" = "📅 Načrt obrokov";
+"no_meals" = "Ni načrtovanih obrokov";
+"breakfast" = "Zajtrk";
+"lunch" = "Kosilo";
+"dinner" = "Večerja";
+"select_slot" = "Obrok";
+"select_date" = "Datum";
+"add_custom_meal" = "Dodaj obrok po meri";
+"confirm_meal" = "Dodaj k načrtu obrokov";
+"no_recipe_linked" = "Ni povezanega recepta"
+"unknown_entry" = "Neznan vnos";
+"today" = "Danes";
+"current_week" = "Trenutni teden";
+"entries_in_other_weeks" = "Ni vnosov v ostalih tednih";
+"available_weeks" = "Tedni na voljo:";
+"entry_singular" = "vnos";
+"entries_plural" = "vnosi";
+
+// MARK: - Date Selection (Meal Plan)
+"select_week" = "Izberi teden"
+"select_week_description" = "Izberi datum za skok v pripadajoči teden";
+"selected_week" = "Izbran teden";
+"go_to_week" = "Pojdi na teden";
+"jump_to_date" = "Skoči na datum";
+"week_abbreviation" = "Teden";
+
+// MARK: - Leftover Recipes
+"leftover.ingredients" = "Sestavine doma";
+"leftover.enter_ingredient" = "Vnesi sestavino";
+"leftover.suggestions" = "Predlogi receptov";
+"leftover.no_matches" = "Ne najdem pripadajočih recoptov.";
+"leftover.matching_percent" = "%d%% skladnost (%d/%d)";
+"leftover.description" = "Vnesi ostanke, ki so na voljo, da najdem primeren recept za optimalno porabo ostankov.";
+"leftover.refresh" = "Posodobi recepte";
+"leftover.refresh_info_title" = "Kaj naredi ta funkcija?";
+"leftover.refresh_info" = "Ta funkcija osveži vse recepte s strežnika in posodobi lokalni predpomnilnik. To zagotavlja, da so na novo dodani ali modificirani recepti na voljo za ujemanje s sestavinami. To lahko traja nekaj sekund, odvisno od količine receptov.";
+
+// MARK: - Archive & Delete
+"delete_all" = "Zbriši vse";
+"delete_confirm_title" = "Zbriši vse arhivirane sezname?";
+"delete_confirm_message" = "Ta akcija ne bore biti razveljavljena.";
+"confirm_delete_title" = "Zbrišem recept?";
+"confirm_delete_message" = "Si prepričan, da želiš zbrisati recept?";
+"list_title" = "Seznam %d";
+
+// MARK: - Import from Reminders
+"import_from_reminders" = "Uvozi iz opomnikov";
+"import_now" = "Uvozi zdaj";
+"reminders_choose_list" = "Označi seznam opomnikov";
+"reminders_list" = "Seznam";
+"this_is_grocery_list" = "To je nakupovalni seznam";
+"this_is_grocery_list_help" = "Omogoči, če je to Applov nakupovalni seznam";
+"importing_from_reminders" = "Uvažam iz opomnikov...";
+"postimport_hint" = "Velja le za nedavno uvožene opomnike.";
+"postimport_action" = "Po uvozu:";
+"postimport_leave" = "Zapusti";
+"postimport_complete" = "Končaj";
+"postimport_complete_delete" = "Končaj in zbriši";
+"import_reminders" = "Uvozi opomnike";
+"select_list" = "Označi seznam";
+"import_selected" = "Uvozi označeno";
+"import_all" = "Uvozi vse";
+"import_in_progress" = "Uvažam...";
+"import_success" = "Uspešno uvoženo";
+"import_error" = "Uvoz spodletel";
+"no_reminders_found" = "Ne najdem nobenih opomnikov";
+
+// MARK: - Sync & Conflict Resolution
+"sync_alert_yes" = "Da";
+"sync_alert_no" = "Ne";
+"sync_changes_title" = "Spremembe brez povezave";
+"sync_changes_checked" = "Preverjeno";
+"sync_changes_quantity" = "Količina";
+"sync_changes_category" = "Kategorija";
+"local_value" = "lokalno";
+"server_value" = "Strežnik";
+"sync_changes_additions_en" = "Dodano na novo";
+"keep_local" = "Obdrži lokalno";
+"use_new" = "Uporabi novo";
+
+// MARK: - Placeholders & UI Elements
+"addNewPlaceholder" = "Nov vnos…";
+"addIngredient" = "Dodaj sestavino";
+"addStep" = "Dodaj korak";
+
+// MARK: - Recipe Sorting Function
+"sort_recipes" = "Razvrsti recepte";
+"sort_name_a_z" = "Po imenu: A → Ž";
+"sort_name_z_a" = "Po imenu: Ž → A";
+"sort_date_newest" = "Novejši naprej";
+"sort_date_oldest" = "Starejši naprej";
+"sort_prep_time_short" = "Najkrajši čas priprave";
+"sort_prep_time_long" = "Najdaljši čas priprave";
