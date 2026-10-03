@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Bewusst OHNE App-Sandbox (Verteilung als DMG, nicht App Store):
+	     nur so kann sich die App per Update-Prüfer selbst in „Programme"
+	     ersetzen. Hardened Runtime + Notarisierung bleiben aktiv. -->
+</dict>
+</plist>

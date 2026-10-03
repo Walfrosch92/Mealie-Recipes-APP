@@ -1,0 +1,13 @@
+// Application-level settings for the Runner target.
+
+// App-Name im Finder/Dock („Mealie Recipes.app"); zugleich Fenstertitel.
+PRODUCT_NAME = Mealie Recipes
+
+// Gleiche Kennung wie die iOS-App (Walfrosch92.MealieRecipes).
+PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes
+
+// The copyright displayed in application information
+PRODUCT_COPYRIGHT = Copyright © 2026 Walfrosch92. All rights reserved.
+
+// ARCHS (nur arm64) steht in Debug/Release.xcconfig auf Projekt-Ebene —
+// hier auf Ziel-Ebene würde es „Flutter Assemble" nicht erreichen.

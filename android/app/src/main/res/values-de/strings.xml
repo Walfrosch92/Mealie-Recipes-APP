@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget-Labels/-Beschreibungen für den Launcher-Widget-Picker (Systemsprache).
+         Werden nicht aus der Flutter-l10n versorgt, da der Picker VOR dem ersten
+         App-Start gezeigt werden kann. Quelle: dieselbe Tabelle wie WidgetL10n. -->
+    <string name="widget_mealplan_label">Essensplan</string>
+    <string name="widget_shopping_label">Einkaufsliste</string>
+    <string name="widget_daily_recipe_label">Rezept des Tages</string>
+    <string name="widget_mealplan_description">Zeigt den Essensplan für heute und morgen.</string>
+    <string name="widget_shopping_description">Zeigt offene Artikel der Einkaufsliste.</string>
+    <string name="widget_daily_recipe_description">Zeigt täglich ein neues Zufallsrezept.</string>
+</resources>

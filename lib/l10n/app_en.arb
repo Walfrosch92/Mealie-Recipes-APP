@@ -1,0 +1,2774 @@
+{
+  "@@locale": "en",
+  "appTitle": "Mealie Recipes",
+  "endCookingMode": "End cooking mode",
+  "endCookingModeConfirm": "Do you really want to end cooking mode?",
+  "endCookingModeConfirmAll": "This will end all {count} recipes in cooking mode. Continue?",
+  "@endCookingModeConfirmAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addTimer": "Add timer",
+  "recipeFinished": "Your dish is ready.",
+  "bonAppetit": "Enjoy your meal!",
+  "prepareIngredients": "Please prepare the following ingredients",
+  "prepareIngredientsFor": "Please prepare the following ingredients for {servings} servings",
+  "@prepareIngredientsFor": {
+    "placeholders": {
+      "servings": {
+        "type": "String"
+      }
+    }
+  },
+  "next": "Next",
+  "navHome": "Home",
+  "homeCookToday": "Cook today",
+  "homeSuggestion": "Suggestion",
+  "homeQuickAccess": "Quick access",
+  "homePlanned": "Planned",
+  "favorite": "Favorite",
+  "navSettings": "Settings",
+  "homeWelcomeName": "Welcome {name},",
+  "@homeWelcomeName": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "homeWelcomeApp": "to Mealie Recipes 👋",
+  "theme": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "recipes": "Recipes",
+  "shoppingList": "🛒 Shopping List",
+  "mealplan": "Meal Plan",
+  "settings": "⚙️ Settings",
+  "searchRecipe": "Search recipe...",
+  "loadingRecipes": "Loading recipes...",
+  "loadingRecipe": "Loading recipe...",
+  "errorLoadingRecipes": "Error loading recipes: {error}",
+  "@errorLoadingRecipes": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorLoadingRecipe": "Could not load recipe.",
+  "noRecipesForCategory": "No recipes for this filter.",
+  "resetFilter": "Reset filter",
+  "allCategories": "All categories",
+  "all": "All",
+  "sortRecipes": "Sort recipes",
+  "refreshRecipes": "Refresh",
+  "sortNameAZ": "Name A–Z",
+  "sortNameZA": "Name Z–A",
+  "sortDateNewest": "Newest first",
+  "sortDateOldest": "Oldest first",
+  "sortPrepTimeShort": "Shortest prep time",
+  "sortPrepTimeLong": "Longest prep time",
+  "sortRatingHighest": "Highest rating",
+  "sortRatingLowest": "Lowest rating",
+  "details": "Details",
+  "ingredients": "Ingredients",
+  "instructions": "Instructions",
+  "tags": "Tags",
+  "notes": "Notes",
+  "addNote": "Add note",
+  "editNote": "Edit note",
+  "noteTitleHint": "Title (optional)",
+  "noteTextHint": "Note text",
+  "deleteNoteTitle": "Delete note?",
+  "deleteNoteMessage": "This note will be permanently deleted.",
+  "servings": "Servings",
+  "adjustQuantity": "Adjust quantity",
+  "startTimer": "Start Timer",
+  "runningTimer": "Timer: {minutes}:{seconds}",
+  "@runningTimer": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "planMeal": "Plan Meal",
+  "displayAlwaysOn": "Keep screen on",
+  "addAllIngredients": "Add all ingredients",
+  "addSelectedIngredients": "Add selected ingredients",
+  "addIngredientsTitle": "Ingredients added",
+  "addIngredientsMessage": "The ingredients have been added to your shopping list.",
+  "addIngredientsFailedCount": "{count, plural, =1{1 ingredient could not be added.} other{{count} ingredients could not be added.}}",
+  "@addIngredientsFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookbooks": "Cookbooks",
+  "cookbooksEmpty": "No cookbooks yet. Tap “+” in the top right to create one.",
+  "cookbookNoMatches": "No recipes match this filter.",
+  "cookbookCreateTitle": "Create cookbook",
+  "cookbookEditTitle": "Edit cookbook",
+  "cookbookNameLabel": "Cookbook name",
+  "cookbookFilterSectionTitle": "Automatically add recipes",
+  "cookbookFieldTools": "Tools",
+  "cookbookFieldUsers": "Users",
+  "cookbookOpIsOneOf": "is one of",
+  "cookbookOpIsNotOneOf": "is not one of",
+  "cookbookOpContainsAll": "contains all",
+  "cookbookSelectValues": "Select values",
+  "cookbookFilterOptionsUnavailable": "No options available",
+  "cookbookAddFilterField": "Add field",
+  "cookbookPublicLabel": "Public cookbook",
+  "cookbookPublicSubtitle": "Visible to other households on the server",
+  "cookbookRawModeEnter": "Edit as text",
+  "cookbookRawModeExit": "Back to builder",
+  "cookbookRawModeHint": "This app's expert mode: edits the filter directly as text. Useful when an existing filter couldn't be broken down into simple rows.",
+  "cookbookRawModeUnparseable": "This text doesn't match the simple row format — it stays as text.",
+  "saveFailed": "Save failed",
+  "search": "Search",
+  "apply": "Apply",
+  "setupCachingTitle": "Loading your recipes",
+  "setupCachingSubtitle": "Your recipes are being prepared for offline use. Depending on how many you have, this can take a moment.",
+  "setupCachingDone": "All set!",
+  "setupTipsHeader": "Did you know?",
+  "setupFinish": "Let's go",
+  "setupSkipCaching": "Continue in the background",
+  "setupTip1": "You can import recipes from a link, photo or PDF — via the Import tile on the home screen.",
+  "setupTip2": "Cooking mode keeps the screen awake, guides you step by step and automatically detects timers in the text.",
+  "setupTip3": "The shopping list works offline too — changes sync automatically once the server is reachable.",
+  "setupTip4": "Long-press a tile on the home screen to rearrange your quick access.",
+  "setupTip5": "Find your Mealie cookbooks via the Cookbooks tile — including offline support.",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "save": "Save",
+  "done": "Done",
+  "close": "Close",
+  "add": "Add",
+  "send": "Send",
+  "retry": "Retry",
+  "confirmDeleteTitle": "Delete recipe?",
+  "confirmDeleteMessage": "This action cannot be undone.",
+  "sendToDevice": "Send to device",
+  "sendToDevicePickerTitle": "Send to device",
+  "sendToAllDevices": "Send to all devices",
+  "timerFinished": "Timer finished!",
+  "timerFinishedBody": "Your recipe timer has finished.",
+  "timer": "Timer",
+  "newTimer": "New Timer",
+  "timerDetails": "Timer Details",
+  "timerNamePlaceholder": "Timer name",
+  "timerNameHint": "Give your timer a descriptive name.",
+  "durationLabel": "Duration",
+  "minutesCount": "{count} minutes",
+  "@minutesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "start": "Start",
+  "stop": "Stop",
+  "pause": "Pause",
+  "resume": "Resume",
+  "finished": "Finished!",
+  "stepNumber": "Step {number}",
+  "@stepNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "minAbbreviation": "min",
+  "cookingMode": "Cooking Mode",
+  "activeRecipesCount": "{count} active recipes",
+  "@activeRecipesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endAll": "End all",
+  "end": "End",
+  "endAllRecipesTitle": "End all recipes?",
+  "endAllRecipesMessage": "Do you want to end all {count} active cooking sessions?",
+  "@endAllRecipesMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "endRecipeTitle": "End recipe?",
+  "endRecipeMessage": "Do you want to end the cooking session for \"{name}\"?",
+  "@endRecipeMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noActiveTimers": "No active timers",
+  "noActiveRecipes": "No active recipes",
+  "startRecipeToCook": "Open a recipe and tap the cooking mode button to start.",
+  "browseRecipes": "Browse recipes",
+  "timersPausedCount": "{count} timer(s) paused",
+  "@timersPausedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookFriends": "Cook with Friends",
+  "cookingModeAddRecipe": "Add recipe",
+  "cookingModeAddRecipeSearchHint": "Search recipes",
+  "cookFriendsCode": "Session code",
+  "cookFriendsJoin": "Join session",
+  "cookFriendsHost": "Host session",
+  "cookFriendsHostNotFound": "Host not found. Make sure both devices are on the same Wi-Fi and local network access is allowed.",
+  "cookFriendsConnectionFailed": "Connection failed. Please try again.",
+  "cookFriendsEnterCode": "Enter code",
+  "cookFriendsConnected": "Connected: {count} guests",
+  "@cookFriendsConnected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "joinSession": "Join session",
+  "hostEndedSessionTitle": "Session ended",
+  "hostEndedSessionMessage": "The host has ended the cooking session.",
+  "shoppingListEmpty": "Your shopping list is empty.",
+  "addItem": "Add item",
+  "itemNote": "Item name",
+  "unlabeledCategory": "Unlabeled",
+  "reorderCategories": "Reorder categories",
+  "archiveChecked": "Archive checked items",
+  "archivedLists": "📦 Archived purchases",
+  "syncChanges": "Sync changes",
+  "noSyncChanges": "No sync changes",
+  "postimportAction": "After import",
+  "postimportHint": "Choose what should happen in the source app (Reminders / Google Tasks) with the imported entries.",
+  "postimportLeave": "Just add",
+  "postimportComplete": "Check off",
+  "postimportCompleteDelete": "Check off & delete",
+  "postimportFailed": "Post-processing in the source app failed. The items were still added to Mealie.",
+  "syncChangesTitle": "Sync changes",
+  "syncSectionChecked": "Checked",
+  "syncSectionQuantity": "Quantity",
+  "syncSectionCategory": "Category",
+  "syncSectionAdditions": "Newly added",
+  "syncLocalLabel": "Local",
+  "syncServerLabel": "Server",
+  "syncNow": "Sync now",
+  "offlineBadge": "Offline",
+  "mealplanTitle": "📅 Meal Plan",
+  "mealplanSelectMode": "Select multiple recipes",
+  "mealplanSelectedCount": "{count, plural, =0{Select} =1{1 selected} other{{count} selected}}",
+  "@mealplanSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "breakfast": "Breakfast",
+  "lunch": "Lunch",
+  "dinner": "Dinner",
+  "addMealEntry": "Add meal",
+  "selectRecipe": "Select recipe",
+  "orFreeText": "or free text",
+  "entryNote": "Note",
+  "noMealEntries": "No entries for this week.",
+  "importRecipe": "Import Recipe",
+  "importFromUrl": "Import from URL",
+  "importFromImage": "Import from photo",
+  "importFromJson": "Import from JSON",
+  "url": "URL",
+  "urlPlaceholder": "https://...",
+  "importLanguage": "Language for OCR",
+  "importing": "Importing...",
+  "importSuccess": "Recipe imported successfully!",
+  "importError": "Import failed: {error}",
+  "@importError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pasteJson": "Paste JSON here",
+  "setupTitle": "Welcome to Mealie Recipes",
+  "setupSubtitle": "Please configure your Mealie server.",
+  "serverUrl": "Server URL",
+  "serverUrlPlaceholder": "https://mealie.example.com",
+  "apiToken": "API Token",
+  "apiTokenPlaceholder": "Your API token",
+  "householdId": "Household",
+  "householdIdPlaceholder": "Family",
+  "shoppingListId": "Shopping list ID",
+  "shoppingListIdPlaceholder": "Select a shopping list",
+  "setupHouseholdListTitle": "Household & shopping list",
+  "shoppingListLabel": "Shopping list",
+  "setupHouseholdManualHint": "Households could not be loaded — enter the household name manually.",
+  "setupExactTitle": "Quantities on the shopping list",
+  "setupExactBody": "In most countries you don't shop gram-precise — you put 1 pack of butter in the cart, not 200 g. In simple mode the app therefore converts recipe amounts to “1×”. In exact mode quantity and unit are kept 1:1 like the Mealie web app — including when typing new items (e.g. “200 g butter”). You can change this anytime in the settings.",
+  "setupExactSimpleTitle": "Simple mode (1×)",
+  "setupExactSimpleBody": "Ingredients land on the list as “1× item” — ideal for quick ticking off in the store.",
+  "setupExactExactTitle": "Exact quantities",
+  "setupExactExactBody": "Items appear with quantity and unit, e.g. “200 g butter” — exactly like the web app.",
+  "connect": "Connect",
+  "connecting": "Connecting...",
+  "connectionSuccess": "Connection successful!",
+  "connectionError": "Connection failed: {error}",
+  "@connectionError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "optionalHeaders": "Optional HTTP headers (for reverse proxy)",
+  "settingsTitle": "⚙️ Settings",
+  "settingsSaved": "Settings saved",
+  "serverSettings": "Server",
+  "displaySettings": "Display",
+  "notificationSettings": "Notifications",
+  "securitySettings": "Security",
+  "aboutSettings": "About",
+  "showRecipeImages": "Show recipe images",
+  "apiVersion": "API version",
+  "language": "Language",
+  "biometricLock": "Biometric lock",
+  "biometricLockDescription": "Unlock app with biometrics",
+  "criticalAlerts": "Critical alerts",
+  "criticalAlertsDescription": "Timer alarm even in silent mode",
+  "enableLogging": "Enable logging",
+  "selectLanguage": "Select language",
+  "setupContinue": "Continue",
+  "back": "Back",
+  "setupConnectStep": "Connect to your server",
+  "resetSettings": "Reset all settings",
+  "resetSettingsConfirm": "This will reset all settings. Continue?",
+  "guestMode": "Guest mode",
+  "appVersion": "Version",
+  "leftoverFinder": "Recipe Finder",
+  "leftoverFinderSubtitle": "Find recipes with ingredients you have",
+  "addIngredient": "Add ingredient",
+  "ingredientPlaceholder": "e.g. eggs",
+  "findRecipes": "Find recipes",
+  "matchingRecipes": "Matching recipes",
+  "noMatchingRecipes": "No recipes found for these ingredients.",
+  "matchPercent": "{percent}% match",
+  "@matchPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "biometricPrompt": "Authenticate to open Mealie Recipes",
+  "biometricFailed": "Authentication failed",
+  "whatsNew": "What's New",
+  "pendingRecipesTitle": "Received recipes",
+  "pendingRecipesMessage": "You received a recipe from {sender}: \"{name}\"",
+  "pendingRecipesFrom": "From {names}",
+  "pendingRecipesOpenCooking": "Open cooking mode",
+  "pendingRecipesLater": "Later",
+  "@pendingRecipesMessage": {
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "openRecipe": "Open recipe",
+  "dismiss": "Dismiss",
+  "editRecipe": "Edit Recipe",
+  "recipeName": "Recipe name",
+  "recipeDescription": "Description",
+  "prepTime": "Prep time (min)",
+  "cookTime": "Cook time (min)",
+  "totalTime": "Total time (min)",
+  "recipeServings": "Servings",
+  "rating": "Rating",
+  "addIngredientLine": "Add ingredient",
+  "addInstruction": "Add step",
+  "removeIngredient": "Remove ingredient",
+  "removeInstruction": "Remove step",
+  "ingredientName": "Ingredient",
+  "ingredientQuantity": "Qty",
+  "ingredientUnit": "Unit",
+  "ingredientNote": "Note",
+  "instructionText": "Step text",
+  "categories": "Categories",
+  "selectCategories": "Select categories",
+  "selectTags": "Select tags",
+  "uploadImage": "Upload image",
+  "removeImage": "Remove image",
+  "saveChanges": "Save changes",
+  "saving": "Saving...",
+  "saveSuccess": "Recipe saved.",
+  "saveError": "Could not save: {error}",
+  "@saveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newCategory": "New category",
+  "newTag": "New tag",
+  "setRating": "Set rating",
+  "removeRating": "Remove rating",
+  "ratingRemoved": "Rating removed",
+  "googleTasksImport": "Import from Google Tasks",
+  "googleTasksImportDescription": "Import items from Google Tasks to your shopping list.",
+  "homeWelcome": "Welcome to Mealie Recipes! 👋",
+  "homeWelcomeNamed": "Welcome {name}, to Mealie Recipes! 👋",
+  "@homeWelcomeNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shopping": "Shopping",
+  "planning": "Planning",
+  "other": "Other",
+  "viewRecipes": "📖 View Recipes",
+  "addRecipe": "➕ Add Recipe",
+  "completeShopping": "Complete Shopping",
+  "shoppingCompleted": "Shopping Completed",
+  "shoppingCompletedSubtitle": "All in the cart! 🎉",
+  "essensplan": "📅 Meal Plan",
+  "resteverwertung": "🥗 Recipe Finder",
+  "newRecipeUpload": "Upload New Recipe",
+  "copyCode": "Copy Code",
+  "shareLink": "Share Link",
+  "connectedFriends": "Connected Friends",
+  "waitingForFriends": "Waiting for friends...",
+  "endSharing": "End Sharing",
+  "cookFriendsDescription": "Invite a friend to cook this recipe together",
+  "sessionCode": "SESSION CODE",
+  "adjustQuantityLabel": "Adjust quantity for this recipe:",
+  "timerStartForStep": "Timer for step",
+  "enterRecipeUrl": "Enter recipe URL",
+  "loading": "Loading...",
+  "urlInvalidScheme": "URL must start with http:// or https://",
+  "urlAddScheme": "Add https://",
+  "addItemPlaceholder": "Add item...",
+  "addSuccessToast": "Added!",
+  "completedItems": "Completed",
+  "completeShoppingTitle": "Complete shopping?",
+  "completeShoppingMessage": "Delete completed items?",
+  "recipeListTitle": "📖 Recipes",
+  "importRecipeTitle": "Upload new recipe",
+  "uploadRecipeUrl": "Import via Recipe URL",
+  "uploadRecipeUrlHint": "Enter the recipe URL to save it on your server",
+  "uploadOpenAI": "Import from file via OpenAI",
+  "uploadOpenAIHint": "Alternatively upload photos or a PDF of a recipe. If the recipe spans several pages, just add several — they are analyzed together by AI.",
+  "takePhoto": "Camera",
+  "cameraPermissionDenied": "No access to the camera. Allow it in your system settings to photograph recipes.",
+  "cameraUnavailable": "No camera available on this device.",
+  "selectPhoto": "Photos",
+  "selectPdf": "PDF",
+  "openAIHintTitle": "File Analysis Info",
+  "openAIHintBody": "Recipe analysis uses the OpenAI API. Make sure your API key is configured in the Mealie server settings.",
+  "allDeleteConfirm": "Delete all",
+  "portionen": "Servings",
+  "timerForStep": "Start timer for this step",
+  "weekNavPrev": "Previous week",
+  "weekNavNext": "Next week",
+  "noMealsThisWeek": "No meals planned",
+  "entriesInOtherWeeks": "There are entries in other weeks",
+  "availableWeeks": "Available weeks:",
+  "weekRange": "Week {week} ({start} – {end})",
+  "currentWeek": "Current Week",
+  "rezepteAktualisieren": "Update recipes",
+  "leftoverWhatTitle": "What does this do?",
+  "leftoverWhatBody": "This function reloads all recipes from the server and updates the local cache.",
+  "leftoverDescription": "Enter available ingredients to find matching recipes and use up leftovers.",
+  "leftoverIngredientsHeader": "Ingredients at home",
+  "leftoverSuggestions": "Recipe suggestions",
+  "leftoverNoMatches": "No matching recipes found.",
+  "leftoverEnterIngredient": "Enter ingredient",
+  "matchingPercentText": "{percent}% match ({count}/{total})",
+  "@matchingPercentText": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "weekAbbreviation": "Week",
+  "today": "Today",
+  "selectDate": "Select date",
+  "selectSlot": "Select meal",
+  "selectedRecipe": "Selected recipe",
+  "confirmMeal": "Schedule meal",
+  "searchRecipes": "Search recipes",
+  "addCustomMeal": "Add custom meal",
+  "diceModeButton": "Roll random recipes",
+  "diceModeTitle": "3 random suggestions",
+  "diceBackToSearch": "Back to search",
+  "diceNotEnoughRecipes": "Not enough recipes for dice mode (need at least 3)",
+  "entrySingular": "entry",
+  "entriesPlural": "entries",
+  "listTitle": "List {n}",
+  "@listTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteAllConfirmTitle": "Delete all?",
+  "deleteAllConfirmMessage": "Do you want to delete all archived purchases?",
+  "uploadFromUrlButton": "Import recipe from URL",
+  "uploadingImage": "Uploading...",
+  "uploadErrorTitle": "Upload failed",
+  "uploadSuccessTitle": "Upload successful",
+  "editImportedRecipeQuestion": "Do you want to edit the new recipe now?",
+  "notNow": "Not now",
+  "pdfTooLarge": "The PDF file is too large (max 10 MB).",
+  "invalidUrl": "Invalid URL. Please enter a valid HTTP(S) URL.",
+  "cookWithFriends": "Cook with friends",
+  "cookFriendsSubtitle": "Invite a friend to cook this recipe together",
+  "copied": "Copied",
+  "linkCopied": "Link copied",
+  "startCooking": "Start cooking",
+  "hostNoRecipe": "Open from a recipe to host a session",
+  "uploadToOwnServer": "Save to my server",
+  "uploadingRecipe": "Uploading recipe…",
+  "recipeUploadedToOwnServer": "Recipe saved to your server",
+  "recipeUploadFailed": "Upload failed",
+  "allowGuestSaveRecipes": "Let guests save recipes to their own server",
+  "appIcon": "App icon",
+  "appIconClassic": "Classic",
+  "appIconModern": "Modern",
+  "name": "Name",
+  "color": "Color",
+  "randomColor": "Random color",
+  "createFailed": "Could not create",
+  "deleteFailed": "Could not delete",
+  "deleteOrganizerConfirm": "Delete \"{name}\"? This also removes it on the server.",
+  "@deleteOrganizerConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionSection": "Connection",
+  "token": "Token",
+  "advancedOptions": "Advanced options",
+  "mealieApiVersion": "Mealie API version",
+  "sendOptionalHeaders": "Send optional headers",
+  "offlineRecipeImages": "Save recipe images offline",
+  "offlineRecipeImagesHint": "Downloads all recipe images to this device so they also show without a connection. With large collections this can take up several hundred MB. Turning it off deletes the saved images.",
+  "offlineRecipeImagesStatus": "Saved: {count}/{total} · {size}",
+  "@offlineRecipeImagesStatus": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineRecipeImagesDisableConfirm": "Delete all saved recipe images?",
+  "headerNameLabel": "Header {n} name",
+  "@headerNameLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "headerValueLabel": "Header {n} value",
+  "@headerValueLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "value": "Value",
+  "personalization": "Personalization",
+  "showRecipeImagesSubtitle": "Shows images in the recipe list",
+  "exactQuantities": "Add exact quantities",
+  "exactQuantitiesSubtitle": "Ingredients & typed items keep quantity and unit (e.g. 200 g butter) instead of 1x per item — missing foods are created on the server",
+  "remindToShop": "Remind me to shop",
+  "remindToShopSubtitle": "Notifies you when you're near a saved location and your shopping list has open items — even if the app is closed",
+  "shoppingReminderAddLocation": "Add location",
+  "shoppingReminderMaxLocations": "Maximum of 3 locations reached",
+  "shoppingReminderLocationServiceDisabled": "Location services are turned off on this device",
+  "shoppingReminderPermissionTitle": "Location access needed",
+  "shoppingReminderPermissionMessage": "To remind you when you're near a shop, this needs \"Always\" location access — even while the app is closed. Please enable it in Settings.",
+  "openSettings": "Open Settings",
+  "shoppingReminderLocationName": "Name",
+  "shoppingReminderUseCurrentLocation": "Use current location",
+  "shoppingReminderOrAddress": "or enter an address",
+  "shoppingReminderAddress": "Address",
+  "shoppingReminderAddressPlaceholder": "Street, city",
+  "shoppingReminderSearchAddress": "Search",
+  "shoppingReminderLocationFailed": "Couldn't determine your location",
+  "shoppingReminderAddressNotFound": "Address not found",
+  "ratingFailed": "The rating could not be saved — please try again.",
+  "lastCooked": "Last made",
+  "syncLastCooked": "Update “last made”",
+  "syncLastCookedSubtitle": "Saves today's date and a timeline entry on the server — like the Mealie web app.",
+  "developer": "Developer",
+  "enableLoggingSubtitle": "Records print/error logs (last 500 lines)",
+  "entriesLabel": "Entries",
+  "fileSize": "File size",
+  "showAction": "Show",
+  "copy": "Copy",
+  "logsWithCount": "Logs ({count})",
+  "@logsWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noLogs": "No logs available",
+  "logsTitle": "Logs",
+  "required": "Required",
+  "connectionFailedCheck": "Connection failed. Check URL and token.",
+  "username": "Username",
+  "password": "Password",
+  "setupPasswordHint": "Your password is not stored — the app logs you in once and generates an API token from it (same as Profile → API Tokens in the web app).",
+  "loginAndConnect": "Log in & connect",
+  "loginInvalidCredentials": "Username or password is incorrect.",
+  "loginAndGenerateToken": "Log in & generate token",
+  "loggingIn": "Signing in…",
+  "apiTokenSaveHint": "Token applied — please tap “Save changes” below.",
+  "renewApiToken": "Renew API token",
+  "setupAuthChoiceTitle": "How would you like to sign in?",
+  "authModePasswordTitle": "Let the app create an API key for me",
+  "authModePasswordSubtitle": "Sign in with username & password — the app generates a token automatically.",
+  "authModeTokenTitle": "I already have an API key",
+  "authModeTokenSubtitle": "Copied from the Mealie profile (Profile → API Tokens).",
+  "keyN": "Key {n}",
+  "@keyN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "valueN": "Value {n}",
+  "@valueN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "openCookingMode": "Open cooking mode",
+  "activeRecipes": "{count, plural, =1{1 active recipe} other{{count} active recipes}}",
+  "@activeRecipes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reparseIngredients": "Re-parse ingredients",
+  "reparseIngredientsSubtitle": "Split quantity/unit/ingredient (e.g. “200 g flour”)",
+  "reparseDone": "Ingredients split – tap “Save changes” to apply",
+  "reparseNone": "No splittable ingredients found",
+  "tagsAndCategories": "Tags, categories & tools",
+  "tapToAddPhoto": "Tap to add photo",
+  "descriptionLabel": "Description",
+  "searchingDevices": "Searching for devices on the same Wi-Fi…",
+  "selectAll": "Select all",
+  "importReminders": "Import reminders",
+  "importGoogleTasks": "Import Google Tasks",
+  "noTaskLists": "No task lists found",
+  "noReminderLists": "No reminder lists found",
+  "importCount": "Import {count}",
+  "@importCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activeRecipeTimer": "Active recipe timer",
+  "linkIngredients": "Link ingredients",
+  "noIngredientsToLink": "No ingredients to link yet",
+  "importLanguageSubtitle": "Language for recipes imported from a photo or PDF",
+  "importLanguageSearch": "Search language",
+  "importLanguageFollowApp": "Same as app language",
+  "importLanguageNoMatch": "No language found",
+  "setupImportLanguageTitle": "AI recipe import",
+  "setupImportLanguageBody": "Photos and PDFs can be turned into recipes by AI. Pick the language they should end up in — handy if your mother tongue is not available as an app language. You can change this later in the settings.",
+  "setupImportLanguageSearchHint": "Use the search in the picker to find languages the app interface does not offer.",
+  "setupCachingKeepOpenTitle": "Please keep the app open",
+  "setupCachingKeepOpenBody": "Loading runs in the foreground. Leave the app open until it finishes — if you close it or switch away for too long, the process stops and starts over later.",
+  "supportContact": "Contact support",
+  "supportDialogMessage": "Describe your problem and we will get back to you. The log helps a lot with troubleshooting — you can attach it as a text file.",
+  "supportWithoutLogs": "Without log",
+  "supportWithLogs": "Attach log",
+  "supportMailSubject": "Mealie Recipes — Support",
+  "supportMailHint": "Please describe your problem here:",
+  "supportLogsEmpty": "The log is empty. Turn on logging, reproduce the problem and then send it.",
+  "supportAddressCopied": "Address copied: {email}",
+  "@supportAddressCopied": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "supportNoMailApp": "No mail app found. Address copied: {email}",
+  "@supportNoMailApp": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "createRecipeFromImages": "Create recipe",
+  "imagePagesSelected": "{count, plural, =1{1 page selected} other{{count} pages selected}}",
+  "@imagePagesSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "imagePagesHint": "The first image becomes the recipe's main image. Press and hold a page to reorder it.",
+  "mainImageBadge": "Main",
+  "maxImagesReached": "You can add up to {max} images per recipe.",
+  "@maxImagesReached": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "removePage": "Remove page",
+  "preparingPdf": "Processing PDF...",
+  "shareRecipeTitle": "Share recipe",
+  "recipeOptionsTitle": "Options",
+  "exportAsPdf": "Export as PDF",
+  "generatingPdf": "Generating PDF…",
+  "pdfExportFailed": "PDF export failed",
+  "recipeTime": "Time",
+  "ingredientSectionTitle": "Section",
+  "addIngredientSection": "Add section",
+  "aiImportToggle": "Analyze with AI",
+  "aiImportToggleHint": "Also for recipe videos (YouTube, Instagram, TikTok …) and pages the regular import can't read. Requires an AI provider on your Mealie server — for videos also an audio provider.",
+  "aiImportButton": "Import with AI",
+  "aiImportRunning": "The AI is analyzing the link … videos can take a few minutes.",
+  "aiImportFailed": "The AI import failed. Check the AI settings on your Mealie server.",
+  "stepHeadingLabel": "Step heading (optional)",
+  "linkedRecipeLabel": "Linked recipe",
+  "toolsTitle": "Tools",
+  "prepareTools": "Please get the following tools ready",
+  "newTool": "New tool",
+  "renameAction": "Rename",
+  "organizerEmpty": "Nothing here yet. Tap “+” in the top right to create one.",
+  "organizerRecipeCount": "{count, plural, =0{No recipes} =1{1 recipe} other{{count} recipes}}",
+  "toolOnHand": "On hand",
+  "@organizerRecipeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mealDiceSettingsTitle": "Dice filter",
+  "mealDiceSettingsHint": "Choose categories and tags for each meal. When you roll the dice, only recipes with at least one of them are suggested. The same entry can be used for several meals.",
+  "mealDiceSettingsNoneHint": "Nothing selected for this meal: the dice picks automatically by category names like “Breakfast”, “Lunch” or “Dinner”.",
+  "mealDiceAutoHintTitle": "Automatic selection",
+  "mealDiceAutoHintBody": "No categories or tags are set for this meal yet. The dice therefore looks for categories like “Breakfast”, “Lunch” or “Dinner” and fills up with other recipes.\n\nTo choose your own: in the meal plan, tap the gear icon next to “+”.",
+  "dontShowAgain": "Don't show again",
+  "mealDiceNoMatches": "No recipe matches the categories and tags selected for this meal.",
+  "mealDiceFewMatches": "{count, plural, =1{Only 1 matching recipe} other{Only {count} matching recipes}}",
+  "@mealDiceFewMatches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentsTitle": "Comments",
+  "commentHint": "Write a comment…",
+  "commentSaveFailed": "The comment could not be saved.",
+  "commentDeleteConfirm": "Delete this comment?",
+  "cookingDoneCommentLabel": "Comment (optional)",
+  "cookingDoneCommentHint": "How did it turn out? Tips for next time…",
+  "nutritionTitle": "Nutrition",
+  "nutritionPerServing": "per serving",
+  "nutritionCalories": "Calories",
+  "nutritionFat": "Fat",
+  "nutritionSaturatedFat": "Saturated fat",
+  "nutritionTransFat": "Trans fat",
+  "nutritionUnsaturatedFat": "Unsaturated fat",
+  "nutritionCholesterol": "Cholesterol",
+  "nutritionSodium": "Sodium",
+  "nutritionCarbohydrates": "Carbohydrates",
+  "nutritionFiber": "Fiber",
+  "nutritionSugar": "Sugar",
+  "nutritionProtein": "Protein",
+  "timelineTitle": "Timeline",
+  "timelineMadeThis": "I made this",
+  "timelineUserMadeThis": "{name} made this",
+  "@timelineUserMadeThis": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineEmpty": "No timeline entries yet.",
+  "timelineDate": "Date",
+  "timelineNoteHint": "Note (optional)",
+  "timelineAddPhoto": "Add photo",
+  "timelineRemovePhoto": "Remove photo",
+  "timelineSaved": "Added to the timeline",
+  "timelineSaveFailed": "Could not add to the timeline",
+  "timelineImageFailed": "Entry saved, but the photo could not be uploaded",
+  "timelineDeleteConfirm": "Delete this entry from the timeline?",
+  "timelineEditNote": "Edit note",
+  "timelineUnknownRecipe": "Recipe not found",
+  "cookingDonePhotoHint": "Photo for the Mealie timeline (optional)",
+  "assetsTitle": "Attachments",
+  "assetsAdd": "Add attachment",
+  "assetsChooseFile": "File",
+  "assetsUploading": "Uploading…",
+  "assetsUploadFailed": "Attachment could not be uploaded",
+  "assetsDeleteConfirm": "Remove “{name}” from the attachments?",
+  "@assetsDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "assetsOpenFailed": "Attachment could not be opened",
+  "assetsUnsupported": "Mealie only supports PDF, images, TXT, MD, CSV and JSON.",
+  "assetsShare": "Share",
+  "mealRulesTitle": "Mealie rules",
+  "mealRulesHint": "Also used by the Mealie web app. If several rules apply to the day and meal, all of them must match. If no rule applies, the dice picks from all recipes.",
+  "mealRuleAdd": "Add rule",
+  "mealRuleNewTitle": "New rule",
+  "mealRuleEditTitle": "Edit rule",
+  "mealRuleDay": "Day",
+  "mealRuleAnyDay": "Any day",
+  "mealRuleMealType": "Meal",
+  "mealRuleAnyMeal": "Any meal",
+  "mealRuleConditionsTitle": "Conditions",
+  "mealRuleAllRecipes": "All recipes",
+  "mealRuleDeleteConfirm": "Delete this rule?",
+  "mealRulesOffline": "Mealie rules are unavailable right now – the dice uses the app selection.",
+  "mealRulesNoMatches": "No recipes match the Mealie rules for this meal.",
+  "mealTypeSide": "Side",
+  "mealTypeSnack": "Snack",
+  "mealTypeDrink": "Drink",
+  "mealTypeDessert": "Dessert",
+  "foodsTitle": "Foods",
+  "unitsTitle": "Units",
+  "newFood": "New food",
+  "newUnit": "New unit",
+  "editFood": "Edit food",
+  "editUnit": "Edit unit",
+  "pluralNameLabel": "Plural name",
+  "abbreviationLabel": "Abbreviation",
+  "pluralAbbreviationLabel": "Plural abbreviation",
+  "mergeAction": "Merge",
+  "mergeIntoTitle": "Merge “{name}” into…",
+  "@mergeIntoTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mergeConfirm": "“{from}” will be merged into “{to}”: all recipes and shopping lists will use “{to}” afterwards, and “{from}” will be deleted.",
+  "@mergeConfirm": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "mergeFailed": "Merge failed",
+  "foodUnitDeleteConfirm": "Delete “{name}”? Ingredients that use it will lose the reference.",
+  "@foodUnitDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "foodsUnitsEmpty": "No entries yet.",
+  "mealRuleConditionCount": "{count, plural, =1{1 condition} other{{count} conditions}}",
+  "@mealRuleConditionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "showAll": "Show all",
+  "mealDiceModeTitle": "Dice uses",
+  "mealDiceModeApp": "App selection",
+  "switchListTitle": "Switch list",
+  "newShoppingList": "New shopping list",
+  "shoppingListDeleteConfirm": "Delete “{name}”? All items in it will be deleted too.",
+  "@shoppingListDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "labelOrderTitle": "Sort labels",
+  "labelOrderHint": "Drag to sort. Applies to this list – in the Mealie web app too.",
+  "labelOrderEmpty": "This list has no labels yet.",
+  "useAsActiveList": "Use as active list",
+  "activeListBadge": "Active",
+  "foodLabelLabel": "Label",
+  "foodNoLabel": "No label",
+  "aliasesLabel": "Aliases",
+  "aliasAddHint": "Add alias",
+  "foodOnHand": "On hand in the household",
+  "timelineChildRecipesTitle": "Also add for linked recipes",
+  "timelineMadeForRecipe": "Made for {recipe}",
+  "@timelineMadeForRecipe": {
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineFilter": "Filter entries",
+  "timelineTypeComment": "Made & notes",
+  "timelineTypeInfo": "Info",
+  "timelineTypeSystem": "System",
+  "listManagementTitle": "Shopping lists",
+  "managementTitle": "More",
+  "pinToHome": "Add to home screen",
+  "unpinFromHome": "Remove from home screen",
+  "homeScreenFull": "The home screen is full – at most {count} tiles. Remove another tile under “More” first.",
+  "@homeScreenFull": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectAction": "Select",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "assignLabelAction": "Assign label",
+  "assignLabelOverwriteHint": "Overwrites the label of all selected foods.",
+  "deleteSelectedConfirm": "{count, plural, =1{Delete 1 entry?} other{Delete {count} entries?}}",
+  "@deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "seedDataAction": "Load default data",
+  "seedFoodsHint": "Creates Mealie's default foods in the selected language.",
+  "seedUnitsHint": "Creates Mealie's default units in the selected language.",
+  "seedLanguageLabel": "Language",
+  "seedDuplicateWarning": "You already have entries. Mealie does not reconcile duplicates – you'll have to merge them yourself afterwards.",
+  "seedDone": "Default data created",
+  "seedFailed": "Default data could not be loaded",
+  "exportAction": "Export",
+  "substitutionsLabel": "Substitutes",
+  "substitutionAddHint": "Add substitute",
+  "substitutionFoodLabel": "Food (optional)",
+  "substitutionNoteLabel": "Note (optional)",
+  "substitutionNeedOne": "Enter a food or a note",
+  "useAbbreviationLabel": "Use abbreviation",
+  "useAbbreviationHint": "Show “g” instead of “gram” in recipes",
+  "fractionLabel": "Display as fraction",
+  "fractionHint": "½ instead of 0.5",
+  "standardizationTitle": "Standardization",
+  "standardizationHint": "For conversions: 1 of this unit equals … (e.g. 1 tbsp = 15 milliliters).",
+  "standardQuantityLabel": "Standard quantity",
+  "standardUnitLabel": "Standard unit",
+  "standardUnitNone": "None",
+  "stdFluidOunce": "Fluid ounce (fl oz)",
+  "stdCup": "Cup (US)",
+  "stdOunce": "Ounce (oz)",
+  "stdPound": "Pound (lb)",
+  "stdMilliliter": "Milliliter",
+  "stdLiter": "Liter",
+  "stdGram": "Gram",
+  "stdKilogram": "Kilogram",
+  "labelsTitle": "Labels",
+  "newLabel": "New label",
+  "editLabel": "Edit label",
+  "colorLabel": "Color",
+  "labelDeleteConfirm": "Delete “{name}”? Items and foods will lose this label.",
+  "@labelDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importMenuAction": "Import",
+  "archivedEmpty": "No archived purchases yet. Tap “Complete Shopping” after shopping – the checked items will be stored here.",
+  "sectionTitleLabel": "Section title",
+  "clearSection": "Clear section",
+  "noPermissionGeneric": "You don't have permission for this in Mealie. Ask an admin or household manager.",
+  "noPermissionEditRecipe": "You can't edit this recipe – it's locked or belongs to another household. Only its creator or an admin can.",
+  "noPermissionDeleteRecipe": "Only the recipe's creator or an admin can delete it.",
+  "noPermissionDemoteSelf": "You can't remove your own admin rights.",
+  "recipeLockedHint": "Locked – only its creator can edit it",
+  "recipeDeleteOwnerOnlyHint": "Only its creator or an admin can delete",
+  "organizeReadOnlyHint": "View only: creating, changing and deleting requires the permission “User can manage foods, tags, and categories”.",
+  "notesNotSavedNoPermission": "Note not saved – you don't have permission to edit this recipe.",
+  "userManagementTitle": "User Management",
+  "usersTitle": "Users",
+  "editUserTitle": "Edit User",
+  "fullNameLabel": "Full Name",
+  "usernameLabel": "Username",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "householdLabel": "Household",
+  "permissionsTitle": "Permissions",
+  "administratorLabel": "Administrator",
+  "permCanInvite": "User can invite others to group",
+  "permCanManage": "User can manage group settings",
+  "permCanManageHousehold": "User can manage household",
+  "permCanOrganize": "User can manage foods, tags, and categories",
+  "advancedFeaturesLabel": "Enable advanced features",
+  "passwordResetLinkAction": "Generate Password Reset Link",
+  "resetLockedUsersAction": "Reset Locked Users",
+  "membersTitle": "Members",
+  "inviteLinkTitle": "Invite Link",
+  "inviteAction": "Invite",
+  "userUpdated": "User updated",
+  "createUserTitle": "Create user",
+  "userCreated": "User created",
+  "userDeleteConfirm": "Delete “{name}”? The account will be removed from Mealie.",
+  "@userDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "passwordResetLinkCopied": "Link copied – pass it on to the user. It is only valid for a limited time.",
+  "lockedUsersReset": "{count, plural, =0{No locked users} =1{1 user unlocked} other{{count} users unlocked}}",
+  "@lockedUsersReset": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteUsesLabel": "Number of uses",
+  "inviteCreated": "Invite link created",
+  "inviteEmailHint": "Email address (optional – Mealie will send the invitation)",
+  "inviteEmailSent": "Invitation sent by email",
+  "inviteEmailFailed": "The email couldn't be sent (is SMTP set up in Mealie?). The link still works.",
+  "copyLinkAction": "Copy link",
+  "youLabel": "You",
+  "membersPermissionsHint": "You can change the permissions of your household members – but not your own.",
+  "householdManagementTitle": "Household Management",
+  "householdsTitle": "Households",
+  "createHouseholdTitle": "Create Household",
+  "householdNameLabel": "Household Name",
+  "householdPreferencesTitle": "Household Preferences",
+  "privateHouseholdLabel": "Private Household",
+  "privateHouseholdHint": "Setting your household to private will disable all public view options. This overrides any individual public view settings",
+  "lockRecipeEditsLabel": "Lock recipe edits from other households",
+  "lockRecipeEditsHint": "When enabled only users in your household can edit recipes created by your household",
+  "householdRecipePreferencesTitle": "Household Recipe Preferences",
+  "groupsTitle": "Groups",
+  "groupLabel": "Group",
+  "createGroupTitle": "Create Group",
+  "groupNameLabel": "Group Name",
+  "groupPreferencesTitle": "Group Preferences",
+  "privateGroupLabel": "Private Group",
+  "privateGroupHint": "Setting your group to private will disable all public view options. This overrides any individual public view settings",
+  "firstDayOfWeekLabel": "First day of the week",
+  "showAnnouncementsLabel": "Show announcements from Mealie",
+  "recipePublicDefaultLabel": "Allow users outside of your group to see your recipes",
+  "recipeShowNutritionDefaultLabel": "Show nutrition information",
+  "recipeShowAssetsDefaultLabel": "Show recipe assets",
+  "recipeLandscapeDefaultLabel": "Default to landscape view",
+  "recipeDisableCommentsDefaultLabel": "Disable users from commenting on recipes",
+  "myHouseholdSection": "My household",
+  "myGroupSection": "My group",
+  "preferencesSaved": "Settings saved",
+  "cannotDeleteWithUsers": "Still has users – move or delete them in User Management first.",
+  "deleteHouseholdConfirm": "Delete household “{name}”?",
+  "@deleteHouseholdConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteGroupConfirm": "Delete group “{name}”?",
+  "@deleteGroupConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "usersCount": "{count, plural, =0{No users} =1{1 user} other{{count} users}}",
+  "@usersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "originalUrlLabel": "Original URL",
+  "copyTextAction": "Copy text",
+  "copiedToClipboard": "Copied to clipboard",
+  "changelogEnglishHint": "The release notes are available in English only.",
+  "favoritesTitle": "Favorites",
+  "favoritesEmpty": "No favorites yet. Tap the heart on a recipe to collect it here.",
+  "changelogTitle": "Changelog",
+  "changeProfileImage": "Change profile picture",
+  "profileImageUpdated": "Profile picture updated",
+  "profileImageFailed": "Profile picture could not be uploaded",
+  "myAccountTitle": "My account",
+  "ownAccountHint": "Here you can edit your own account. Other users are managed by administrators and members with the \"manage\" permission.",
+  "changePasswordAction": "Change password",
+  "currentPasswordLabel": "Current password",
+  "newPasswordLabel": "New password",
+  "confirmPasswordLabel": "Confirm password",
+  "passwordTooShort": "At least 8 characters",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "passwordUpdated": "Password updated",
+  "passwordChangeFailed": "Password could not be changed",
+  "passwordManagedExternally": "You sign in via {method} — change your password there.",
+  "@passwordManagedExternally": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "bulkAddHint": "One line per entry.",
+  "bulkAddCount": "{count, plural, =1{Add 1 entry} other{Add {count} entries}}",
+  "@bulkAddCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "linkRecipeAction": "Link recipe",
+  "useFoodAction": "Use food instead of recipe",
+  "addSubstitutionsAction": "Add substitutions",
+  "clearSubstitutionsAction": "Clear substitutions",
+  "recipeSubstitutionsTitle": "Substitutions",
+  "substitutionUnknownFood": "Existing foods only – use the note otherwise",
+  "insertAboveAction": "Insert above",
+  "insertBelowAction": "Insert below",
+  "moveToTopAction": "Move to top",
+  "moveToBottomAction": "Move to bottom",
+  "linkReferencesAction": "Link references",
+  "editMarkdownAction": "Edit Markdown",
+  "previewMarkdownAction": "Preview Markdown",
+  "insertStepImageAction": "Upload image",
+  "mergeAboveAction": "Merge above",
+  "linkedToOtherStep": "Linked to other step",
+  "noNotesToLink": "No notes to link",
+  "ownerLabel": "Owner",
+  "ingredientParserTitle": "Ingredient Parser",
+  "ingredientParserHint": "{count, plural, =1{1 ingredient isn't structured yet. Pick a parser, check the result, apply.} other{{count} ingredients aren't structured yet. Pick a parser, check the result, apply.}}",
+  "@ingredientParserHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parserNlp": "Natural Language Processor",
+  "parserBrute": "Brute Parser",
+  "parserOpenai": "OpenAI Parser",
+  "parserApp": "Offline (app)",
+  "parseFailed": "Parsing failed",
+  "parseAction": "Parse",
+  "applyParsedCount": "{count, plural, =0{Nothing selected} =1{Apply 1 ingredient} other{Apply {count} ingredients}}",
+  "@applyParsedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parsedNewBadge": "new",
+  "hoursShort": "h",
+  "minutesShort": "min",
+  "timeExtraHint": "Extra, e.g. “plus overnight”",
+  "yieldLabel": "Yield",
+  "yieldTextLabel": "Yield Text",
+  "prepTimeLabel": "Prep Time",
+  "performTimeLabel": "Cook Time",
+  "totalTimeLabel": "Total Time",
+  "settingPublicRecipe": "Public Recipe",
+  "settingShowNutrition": "Show Nutrition Values",
+  "settingShowAssets": "Show Assets",
+  "settingLandscapeView": "Landscape View",
+  "settingDisableComments": "Disable Comments",
+  "settingDisableAmount": "Disable Ingredient Amounts",
+  "settingLocked": "Locked",
+  "settingLockedOwnerOnly": "Only the creator can lock or unlock the recipe.",
+  "apiExtrasTitle": "API Extras",
+  "apiExtrasHint": "Custom key/value pairs for 3rd party applications, e.g. to trigger automations.",
+  "extraKeyLabel": "Key",
+  "extraValueLabel": "Value",
+  "addExtraAction": "Add extra",
+  "durationHours": "{count, plural, =1{1 hour} other{{count} hours}}",
+  "@durationHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "@durationMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "discardChangesConfirm": "Discard unsaved changes?",
+  "discardChanges": "Discard Changes",
+  "imageFromUrl": "Image from URL",
+  "deleteRecipeImage": "Delete Recipe Image",
+  "deleteRecipeImageConfirm": "Are you sure you want to delete this recipe image?",
+  "bulkAddIngredients": "Bulk add ingredients",
+  "bulkAddSteps": "Bulk add steps",
+  "stepImageFailed": "Image could not be uploaded",
+  "servingsAndTimes": "Servings & times",
+  "recipeSettingsTitle": "Recipe Settings",
+  "jsonEditorTitle": "JSON Editor",
+  "jsonInvalid": "Invalid JSON – please check.",
+  "editorOfflineHint": "Opened offline: saving needs a connection. Newer Mealie fields (e.g. substitutions) are kept unchanged.",
+  "parseLineFailed": "Not recognized – stays unchanged",
+  "createManualTitle": "Create recipe manually",
+  "createManualHint": "Enter a name – add ingredients, steps, image and everything else afterwards in the recipe editor.",
+  "createManualButton": "Create & edit",
+  "changelogEmpty": "No entries for this version yet.",
+  "finderDescription": "Search for recipes based on ingredients you have on hand. You can also filter by tools you have available, and set a maximum number of missing ingredients or tools.",
+  "finderSelectedIngredients": "Selected Ingredients",
+  "finderNoIngredientsSelected": "No ingredients selected",
+  "finderMissing": "Missing",
+  "finderNoRecipesFound": "No recipes found",
+  "finderNoRecipesFoundDescription": "Try adding more ingredients to your search or adjusting your filters",
+  "finderIncludeFoodsOnHand": "Include Ingredients On Hand",
+  "finderIncludeToolsOnHand": "Include Tools On Hand",
+  "finderIncludeSubstitutions": "Include Substitutions",
+  "finderSubstituting": "Substituting",
+  "finderSubstituteForFood": "{substitute} for {food}",
+  "@finderSubstituteForFood": {
+    "placeholders": {
+      "substitute": {
+        "type": "String"
+      },
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "finderMaxMissingIngredients": "Max Missing Ingredients",
+  "finderMaxMissingTools": "Max Missing Tools",
+  "finderSelectedTools": "Selected Tools",
+  "finderReadyToMake": "Ready to Make",
+  "finderAlmostReadyToMake": "Almost Ready to Make",
+  "finderSettings": "Settings",
+  "finderLoadingRecipes": "Loading Recipes",
+  "finderClearSelection": "Clear Selection",
+  "finderOfflineHint": "No connection to the server – results come from the recipes stored on this device.",
+  "addIngredientsSkippedOnHand": "{count, plural, =1{Added to your shopping list – 1 ingredient on hand was skipped.} other{Added to your shopping list – {count} ingredients on hand were skipped.}}",
+  "@addIngredientsSkippedOnHand": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sendPeerOfflineHint": "Not reachable right now – arrives when the app is opened there",
+  "sendDeliveredLater": "“{device}” is not reachable right now. The recipe will arrive as soon as the app is opened there.",
+  "sendQueuedOffline": "No connection right now. The recipe will be sent automatically as soon as you're back online.",
+  "@sendDeliveredLater": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "searchHasAll": "Has All",
+  "searchHasAny": "Has Any",
+  "recipeFilterTitle": "Filter",
+  "finderOtherFilters": "Other Filters",
+  "qfOpEquals": "equals",
+  "qfOpNotEquals": "does not equal",
+  "qfOpGreater": "is greater than",
+  "qfOpGreaterEq": "is greater than or equal to",
+  "qfOpLess": "is less than",
+  "qfOpLessEq": "is less than or equal to",
+  "qfOpNewerThan": "is newer than",
+  "qfOpOlderThan": "is older than",
+  "qfDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "filterResetAll": "Reset all filters",
+  "filterAny": "Any",
+  "filterOfflineIgnored": "Offline, the “Other Filters” can only be applied in their simple form.",
+  "@qfDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "linkedRecipesCount": "{count, plural, =0{No Linked Recipes} =1{One Linked Recipe} other{{count} Linked Recipes}}",
+  "@linkedRecipesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingReminderNotificationsOff": "Notifications are turned off for Mealie Recipes — without them the shopping reminder can't appear. Please allow notifications in the settings.",
+  "shoppingReminderInactiveHint": "The shopping reminder can't work right now: please set location access to “Always” and allow notifications.",
+  "bulkImportTitle": "Bulk URL Import",
+  "@bulkImportTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportDescription": "The Bulk recipe importer allows you to import multiple recipes at once by queueing the sites on the backend and running the task in the background. This can be useful when initially migrating to Mealie, or when you want to import a large number of recipes.",
+  "@bulkImportDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkAddTitle": "Bulk Add",
+  "@bulkAddTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportSetOrganizers": "Set Categories and Tags",
+  "@bulkImportSetOrganizers": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportStarted": "Bulk Import process has started",
+  "@bulkImportStarted": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportFailed": "Bulk import process has failed",
+  "@bulkImportFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportReports": "Bulk Imports",
+  "@bulkImportReports": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportUrlHint": "Recipe URL",
+  "@bulkImportUrlHint": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationsTitle": "Data Migrations",
+  "@migrationsTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationsDescription": "Recipes can be migrated from another supported application to Mealie. This is a great way to get started with Mealie. Moving data between Mealie instances, or restoring an earlier Mealie backup, is done with the backup and restore tools instead.",
+  "@migrationsDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationNew": "New Migration",
+  "@migrationNew": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationChooseType": "Choose Migration Type",
+  "@migrationChooseType": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "noFileSelected": "No File Selected",
+  "@noFileSelected": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationTagAll": "Tag all recipes with {tag} tag",
+  "@migrationTagAll": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "migrationPrevious": "Previous Migrations",
+  "@migrationPrevious": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationMealieDescription": "Mealie can import recipes from the Mealie application from a pre v1.0 release. Export your recipes from your old instance, and upload the zip file below. Note that only recipes can be imported from the export. This applies only to instances older than v1.0. A backup taken from v1.0 or later should be restored with the backup and restore tools.",
+  "@migrationMealieDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationChowdownDescription": "Mealie natively supports the chowdown repository format. Download the code repository as a .zip file and upload it below.",
+  "@migrationChowdownDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationCopyMeThatDescription": "Mealie can import recipes from Copy Me That. Export your recipes in HTML format, then upload the .zip below.",
+  "@migrationCopyMeThatDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationMyRecipeBoxDescription": "Mealie can import recipes from My Recipe Box. Export your recipes in CSV format, then upload the .csv file below.",
+  "@migrationMyRecipeBoxDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationNextcloudDescription": "Nextcloud recipes can be imported from a zip file that contains the data stored in Nextcloud. See the example folder structure below to ensure your recipes are able to be imported.",
+  "@migrationNextcloudDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationPaprikaDescription": "Mealie can import recipes from the Paprika application. Export your recipes from paprika, rename the export extension to .zip and upload it below.",
+  "@migrationPaprikaDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationPlanToEatDescription": "Mealie can import recipes from Plan to Eat. Upload a ZIP archive, CSV, or TXT file exported from Plan to Eat.",
+  "@migrationPlanToEatDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationRecipeKeeperDescription": "Mealie can import recipes from Recipe Keeper. Export your recipes in zip format, then upload the .zip file below.",
+  "@migrationRecipeKeeperDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationTandoorDescription": "Mealie can import recipes from Tandoor. Export your data in the \"Default\" format, then upload the .zip below.",
+  "@migrationTandoorDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationCooknDescription": "Mealie can import recipes from DVO Cook'n X3. Export a cookbook or menu in the \"Cook'n\" format, rename the export extension to .zip, then upload the .zip below.",
+  "@migrationCooknDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportTitle": "Report",
+  "@reportTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataTitle": "Recipe Data",
+  "@recipeDataTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataDescription": "Use this section to manage the data associated with your recipes. You can perform several bulk actions on your recipes including exporting, deleting, tagging, and assigning categories.",
+  "@recipeDataDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataTagTitle": "Tag Recipes",
+  "@recipeDataTagTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataCategorizeTitle": "Categorize Recipes",
+  "@recipeDataCategorizeTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataSettingsTitle": "Update Settings",
+  "@recipeDataSettingsTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataExportTitle": "Export Recipes",
+  "@recipeDataExportTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataDeleteTitle": "Delete Recipes",
+  "@recipeDataDeleteTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataExportConfirm": "The following recipes ({count}) will be exported.",
+  "@recipeDataExportConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeDataExportsTitle": "Data Exports",
+  "@recipeDataExportsTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataExportsDescription": "This section provides links to available exports that are ready to download. These exports do expire, so be sure to grab them while they're still available.",
+  "@recipeDataExportsDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataPurgeExports": "Purge Exports",
+  "@recipeDataPurgeExports": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataPurgeConfirm": "Are you sure you want to delete all export data?",
+  "@recipeDataPurgeConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionsTitle": "Recipe Actions",
+  "@recipeActionsTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionNew": "New Recipe Action",
+  "@recipeActionNew": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionEdit": "Edit Recipe Action",
+  "@recipeActionEdit": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionTypeLink": "Link",
+  "@recipeActionTypeLink": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionTypePost": "Post",
+  "@recipeActionTypePost": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhooksTitle": "Webhooks",
+  "@webhooksTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhooksDescription": "The webhooks defined below will be executed when a meal is defined for the day. At the scheduled time the webhooks will be sent with the data from the recipe that is scheduled for the day. Note that webhook execution is not exact. The webhooks are executed on a 5 minutes interval so the webhooks will be executed within 5 +/- minutes of the scheduled.",
+  "@webhooksDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhookName": "Webhook Name",
+  "@webhookName": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhookUrl": "Webhook URL",
+  "@webhookUrl": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifiersTitle": "Notifiers",
+  "@notifiersTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifiersDescription": "Set up email and push notifications that trigger on specific events.",
+  "@notifiersDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierNew": "New Notification",
+  "@notifierNew": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierDescription": "Mealie uses the Apprise library to generate notifications. They offer many options for services to use for notifications. Refer to their wiki for a comprehensive guide on how to create the URL for your service. If available, selecting the type of your notification may include extra features.",
+  "@notifierDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierAppriseUrl": "Apprise URL",
+  "@notifierAppriseUrl": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierAppriseUrlSkipped": "Apprise URL (skipped if blank)",
+  "@notifierAppriseUrlSkipped": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierAppriseUrlBlankHint": "Since Apprise URLs typically contain sensitive information, this field is left intentionally blank while editing. If you wish to update the URL, please enter the new one here, otherwise leave it blank to keep the current URL.",
+  "@notifierAppriseUrlBlankHint": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierEnable": "Enable Notifier",
+  "@notifierEnable": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierWhatEvents": "What events should this notifier subscribe to?",
+  "@notifierWhatEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierRecipeEvents": "Recipe Events",
+  "@notifierRecipeEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierUserEvents": "User Events",
+  "@notifierUserEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierMealplanEvents": "Meal Plan Events",
+  "@notifierMealplanEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierShoppingListEvents": "Shopping List Events",
+  "@notifierShoppingListEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierCookbookEvents": "Cookbook Events",
+  "@notifierCookbookEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierTagEvents": "Tag Events",
+  "@notifierTagEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierCategoryEvents": "Category Events",
+  "@notifierCategoryEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierLabelEvents": "Label Events",
+  "@notifierLabelEvents": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierUserSignup": "When a new user joins your group",
+  "@notifierUserSignup": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierCreate": "Create",
+  "@notifierCreate": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierUpdate": "Update",
+  "@notifierUpdate": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierDelete": "Delete",
+  "@notifierDelete": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierTestSent": "Test Message Sent",
+  "@notifierTestSent": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminTitle": "Admin Settings",
+  "@adminTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupsTitle": "Backups",
+  "@backupsTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupsDescription": "Backups are total snapshots of the database and data directory of the site. This includes all data and cannot be set to exclude subsets of data. You can think of this as a snapshot of Mealie at a specific time. These serve as a database agnostic way to export and import data, or back up the site to an external location.",
+  "@backupsDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupCreateHeading": "Create A Backup",
+  "@backupCreateHeading": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupCreated": "Backup created successfully",
+  "@backupCreated": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupCreateFailed": "Error Creating Backup. See Log File",
+  "@backupCreateFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupDelete": "Delete Backup",
+  "@backupDelete": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupDeleted": "Backup deleted",
+  "@backupDeleted": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupRestore": "Restore Backup",
+  "@backupRestore": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupRestoreDescription": "Restoring this backup will overwrite all the current data in your database and in the data directory and replace them with the contents of this backup. If the restoration is successful, you will be logged out.",
+  "@backupRestoreDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupCannotBeUndone": "This action cannot be undone - use with caution.",
+  "@backupCannotBeUndone": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupAcknowledge": "I understand that this action is irreversible, destructive and may cause data loss",
+  "@backupAcknowledge": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupRestoreSuccess": "Restore successful",
+  "@backupRestoreSuccess": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupRestoreFailed": "Restore failed. Check your server logs for more details",
+  "@backupRestoreFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceTitle": "Maintenance",
+  "@maintenanceTitle": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceSummary": "Summary",
+  "@maintenanceSummary": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceStorage": "Storage Details",
+  "@maintenanceStorage": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceDataDirSize": "Data Directory Size",
+  "@maintenanceDataDirSize": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanableDirs": "Cleanable Directories",
+  "@maintenanceCleanableDirs": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanableImages": "Cleanable Images",
+  "@maintenanceCleanableImages": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceTempDir": "Temporary Directory (.temp)",
+  "@maintenanceTempDir": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceBackupsDir": "Backups Directory (backups)",
+  "@maintenanceBackupsDir": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceGroupsDir": "Groups Directory (groups)",
+  "@maintenanceGroupsDir": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceRecipesDir": "Recipes Directory (recipes)",
+  "@maintenanceRecipesDir": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceUserDir": "User Directory (user)",
+  "@maintenanceUserDir": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanDirs": "Clean Directories",
+  "@maintenanceCleanDirs": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanDirsDescription": "Removes all the recipe folders that are not valid UUIDs",
+  "@maintenanceCleanDirsDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanTemp": "Clean Temporary Files",
+  "@maintenanceCleanTemp": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanTempDescription": "Removes all files and folders in the .temp directory",
+  "@maintenanceCleanTempDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanImages": "Clean Images",
+  "@maintenanceCleanImages": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceCleanImagesDescription": "Removes all the images that don't end with .webp",
+  "@maintenanceCleanImagesDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceActions": "Actions",
+  "@maintenanceActions": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminConfiguration": "Configuration",
+  "@adminConfiguration": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminAppVersion": "Application Version",
+  "@adminAppVersion": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminUpToDate": "Mealie is up to date",
+  "@adminUpToDate": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminVersionOutdated": "Your current version ({current}) does not match the latest release. Considering updating to the latest version ({latest}).",
+  "@adminVersionOutdated": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "latest": {
+        "type": "String"
+      }
+    }
+  },
+  "adminBaseUrl": "Server Side Base URL",
+  "@adminBaseUrl": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminBaseUrlOk": "Server Side URL does not match the default",
+  "@adminBaseUrlOk": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminBaseUrlError": "`BASE_URL` is still the default value on API Server. This will cause issues with notifications links generated on the server for emails, etc.",
+  "@adminBaseUrlError": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminAuthReady": "{provider} Ready",
+  "@adminAuthReady": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAuthNotReady": "{provider} Not Ready",
+  "@adminAuthNotReady": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAuthDisabled": "{provider} Disabled",
+  "@adminAuthDisabled": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAuthSuccessText": "Required {provider} variables are all set.",
+  "@adminAuthSuccessText": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAuthErrorText": "Not all {provider} values are configured. This can be ignored if you are not using {provider} Authentication.",
+  "@adminAuthErrorText": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAuthDisabledText": "To enable set {envVar} to true.",
+  "@adminAuthDisabledText": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "envVar": {
+        "type": "String"
+      }
+    }
+  },
+  "adminEmailStatus": "Email Configuration Status",
+  "@adminEmailStatus": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminEmailConfigured": "Email Configured",
+  "@adminEmailConfigured": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminNotReady": "Not Ready - Check Environmental Variables",
+  "@adminNotReady": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminSucceeded": "Succeeded",
+  "@adminSucceeded": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminFailed": "Failed",
+  "@adminFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminSiteStatistics": "Site Statistics",
+  "@adminSiteStatistics": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminUncategorized": "Uncategorized Recipes",
+  "@adminUncategorized": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminUntagged": "Untagged Recipes",
+  "@adminUntagged": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminGeneralAbout": "General About",
+  "@adminGeneralAbout": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminVersion": "Version",
+  "@adminVersion": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminBuild": "Build",
+  "@adminBuild": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminApplicationMode": "Application Mode",
+  "@adminApplicationMode": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminProduction": "Production",
+  "@adminProduction": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminDevelopment": "Development",
+  "@adminDevelopment": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminDemoStatus": "Demo Status",
+  "@adminDemoStatus": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminDemo": "Demo",
+  "@adminDemo": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminNotDemo": "Not Demo",
+  "@adminNotDemo": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminApiPort": "API Port",
+  "@adminApiPort": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminApiDocs": "API Docs",
+  "@adminApiDocs": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminDatabaseType": "Database Type",
+  "@adminDatabaseType": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminDatabaseUrl": "Database URL",
+  "@adminDatabaseUrl": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminDefaultGroup": "Default Group",
+  "@adminDefaultGroup": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminDefaultHousehold": "Default Household",
+  "@adminDefaultHousehold": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminScraperVersion": "Recipe Scraper Version",
+  "@adminScraperVersion": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminStatUsers": "Users",
+  "@adminStatUsers": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminStatHouseholds": "Households",
+  "@adminStatHouseholds": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminStatGroups": "Groups",
+  "@adminStatGroups": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDuplicate": "Duplicate recipe",
+  "@recipeDuplicate": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDuplicateAction": "Duplicate",
+  "@recipeDuplicateAction": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeShareLink": "Share Recipe",
+  "@recipeShareLink": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeShareExpiration": "Expiration Date",
+  "@recipeShareExpiration": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeShareCopied": "Recipe link copied to clipboard",
+  "@recipeShareCopied": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "enabledLabel": "Enabled",
+  "@enabledLabel": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "disabledLabel": "Disabled",
+  "@disabledLabel": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "testAction": "Test",
+  "@testAction": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "yesLabel": "Yes",
+  "@yesLabel": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "noLabel": "No",
+  "@noLabel": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "downloadAction": "Download",
+  "@downloadAction": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupUpload": "Upload",
+  "@backupUpload": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "zipImportButton": "Import from Zip",
+  "@zipImportButton": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "zipImportDescription": "Import a single recipe that was exported from another Mealie instance.",
+  "@zipImportDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportStatus": "Status",
+  "@reportStatus": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportDate": "Date",
+  "@reportDate": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionTitleLabel": "Title",
+  "@recipeActionTitleLabel": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "clearAll": "Clear",
+  "@clearAll": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataSettingsExplanation": "Settings chosen here, excluding the locked option, will be applied to all selected recipes.",
+  "@recipeDataSettingsExplanation": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminAllowSignup": "Allow sign-up",
+  "@adminAllowSignup": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminAllowPasswordLogin": "Allow password login",
+  "@adminAllowPasswordLogin": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminEmailInvalid": "Please enter a valid email address.",
+  "@adminEmailInvalid": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminEmailTestResult": "Email test: {result}",
+  "@adminEmailTestResult": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSendTestEmail": "Send test email",
+  "@adminSendTestEmail": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "adminTestEmailAddress": "Recipient",
+  "@adminTestEmailAddress": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupCreate": "Create backup",
+  "@backupCreate": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupDeleteConfirm": "Delete the backup \"{name}\"?",
+  "@backupDeleteConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupPostgresNote": "If you use PostgreSQL, please read the backup/restore process in the Mealie documentation before restoring.",
+  "@backupPostgresNote": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupUploaded": "Backup uploaded",
+  "@backupUploaded": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "backupsEmpty": "No backups yet.",
+  "@backupsEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportAddRow": "Add URL",
+  "@bulkImportAddRow": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "bulkImportStart": "Start import",
+  "@bulkImportStart": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "chooseFileButton": "Choose file",
+  "@chooseFileButton": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "deselectAllAction": "Deselect all",
+  "@deselectAllAction": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "downloadFailed": "Download failed",
+  "@downloadFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "fileSaved": "File saved",
+  "@fileSaved": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "loadFailed": "Could not load",
+  "@loadFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceActionsWarning": "Maintenance actions are destructive and should be used with caution. Performing any of these actions is irreversible.",
+  "@maintenanceActionsWarning": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceConfirm": "This action is destructive and cannot be undone. Continue?",
+  "@maintenanceConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceDone": "Done",
+  "@maintenanceDone": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceFailed": "Maintenance action failed",
+  "@maintenanceFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "maintenanceRun": "Run",
+  "@maintenanceRun": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationFailed": "Migration failed",
+  "@migrationFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationStart": "Start migration",
+  "@migrationStart": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "migrationStarted": "Migration finished — see the report below.",
+  "@migrationStarted": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "moreImportOptions": "More import options",
+  "@moreImportOptions": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierDeleteConfirm": "Delete the notifier \"{name}\"?",
+  "@notifierDeleteConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifierEdit": "Edit notifier",
+  "@notifierEdit": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifierEventCount": "Events: {count}",
+  "@notifierEventCount": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifierTestFailed": "Test message could not be sent",
+  "@notifierTestFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "notifiersEmpty": "No notifiers yet.",
+  "@notifiersEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionDeleteConfirm": "Delete the recipe action \"{name}\"?",
+  "@recipeActionDeleteConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeActionFailed": "Recipe action failed",
+  "@recipeActionFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionSent": "Recipe sent",
+  "@recipeActionSent": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionUrlHint": "Placeholders",
+  "@recipeActionUrlHint": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionsDescription": "Recipe actions appear in the menu of every recipe. \"Link\" opens the URL, \"Post\" lets the Mealie server send the recipe to the URL.",
+  "@recipeActionsDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeActionsEmpty": "No recipe actions yet.",
+  "@recipeActionsEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataDeleteConfirm": "Delete the selected recipes ({count})? This action cannot be undone.",
+  "@recipeDataDeleteConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeDataDeleteForbidden": "You may not delete {count} of the selected recipes (only their creator or an admin can).",
+  "@recipeDataDeleteForbidden": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeDataDeleted": "Recipes deleted: {count}",
+  "@recipeDataDeleted": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeDataExportAction": "Export",
+  "@recipeDataExportAction": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataExportDone": "Export created — download it under Data Exports.",
+  "@recipeDataExportDone": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataExportExpires": "expires {date}",
+  "@recipeDataExportExpires": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeDataExportFailed": "Export failed",
+  "@recipeDataExportFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataExportsEmpty": "No exports available.",
+  "@recipeDataExportsEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeDataUpdated": "Recipes updated: {count}",
+  "@recipeDataUpdated": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeDuplicated": "Recipe duplicated",
+  "@recipeDuplicated": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeExportJson": "Export as JSON",
+  "@recipeExportJson": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeExportZip": "Export as ZIP (with image)",
+  "@recipeExportZip": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeShareCreate": "Create link",
+  "@recipeShareCreate": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeShareDescription": "Anyone with the link can view this recipe in the browser — without an account — until it expires.",
+  "@recipeShareDescription": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeShareEmpty": "No share links yet.",
+  "@recipeShareEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "recipeShareExpiresAt": "Expires {date}",
+  "@recipeShareExpiresAt": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeWebToolsMenu": "Duplicate, share link & more",
+  "@recipeWebToolsMenu": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reload": "Reload",
+  "@reload": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportDeleteConfirm": "Delete this report?",
+  "@reportDeleteConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportEntries": "Entries",
+  "@reportEntries": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportFailedEntries": "Failed",
+  "@reportFailedEntries": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportOnlyFailed": "Show only failed entries",
+  "@reportOnlyFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportStatusFailure": "Failure",
+  "@reportStatusFailure": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportStatusInProgress": "In progress",
+  "@reportStatusInProgress": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportStatusPartial": "Partial",
+  "@reportStatusPartial": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportStatusSuccess": "Success",
+  "@reportStatusSuccess": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "reportsEmpty": "No reports yet.",
+  "@reportsEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "uploadFailed": "Upload failed",
+  "@uploadFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhookDeleteConfirm": "Delete the webhook \"{name}\"?",
+  "@webhookDeleteConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop)",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "webhookEdit": "Edit webhook",
+  "@webhookEdit": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhookNew": "New webhook",
+  "@webhookNew": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhookTestFailed": "Test could not be started",
+  "@webhookTestFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhookTestSent": "Test webhook triggered",
+  "@webhookTestSent": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhookTime": "Time (local)",
+  "@webhookTime": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "webhooksEmpty": "No webhooks yet.",
+  "@webhooksEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "zipImportFailed": "ZIP import failed",
+  "@zipImportFailed": {
+    "description": "Webapp-Werkzeuge (Desktop)"
+  },
+  "aiProvidersTitle": "AI Providers",
+  "@aiProvidersTitle": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProvidersDescription": "Configure AI providers to enable AI-powered features, such as enhanced ingredient parsing, creating recipes from videos, and more!",
+  "@aiProvidersDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderSettingsTitle": "AI Provider Settings",
+  "@aiProviderSettingsTitle": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProvidersList": "Providers",
+  "@aiProvidersList": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderCreate": "Create Provider",
+  "@aiProviderCreate": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderEdit": "Edit Provider",
+  "@aiProviderEdit": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiDefaultProvider": "Default Provider",
+  "@aiDefaultProvider": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiDefaultProviderDescription": "Required to enable AI features",
+  "@aiDefaultProviderDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiAudioProvider": "Audio Provider",
+  "@aiAudioProvider": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiAudioProviderDescription": "Enables audio transcription features, such as creating recipes from videos",
+  "@aiAudioProviderDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiImageProvider": "Image Provider",
+  "@aiImageProvider": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiImageProviderDescription": "Enables image recognition features, such as creating recipes from images",
+  "@aiImageProviderDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderName": "Provider Name",
+  "@aiProviderName": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiApiKey": "API Key",
+  "@aiApiKey": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiApiKeyCreateDescription": "Your provider's API key for authentication. If your service (e.g. Ollama) doesn't use an API key, you still have to put something here.",
+  "@aiApiKeyCreateDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiApiKeyEditDescription": "Leave this blank unless you want to change it.",
+  "@aiApiKeyEditDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiBaseUrl": "Base URL",
+  "@aiBaseUrl": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiBaseUrlDescription": "If you're using OpenAI leave this blank. Must be an OpenAI-compatible endpoint (e.g. \"http://localhost:11434/v1\").",
+  "@aiBaseUrlDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiModel": "Model",
+  "@aiModel": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiModelDescription": "Which model your AI provider should use (e.g. \"gpt-5\").",
+  "@aiModelDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiTimeout": "Request Timeout (seconds)",
+  "@aiTimeout": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderCreated": "Provider created",
+  "@aiProviderCreated": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderUpdated": "Provider updated",
+  "@aiProviderUpdated": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderDeleted": "Provider deleted",
+  "@aiProviderDeleted": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderCreateFailed": "Failed to create provider",
+  "@aiProviderCreateFailed": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderUpdateFailed": "Failed to update provider",
+  "@aiProviderUpdateFailed": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderDeleteFailed": "Failed to delete provider",
+  "@aiProviderDeleteFailed": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiRequestHeaders": "Request Headers",
+  "@aiRequestHeaders": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiRequestParams": "Request Parameters",
+  "@aiRequestParams": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiNoDefaultWarning": "You have not set a default provider, so AI features are disabled",
+  "@aiNoDefaultWarning": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiTestConnection": "Test Connection",
+  "@aiTestConnection": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiTestSucceeded": "Connection successful",
+  "@aiTestSucceeded": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiTestFailed": "Connection failed",
+  "@aiTestFailed": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiSupportsImages": "Supports images",
+  "@aiSupportsImages": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiTextOnly": "Text-only, can't be your image provider",
+  "@aiTextOnly": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugAiTitle": "Debug AI Providers",
+  "@debugAiTitle": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugAiDescription": "Use this page to debug AI providers. You can test your AI connection and see the results here. If you have image services enabled, you can also provide an image.",
+  "@debugAiDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugParserTitle": "Parser",
+  "@debugParserTitle": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugParserDescription": "Mealie uses Conditional Random Fields (CRFs) for parsing and processing ingredients. The model used for ingredients is based off a data set of over 100,000 ingredients from a dataset compiled by the New York Times. Note that as the model is trained in English only, you may have varied results when using the model in other languages. This page is a playground for testing the model.",
+  "@debugParserDescription": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugIngredientText": "Ingredient Text",
+  "@debugIngredientText": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugTryExample": "Try an example",
+  "@debugTryExample": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugAverageConfidence": "{value} Confident",
+  "@debugAverageConfidence": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "debugRunTest": "Run Test",
+  "@debugRunTest": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugQuantity": "Quantity",
+  "@debugQuantity": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugUnit": "Unit",
+  "@debugUnit": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugFood": "Food",
+  "@debugFood": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugNote": "Comment",
+  "@debugNote": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugGroup": "Group",
+  "@debugGroup": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderNone": "None",
+  "@aiProviderNone": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiProviderDeleteConfirm": "Delete the provider \"{name}\"?",
+  "@aiProviderDeleteConfirm": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiProvidersEmpty": "No AI providers yet.",
+  "@aiProvidersEmpty": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiAdvanced": "Advanced",
+  "@aiAdvanced": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiKeyLabel": "Name",
+  "@aiKeyLabel": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "aiValueLabel": "Value",
+  "@aiValueLabel": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugTitle": "Debug",
+  "@debugTitle": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugParse": "Parse",
+  "@debugParse": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugParseFailed": "Ingredient could not be parsed",
+  "@debugParseFailed": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugChooseImage": "Choose image",
+  "@debugChooseImage": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "debugNoImage": "No image (optional)",
+  "@debugNoImage": {
+    "description": "Webapp-Werkzeuge (Desktop): KI-Anbieter / Debug"
+  },
+  "updateTitle": "Check for updates",
+  "@updateTitle": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateInstalledVersion": "Installed version",
+  "@updateInstalledVersion": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateLastCheck": "Last checked",
+  "@updateLastCheck": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateCheckNow": "Check now",
+  "@updateCheckNow": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateChecking": "Checking for updates…",
+  "@updateChecking": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateUpToDate": "Mealie Recipes is up to date.",
+  "@updateUpToDate": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateAvailable": "Version {version} is available",
+  "@updateAvailable": {
+    "description": "Update-Prüfer (Desktop)",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateAvailableDescription": "A new version of Mealie Recipes is available. Nothing is installed until you start the update yourself.",
+  "@updateAvailableDescription": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateShow": "Show update",
+  "@updateShow": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateLater": "Later",
+  "@updateLater": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateDownloading": "Downloading … {percent} %",
+  "@updateDownloading": {
+    "description": "Update-Prüfer (Desktop)",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "updateReady": "Version {version} is ready to install",
+  "@updateReady": {
+    "description": "Update-Prüfer (Desktop)",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateInstalling": "Installing — the app restarts automatically …",
+  "@updateInstalling": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateManual": "The update could not be installed automatically. The disk image has been opened: drag Mealie Recipes into Applications.",
+  "@updateManual": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateFailed": "Update failed",
+  "@updateFailed": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateInstallNow": "Download & install",
+  "@updateInstallNow": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateRestartNow": "Install & restart",
+  "@updateRestartNow": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateAutoTitle": "Check for updates on start",
+  "@updateAutoTitle": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateAutoDescription": "Only checks and notifies you — you always start the installation yourself.",
+  "@updateAutoDescription": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateNoNotes": "No release notes.",
+  "@updateNoNotes": {
+    "description": "Update-Prüfer (Desktop)"
+  },
+  "updateSourceHint": "Updates come from the GitHub releases of Mealie Recipes and are only installed if they are signed by the developer (macOS).",
+  "@updateSourceHint": {
+    "description": "Update-Prüfer (Desktop)"
+  }
+}

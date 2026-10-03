@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Plano alimentar</string>
+    <string name="widget_shopping_label">Lista de compras</string>
+    <string name="widget_daily_recipe_label">Receita do dia</string>
+    <string name="widget_mealplan_description">Mostra o plano alimentar de hoje e amanhã.</string>
+    <string name="widget_shopping_description">Mostra os itens em aberto da lista de compras.</string>
+    <string name="widget_daily_recipe_description">Mostra uma nova receita aleatória todos os dias.</string>
+</resources>

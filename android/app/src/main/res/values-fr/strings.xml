@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Plan de repas</string>
+    <string name="widget_shopping_label">Liste de courses</string>
+    <string name="widget_daily_recipe_label">Recette du jour</string>
+    <string name="widget_mealplan_description">Affiche le plan de repas d\'aujourd\'hui et de demain.</string>
+    <string name="widget_shopping_description">Affiche les articles restants de la liste de courses.</string>
+    <string name="widget_daily_recipe_description">Affiche chaque jour une nouvelle recette au hasard.</string>
+</resources>

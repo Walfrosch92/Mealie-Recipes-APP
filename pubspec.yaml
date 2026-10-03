@@ -1,0 +1,206 @@
+name: mealie_recipes
+description: Mealie Recipes 3rd Party App for Android and iOS
+publish_to: 'none'
+version: 1.27.10+2
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Navigation
+  go_router: ^14.3.0
+
+  # HTTP
+  dio: ^5.4.3+1
+
+  # Secure Storage + Preferences
+  # Bleibt bewusst auf 9.x: 11.x verlangt Android compileSdk 37 — höher als
+  # das, wofür die aktuell gepinnte Android-Gradle-Plugin-Version laut eigener
+  # Warnung getestet ist ("tested up to compile SDK version 36.0"). Zusammen
+  # mit dem sensiblen Inhalt (API-Token) kein Kompromiss, den man nebenbei
+  # mitziehen sollte.
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.2.3
+
+  # Image Caching (replaces Kingfisher)
+  cached_network_image: ^3.3.1
+
+  # Local Notifications (replaces UNUserNotificationCenter)
+  flutter_local_notifications: ^17.2.2
+
+  # Audio (replaces AVAudioPlayer)
+  just_audio: ^0.10.6
+
+  # Biometric Auth (replaces LocalAuthentication)
+  local_auth: ^3.0.2
+
+  # Keep-screen-on: in-house MethodChannel (ios/Runner/WakeLockPlugin.swift
+  # + android/.../MainActivity.kt), Dart wrapper at
+  # lib/core/services/wake_lock.dart. Dropped wakelock_plus because its iOS
+  # umbrella headers fail Xcode 16's strict module verifier on every build.
+
+  # Foreground Service Android (replaces Live Activity)
+  flutter_foreground_task: ^10.0.0
+
+  # mDNS for P2P discovery (replaces MultipeerConnectivity)
+  # Bleibt bewusst auf 5.x: 7.x hat das Discovery-Event-Modell (.ready,
+  # BonsoirDiscoveryEventType, ResolvedBonsoirService) komplett umgebaut —
+  # eine Migration würde die hart erarbeitete Cook-Friends/Recipe-Send-mDNS-
+  # Logik (Cross-Platform-Discovery, TXT-Casing) antasten, ohne dass sich das
+  # hier ohne echte Geräte gegentesten ließe.
+  bonsoir: ^5.1.2
+
+  # JSON serialization
+  json_annotation: ^4.9.0
+
+  # Localization
+  intl: ^0.20.2
+
+  # Utilities
+  collection: ^1.18.0
+  path_provider: ^2.1.3
+
+  # Image Picker (for recipe upload via camera/gallery)
+  image_picker: ^1.1.2
+
+  # File Picker (for PDF upload — mirrors iOS RecipeUploadView)
+  # Bleibt auf 8.x: hängt über windows_file_picker an derselben win32-
+  # Kollisionskette wie device_info_plus/package_info_plus/share_plus (siehe
+  # oben) — Ursache ist letztlich das bewusst auf 9.x gehaltene
+  # flutter_secure_storage.
+  file_picker: ^8.1.2
+
+  # PDF → image rendering (mirrors iOS PDFKit renderPDFToImage)
+  pdfx: ^2.6.0
+
+  # PDF-ERZEUGUNG (Rezept-Export als eigenständige, teilbare PDF-Datei —
+  # kein Swift-Original, neue Funktion). Reine Dart-Bibliothek, kein
+  # natives Setup nötig; keine Flutter-SDK/Core-Alternative zum Erzeugen
+  # von PDFs vorhanden. share_plus (unten) übernimmt den Versand.
+  pdf: ^3.11.1
+
+  # Swipe actions (edit/delete) — mirrors iOS swipeActions
+  flutter_slidable: ^4.0.3
+
+  # Google Sign-In + Tasks API (Android equivalent of iOS Reminders import)
+  # Bleibt bewusst auf 6.x: google_sign_in 7.x ersetzt die imperative
+  # GoogleSignIn(scopes:).signIn()-API durch ein komplett neues
+  # Authentication-/Authorization-Client-Modell (kein .signIn()/
+  # .signInSilently() mehr, Access-Token-Beschaffung für die Tasks-API läuft
+  # jetzt separat über einen Authorization-Client) — eine echte Neuimplemen-
+  # tierung des Google-Tasks-Imports, nicht ohne Live-Test des
+  # OAuth-Consent-Flows zu verantworten.
+  google_sign_in: ^6.2.2
+  googleapis: ^13.2.0
+  http: ^1.2.2
+
+  # Device info (for P2P device naming)
+  # Bleibt auf 10.x: hängt über die win32-Windows-Implementierung an derselben
+  # Kollisionskette wie package_info_plus (siehe dort) — Ursache ist
+  # letztlich das bewusst auf 9.x gehaltene flutter_secure_storage.
+  device_info_plus: ^10.1.0
+
+  # Deep-Link-Empfang von Widget-Taps und Custom-Scheme-URLs
+  # (`mealierecipes://recipe?id=…`, `://mealplan`, `://shopping`).
+  # Flutter SDK liefert kein eingebautes URI-Routing, daher dieses Paket.
+  app_links: ^7.0.0
+
+  # Externe Links öffnen (Markdown-Links in Rezeptschritten, mailto: an den
+  # Support)
+  url_launcher: ^6.3.1
+
+  # System-Share-Sheet — hängt die Logs als .txt an die Support-Mail
+  # (mailto: kann keine Dateien transportieren).
+  # Bleibt auf 10.x: 13.x zieht win32 ^6.0.1, was mit flutter_secure_storage
+  # 9.x (bewusst gehalten, siehe oben) kollidiert — beide Pakete gemeinsam
+  # hochzuziehen wäre kein "risikoarmes" Upgrade mehr.
+  share_plus: ^10.1.4
+
+  # App-Version für den Diagnose-Kopf der Support-Mail (liest Info.plist bzw.
+  # PackageManager — kein Drift gegenüber pubspec/Xcode).
+  # Bleibt auf 8.x: 10.x verlangt win32 ^6.0.1, was mit dem (bewusst
+  # gehaltenen) share_plus 10.x kollidiert (win32 ^5.5.3) — beide zusammen
+  # hochzuziehen bräuchte wieder share_plus 13.x mit seiner eigenen
+  # win32/flutter_secure_storage-Kollision (siehe oben).
+  package_info_plus: ^8.1.2
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+  # Standort (Issue #29 "Erinnere mich zum Einkaufen"): Positionsabfrage +
+  # Berechtigungen für die geofence-basierte Einkaufserinnerung. Das
+  # eigentliche Geofencing (Benachrichtigung bei komplett geschlossener App)
+  # läuft nativ (CLLocationManager/GeofencingClient, siehe
+  # ShoppingReminderBridge) — geolocator übernimmt hier nur "aktuellen
+  # Standort abfragen" + den plattformübergreifenden Always/WhenInUse-
+  # Permission-Flow für die Settings-UI.
+  geolocator: ^14.0.3
+  # Adresssuche → Koordinaten, kostenlos über den nativen iOS/Android-
+  # Geocoder (kein API-Key/Abrechnung wie bei Google Maps nötig).
+  geocoding: ^5.0.0
+
+# path_provider_foundation 2.6.0 zog `objective_c` (+ffi) als FFI-Brücke rein.
+# Das daraus gebaute `objective_c.framework` liefert beim Archive kein dSYM und
+# App Store Connect lehnt den Upload ab:
+#   "The archive did not include a dSYM for the objective_c.framework …"
+# 2.5.1 ist die letzte Version OHNE objective_c — funktional identisch für
+# path_provider, entfernt das Framework und damit den dSYM-Fehler komplett.
+  timezone: any
+dependency_overrides:
+  path_provider_foundation: 2.5.1
+  # geolocator ^14.x zieht geolocator_linux ^0.2.6, das wiederum
+  # package_info_plus ^10.0.0 verlangt — kollidiert mit dem hier bewusst auf
+  # 8.x gehaltenen package_info_plus (siehe Kommentar dort, win32/
+  # flutter_secure_storage-Kollisionskette). Linux ist für diese App (Android
+  # + iOS) kein Zielplattform — 0.2.1 (package_info_plus ^8.0.0,
+  # geolocator_platform_interface ^4.1.0, kompatibel zu den anderen
+  # geolocator-Plattform-Implementierungen) reicht als reine
+  # Graph-Auflösungshilfe, ohne echten Funktionsverlust.
+  geolocator_linux: 0.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.9
+  json_serializable: ^6.8.0
+  riverpod_generator: ^2.4.0
+  flutter_launcher_icons: ^0.14.1
+
+# Android launcher icon generation (run: dart run flutter_launcher_icons)
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: false
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_icon.png"
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/audio/
+    - assets/images/
+    - assets/changelog/
+
+  fonts:
+    # Variable fonts → ein TTF deckt alle Gewichte ab; Flutter mappt
+    # FontWeight auf die wght-Achse. Inter = Fließtext, Plus Jakarta Sans =
+    # Headlines (Premium-Redesign).
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Variable.ttf

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Standard = Englisch (unbekannte Systemsprachen). Deutsch in values-de.
+         Quelle: dieselbe Tabelle wie WidgetL10n (iOS + Android). -->
+    <string name="widget_mealplan_label">Meal Plan</string>
+    <string name="widget_shopping_label">Shopping List</string>
+    <string name="widget_daily_recipe_label">Recipe of the Day</string>
+    <string name="widget_mealplan_description">Shows the meal plan for today and tomorrow.</string>
+    <string name="widget_shopping_description">Shows open items on your shopping list.</string>
+    <string name="widget_daily_recipe_description">Shows a new random recipe every day.</string>
+</resources>

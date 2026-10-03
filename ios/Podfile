@@ -1,0 +1,114 @@
+platform :ios, '15.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      # Silence ~20 "deployment target is set to 9.0/10.0, but Xcode requires
+      # 12.0+" warnings from older pods (AppAuth, SDWebImage, DKPhotoGallery, …).
+      # Forces every pod to iOS 15.0 — Xcode 27 rejects anything below 15.0
+      # as a hard "Target Integrity" error (not just a warning).
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+
+      # Force every Pod target to emit a dSYM in Release/Profile so that
+      # App Store Connect doesn't reject the upload with
+      #   "The archive did not include a dSYM for ... .framework"
+      # (most recently objective_c.framework via Dart FFI / ffigen-generated
+      # pods). The default for Release is already 'dwarf-with-dsym' for the
+      # Runner target itself, but some pods ship with just 'dwarf' baked in.
+      if config.name == 'Release' || config.name == 'Profile'
+        config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+        config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+      end
+
+      # Xcode-16 Module-Verifier komplett abschalten — er baut jedes
+      # Plugin-Modul ISOLIERT (ohne Flutter-Header-Search-Paths) und scheitert
+      # daher an jedem Plugin, dessen Umbrella-Header `Flutter/Flutter.h`
+      # quoted importiert (flutter_local_notifications, sqflite_darwin,
+      # permission_handler_apple …):
+      #   "double-quoted include … expected angle-bracketed"
+      #   "'Flutter/Flutter.h' file not found" → "could not build module"
+      #
+      # Diese Einstellungen INLINE setzen (nicht nur im at_exit-Skript): das
+      # Skript läuft via `system("ruby", …)` evtl. mit einem ANDEREN Ruby als
+      # CocoaPods, sodass `require "xcodeproj"` fehlschlägt und der Verifier
+      # aktiv bleibt. Inline läuft im CocoaPods-Ruby und greift zuverlässig.
+      config.build_settings['ENABLE_MODULE_VERIFIER'] = 'NO'
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+
+      # Warnungen aus Third-Party-Pods/Plugins unterdrücken. Deren Quellcode
+      # liegt in ios/Pods bzw. ~/.pub-cache und wird bei jedem pod install /
+      # pub get überschrieben — lässt sich also nicht dauerhaft patchen.
+      # Deprecations etc. der Abhängigkeiten sollen den Build nicht zumüllen.
+      config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
+      config.build_settings['SWIFT_SUPPRESS_WARNINGS'] = 'YES'
+    end
+  end
+
+  # Patch the saved Pods.xcodeproj to disable Xcode-16's module verifier on
+  # JEDEM Target. Die Inline-build_settings oben werden von CocoaPods für viele
+  # Targets nach dem Hook wieder auf YES gesetzt (Default in neueren CocoaPods)
+  # — daher MUSS das nach `installer.pods_project.save` auf dem GESPEICHERTEN
+  # Projekt passieren. `at_exit` feuert nach dem Save.
+  #
+  # WICHTIG: direkt in CocoaPods' eigenem Ruby ausführen (xcodeproj ist hier
+  # schon geladen) statt via `system("ruby", …)`. Der Subprozess nutzte ggf.
+  # ein Ruby OHNE xcodeproj-Gem (z. B. unter `flutter build`), wodurch das
+  # Skript still fehlschlug und der Verifier aktiv blieb (sqflite_darwin etc.).
+  at_exit do
+    require 'xcodeproj'
+    pods_proj = File.expand_path(File.join('Pods', 'Pods.xcodeproj'), __dir__)
+    next unless File.exist?(pods_proj)
+    begin
+      proj = Xcodeproj::Project.open(pods_proj)
+      configs = proj.build_configurations +
+                proj.targets.flat_map(&:build_configurations)
+      configs.each do |c|
+        c.build_settings['ENABLE_MODULE_VERIFIER'] = 'NO'
+        c.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+        # Third-Party-Pod-Warnungen unterdrücken (siehe inline-Kommentar oben).
+        c.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
+        c.build_settings['SWIFT_SUPPRESS_WARNINGS'] = 'YES'
+      end
+      proj.save
+      Pod::UI.puts "[module-verifier] disabled on #{configs.size} configs" rescue nil
+    rescue => e
+      warn "[module-verifier] patch failed: #{e.message}"
+    end
+  end
+end

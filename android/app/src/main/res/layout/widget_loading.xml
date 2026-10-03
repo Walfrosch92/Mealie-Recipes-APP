@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Initial- + Preview-Layout für alle Glance-AppWidgets.
+
+    Glance ersetzt dieses RemoteViews-Layout sofort beim ersten Bind durch
+    den Compose-Render-Output, aber Android braucht ein klassisches XML
+    als Platzhalter für die Widget-Auswahlliste + den ersten Frame.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:padding="12dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Mealie"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+</FrameLayout>

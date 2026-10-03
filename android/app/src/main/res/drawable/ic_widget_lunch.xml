@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pendant zu SF Symbol `fork.knife` — Besteck. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M8.1,13.34L10.93,10.51L3.91,3.5C2.35,5.06 2.35,7.59 3.91,9.16L8.1,13.34ZM14.88,11.53C16.41,12.24 18.56,11.74 20.15,10.15C22.06,8.24 22.43,5.5 20.96,4.03C19.5,2.57 16.76,2.94 14.84,4.85C13.25,6.44 12.75,8.59 13.46,10.12L3.7,19.88L5.12,21.3L12,14.41L18.88,21.3L20.3,19.88L13.41,13L14.88,11.53Z" />
+</vector>

@@ -1,0 +1,73 @@
+# ===========================================================================
+# Mealie Recipes — was NICHT ins GitHub-Repo gehört
+# (Unterordner android/ ios/ macos/ windows/ haben zusätzlich eigene
+# .gitignore-Dateien für Pods, Gradle, generierte Plattform-Dateien.)
+# ===========================================================================
+
+# --- Signierung & Geheimnisse (NIE veröffentlichen!) -----------------------
+android/key.properties
+android/keystore/
+*.jks
+*.keystore
+*.p12
+*.p8
+*.pem
+*.key
+*.mobileprovision
+*.provisionprofile
+*.cer
+.env
+.env.*
+google-services.json
+GoogleService-Info.plist
+client_secret*.json
+
+# --- Build-Ausgaben (inkl. fertiger DMG / Windows-Installer) ---------------
+/build/
+**/build/
+
+# --- Flutter / Dart (wird automatisch neu erzeugt) --------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+coverage/
+*.log
+
+# --- Lokale Maschinen-Konfiguration ----------------------------------------
+local.properties
+.gradle/
+.cxx/
+.externalNativeBuild
+/captures
+
+# --- IDE / Editor -----------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*~
+
+# --- macOS / Windows Systemdateien ------------------------------------------
+.DS_Store
+**/.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Persönliche Arbeitsdateien --------------------------------------------
+# Lokale Claude-Code-Einstellungen (enthalten lokale Pfade).
+.claude/
+# Internes Änderungsprotokoll (nur lokal).
+AENDERUNGEN_*.md
+
+# --- Automatische Tests (nur für die Entwicklung, bleiben lokal) -----------
+/test/
+
+# --- Entwickler-Notizen / Einrichtungs-Dateien (bleiben lokal) -------------
+/cloudkit/
+/ios/WATCH_SETUP.md
+/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md

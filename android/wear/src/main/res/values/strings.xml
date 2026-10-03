@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Markenname — bleibt bewusst in allen Sprachen gleich (siehe Phone-App-
+         Konvention: „Mealie Recipes" wird nie übersetzt). -->
+    <string name="app_name">Mealie Timer</string>
+    <!-- Nur für das System-„Kachel hinzufügen"-Raster (Tile-Picker) — das läuft
+         über die ECHTE Systemsprache der Uhr (Standard-Android-
+         Ressourcenauflösung), anders als der Rest der UI-Texte. Die deckt
+         WearStrings ab (App-Sprache, unabhängig von der Systemsprache — siehe
+         WearStrings.kt). -->
+    <string name="shopping_tile_label">Einkaufsliste</string>
+</resources>

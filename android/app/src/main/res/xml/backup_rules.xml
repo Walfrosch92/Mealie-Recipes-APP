@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android ≤ 11: Auto-Backup. Rezept-Cache (MealieCache/) und
+     Offline-Rezeptbilder (MealieImages/) liegen in
+     getApplicationSupportDirectory = files/, sind jederzeit neu ladbar und
+     können bei großen Bibliotheken das 25-MB-Backup-Kontingent sprengen — dann
+     scheitert die Sicherung der GANZEN App (inkl. Einstellungen). -->
+<full-backup-content>
+    <exclude domain="file" path="MealieCache/" />
+    <exclude domain="file" path="MealieImages/" />
+</full-backup-content>

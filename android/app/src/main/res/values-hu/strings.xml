@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Étkezési terv</string>
+    <string name="widget_shopping_label">Bevásárlólista</string>
+    <string name="widget_daily_recipe_label">A nap receptje</string>
+    <string name="widget_mealplan_description">Megjeleníti a mai és holnapi étkezési tervet.</string>
+    <string name="widget_shopping_description">Megjeleníti a bevásárlólista nyitott tételeit.</string>
+    <string name="widget_daily_recipe_description">Minden nap egy új véletlenszerű receptet mutat.</string>
+</resources>

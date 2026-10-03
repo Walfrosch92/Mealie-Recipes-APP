@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Jedilnik</string>
+    <string name="widget_shopping_label">Nakupovalni seznam</string>
+    <string name="widget_daily_recipe_label">Recept dneva</string>
+    <string name="widget_mealplan_description">Prikaže jedilnik za danes in jutri.</string>
+    <string name="widget_shopping_description">Prikaže odprte artikle nakupovalnega seznama.</string>
+    <string name="widget_daily_recipe_description">Vsak dan prikaže nov naključen recept.</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Maaltijdplan</string>
+    <string name="widget_shopping_label">Boodschappenlijst</string>
+    <string name="widget_daily_recipe_label">Recept van de dag</string>
+    <string name="widget_mealplan_description">Toont het maaltijdplan voor vandaag en morgen.</string>
+    <string name="widget_shopping_description">Toont openstaande artikelen van de boodschappenlijst.</string>
+    <string name="widget_daily_recipe_description">Toont elke dag een nieuw willekeurig recept.</string>
+</resources>

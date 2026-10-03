@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Mealplan-AppWidget-Konfiguration.
+
+    Größen (1:1 zu iOS-`.systemSmall` / `.systemMedium` / `.systemLarge`):
+      • minWidth/minHeight  → kleinste erlaubte Größe (~ 2x2 Launcher-Cells)
+      • targetCellWidth/Height → Android-12+ Grid-Hint (~ 4x2 Default)
+      • resizeMode horizontal|vertical → User kann auf 2x2 / 4x2 / 4x4 ziehen
+      • configure              → fehlt absichtlich (kein Konfigurations-Activity)
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialKeyguardLayout="@layout/widget_loading"
+    android:initialLayout="@layout/widget_loading"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:description="@string/widget_mealplan_description"
+    android:previewImage="@drawable/ic_widget_fork_circle"
+    android:previewLayout="@layout/widget_mealplan_preview"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

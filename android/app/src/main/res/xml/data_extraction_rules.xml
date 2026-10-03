@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: Pendant zu backup_rules.xml (Begründung dort). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="MealieCache/" />
+        <exclude domain="file" path="MealieImages/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="MealieCache/" />
+        <exclude domain="file" path="MealieImages/" />
+    </device-transfer>
+</data-extraction-rules>

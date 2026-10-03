@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pendant zu SF Symbol `sun.rise.fill` — Sonne mit Pfeil nach oben. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorControlNormal">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,7C9.24,7 7,9.24 7,12C7,14.76 9.24,17 12,17C14.76,17 17,14.76 17,12C17,9.24 14.76,7 12,7ZM2,13L4,13C4.55,13 5,12.55 5,12C5,11.45 4.55,11 4,11L2,11C1.45,11 1,11.45 1,12C1,12.55 1.45,13 2,13ZM20,13L22,13C22.55,13 23,12.55 23,12C23,11.45 22.55,11 22,11L20,11C19.45,11 19,11.45 19,12C19,12.55 19.45,13 20,13ZM11,2L11,4C11,4.55 11.45,5 12,5C12.55,5 13,4.55 13,4L13,2C13,1.45 12.55,1 12,1C11.45,1 11,1.45 11,2ZM5.99,4.58C5.6,4.97 5.6,5.61 5.99,6L7.05,7.06C7.44,7.45 8.07,7.45 8.46,7.06C8.85,6.67 8.85,6.03 8.46,5.64L7.4,4.58C7.01,4.19 6.38,4.19 5.99,4.58ZM15.54,7.06L16.6,6C16.99,5.61 16.99,4.98 16.6,4.59C16.21,4.2 15.58,4.2 15.19,4.59L14.13,5.65C13.74,6.04 13.74,6.67 14.13,7.06C14.52,7.45 15.16,7.45 15.54,7.06Z" />
+</vector>

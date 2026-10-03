@@ -1,0 +1,285 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Network access for API calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Full-screen intent for timer alarm (Android 12+) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+    <!-- Foreground service for cooking mode -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- Camera / photo import.
+         KEIN READ_MEDIA_IMAGES/READ_MEDIA_VIDEO: Google-Play-Richtlinie
+         erlaubt die nur bei dauerhaftem Medienzugriff als Kernfunktion.
+         Der gelegentliche Foto-Import (Rezept-Upload/-Edit via image_picker)
+         läuft auf Android 13+ über den System-Photo-Picker und davor über
+         GET_CONTENT — beides berechtigungsfrei. tools:node="remove" strippt
+         die Berechtigungen auch dann, wenn eine Library sie per
+         Manifest-Merge wieder einschleusen sollte. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+
+    <!-- mDNS / local network discovery for Cook Friends + Recipe Send -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- Biometric -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
+    <!-- Keep screen on during cooking mode -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Schedule exact alarms for timer notifications (Android 12+) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- "Erinnere mich zum Einkaufen" (Issue #29): Geofencing an bis zu 3
+         gespeicherten Standorten. ACCESS_BACKGROUND_LOCATION ist eine
+         eigene, vom Nutzer separat in den System-Einstellungen zu erteilende
+         Berechtigung (ab Android 10) — ohne sie feuert die Geofence nicht bei
+         geschlossener App. RECEIVE_BOOT_COMPLETED, weil Android alle
+         Geofence-Registrierungen bei einem Neustart verwirft
+         (ShoppingReminderBootReceiver registriert sie neu). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- enableOnBackInvokedCallback=false: Predictive Back (ab targetSdk 35
+         default AN) fragt Flutter VORAB, ob es den Back-Druck behandelt —
+         diese Vorab-Meldung ist mit go_router-Shell-Routen unzuverlässig
+         (Branch-Navigatoren melden „kann nicht poppen" und das System
+         schließt die App, ohne den PopScope der Tab-Shell zu fragen).
+         Legacy-Back liefert das Event zur Laufzeit an Flutter → PopScope
+         (Zurück auf Nicht-Home-Tab → Home) greift zuverlässig. -->
+    <application
+        android:label="Mealie Recipes"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- WICHTIG: KEIN android:showWhenLocked / android:turnScreenOn an
+                 dieser Activity. Statisch gesetzt zeigt sich die GESAMTE App
+                 über dem Sperrbildschirm — nach dem Aufwecken landet man direkt
+                 (entsperrt) in der App, die Home-Taste enthüllt erst den echten
+                 Lockscreen darunter (Sicherheitsproblem auf z.B. Samsung S23).
+                 Der Timer-Alarm (notification_service.dart, fullScreenIntent)
+                 klingelt weiterhin über Audio + Foreground-Service + Notification
+                 und erscheint als Lockscreen-Benachrichtigung; er reißt nur nicht
+                 mehr die App über den Sperrbildschirm auf. Soll der Alarm wieder
+                 über dem Lockscreen erscheinen, muss das KONDITIONAL (nur für den
+                 Alarm) via setShowWhenLocked(true) in einer dedizierten Alarm-
+                 Activity passieren, NICHT statisch an der MainActivity. -->
+
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme" />
+
+            <!-- Flutters automatisches Deep-Linking AUS: Custom-Scheme-Links
+                 (mealierecipes://…) werden ausschließlich über das app_links-
+                 Plugin (DeepLinkHandler) verarbeitet, das sie korrekt auf
+                 /shopping, /mealplan, /recipes/<id> mappt. Sonst würde Flutter
+                 die rohe URI als Route an GoRouter weiterreichen. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- Custom-Scheme `mealierecipes://` für Deep-Links aus
+                 Home-Widgets, Notifications und externen App-Links.
+                 Routen: //recipe?id=… //mealplan //shopping -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="mealierecipes"/>
+            </intent-filter>
+        </activity>
+
+        <!-- "Rezept teilen"-Import: Chrome/Browser "Teilen" → App im
+             System-Share-Sheet. ShareReceiverActivity wandelt die geteilte
+             URL in mealierecipes://import?url=… um und reicht sie an
+             MainActivity weiter (siehe ShareReceiverActivity.kt). -->
+        <activity
+            android:name=".ShareReceiverActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:excludeFromRecents="true"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Foreground service for cooking mode / active timer -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
+
+        <!-- ============================================================
+             Jetpack-Glance Home-Screen-Widgets — 1:1 Mirror der iOS-
+             MealieTimerWidget-Extension. Drei Glance-AppWidget-Receiver,
+             je ein <appwidget-provider>-XML in res/xml/.
+
+             Alle drei sind exported=true (Pflicht für AppWidget-Hosts wie
+             Launcher), aber haben KEINEN Konfigurations-Activity und
+             reagieren ausschließlich auf APPWIDGET_UPDATE. Die Daten
+             kommen via MethodChannel `mealie/widget` aus der Flutter-App
+             und landen in DataStore<Preferences>.
+             ============================================================ -->
+        <receiver
+            android:name="com.walfrosch92.mealie_recipes.widgets.MealplanGlanceReceiver"
+            android:exported="true"
+            android:label="@string/widget_mealplan_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_mealplan_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.walfrosch92.mealie_recipes.widgets.ShoppingListGlanceReceiver"
+            android:exported="true"
+            android:label="@string/widget_shopping_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_shopping_info" />
+        </receiver>
+
+        <receiver
+            android:name="com.walfrosch92.mealie_recipes.widgets.DailyRecipeGlanceReceiver"
+            android:exported="true"
+            android:label="@string/widget_daily_recipe_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_daily_recipe_info" />
+        </receiver>
+
+        <!-- ============================================================
+             Wear-OS-Timer-Bridge — empfängt Steuer-Aktionen (pause/resume/
+             stop) der gekoppelten Uhr über den Wearable MessageClient. Das
+             System startet den Service im App-Prozess sobald eine Nachricht
+             auf dem Pfad /mealie_timer/action eintrifft (auch ohne Activity).
+             ============================================================ -->
+        <service
+            android:name="com.walfrosch92.mealie_recipes.wear.PhoneWearListenerService"
+            android:exported="true">
+            <!-- Getrennte Intent-Filter je Pfad: mehrere <data> in EINEM Filter
+                 pooled Android tückisch (Attribut-Kreuzprodukt) → der zweite
+                 Pfad wurde nicht zuverlässig zugestellt. -->
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_timer/action" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_shopping/action" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_cooking/action" />
+            </intent-filter>
+        </service>
+
+        <!-- ============================================================
+             "Erinnere mich zum Einkaufen" (Issue #29) — Geofence-Ziel +
+             Boot-Neu-Registrierung. exported=true beim Geofence-Receiver:
+             der PendingIntent-Broadcast kommt aus dem Google-Play-Services-
+             Prozess, nicht aus der eigenen App. Keine <intent-filter>
+             Data-Deklaration nötig — GeofencingClient adressiert den
+             Receiver direkt über den PendingIntent.
+             ============================================================ -->
+        <receiver
+            android:name="com.walfrosch92.mealie_recipes.shopping_reminder.GeofenceBroadcastReceiver"
+            android:exported="false" />
+        <receiver
+            android:name="com.walfrosch92.mealie_recipes.shopping_reminder.ShoppingReminderBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- flutter_local_notifications full-screen intent receiver -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- url_launcher: Browser/Mail für Markdown-Links in Rezeptschritten -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+    </queries>
+</manifest>

@@ -1,0 +1,8 @@
+#include "../../Flutter/Flutter-Release.xcconfig"
+#include "Warnings.xcconfig"
+
+// Nur Apple Silicon (M-Prozessoren). Muss auf PROJEKT-Ebene stehen, damit
+// auch das Ziel „Flutter Assemble" nur arm64 sieht: Xcode-27-lipo nimmt bei
+// `-verify_arch` nur noch EINE Architektur an, Flutter übergibt bei
+// universal-Builds „arm64 x86_64" → release_unpack_macos bricht ab.
+ARCHS = arm64

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Måltidsplan</string>
+    <string name="widget_shopping_label">Handleliste</string>
+    <string name="widget_daily_recipe_label">Dagens oppskrift</string>
+    <string name="widget_mealplan_description">Viser måltidsplanen for i dag og i morgen.</string>
+    <string name="widget_shopping_description">Viser åpne varer på handlelisten.</string>
+    <string name="widget_daily_recipe_description">Viser en ny tilfeldig oppskrift hver dag.</string>
+</resources>

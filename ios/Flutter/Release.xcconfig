@@ -1,0 +1,13 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
+#include "Generated.xcconfig"
+
+// dSYM-Generierung erzwingen damit App Store Connect den Archive-Upload nicht
+// mit "The archive did not include a dSYM for the objective_c.framework"
+// abweist. Das objective_c.framework kommt aus dem Flutter-Engine selbst
+// (nicht aus einem Pod), deshalb greift unser Podfile-post_install-Patch dort
+// nicht — wir müssen es am Runner-Target via xcconfig erzwingen.
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+// Defensiv: verhindert dass Xcode beim Embedding einzelne Framework-Symbols
+// strippt bevor das dSYM extrahiert wurde.
+STRIP_INSTALLED_PRODUCT = NO
+COPY_PHASE_STRIP = NO

@@ -1,0 +1,127 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Markiert dieses APK als Wear-OS-Variante. Google Play nutzt dieses
+         Feature, um die App automatisch auf eine gekoppelte Uhr auszuliefern,
+         sobald die (gleich signierte, gleich benannte) Handy-App installiert
+         ist. Die Handy-App darf dieses Feature NICHT deklarieren. -->
+    <uses-feature android:name="android.hardware.type.watch" android:required="true" />
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- OngoingActivity-Notification (Wear OS zeigt den laufenden Countdown). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Timer-Ende: vibrieren. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Selbst geplanter Exact-Alarm zum Timer-Ende (unabhängig vom Handy).
+         USE_EXACT_ALARM ist für Wecker-/Timer-Apps bei Installation gewährt
+         (API 33+); SCHEDULE_EXACT_ALARM deckt API 31–32 ab. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/ic_timer"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <!-- Companion (kein Standalone): die Wear-App braucht die Handy-App als
+             Datenquelle. value=false signalisiert Play, dass sie zusammen mit
+             der Handy-App installiert werden soll. -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="false" />
+
+        <!-- Compose-UI-Activity (Timer-Detailansicht + Steuerung). -->
+        <activity
+            android:name=".presentation.MainActivity"
+            android:exported="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Empfängt Timer-DataItems vom Handy (Data Layer) auch im
+             Hintergrund → aktualisiert OngoingActivity + Tile. -->
+        <service
+            android:name=".WearListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_timer" />
+            </intent-filter>
+            <!-- Kochmodus-Navigationszustand (aktiv? vor/zurück möglich?). -->
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_cooking" />
+            </intent-filter>
+            <!-- Shopping-DataItems (Einkaufsliste). -->
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_shopping" />
+            </intent-filter>
+            <!-- App-Sprache (unabhängig von der Systemsprache der Uhr). -->
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_language" />
+            </intent-filter>
+            <!-- Timer-Ende-Signal vom Handy → läuten/vibrieren. -->
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/mealie_timer/finished" />
+            </intent-filter>
+        </service>
+
+        <!-- Selbst geplanter Timer-Ende-Alarm (AlarmManager → WearAlarmReceiver),
+             feuert auch wenn die Handy-App tot ist. -->
+        <receiver
+            android:name=".WearAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Glanceable Tile mit der Restzeit. -->
+        <service
+            android:name=".tile.TimerTileService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/ic_timer" />
+        </service>
+
+        <!-- Glanceable Tile mit den offenen Einkaufslisten-Artikeln. -->
+        <service
+            android:name=".tile.ShoppingTileService"
+            android:exported="true"
+            android:label="@string/shopping_tile_label"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/ic_timer" />
+        </service>
+    </application>
+</manifest>
