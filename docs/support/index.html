@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0E0C0A" />
+<title>Support – Mealie Recipes</title>
+<meta name="description" content="Support for the Mealie Recipes app – contact, common questions and troubleshooting." />
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Walfrosch92/Mealie-Recipes-APP/8218a83c994d528258bed15cadde020a84cdaf08/MealieRecipes/MealieRecipes/Assets/Assets.xcassets/AppIcon.appiconset/AppIcon-1024pt%401x%201.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ───────────────────────────────────────────────────────────────────
+     Design tokens – taken 1:1 from the app (lib/shared/theme/app_colors.dart,
+     lib/shared/widgets/liquid_glass.dart, lib/app.dart).
+     Dark-theme variant of the warm premium palette.
+  ──────────────────────────────────────────────────────────────────── */
+  :root {
+    --bg:           #0E0C0A;
+    --card:         #1A1714;
+    --surface2:     #231F1B;
+    --separator:    #2A2521;
+
+    --fg:           #F5F1EA;
+    --fg-sub:       #B6AB9C;
+    --fg-tertiary:  #7D7468;
+
+    --accent:       #FF8A00;
+    --accent-deep:  #FF6A00;
+    --accent-light: #FFB23E;
+    --gradient:     linear-gradient(135deg, #FFB23E 0%, #FF8A00 45%, #FF6A00 100%);
+    --glow:         rgba(255, 120, 0, 0.35);
+
+    --r-sm: 14px;
+    --r-md: 18px;
+    --r-lg: 22px;
+    --r-xl: 26px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--fg);
+    background-color: var(--bg);
+    line-height: 1.65;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Warm dark background with soft orange glows (signature accent glow). */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(620px 460px at 78% -6%,  rgba(255, 138, 0, 0.20), transparent 70%),
+      radial-gradient(520px 420px at 8% 8%,    rgba(255, 106, 0, 0.14), transparent 72%),
+      radial-gradient(680px 600px at 50% 112%, rgba(255, 178, 62, 0.10), transparent 70%);
+    pointer-events: none;
+  }
+
+  a {
+    color: var(--accent-light);
+    text-decoration: none;
+    font-weight: 600;
+    word-break: break-word;
+  }
+  a:hover { text-decoration: underline; }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 22px 80px;
+  }
+
+  /* ── Header ──────────────────────────────────────────────────────── */
+  header { text-align: center; margin-bottom: 44px; }
+
+  .logo {
+    width: 92px;
+    height: 92px;
+    border-radius: var(--r-xl);
+    object-fit: cover;
+    display: block;
+    margin: 0 auto 22px;
+    box-shadow:
+      0 18px 40px rgba(40, 28, 12, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 0 36px var(--glow);
+  }
+
+
+  .pill .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gradient);
+    box-shadow: 0 0 12px var(--glow);
+  }
+
+  h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: clamp(34px, 8vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  h1 .grad {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .lead {
+    color: var(--fg-sub);
+    font-size: 16.5px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .stamp {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--fg-tertiary);
+  }
+
+  /* ── Glass card (mirrors LiquidGlass) ────────────────────────────── */
+  .card {
+    position: relative;
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,0.10), rgba(255,255,255,0.03)),
+      rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--r-lg);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    padding: 26px 26px 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.30);
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .badge {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: #fff;
+    background: var(--gradient);
+    box-shadow: 0 8px 20px var(--glow);
+  }
+
+  h2 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+  }
+
+  .card p { color: var(--fg-sub); }
+  .card p + p { margin-top: 12px; }
+
+  .card ul {
+    list-style: none;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .card li {
+    position: relative;
+    padding-left: 26px;
+    color: var(--fg-sub);
+  }
+  .card li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 10px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gradient);
+    box-shadow: 0 0 10px var(--glow);
+  }
+  .card li strong { color: var(--fg); font-weight: 600; }
+
+  /* ── Highlight card (the key statement) ──────────────────────────── */
+  .highlight {
+    background:
+      linear-gradient(135deg, rgba(255, 178, 62, 0.16), rgba(255, 106, 0, 0.10)),
+      rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 138, 0, 0.40);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.30), 0 0 50px rgba(255, 120, 0, 0.14);
+  }
+  .highlight .badge { border-radius: 50%; }
+  .highlight h2 { color: var(--fg); }
+  .highlight p { color: rgba(245, 241, 234, 0.92); font-size: 16.5px; }
+
+  /* ── Accent box (technical / SDK notes) ──────────────────────────── */
+  .accent-box {
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: var(--r-md);
+    background: rgba(255, 138, 0, 0.08);
+    border: 1px solid rgba(255, 138, 0, 0.22);
+    border-left: 3px solid var(--accent);
+  }
+  .accent-box .ab-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--accent-light);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .accent-box p, .accent-box li { color: var(--fg-sub); font-size: 14.5px; }
+  .accent-box p + p { margin-top: 10px; }
+  .accent-box .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .accent-box .chip {
+    font-family: 'Inter', monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--fg);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--separator);
+    border-radius: 10px;
+    padding: 5px 10px;
+  }
+
+  /* ── Footer ──────────────────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--separator);
+    color: var(--fg-tertiary);
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+  footer .mail { color: var(--accent-light); }
+
+  @media (max-width: 540px) {
+    .wrap { padding: 40px 16px 64px; }
+    .card { padding: 22px 18px 20px; }
+    .card-head { gap: 11px; }
+    h2 { font-size: 18px; }
+  }
+  code {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--separator);
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ── Header ─────────────────────────────────────────────────── -->
+    <header>
+      <img class="logo" src="https://raw.githubusercontent.com/Walfrosch92/Mealie-Recipes-APP/main/MealieRecipes/MealieRecipes/Assets/Assets.xcassets/LogoClassicPreview.imageset/AppIcon-1024pt%401x%201.png" alt="Mealie Recipes app icon" />
+      <div class="pill"><span class="dot"></span> Support</div>
+      <h1>Support<br /><span class="grad">Mealie Recipes</span></h1>
+      <p class="lead">Questions, problems or ideas? Here is how to get help with Mealie Recipes – a third-party app for your <strong>own</strong> Mealie server.</p>
+      <p class="stamp">Last updated: October 15, 2026</p>
+    </header>
+
+    <section class="card highlight">
+      <div class="card-head">
+        <div class="badge">✉</div>
+        <h2>Contact support</h2>
+      </div>
+      <p>Write an e-mail to <a class="mail" href="mailto:walfrosch92@gmail.com?subject=Mealie%20Recipes%20Support">walfrosch92@gmail.com</a>. Replies usually come within a few days, in English or German.</p>
+      <p>The fastest way is right from the app: <strong>Settings → Logs → Contact support</strong>. The app can attach a log file that helps to find the cause.</p>
+      <p>Please mention your device, the app version (shown in Settings) and your Mealie server version.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">1</div>
+        <h2>Bug reports &amp; feature requests</h2>
+      </div>
+      <p>You can also open an issue on GitHub – there you can see whether someone already reported the same problem:<br />
+      <a href="https://github.com/Walfrosch92/Mealie-Recipes-APP/issues" target="_blank" rel="noopener">github.com/Walfrosch92/Mealie-Recipes-APP/issues</a></p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">2</div>
+        <h2>The app can't connect to my server</h2>
+      </div>
+      <ul>
+        <li>Open your server address in the phone's browser. If it doesn't load there either, the problem is the network or the server, not the app.</li>
+        <li>Enter the full address including <strong>http://</strong> or <strong>https://</strong> and, if needed, the port (e.g. <code>http://192.168.1.20:9000</code>).</li>
+        <li><strong>iPhone / iPad:</strong> if your server is in your home network, allow <em>Local Network</em> access: <em>Settings → Privacy &amp; Security → Local Network → Mealie Recipes</em>.</li>
+        <li>Check that your API token is still valid. You can create a new one in the Mealie web app under your profile → <em>API Tokens</em>, or sign in with user name and password instead.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">3</div>
+        <h2>What do I need?</h2>
+      </div>
+      <p>Mealie Recipes is not an official Mealie app and has no server of its own. You need a running <a href="https://mealie.io" target="_blank" rel="noopener">Mealie</a> server (self-hosted or provided by someone you know). All recipes, meal plans and shopping lists stay on that server.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div class="badge">4</div>
+        <h2>Privacy</h2>
+      </div>
+      <p>The app collects no personal data and contains no tracking or ads. Details: <a href="../privacy/">Privacy Policy</a>.</p>
+    </section>
+
+    <footer>
+      Mealie Recipes · Developed by Walfrosch92<br />
+      <a class="mail" href="mailto:walfrosch92@gmail.com">walfrosch92@gmail.com</a><br />
+      Last updated: October 15, 2026
+    </footer>
+  </div>
+</body>
+</html>
