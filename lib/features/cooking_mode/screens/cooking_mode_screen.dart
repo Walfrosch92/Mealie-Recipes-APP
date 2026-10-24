@@ -13,6 +13,7 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/providers/permissions_provider.dart';
 import '../../../core/utils/ingredient_display.dart'
     show formatQuantity, ingredientDisplayParts;
 import '../../../core/utils/yield_format.dart';
@@ -35,6 +36,10 @@ import '../../timer/providers/timer_provider.dart';
 import '../providers/cooking_session_provider.dart';
 import '../../../shared/widgets/recipe_image.dart';
 import '../../../core/utils/search_match.dart';
+import '../../timeline/services/offline_cooked_queue.dart';
+import '../../../core/utils/auth_headers.dart';
+import '../../../shared/widgets/recipe_image_viewer.dart';
+import '../../../core/services/recipe_image_store.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CookingModeScreen — mirrors iOS CookingModeView + CookingRecipeDetailView
@@ -254,7 +259,13 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
                   _openAddRecipeSheet(context);
                   break;
                 case 'notes':
-                  _openNotesSheet(context, session, editable: !isGuest);
+                  // Notizen gehören zum Rezept → gleiche Rechte wie
+                  // Bearbeiten (gesperrt / fremder Haushalt = nur lesen).
+                  _openNotesSheet(context, session,
+                      editable: !isGuest &&
+                          recipeEditAccess(ref.read(userPermissionsProvider),
+                                  session.recipe) ==
+                              RecipeEditAccess.allowed);
                   break;
                 case 'friends':
                   context.push('/cook-friends?slug=${session.recipe.id}');
@@ -424,6 +435,10 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
               .upsertOne(latest.copyWith(comments: [...latest.comments, c]));
           container.invalidate(recipeDetailProvider(session.slug));
         } catch (e) {
+          // Offline: vormerken und später senden statt verlieren.
+          if (isConnectionError(e)) {
+            await queueRecipeComment(recipe.id, comment);
+          }
           LogManager.shared
               .log('💬 Kommentar aus dem Kochmodus fehlgeschlagen: $e');
         }
@@ -857,6 +872,7 @@ class _AddRecipeSheetState extends ConsumerState<_AddRecipeSheet> {
                             letterSpacing: -0.3)),
                   ),
                   IconButton(
+                    tooltip: AppLocalizations.of(context)!.close,
                     icon: Icon(Icons.close_rounded, color: context.appFgSub),
                     onPressed: () => Navigator.of(ctx).pop(),
                   ),
@@ -1103,7 +1119,9 @@ void showAddTimerSheet(
           right: 16,
           top: 16,
         ),
-        child: Column(
+        child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1143,6 +1161,7 @@ void showAddTimerSheet(
                         color: context.appFgSub, fontWeight: FontWeight.w600)),
                 const Spacer(),
                 IconButton(
+                  tooltip: AppLocalizations.of(context)!.a11yDecrease,
                   icon: const Icon(Icons.remove_circle_outline_rounded,
                       color: AppTokens.accentDeep),
                   onPressed: () =>
@@ -1155,6 +1174,7 @@ void showAddTimerSheet(
                         fontSize: 18,
                         fontWeight: FontWeight.w800)),
                 IconButton(
+                  tooltip: AppLocalizations.of(context)!.a11yIncrease,
                   icon: const Icon(Icons.add_circle_outline_rounded,
                       color: AppTokens.accentDeep),
                   onPressed: () =>
@@ -1189,7 +1209,7 @@ void showAddTimerSheet(
             ),
             const SizedBox(height: 16),
           ],
-        ),
+        )),
       ),
     ),
   );
@@ -1211,6 +1231,48 @@ class _ChipButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(6),
         child: Icon(icon, color: color, size: 30),
+      ),
+    );
+  }
+}
+
+/// „+1"/„+5"-Knopf am fertigen Timer-Chip (große Tippfläche, grün wie das
+/// fertige Chip).
+class _ExtendButton extends StatelessWidget {
+  final String label;
+  final String tooltip;
+  final VoidCallback onTap;
+  const _ExtendButton(
+      {required this.label, required this.tooltip, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 36),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Text(label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: [FontFeature.tabularFigures()])),
+          ),
+        ),
       ),
     );
   }
@@ -1312,13 +1374,23 @@ class _TimerChipState extends ConsumerState<_TimerChip>
           const SizedBox(width: 6),
           // Fertig: ein Icon, das das Antippen zum Stummschalten andeutet (das
           // ganze Chip ist tappbar, siehe unten). Sonst Pause/Play + Stop.
-          if (timer.isFinished)
+          if (timer.isFinished) ...[
+            // Verlängern: eigene Tippflächen, gewinnen gegen das Chip-Tap
+            // (Stummschalten) — derselbe Timer läuft 1/5 Min weiter.
+            for (final m in const [1, 5])
+              _ExtendButton(
+                label: '+$m',
+                tooltip: '+$m ${l.minAbbreviation}',
+                onTap: () => ref
+                    .read(timerProvider.notifier)
+                    .extendFinished(timer.id, m),
+              ),
             const Padding(
               padding: EdgeInsets.all(6),
               child: Icon(Icons.notifications_off_rounded,
                   color: Colors.green, size: 26),
-            )
-          else ...[
+            ),
+          ] else ...[
             _ChipButton(
               icon: timer.isRunning
                   ? Icons.pause_circle_filled_rounded
@@ -1330,8 +1402,26 @@ class _TimerChipState extends ConsumerState<_TimerChip>
             _ChipButton(
               icon: Icons.cancel_rounded,
               color: context.appFgTertiary,
-              onTap: () =>
-                  ref.read(timerProvider.notifier).removeTimer(timer.id),
+              // Laufenden Timer beenden — mit „Rückgängig", weil das kleine ✕
+              // mit nassen Fingern schnell versehentlich getroffen ist.
+              onTap: () {
+                final notifier = ref.read(timerProvider.notifier);
+                final messenger = ScaffoldMessenger.of(context);
+                final snapshot = timer;
+                notifier.removeTimer(timer.id);
+                messenger.hideCurrentSnackBar();
+                messenger.showSnackBar(SnackBar(
+                  // Mit Knopf bleibt eine SnackBar seit Flutter 3.29 sonst STEHEN
+                  // (persist = action != null) — erst ein Neustart räumte sie weg.
+                  persist: false,
+                  content: Text(l.timerStoppedSnack(snapshot.name)),
+                  duration: const Duration(seconds: 5),
+                  action: SnackBarAction(
+                    label: l.undo,
+                    onPressed: () => notifier.restoreTimer(snapshot),
+                  ),
+                ));
+              },
             ),
           ],
         ],
@@ -1879,8 +1969,11 @@ class _StepView extends ConsumerWidget {
 
     // Schrittbild: Markdown-Bild im Text (Mealie hat kein Step-Image-Feld) →
     // sonst Fallback aufs Rezept-Hauptbild.
-    final embedded =
-        serverUrl.isEmpty ? null : stepImageUrl(step.text, serverUrl);
+    // ALLE Bilder des Schritts (vorher nur das erste) — wischbar, Antippen
+    // öffnet sie groß wie in der Rezept-Detailansicht.
+    final embeddedUrls = serverUrl.isEmpty
+        ? const <String>[]
+        : embeddedImageUrls(step.text, serverUrl);
     final mainUrl =
         '$serverUrl/api/media/recipes/${recipe.id}/images/original.webp';
     // Ein GAST sieht ein Rezept, das auf dem HOST-Server liegt — sein eigener
@@ -1904,25 +1997,29 @@ class _StepView extends ConsumerWidget {
           fit: BoxFit.cover,
           gaplessPlayback: true,
           errorBuilder: (_, __, ___) => _stepImgPlaceholder(context));
-    } else if (embedded != null) {
-      image = CachedNetworkImage(
-        imageUrl: embedded,
-        httpHeaders: {'Authorization': 'Bearer $token'},
-        width: double.infinity,
-        height: 220,
-        fit: BoxFit.cover,
-        placeholder: (_, __) => _stepImgPlaceholder(context),
-        errorWidget: (_, __, ___) => _stepImgPlaceholder(context),
+    } else if (embeddedUrls.isNotEmpty) {
+      image = _StepImageCarousel(
+        urls: embeddedUrls,
+        serverUrl: serverUrl,
+        token: token,
+        placeholder: _stepImgPlaceholder,
       );
     } else {
-      // Rezept-Hauptbild → Offline-Kopie, falls gespeichert.
-      image = RecipeImage(
-        recipeId: recipe.id,
-        imageUrl: mainUrl,
-        httpHeaders: {'Authorization': 'Bearer $token'},
-        width: double.infinity,
-        height: 220,
-        placeholder: _stepImgPlaceholder,
+      // Rezept-Hauptbild → Offline-Kopie, falls gespeichert. Antippen öffnet
+      // es groß wie in der Detailansicht.
+      image = GestureDetector(
+        onTap: () => showRecipeImageViewer(context,
+            recipeId: recipe.id,
+            imageUrl: mainUrl,
+            httpHeaders: authHeadersFor(mainUrl, serverUrl, token)),
+        child: RecipeImage(
+          recipeId: recipe.id,
+          imageUrl: mainUrl,
+          httpHeaders: authHeadersFor(mainUrl, serverUrl, token),
+          width: double.infinity,
+          height: 220,
+          placeholder: _stepImgPlaceholder,
+        ),
       );
     }
 
@@ -2389,25 +2486,15 @@ String _scaledIngredientText(Ingredient ing, double m) {
   final hasQty = (ing.quantity ?? 0) > 0;
   final hasUnit = ing.unit?.name?.isNotEmpty == true;
   final hasFood = ing.food?.name?.isNotEmpty == true;
-  if (!hasFood && ing.referencedRecipe != null) {
-    // Verlinktes Rezept — gleiche Darstellung wie in der Detailansicht.
-    final (:amount, :name) = ingredientDisplayParts(ing, m);
-    return '$amount $name'.trim();
-  }
-  if (ing.disableAmount == true || (!hasQty && !hasFood && !hasUnit)) {
+  final linked = !hasFood && ing.referencedRecipe != null;
+  if (!linked &&
+      (ing.disableAmount == true || (!hasQty && !hasFood && !hasUnit))) {
     return _scaledNote(ing.note, m);
   }
-  final parts = <String>[
-    if (hasQty) formatQuantity((ing.quantity ?? 0) * m),
-    if (hasUnit) ing.unit!.name!,
-  ];
-  if (hasFood) {
-    parts.add(ing.food!.name!);
-    if (ing.note?.isNotEmpty == true) parts.add('(${ing.note})');
-  } else if (ing.note?.isNotEmpty == true) {
-    parts.add(ing.note!);
-  }
-  return parts.join(' ').trim();
+  // Gleiche Darstellung wie die Detailansicht (Abkürzung/Bruch je Einheit,
+  // Plural, verlinkte Rezepte).
+  final (:amount, :name) = ingredientDisplayParts(ing, m);
+  return '$amount $name'.trim();
 }
 
 // Skaliert nur die FÜHRENDE Zahl in einem freien Notiz-Text (jede Sprache/
@@ -3224,5 +3311,105 @@ class _StepTextState extends State<_StepText> {
         ],
       ),
     ));
+  }
+}
+
+// ── Schrittbilder (Kochmodus) ────────────────────────────────────────────
+// Alle Bilder eines Schritts seitlich wischbar, Punkte zeigen Position und
+// Anzahl. Antippen öffnet die Vollbild-Galerie beim aktuellen Bild. Token
+// nur an den eigenen Server (vorher ging er an jede Bildadresse im Text).
+
+class _StepImageCarousel extends StatefulWidget {
+  final List<String> urls;
+  final String serverUrl;
+  final String token;
+  final WidgetBuilder placeholder;
+
+  const _StepImageCarousel({
+    required this.urls,
+    required this.serverUrl,
+    required this.token,
+    required this.placeholder,
+  });
+
+  @override
+  State<_StepImageCarousel> createState() => _StepImageCarouselState();
+}
+
+class _StepImageCarouselState extends State<_StepImageCarousel> {
+  int _index = 0;
+
+  Map<String, String>? _headers(String url) =>
+      authHeadersFor(url, widget.serverUrl, widget.token);
+
+  @override
+  void didUpdateWidget(covariant _StepImageCarousel old) {
+    super.didUpdateWidget(old);
+    // Anderer Schritt → wieder beim ersten Bild beginnen.
+    if (old.urls.join() != widget.urls.join()) _index = 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final many = widget.urls.length > 1;
+    return Stack(
+      children: [
+        PageView.builder(
+          key: ValueKey(widget.urls.join('|')),
+          itemCount: widget.urls.length,
+          onPageChanged: (i) => setState(() => _index = i),
+          itemBuilder: (_, i) => GestureDetector(
+            onTap: () => showImageGalleryViewer(context,
+                urls: widget.urls, initialIndex: i, headersFor: _headers),
+            // Offline-Kopie zuerst (Rezeptbilder offline speichern).
+            child: RecipeImageStore.shared.fileForUrl(widget.urls[i]) != null
+                ? Image.file(
+                    RecipeImageStore.shared.fileForUrl(widget.urls[i])!,
+                    width: double.infinity,
+                    height: 220,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, __, ___) => widget.placeholder(c))
+                : CachedNetworkImage(
+                    imageUrl: widget.urls[i],
+                    httpHeaders: _headers(widget.urls[i]),
+                    width: double.infinity,
+                    height: 220,
+                    fit: BoxFit.cover,
+                    placeholder: (c, __) => widget.placeholder(c),
+                    errorWidget: (c, __, ___) => widget.placeholder(c),
+                  ),
+          ),
+        ),
+        if (many)
+          Positioned(
+            bottom: 10,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < widget.urls.length; i++)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: i == _index ? 18 : 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: i == _index
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: const [
+                          BoxShadow(color: Color(0x55000000), blurRadius: 4)
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }

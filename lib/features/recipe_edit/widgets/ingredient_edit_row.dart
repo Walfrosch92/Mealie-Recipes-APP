@@ -5,6 +5,7 @@ import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
 import '../models/recipe_draft.dart';
 import 'edit_common.dart';
+import '../../../core/utils/ingredient_display.dart' show quantityKeyboardType;
 
 /// Aktionen im „⋯"-Menü einer Zutat (wie das Zutaten-Menü der Webapp).
 enum IngredientAction {
@@ -132,8 +133,10 @@ class IngredientEditRow extends StatelessWidget {
                 child: TextField(
                   onTapOutside: unfocusOnTapOutside,
                   controller: item.quantity,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  // Brüche tippbar („1/8") — Zahlentastatur hat kein „/".
+                  keyboardType: quantityKeyboardType,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   onChanged: (_) => onChanged(),
                   decoration: outlinedEditDecoration(l.ingredientQuantity),
                 ),
@@ -322,6 +325,7 @@ class _SubstitutionsBlock extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: AppLocalizations.of(context)!.a11yRemove,
                     icon: const Icon(Icons.remove_circle_outline, size: 20),
                     visualDensity: VisualDensity.compact,
                     onPressed: () {

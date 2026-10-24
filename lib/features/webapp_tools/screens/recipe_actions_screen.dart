@@ -156,6 +156,8 @@ class _ActionDialogState extends State<_ActionDialog> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return AlertDialog(
+      // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+      scrollable: true,
       backgroundColor: context.appCard,
       title:
           Text(widget.action == null ? l.recipeActionNew : l.recipeActionEdit),

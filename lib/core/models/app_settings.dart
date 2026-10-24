@@ -140,8 +140,11 @@ class AppSettings {
 
   /// Sprache, in der importierte Rezepte ankommen sollen — der explizit
   /// gewählte Wert, sonst die App-Sprache.
-  String get effectiveImportLanguage =>
-      importLanguage.isEmpty ? selectedLanguage : importLanguage;
+  /// App-Sprache „fr_CA" geht als „fr-CA" an Mealie (Schreibweise der
+  /// Import-Sprachliste).
+  String get effectiveImportLanguage => importLanguage.isEmpty
+      ? selectedLanguage.replaceAll('_', '-')
+      : importLanguage;
 
   bool get isConfigured => serverUrl.isNotEmpty && apiToken.isNotEmpty;
   bool get setupComplete => isConfigured || isGuestMode;

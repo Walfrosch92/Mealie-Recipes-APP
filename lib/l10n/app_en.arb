@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-  "appTitle": "Mealie Recipes",
   "endCookingMode": "End cooking mode",
   "endCookingModeConfirm": "Do you really want to end cooking mode?",
   "endCookingModeConfirmAll": "This will end all {count} recipes in cooking mode. Continue?",
@@ -47,16 +46,7 @@
   "mealplan": "Meal Plan",
   "settings": "⚙️ Settings",
   "searchRecipe": "Search recipe...",
-  "loadingRecipes": "Loading recipes...",
   "loadingRecipe": "Loading recipe...",
-  "errorLoadingRecipes": "Error loading recipes: {error}",
-  "@errorLoadingRecipes": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "errorLoadingRecipe": "Could not load recipe.",
   "noRecipesForCategory": "No recipes for this filter.",
   "resetFilter": "Reset filter",
@@ -84,24 +74,9 @@
   "deleteNoteTitle": "Delete note?",
   "deleteNoteMessage": "This note will be permanently deleted.",
   "servings": "Servings",
-  "adjustQuantity": "Adjust quantity",
-  "startTimer": "Start Timer",
-  "runningTimer": "Timer: {minutes}:{seconds}",
-  "@runningTimer": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      },
-      "seconds": {
-        "type": "String"
-      }
-    }
-  },
   "planMeal": "Plan Meal",
-  "displayAlwaysOn": "Keep screen on",
   "addAllIngredients": "Add all ingredients",
   "addSelectedIngredients": "Add selected ingredients",
-  "addIngredientsTitle": "Ingredients added",
   "addIngredientsMessage": "The ingredients have been added to your shopping list.",
   "addIngredientsFailedCount": "{count, plural, =1{1 ingredient could not be added.} other{{count} ingredients could not be added.}}",
   "@addIngredientsFailedCount": {
@@ -159,24 +134,11 @@
   "confirmDeleteTitle": "Delete recipe?",
   "confirmDeleteMessage": "This action cannot be undone.",
   "sendToDevice": "Send to device",
-  "sendToDevicePickerTitle": "Send to device",
-  "sendToAllDevices": "Send to all devices",
   "timerFinished": "Timer finished!",
-  "timerFinishedBody": "Your recipe timer has finished.",
   "timer": "Timer",
   "newTimer": "New Timer",
-  "timerDetails": "Timer Details",
   "timerNamePlaceholder": "Timer name",
-  "timerNameHint": "Give your timer a descriptive name.",
   "durationLabel": "Duration",
-  "minutesCount": "{count} minutes",
-  "@minutesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "start": "Start",
   "stop": "Stop",
   "pause": "Pause",
@@ -192,46 +154,12 @@
   },
   "minAbbreviation": "min",
   "cookingMode": "Cooking Mode",
-  "activeRecipesCount": "{count} active recipes",
-  "@activeRecipesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "endAll": "End all",
   "end": "End",
-  "endAllRecipesTitle": "End all recipes?",
-  "endAllRecipesMessage": "Do you want to end all {count} active cooking sessions?",
-  "@endAllRecipesMessage": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "endRecipeTitle": "End recipe?",
-  "endRecipeMessage": "Do you want to end the cooking session for \"{name}\"?",
-  "@endRecipeMessage": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "noActiveTimers": "No active timers",
   "noActiveRecipes": "No active recipes",
   "startRecipeToCook": "Open a recipe and tap the cooking mode button to start.",
   "browseRecipes": "Browse recipes",
-  "timersPausedCount": "{count} timer(s) paused",
-  "@timersPausedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "cookFriends": "Cook with Friends",
   "cookingModeAddRecipe": "Add recipe",
   "cookingModeAddRecipeSearchHint": "Search recipes",
@@ -250,17 +178,11 @@
     }
   },
   "joinSession": "Join session",
-  "hostEndedSessionTitle": "Session ended",
   "hostEndedSessionMessage": "The host has ended the cooking session.",
-  "shoppingListEmpty": "Your shopping list is empty.",
   "addItem": "Add item",
   "itemNote": "Item name",
   "unlabeledCategory": "Unlabeled",
-  "reorderCategories": "Reorder categories",
-  "archiveChecked": "Archive checked items",
   "archivedLists": "📦 Archived purchases",
-  "syncChanges": "Sync changes",
-  "noSyncChanges": "No sync changes",
   "postimportAction": "After import",
   "postimportHint": "Choose what should happen in the source app (Reminders / Google Tasks) with the imported entries.",
   "postimportLeave": "Just add",
@@ -291,27 +213,9 @@
   "dinner": "Dinner",
   "addMealEntry": "Add meal",
   "selectRecipe": "Select recipe",
-  "orFreeText": "or free text",
-  "entryNote": "Note",
-  "noMealEntries": "No entries for this week.",
   "importRecipe": "Import Recipe",
-  "importFromUrl": "Import from URL",
-  "importFromImage": "Import from photo",
-  "importFromJson": "Import from JSON",
   "url": "URL",
-  "urlPlaceholder": "https://...",
   "importLanguage": "Language for OCR",
-  "importing": "Importing...",
-  "importSuccess": "Recipe imported successfully!",
-  "importError": "Import failed: {error}",
-  "@importError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "pasteJson": "Paste JSON here",
   "setupTitle": "Welcome to Mealie Recipes",
   "setupSubtitle": "Please configure your Mealie server.",
   "serverUrl": "Server URL",
@@ -321,7 +225,6 @@
   "householdId": "Household",
   "householdIdPlaceholder": "Family",
   "shoppingListId": "Shopping list ID",
-  "shoppingListIdPlaceholder": "Select a shopping list",
   "setupHouseholdListTitle": "Household & shopping list",
   "shoppingListLabel": "Shopping list",
   "setupHouseholdManualHint": "Households could not be loaded — enter the household name manually.",
@@ -332,8 +235,6 @@
   "setupExactExactTitle": "Exact quantities",
   "setupExactExactBody": "Items appear with quantity and unit, e.g. “200 g butter” — exactly like the web app.",
   "connect": "Connect",
-  "connecting": "Connecting...",
-  "connectionSuccess": "Connection successful!",
   "connectionError": "Connection failed: {error}",
   "@connectionError": {
     "placeholders": {
@@ -345,18 +246,12 @@
   "optionalHeaders": "Optional HTTP headers (for reverse proxy)",
   "settingsTitle": "⚙️ Settings",
   "settingsSaved": "Settings saved",
-  "serverSettings": "Server",
-  "displaySettings": "Display",
-  "notificationSettings": "Notifications",
   "securitySettings": "Security",
-  "aboutSettings": "About",
   "showRecipeImages": "Show recipe images",
   "apiVersion": "API version",
   "language": "Language",
   "biometricLock": "Biometric lock",
   "biometricLockDescription": "Unlock app with biometrics",
-  "criticalAlerts": "Critical alerts",
-  "criticalAlertsDescription": "Timer alarm even in silent mode",
   "enableLogging": "Enable logging",
   "selectLanguage": "Select language",
   "setupContinue": "Continue",
@@ -367,43 +262,15 @@
   "guestMode": "Guest mode",
   "appVersion": "Version",
   "leftoverFinder": "Recipe Finder",
-  "leftoverFinderSubtitle": "Find recipes with ingredients you have",
   "addIngredient": "Add ingredient",
-  "ingredientPlaceholder": "e.g. eggs",
-  "findRecipes": "Find recipes",
-  "matchingRecipes": "Matching recipes",
-  "noMatchingRecipes": "No recipes found for these ingredients.",
-  "matchPercent": "{percent}% match",
-  "@matchPercent": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "biometricPrompt": "Authenticate to open Mealie Recipes",
   "biometricFailed": "Authentication failed",
-  "whatsNew": "What's New",
   "pendingRecipesTitle": "Received recipes",
-  "pendingRecipesMessage": "You received a recipe from {sender}: \"{name}\"",
   "pendingRecipesFrom": "From {names}",
   "pendingRecipesOpenCooking": "Open cooking mode",
-  "pendingRecipesLater": "Later",
-  "@pendingRecipesMessage": {
-    "placeholders": {
-      "sender": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "openRecipe": "Open recipe",
   "dismiss": "Dismiss",
   "editRecipe": "Edit Recipe",
   "recipeName": "Recipe name",
-  "recipeDescription": "Description",
   "prepTime": "Prep time (min)",
   "cookTime": "Cook time (min)",
   "totalTime": "Total time (min)",
@@ -419,28 +286,11 @@
   "ingredientNote": "Note",
   "instructionText": "Step text",
   "categories": "Categories",
-  "selectCategories": "Select categories",
-  "selectTags": "Select tags",
-  "uploadImage": "Upload image",
-  "removeImage": "Remove image",
   "saveChanges": "Save changes",
-  "saving": "Saving...",
   "saveSuccess": "Recipe saved.",
-  "saveError": "Could not save: {error}",
-  "@saveError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "newCategory": "New category",
   "newTag": "New tag",
   "setRating": "Set rating",
-  "removeRating": "Remove rating",
-  "ratingRemoved": "Rating removed",
-  "googleTasksImport": "Import from Google Tasks",
-  "googleTasksImportDescription": "Import items from Google Tasks to your shopping list.",
   "homeWelcome": "Welcome to Mealie Recipes! 👋",
   "homeWelcomeNamed": "Welcome {name}, to Mealie Recipes! 👋",
   "@homeWelcomeNamed": {
@@ -453,29 +303,21 @@
   "shopping": "Shopping",
   "planning": "Planning",
   "other": "Other",
-  "viewRecipes": "📖 View Recipes",
   "addRecipe": "➕ Add Recipe",
   "completeShopping": "Complete Shopping",
   "shoppingCompleted": "Shopping Completed",
   "shoppingCompletedSubtitle": "All in the cart! 🎉",
   "essensplan": "📅 Meal Plan",
   "resteverwertung": "🥗 Recipe Finder",
-  "newRecipeUpload": "Upload New Recipe",
   "copyCode": "Copy Code",
   "shareLink": "Share Link",
   "connectedFriends": "Connected Friends",
   "waitingForFriends": "Waiting for friends...",
-  "endSharing": "End Sharing",
-  "cookFriendsDescription": "Invite a friend to cook this recipe together",
   "sessionCode": "SESSION CODE",
-  "adjustQuantityLabel": "Adjust quantity for this recipe:",
-  "timerStartForStep": "Timer for step",
-  "enterRecipeUrl": "Enter recipe URL",
   "loading": "Loading...",
   "urlInvalidScheme": "URL must start with http:// or https://",
   "urlAddScheme": "Add https://",
   "addItemPlaceholder": "Add item...",
-  "addSuccessToast": "Added!",
   "completedItems": "Completed",
   "completeShoppingTitle": "Complete shopping?",
   "completeShoppingMessage": "Delete completed items?",
@@ -493,41 +335,13 @@
   "openAIHintTitle": "File Analysis Info",
   "openAIHintBody": "Recipe analysis uses the OpenAI API. Make sure your API key is configured in the Mealie server settings.",
   "allDeleteConfirm": "Delete all",
-  "portionen": "Servings",
-  "timerForStep": "Start timer for this step",
-  "weekNavPrev": "Previous week",
-  "weekNavNext": "Next week",
   "noMealsThisWeek": "No meals planned",
   "entriesInOtherWeeks": "There are entries in other weeks",
   "availableWeeks": "Available weeks:",
-  "weekRange": "Week {week} ({start} – {end})",
   "currentWeek": "Current Week",
-  "rezepteAktualisieren": "Update recipes",
-  "leftoverWhatTitle": "What does this do?",
-  "leftoverWhatBody": "This function reloads all recipes from the server and updates the local cache.",
-  "leftoverDescription": "Enter available ingredients to find matching recipes and use up leftovers.",
-  "leftoverIngredientsHeader": "Ingredients at home",
-  "leftoverSuggestions": "Recipe suggestions",
-  "leftoverNoMatches": "No matching recipes found.",
-  "leftoverEnterIngredient": "Enter ingredient",
-  "matchingPercentText": "{percent}% match ({count}/{total})",
-  "@matchingPercentText": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      },
-      "count": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "weekAbbreviation": "Week",
   "today": "Today",
   "selectDate": "Select date",
-  "selectSlot": "Select meal",
   "selectedRecipe": "Selected recipe",
   "confirmMeal": "Schedule meal",
   "searchRecipes": "Search recipes",
@@ -538,14 +352,6 @@
   "diceNotEnoughRecipes": "Not enough recipes for dice mode (need at least 3)",
   "entrySingular": "entry",
   "entriesPlural": "entries",
-  "listTitle": "List {n}",
-  "@listTitle": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "deleteAllConfirmTitle": "Delete all?",
   "deleteAllConfirmMessage": "Do you want to delete all archived purchases?",
   "uploadFromUrlButton": "Import recipe from URL",
@@ -561,15 +367,12 @@
   "copied": "Copied",
   "linkCopied": "Link copied",
   "startCooking": "Start cooking",
-  "hostNoRecipe": "Open from a recipe to host a session",
   "uploadToOwnServer": "Save to my server",
   "uploadingRecipe": "Uploading recipe…",
   "recipeUploadedToOwnServer": "Recipe saved to your server",
   "recipeUploadFailed": "Upload failed",
   "allowGuestSaveRecipes": "Let guests save recipes to their own server",
   "appIcon": "App icon",
-  "appIconClassic": "Classic",
-  "appIconModern": "Modern",
   "name": "Name",
   "color": "Color",
   "randomColor": "Random color",
@@ -589,7 +392,7 @@
   "mealieApiVersion": "Mealie API version",
   "sendOptionalHeaders": "Send optional headers",
   "offlineRecipeImages": "Save recipe images offline",
-  "offlineRecipeImagesHint": "Downloads all recipe images to this device so they also show without a connection. With large collections this can take up several hundred MB. Turning it off deletes the saved images.",
+  "offlineRecipeImagesHint": "Downloads all recipe images to the device – including the images in the steps and notes – so they show without a connection. Large collections can take up several hundred MB. Turning this off deletes the stored images.",
   "offlineRecipeImagesStatus": "Saved: {count}/{total} · {size}",
   "@offlineRecipeImagesStatus": {
     "placeholders": {
@@ -625,7 +428,7 @@
   "personalization": "Personalization",
   "showRecipeImagesSubtitle": "Shows images in the recipe list",
   "exactQuantities": "Add exact quantities",
-  "exactQuantitiesSubtitle": "Ingredients & typed items keep quantity and unit (e.g. 200 g butter) instead of 1x per item — missing foods are created on the server",
+  "exactQuantitiesSubtitle": "Ingredients & typed items keep quantity and unit (e.g. 200 g butter) instead of 1x per item",
   "remindToShop": "Remind me to shop",
   "remindToShopSubtitle": "Notifies you when you're near a saved location and your shopping list has open items — even if the app is closed",
   "shoppingReminderAddLocation": "Add location",
@@ -669,8 +472,6 @@
   "setupPasswordHint": "Your password is not stored — the app logs you in once and generates an API token from it (same as Profile → API Tokens in the web app).",
   "loginAndConnect": "Log in & connect",
   "loginInvalidCredentials": "Username or password is incorrect.",
-  "loginAndGenerateToken": "Log in & generate token",
-  "loggingIn": "Signing in…",
   "apiTokenSaveHint": "Token applied — please tap “Save changes” below.",
   "renewApiToken": "Renew API token",
   "setupAuthChoiceTitle": "How would you like to sign in?",
@@ -706,7 +507,6 @@
   "reparseIngredients": "Re-parse ingredients",
   "reparseIngredientsSubtitle": "Split quantity/unit/ingredient (e.g. “200 g flour”)",
   "reparseDone": "Ingredients split – tap “Save changes” to apply",
-  "reparseNone": "No splittable ingredients found",
   "tagsAndCategories": "Tags, categories & tools",
   "tapToAddPhoto": "Tap to add photo",
   "descriptionLabel": "Description",
@@ -724,8 +524,6 @@
       }
     }
   },
-  "activeRecipeTimer": "Active recipe timer",
-  "linkIngredients": "Link ingredients",
   "noIngredientsToLink": "No ingredients to link yet",
   "importLanguageSubtitle": "Language for recipes imported from a photo or PDF",
   "importLanguageSearch": "Search language",
@@ -751,7 +549,7 @@
       }
     }
   },
-  "supportNoMailApp": "No mail app found. Address copied: {email}",
+  "supportNoMailApp": "No mail app set up – address copied: {email}. Choose another app to write to us.",
   "@supportNoMailApp": {
     "placeholders": {
       "email": {
@@ -780,13 +578,11 @@
   },
   "removePage": "Remove page",
   "preparingPdf": "Processing PDF...",
-  "shareRecipeTitle": "Share recipe",
   "recipeOptionsTitle": "Options",
   "exportAsPdf": "Export as PDF",
   "generatingPdf": "Generating PDF…",
   "pdfExportFailed": "PDF export failed",
   "recipeTime": "Time",
-  "ingredientSectionTitle": "Section",
   "addIngredientSection": "Add section",
   "aiImportToggle": "Analyze with AI",
   "aiImportToggleHint": "Also for recipe videos (YouTube, Instagram, TikTok …) and pages the regular import can't read. Requires an AI provider on your Mealie server — for videos also an audio provider.",
@@ -809,7 +605,6 @@
       }
     }
   },
-  "mealDiceSettingsTitle": "Dice filter",
   "mealDiceSettingsHint": "Choose categories and tags for each meal. When you roll the dice, only recipes with at least one of them are suggested. The same entry can be used for several meals.",
   "mealDiceSettingsNoneHint": "Nothing selected for this meal: the dice picks automatically by category names like “Breakfast”, “Lunch” or “Dinner”.",
   "mealDiceAutoHintTitle": "Automatic selection",
@@ -1068,7 +863,6 @@
   "organizeReadOnlyHint": "View only: creating, changing and deleting requires the permission “User can manage foods, tags, and categories”.",
   "notesNotSavedNoPermission": "Note not saved – you don't have permission to edit this recipe.",
   "userManagementTitle": "User Management",
-  "usersTitle": "Users",
   "editUserTitle": "Edit User",
   "fullNameLabel": "Full Name",
   "usernameLabel": "Username",
@@ -1084,7 +878,6 @@
   "advancedFeaturesLabel": "Enable advanced features",
   "passwordResetLinkAction": "Generate Password Reset Link",
   "resetLockedUsersAction": "Reset Locked Users",
-  "membersTitle": "Members",
   "inviteLinkTitle": "Invite Link",
   "inviteAction": "Invite",
   "userUpdated": "User updated",
@@ -2770,5 +2563,231 @@
   "updateSourceHint": "Updates come from the GitHub releases of Mealie Recipes and are only installed if they are signed by the developer (macOS).",
   "@updateSourceHint": {
     "description": "Update-Prüfer (Desktop)"
+  },
+  "errorNoConnection": "Can't reach your Mealie server. Check your internet connection and the server address.",
+  "@errorNoConnection": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "errorTimeout": "The server took too long to respond. Please try again.",
+  "@errorTimeout": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "errorUnauthorized": "Your sign-in has expired or the API token is no longer valid. Please sign in again in the settings.",
+  "@errorUnauthorized": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "errorServer": "The Mealie server reported an error. Please try again later.",
+  "@errorServer": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "errorNotFound": "Not found on the server — it may have been deleted.",
+  "@errorNotFound": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "errorCertificate": "The server's security certificate is not trusted.",
+  "@errorCertificate": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "errorGeneric": "Something went wrong. Please try again.",
+  "@errorGeneric": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "offlineLabel": "Offline",
+  "@offlineLabel": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "offlineSince": "Offline · last synced {time}",
+  "@offlineSince": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealplanEntryActions": "Meal options",
+  "@mealplanEntryActions": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "mealplanMoveAction": "Move",
+  "@mealplanMoveAction": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "mealplanMoveTitle": "Move meal",
+  "@mealplanMoveTitle": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "mealplanMoveDate": "Date",
+  "@mealplanMoveDate": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "mealplanMovedTo": "Moved to {date}",
+  "@mealplanMovedTo": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "mealplanShowWeek": "Show",
+  "@mealplanShowWeek": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "mealplanMoveFailed": "Could not move the meal",
+  "@mealplanMoveFailed": {
+    "description": "UX: Fehlertexte / Offline / Mahlzeit verschieben"
+  },
+  "recentlyViewedTitle": "Recently viewed",
+  "recentlyViewedEmpty": "Recipes you open will appear here.",
+  "recentlyViewedClear": "Clear history",
+  "recentlyViewedClearMessage": "The list of recently viewed recipes on this device will be cleared. The recipes themselves stay.",
+  "recentlyViewedClearConfirm": "Clear",
+  "duplicatesTitle": "Duplicate finder",
+  "duplicatesScanning": "Searching for duplicate recipes…",
+  "duplicatesNone": "No duplicate recipes found.",
+  "duplicatesFound": "{count, plural, =1{1 possible duplicate found.} other{{count} possible duplicates found.}}",
+  "@duplicatesFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesIntro": "Tap the recipe that should stay, then merge.",
+  "duplicatesReasonSource": "Same source",
+  "duplicatesReasonName": "Same name",
+  "duplicatesReasonSimilar": "Similar · {percent} % same ingredients",
+  "@duplicatesReasonSimilar": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesKeeps": "Stays",
+  "duplicatesWillBeDeleted": "Will be deleted",
+  "duplicatesMerge": "Merge",
+  "duplicatesNotDuplicate": "Not a duplicate",
+  "duplicatesMergeTitle": "Merge recipes?",
+  "duplicatesMergeMessage": "\"{name}\" stays. {count, plural, =1{1 other recipe will be deleted} other{{count} other recipes will be deleted}}.\n\nCategories, tags, tools, notes, planned meals of your household and your favorite are moved over. Comments, timeline and attachments of the deleted recipes are lost.",
+  "@duplicatesMergeMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesMerged": "Recipes merged",
+  "duplicatesIngredientCount": "{count, plural, =1{1 ingredient} other{{count} ingredients}}",
+  "@duplicatesIngredientCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesResetIgnored": "Show hidden pairs again ({count})",
+  "@duplicatesResetIgnored": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesRescan": "Search again",
+  "duplicatesOpenRecipe": "Open recipe",
+  "duplicatesMergeNoEditHint": "You may not edit the recipe that stays (someone else's recipe that is locked or from another household). Its categories, tags, tools and notes therefore stay as they are; only planned meals and your favorite are moved over.",
+  "recipeOtherHouseholdHint": "From another household – editing is locked there",
+  "foodsSavedAsNote": "Saved. {count, plural, =1{1 new food was} other{{count} new foods were}} kept as an ingredient note – creating foods needs the \"User can manage foods, tags, and categories\" permission in Mealie.",
+  "@foodsSavedAsNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yRemove": "Remove",
+  "a11yDecrease": "Less",
+  "a11yIncrease": "More",
+  "a11yShowPassword": "Show password",
+  "a11yHidePassword": "Hide password",
+  "a11yClearSearch": "Clear search",
+  "notesQueuedOffline": "Offline – the note will be sent as soon as the server is reachable again.",
+  "timelineQueuedOffline": "Offline – it will be added to the timeline as soon as the server is reachable again.",
+  "syncSectionName": "Renamed",
+  "pendingRecipesDiscard": "Discard",
+  "undo": "Undo",
+  "timerStoppedSnack": "Timer \"{name}\" stopped",
+  "cookFriendsEndConfirm": "End the session for everyone? All guests will be disconnected.",
+  "@timerStoppedSnack": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "weekStartSyncHint": "Saved in Mealie – applies to your whole household, also in the web app.",
+  "weekStartNoPermission": "Set in Mealie by your household. Only members who may manage the household can change it.",
+  "assetsUnsupported329": "Mealie supports PDF, images, videos (MP4, MOV, WebM), audio (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV and JSON.",
+  "assetsRecordVideo": "Record video",
+  "assetsChooseVideo": "Choose video",
+  "shoppingSearchHint": "Search this list",
+  "shoppingSearchNoMatches": "No items match your search.",
+  "mealplanServingsTitle": "Planned servings",
+  "mealplanServingsHint": "Only for this meal plan entry — the recipe itself stays unchanged. Opening the recipe and adding it to the shopping list use these servings.",
+  "calendarFeedTitle": "Subscribe to calendar",
+  "calendarFeedSubtitle": "Show the meal plan in Google, Apple or any other calendar",
+  "calendarFeedDescription": "Subscribe to your household's meal plan from Google Calendar, Apple Calendar, Home Assistant or any other app that supports iCal links. Anyone with the link can see your meal plan.",
+  "calendarFeedOff": "The calendar link is turned off for your household.",
+  "calendarFeedAskManager": "Ask someone who can manage your household to turn it on.",
+  "calendarFeedTurnOn": "Turn on",
+  "calendarFeedTurnOff": "Turn off",
+  "calendarFeedReset": "Reset link",
+  "calendarFeedResetHint": "Resetting or turning off the link stops existing subscriptions from updating.",
+  "calendarFeedIncludeNotes": "Include notes",
+  "calendarFeedTimesHint": "Tap a meal to set its time. Meals without a time are shown as all-day events.",
+  "calendarFeedMealTypes": "Meal Type",
+  "calendarFeedSubscribe": "Subscribe in calendar",
+  "calendarFeedNoApp": "No calendar app could be opened. Copy the link and add it to your calendar as a subscription.",
+  "calendarFeedPublicHint": "The link works without signing in — only share it with people who may see your meal plan.",
+  "recipeShareLinkMenu": "Share link & QR code",
+  "recipeShareShowQr": "Show QR Code",
+  "recipeShareScanQr": "Scan with a phone camera to open this recipe",
+  "recipeShareQrShare": "Share image",
+  "recipeShareQrFailed": "Could not create the QR code image",
+  "mealplanSettingsTitle": "Meal Plan Settings",
+  "mealDiceRulesTitle": "Dice rules",
+  "saveAsNewFood": "Save \"{name}\" as a new food",
+  "@saveAsNewFood": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingMoreOptions": "More options",
+  "shoppingFewerOptions": "Fewer options",
+  "nameAlreadyExists": "Already exists: {name}",
+  "aliasBelongsTo": "\"{alias}\" already belongs to \"{name}\" — better merge the two.",
+  "@nameAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@aliasBelongsTo": {
+    "placeholders": {
+      "alias": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

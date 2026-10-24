@@ -8,6 +8,8 @@ import '../../../core/models/timeline_event.dart';
 import '../../../core/services/local_cache.dart';
 import '../../../core/services/log_manager.dart';
 import '../../recipes/providers/recipes_provider.dart';
+import '../../../core/utils/server_time.dart';
+import '../services/offline_cooked_queue.dart';
 
 // ---------------------------------------------------------------------------
 // Zeitleiste — Cache-first (Offline-Prinzip): sofort den letzten Stand aus
@@ -95,8 +97,9 @@ class RecipeTimelineNotifier
   }
 }
 
-/// Ergebnis von [recordRecipeMade].
-enum MadeThisResult { ok, imageFailed }
+/// Ergebnis von [recordRecipeMade]. [queued] = offline vorgemerkt, wird
+/// später gesendet (offline_cooked_queue.dart).
+enum MadeThisResult { ok, imageFailed, queued }
 
 /// „Ich hab's gekocht" — wie der Dialog der Mealie-Webapp:
 ///  1. Zeitleisten-Eintrag (Typ `comment`, Betreff „Name hat das gekocht")
@@ -115,8 +118,51 @@ Future<MadeThisResult> recordRecipeMade(
   List<ReferencedRecipe> childRecipes = const [],
   String Function(String parentName)? childMessage,
 }) async {
-  final api = container.read(apiServiceProvider);
   final timestamp = when ?? DateTime.now();
+  final childMessageText = childMessage?.call(recipe.name);
+  try {
+    return await sendRecipeMade(container,
+        recipe: recipe,
+        subject: subject,
+        message: message,
+        timestamp: timestamp,
+        photo: photo,
+        childRecipes: childRecipes,
+        childMessageText: childMessageText);
+  } catch (e) {
+    if (!isConnectionError(e)) rethrow;
+    // Offline: vormerken statt verlieren, „Zuletzt gekocht" schon lokal
+    // zeigen. Gesendet wird beim Wiederverbinden (flushOfflineCooked).
+    await queueRecipeMade(
+        recipe: recipe,
+        subject: subject,
+        message: message,
+        timestamp: timestamp,
+        photo: photo,
+        childRecipes: childRecipes,
+        childMessageText: childMessageText);
+    final last = parseMealieTime(recipe.lastMade);
+    if (last == null || timestamp.isAfter(last)) {
+      await container.read(recipesProvider.notifier).upsertOne(
+          recipe.copyWith(lastMade: timestamp.toUtc().toIso8601String()));
+    }
+    return MadeThisResult.queued;
+  }
+}
+
+/// Sendet „Ich hab's gekocht" (siehe [recordRecipeMade]). Wirft, wenn der
+/// Zeitleisten-Eintrag selbst nicht angelegt werden konnte.
+Future<MadeThisResult> sendRecipeMade(
+  ProviderContainer container, {
+  required RecipeDetail recipe,
+  required String subject,
+  String? message,
+  required DateTime timestamp,
+  File? photo,
+  List<ReferencedRecipe> childRecipes = const [],
+  String? childMessageText,
+}) async {
+  final api = container.read(apiServiceProvider);
   var ev = await api.createTimelineEvent(
     recipeId: recipe.id,
     subject: subject,
@@ -124,7 +170,7 @@ Future<MadeThisResult> recordRecipeMade(
     timestamp: timestamp,
   );
 
-  final last = DateTime.tryParse(recipe.lastMade ?? '');
+  final last = parseMealieTime(recipe.lastMade);
   if (last == null || timestamp.isAfter(last)) {
     try {
       await api.updateLastMade(recipe.slug, timestamp);
@@ -144,14 +190,14 @@ Future<MadeThisResult> recordRecipeMade(
       await api.createTimelineEvent(
         recipeId: child.id,
         subject: subject,
-        message: childMessage?.call(recipe.name),
+        message: childMessageText,
         timestamp: timestamp,
       );
       RecipeDetail? full;
       for (final r in all) {
         if (r.id == child.id) full = r;
       }
-      final childLast = DateTime.tryParse(full?.lastMade ?? '');
+      final childLast = parseMealieTime(full?.lastMade);
       if (childLast == null || timestamp.isAfter(childLast)) {
         await api.updateLastMade(child.slug, timestamp);
         if (full != null) {

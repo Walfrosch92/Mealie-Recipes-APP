@@ -39,6 +39,90 @@ Future<void> showRecipeImageViewer(
   ));
 }
 
+/// Mehrere Bilder (z. B. alle Bilder eines Schritts) im Vollbild, seitlich
+/// wischbar — jedes Bild mit Zoom/Scrollen wie [showRecipeImageViewer].
+/// [headersFor] liefert pro URL die Anmeldung (nur eigener Server).
+Future<void> showImageGalleryViewer(
+  BuildContext context, {
+  required List<String> urls,
+  int initialIndex = 0,
+  Map<String, String>? Function(String url)? headersFor,
+}) {
+  if (urls.isEmpty) return Future.value();
+  return Navigator.of(context, rootNavigator: true).push(PageRouteBuilder(
+    opaque: true,
+    barrierColor: Colors.black,
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (_, __, ___) => _ImageGallery(
+      urls: urls,
+      initialIndex: initialIndex.clamp(0, urls.length - 1),
+      headersFor: headersFor,
+    ),
+    transitionsBuilder: (_, anim, __, child) =>
+        FadeTransition(opacity: anim, child: child),
+  ));
+}
+
+class _ImageGallery extends StatefulWidget {
+  final List<String> urls;
+  final int initialIndex;
+  final Map<String, String>? Function(String url)? headersFor;
+  const _ImageGallery(
+      {required this.urls, required this.initialIndex, this.headersFor});
+
+  @override
+  State<_ImageGallery> createState() => _ImageGalleryState();
+}
+
+class _ImageGalleryState extends State<_ImageGallery> {
+  late final _controller = PageController(initialPage: widget.initialIndex);
+  late int _index = widget.initialIndex;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topPad = MediaQuery.paddingOf(context).top;
+    return Stack(
+      children: [
+        PageView.builder(
+          controller: _controller,
+          itemCount: widget.urls.length,
+          onPageChanged: (i) => setState(() => _index = i),
+          itemBuilder: (_, i) => _RecipeImageViewer(
+            recipeId: '',
+            imageUrl: widget.urls[i],
+            httpHeaders: widget.headersFor?.call(widget.urls[i]),
+            useOfflineCopy: false,
+          ),
+        ),
+        if (widget.urls.length > 1)
+          Positioned(
+            top: topPad + 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text('${_index + 1} / ${widget.urls.length}',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      decoration: TextDecoration.none)),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _RecipeImageViewer extends StatefulWidget {
   final String recipeId;
   final String imageUrl;
@@ -69,9 +153,10 @@ class _RecipeImageViewerState extends State<_RecipeImageViewer> {
   @override
   void initState() {
     super.initState();
+    // Hauptbild über die Rezept-ID, Schritt-/Notizbilder über ihre URL.
     final file = widget.useOfflineCopy
         ? RecipeImageStore.shared.fileFor(widget.recipeId)
-        : null;
+        : RecipeImageStore.shared.fileForUrl(widget.imageUrl);
     _provider = file != null
         ? FileImage(file)
         : CachedNetworkImageProvider(widget.imageUrl,

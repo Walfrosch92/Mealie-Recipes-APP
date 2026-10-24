@@ -11,7 +11,10 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/utils/ingredient_display.dart';
+import '../../../core/utils/markdown_parse.dart'
+    show embeddedImageUrls, stripEmbeddedImages;
 import '../../../core/utils/yield_format.dart';
+import '../../../core/services/recipe_image_store.dart';
 
 // ---------------------------------------------------------------------------
 // RecipePdfService — generiert ein eigenständiges Rezept-PDF (Bild als Bytes
@@ -86,6 +89,45 @@ class RecipePdfService {
       }
     }
 
+    // Bilder IN den Schritten (Mealie-Importe hängen sie als HTML-`<img>` bzw.
+    // Markdown an) — wie in der App ein Bild je Schritt unter dem Text. Vorher
+    // stand der rohe `<img src=…>`-Code im PDF. Fehlende/unlesbare Bilder
+    // werden still ausgelassen, das PDF entsteht trotzdem.
+    final stepImages = <int, List<pw.ImageProvider>>{};
+    final noteImages = <int, List<pw.ImageProvider>>{};
+    if (includeImage) {
+      final base = api.settings.serverUrl;
+      Future<List<pw.ImageProvider>> load(String text) async {
+        final imgs = <pw.ImageProvider>[];
+        for (final url in embeddedImageUrls(text, base)) {
+          try {
+            // Offline-Kopie zuerst — PDF klappt dann auch ohne Netz.
+            final local = RecipeImageStore.shared.fileForUrl(url);
+            final b = local != null
+                ? await local.readAsBytes()
+                : await api.fetchImageBytesFromUrl(url);
+            if (b.isEmpty) continue;
+            imgs.add(pw.MemoryImage(Uint8List.fromList(b)));
+          } catch (_) {/* nicht ladbar/unbekanntes Format → auslassen */}
+        }
+        return imgs;
+      }
+
+      await Future.wait([
+        for (var i = 0; i < recipe.recipeInstructions.length; i++)
+          () async {
+            final imgs = await load(recipe.recipeInstructions[i].text);
+            if (imgs.isNotEmpty) stepImages[i] = imgs;
+          }(),
+        // Bilder in Notizen genauso (vorher nur aus dem Text entfernt).
+        for (var i = 0; i < recipe.notes.length; i++)
+          () async {
+            final imgs = await load(recipe.notes[i].text);
+            if (imgs.isNotEmpty) noteImages[i] = imgs;
+          }(),
+      ]);
+    }
+
     final baseFontData =
         await rootBundle.load('assets/fonts/Inter-Variable.ttf');
     final headingFontData =
@@ -114,6 +156,8 @@ class RecipePdfService {
         recipe: recipe,
         multiplier: multiplier,
         imageBytes: imageBytes,
+        stepImages: stepImages,
+        noteImages: noteImages,
         baseFont: baseFont,
         headingFont: headingFont,
         labels: labels,
@@ -127,17 +171,19 @@ class RecipePdfService {
     final file = File('${dir.path}/$fileName.pdf');
     await file.writeAsBytes(bytes, flush: true);
 
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'application/pdf')],
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path, mimeType: 'application/pdf')],
       subject: recipe.name,
       sharePositionOrigin: sharePositionOrigin,
-    );
+    ));
   }
 
   static List<pw.Widget> _buildContent({
     required RecipeDetail recipe,
     required double multiplier,
     required Uint8List? imageBytes,
+    Map<int, List<pw.ImageProvider>> stepImages = const {},
+    Map<int, List<pw.ImageProvider>> noteImages = const {},
     required pw.Font baseFont,
     required pw.Font headingFont,
     required RecipePdfLabels labels,
@@ -304,7 +350,9 @@ class RecipePdfService {
       for (var i = 0; i < recipe.recipeInstructions.length; i++) {
         final step = recipe.recipeInstructions[i];
         final section = step.sectionTitle;
-        final text = _stripMarkdown(step.text);
+        // Eingebettete Bilder (HTML `<img>`, Markdown, nackte Bild-URLs) aus
+        // dem Text nehmen — sie kommen als echtes Bild darunter.
+        final text = _stripMarkdown(stripEmbeddedImages(step.text));
         if (section != null) {
           widgets.add(pw.Padding(
             padding: pw.EdgeInsets.only(top: i == 0 ? 0 : 6, bottom: 6),
@@ -344,12 +392,27 @@ class RecipePdfService {
                                 fontSize: 10.5,
                                 color: _textDark)),
                       ),
-                    pw.Text(text,
-                        style: pw.TextStyle(
-                            font: baseFont,
-                            fontSize: 10.5,
-                            color: _textDark,
-                            lineSpacing: 2)),
+                    if (text.isNotEmpty)
+                      pw.Text(text,
+                          style: pw.TextStyle(
+                              font: baseFont,
+                              fontSize: 10.5,
+                              color: _textDark,
+                              lineSpacing: 2)),
+                    for (final img
+                        in stepImages[i] ?? const <pw.ImageProvider>[])
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(top: 6),
+                        child: pw.ClipRRect(
+                          horizontalRadius: 6,
+                          verticalRadius: 6,
+                          child: pw.ConstrainedBox(
+                            constraints: const pw.BoxConstraints(
+                                maxHeight: 190, maxWidth: 300),
+                            child: pw.Image(img, fit: pw.BoxFit.contain),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -364,20 +427,39 @@ class RecipePdfService {
     if (recipe.notes.isNotEmpty) {
       widgets.add(_sectionHeader(labels.notes, headingFont));
       widgets.add(pw.SizedBox(height: 8));
-      for (final n in recipe.notes) {
+      for (var ni = 0; ni < recipe.notes.length; ni++) {
+        final n = recipe.notes[ni];
         if (n.title.isNotEmpty) {
           widgets.add(pw.Text(n.title,
               style: pw.TextStyle(
                   font: headingFont, fontSize: 10.5, color: _textDark)));
           widgets.add(pw.SizedBox(height: 2));
         }
-        if (n.text.isNotEmpty) {
-          widgets.add(pw.Text(_stripMarkdown(n.text),
+        final noteText = _stripMarkdown(stripEmbeddedImages(n.text));
+        if (noteText.isNotEmpty) {
+          widgets.add(pw.Text(noteText,
               style: pw.TextStyle(
                   font: baseFont,
                   fontSize: 10,
                   color: _textSub,
                   lineSpacing: 2)));
+        }
+        for (final img in noteImages[ni] ?? const <pw.ImageProvider>[]) {
+          widgets.add(pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 6),
+            child: pw.Align(
+              alignment: pw.Alignment.centerLeft,
+              child: pw.ClipRRect(
+                horizontalRadius: 6,
+                verticalRadius: 6,
+                child: pw.ConstrainedBox(
+                  constraints:
+                      const pw.BoxConstraints(maxHeight: 190, maxWidth: 300),
+                  child: pw.Image(img, fit: pw.BoxFit.contain),
+                ),
+              ),
+            ),
+          ));
         }
         widgets.add(pw.SizedBox(height: 8));
       }

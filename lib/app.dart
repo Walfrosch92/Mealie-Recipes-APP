@@ -38,6 +38,8 @@ import 'core/models/organizer_item.dart';
 import 'features/organizers/screens/organizers_screen.dart';
 import 'features/timeline/screens/timeline_screen.dart';
 import 'features/recipes/screens/favorites_screen.dart';
+import 'features/recipes/screens/recently_viewed_screen.dart';
+import 'features/recipe_duplicates/screens/duplicates_screen.dart';
 import 'features/users/screens/user_management_screen.dart';
 import 'features/users/screens/household_management_screen.dart';
 import 'features/shopping_list/screens/shopping_lists_screen.dart';
@@ -62,6 +64,10 @@ import 'features/webapp_tools/screens/report_screen.dart';
 import 'features/webapp_tools/screens/update_screen.dart';
 import 'features/webapp_tools/screens/webhooks_screen.dart';
 import 'shared/widgets/liquid_glass.dart';
+import 'shared/widgets/offline_banner.dart';
+import 'core/services/connection_monitor.dart';
+import 'features/recipes/services/recipe_notes_sync.dart';
+import 'features/timeline/services/offline_cooked_queue.dart';
 
 // ---------------------------------------------------------------------------
 // Router
@@ -176,7 +182,12 @@ final _routerProvider = Provider<GoRouter>((ref) {
                   path: ':slug',
                   parentNavigatorKey: _rootNavigatorKey,
                   pageBuilder: (ctx, state) => _animatedPage(state,
-                      RecipeDetailScreen(slug: state.pathParameters['slug']!)),
+                      RecipeDetailScreen(
+                          slug: state.pathParameters['slug']!,
+                          // ?scale=… z. B. aus dem Mahlzeitplan (Portionen
+                          // des Eintrags), wie die Webapp.
+                          initialScale: double.tryParse(
+                              state.uri.queryParameters['scale'] ?? ''))),
                 ),
                 GoRoute(
                   path: ':slug/edit',
@@ -271,6 +282,18 @@ final _routerProvider = Provider<GoRouter>((ref) {
         path: '/favorites',
         pageBuilder: (ctx, state) =>
             _animatedPage(state, const FavoritesScreen()),
+      ),
+      // Zuletzt angesehene Rezepte (Kachel in „Weiteres").
+      GoRoute(
+        path: '/recent',
+        pageBuilder: (ctx, state) =>
+            _animatedPage(state, const RecentlyViewedScreen()),
+      ),
+      // Duplikatsfinder (Kachel in „Weiteres").
+      GoRoute(
+        path: '/duplicates',
+        pageBuilder: (ctx, state) =>
+            _animatedPage(state, const DuplicatesScreen()),
       ),
       // Zeitleiste aller Rezepte (Home-Kachel).
       GoRoute(
@@ -417,12 +440,15 @@ final _routerProvider = Provider<GoRouter>((ref) {
 // Leiste schwebt einfach über dem Inhalt (deren Blur greift weiter).
 // ---------------------------------------------------------------------------
 
-class _TabShell extends StatelessWidget {
+class _TabShell extends ConsumerWidget {
   final StatefulNavigationShell shell;
   const _TabShell({required this.shell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Offline-Streifen oben: trägt selbst das Statusleisten-Polster, die Tabs
+    // bekommen es dann nicht noch einmal (sonst doppelter Abstand).
+    final offline = offlineBannerVisible(ref);
     // Material(transparency): die Shell liegt AUSSERHALB der Screen-Scaffolds
     // — ohne Material-Ancestor rendern die Tab-Label-Texte mit dem Fallback-
     // TextStyle (gelbe Doppel-Unterstreichung, „komische Striche").
@@ -440,12 +466,35 @@ class _TabShell extends StatelessWidget {
       },
       child: Material(
         type: MaterialType.transparency,
-        child: Stack(
+        child: Column(
           children: [
-            Positioned.fill(child: shell),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: GlassTabBar(current: GlassTab.values[shell.currentIndex]),
+            const OfflineBanner(),
+            Expanded(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: offline,
+                // Scaffold statt Stack: Die schwebende Tab-Leiste ist jetzt
+                // `bottomNavigationBar` — nur so kennt Flutter ihre Höhe und
+                // zeigt Hinweise (SnackBars) DARÜBER. Vorher lagen sie auf
+                // allen Tab-Seiten unter der Leiste und waren kaum lesbar
+                // (z. B. „Keine Mail-App" beim Support-Kontakt).
+                // Die Tab-Seiten bekommen dieselben Abstände wie bisher
+                // (MediaQuery unverändert durchgereicht), die Tastatur regeln
+                // sie weiterhin selbst.
+                child: Builder(
+                  builder: (context) => Scaffold(
+                    backgroundColor: Colors.transparent,
+                    extendBody: true,
+                    resizeToAvoidBottomInset: false,
+                    body: MediaQuery(
+                      data: MediaQuery.of(context),
+                      child: shell,
+                    ),
+                    bottomNavigationBar: GlassTabBar(
+                        current: GlassTab.values[shell.currentIndex]),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -574,10 +623,31 @@ class _MealieAppState extends ConsumerState<MealieApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Offline vorgemerkte Notizen: beim Start und sobald der Server wieder
+    // antwortet (offline → online) nachsenden.
+    ConnectionMonitor.instance.addListener(_onConnectionChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _flushOfflineQueues());
+  }
+
+  /// Offline Vorgemerktes nachsenden: Notizen, „Ich hab's gekocht" (inkl.
+  /// Foto) und Kochmodus-Kommentare.
+  void _flushOfflineQueues() {
+    if (!mounted) return;
+    unawaited(flushPendingRecipeNotes(ref));
+    unawaited(
+        flushOfflineCooked(ProviderScope.containerOf(context, listen: false)));
+  }
+
+  bool _wasOffline = false;
+  void _onConnectionChanged() {
+    final offline = ConnectionMonitor.instance.offline;
+    if (_wasOffline && !offline) _flushOfflineQueues();
+    _wasOffline = offline;
   }
 
   @override
   void dispose() {
+    ConnectionMonitor.instance.removeListener(_onConnectionChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -609,6 +679,7 @@ class _MealieAppState extends ConsumerState<MealieApp>
     // statt erst beim nächsten Kaltstart. No-op, wenn alles abgeglichen ist.
     if (state == AppLifecycleState.resumed) {
       ref.read(recipesProvider.notifier).resumeSyncIfNeeded();
+      _flushOfflineQueues();
     }
   }
 
@@ -780,13 +851,31 @@ class _MealieAppState extends ConsumerState<MealieApp>
                 isDark ? Brightness.light : Brightness.dark,
             systemNavigationBarContrastEnforced: false,
           ),
-          child: _LargeScreenFrame(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (child != null) Positioned.fill(child: child),
-                const _BiometricLockOverlay(),
-              ],
+          // Systemschrift bis 135 % mitgehen, darüber deckeln: ohne Grenze
+          // liefen bei den großen Bedienungshilfen-Größen (iOS bis ~310 %)
+          // Tab-Leiste, Kacheln, Chips und Timer-Chips über bzw. wurden
+          // abgeschnitten. Wer kleinere Größen nutzt, merkt nichts.
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.35,
+            child: _LargeScreenFrame(
+              // Querformat auf Geräten mit Notch/Kamera-Ausschnitt: seitlich
+              // den sicheren Bereich einhalten — sonst lagen Knöpfe am Rand
+              // (Zurück, ⋮, Schließen, Listen-Aktionen) halb unter der Notch.
+              // Oben/unten regeln die Screens selbst (Tab-Leiste, Edge-to-Edge).
+              child: ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (child != null) Positioned.fill(child: child),
+                      const _BiometricLockOverlay(),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         );
@@ -794,7 +883,12 @@ class _MealieAppState extends ConsumerState<MealieApp>
     );
   }
 
-  Locale _localeFor(String code) => Locale(code);
+  /// „fr_CA" → Locale('fr', 'CA'): regionale Variante (nur Abweichungen,
+  /// der Rest fällt automatisch auf die Grundsprache zurück).
+  Locale _localeFor(String code) {
+    final parts = code.split('_');
+    return parts.length > 1 ? Locale(parts[0], parts[1]) : Locale(code);
+  }
 
   ThemeData _buildTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;

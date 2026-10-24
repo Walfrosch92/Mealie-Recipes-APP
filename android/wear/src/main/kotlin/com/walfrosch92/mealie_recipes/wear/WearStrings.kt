@@ -15,9 +15,17 @@ package com.walfrosch92.mealie_recipes.wear
  */
 object WearStrings {
     fun t(key: String, lang: String): String =
-        table[lang]?.get(key) ?: table.getValue("de").getValue(key)
+        // Regionale Variante (z. B. "fr_CA") → eigene Einträge, sonst die
+        // Grundsprache ("fr"), sonst Deutsch.
+        table[lang]?.get(key) ?: table[lang.substringBefore('_')]?.get(key)
+            ?: table.getValue("de").getValue(key)
 
     private val table: Map<String, Map<String, String>> = mapOf(
+        // Französisch (Kanada): nur Abweichungen, Rest kommt aus "fr".
+        "fr_CA" to mapOf(
+            "shoppingHeader" to "Épicerie",
+            "shoppingTileLabel" to "Liste d'épicerie",
+        ),
         "de" to mapOf(
             "noActiveTimer" to "Kein aktiver Timer",
             "openPhoneHint" to "Starte einen Timer im Kochmodus auf dem Handy.",
@@ -164,7 +172,7 @@ object WearStrings {
         ),
         "nb" to mapOf(
             "noActiveTimer" to "Ingen aktiv timer",
-            "openPhoneHint" to "Start en timer i kokemodus på telefonen.",
+            "openPhoneHint" to "Start en timer i tilberedelsesmodus på telefonen.",
             "pause" to "Pause",
             "resume" to "Fortsett",
             "stop" to "Stopp",

@@ -5,6 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/utils/markdown_parse.dart';
 import '../theme/app_colors.dart';
+import '../../core/utils/auth_headers.dart';
+import 'recipe_image_viewer.dart';
+import '../../core/services/recipe_image_store.dart';
 
 // ---------------------------------------------------------------------------
 // Markdown-Anzeige im Premium-Design.
@@ -263,27 +266,34 @@ class _StepImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Nur exakt der eigene Server bekommt den Token — mit Pfadgrenze, damit
-    // z. B. „https://srv.de.evil.com" nicht als Präfix von „https://srv.de"
-    // durchgeht; Trailing-Slash in den Settings wird normalisiert.
-    var base = (serverUrl ?? '').trim();
-    if (base.endsWith('/')) base = base.substring(0, base.length - 1);
-    final sendAuth = base.isNotEmpty &&
-        (apiToken ?? '').isNotEmpty &&
-        (url == base || url.startsWith('$base/'));
-
+    // Nur exakt der eigene Server bekommt den Token (auth_headers.dart).
+    final headers = authHeadersFor(url, serverUrl ?? '', apiToken ?? '');
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.rMd),
-        child: CachedNetworkImage(
-          imageUrl: url,
-          httpHeaders: sendAuth ? {'Authorization': 'Bearer $apiToken'} : null,
-          width: double.infinity,
-          height: 190,
-          fit: BoxFit.cover,
-          placeholder: (_, __) => _placeholder(context),
-          errorWidget: (_, __, ___) => _placeholder(context),
+      // Antippen öffnet das Bild groß (Zoom), wie das Rezeptbild oben.
+      child: GestureDetector(
+        onTap: () => showImageGalleryViewer(context,
+            urls: [url],
+            headersFor: (u) =>
+                authHeadersFor(u, serverUrl ?? '', apiToken ?? '')),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTokens.rMd),
+          // Offline-Kopie („Rezeptbilder offline speichern"), sonst Netzwerk.
+          child: RecipeImageStore.shared.fileForUrl(url) != null
+              ? Image.file(RecipeImageStore.shared.fileForUrl(url)!,
+                  width: double.infinity,
+                  height: 190,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _placeholder(context))
+              : CachedNetworkImage(
+                  imageUrl: url,
+                  httpHeaders: headers,
+                  width: double.infinity,
+                  height: 190,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => _placeholder(context),
+                  errorWidget: (_, __, ___) => _placeholder(context),
+                ),
         ),
       ),
     );

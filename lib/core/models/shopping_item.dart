@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import '../utils/ingredient_display.dart' show formatQuantity;
+
 part 'shopping_item.g.dart';
 
 @JsonSerializable(explicitToJson: true)
@@ -160,9 +162,8 @@ class ShoppingItem {
     if (display != null && display!.isNotEmpty) return display!;
     final parts = <String>[];
     if (quantity != null && quantity! > 0) {
-      parts.add(quantity! == quantity!.truncateToDouble()
-          ? quantity!.truncate().toString()
-          : quantity!.toStringAsFixed(1));
+      // Gleiche Bruch-Anzeige wie die Liste (⅛ statt „0.1").
+      parts.add(formatQuantity(quantity!));
     }
     if (unit?.name != null) parts.add(unit!.name!);
     if (food?.name != null) {
@@ -188,6 +189,22 @@ class ShoppingLabel {
   Map<String, dynamic> toJson() => _$ShoppingLabelToJson(this);
 }
 
+/// Aliasse tolerant einlesen: Mealie liefert `[{"name": "…"}]`, der lokale
+/// Katalog-Cache speichert reine Texte. Unbekanntes wird ignoriert — ein
+/// Alias darf NIE das Lesen eines Artikels (und damit der ganzen Liste)
+/// scheitern lassen.
+List<String>? _parseFoodAliases(dynamic raw) {
+  if (raw is! List) return null;
+  return [
+    for (final a in raw)
+      if (a is String && a.trim().isNotEmpty)
+        a.trim()
+      else if (a is Map && a['name'] is String &&
+          (a['name'] as String).trim().isNotEmpty)
+        (a['name'] as String).trim(),
+  ];
+}
+
 @JsonSerializable()
 class ShoppingFood {
   final String? id;
@@ -203,13 +220,18 @@ class ShoppingFood {
   /// Bezeichnung (Label) des Lebensmittels — Rezept-Suche-Filter offline.
   final String? labelId;
 
+  /// Aliasse (Mealie `aliases[].name`) — getippter Text, der einem Alias
+  /// entspricht, ist wie in der Webapp dieses Lebensmittel.
+  final List<String>? aliases;
+
   const ShoppingFood(
       {this.id,
       this.name,
       this.pluralName,
       this.householdsWithIngredientFood,
       this.onHand,
-      this.labelId});
+      this.labelId,
+      this.aliases});
 
   /// „Im Haushalt vorrätig" für den Haushalt [householdSlug] — dieselbe
   /// Regel wie Mealie-Web beim Hinzufügen zur Einkaufsliste.

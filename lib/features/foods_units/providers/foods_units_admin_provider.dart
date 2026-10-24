@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/services/local_cache.dart';
+import '../../recipes/providers/recipes_provider.dart';
 import '../../shopping_list/providers/foods_units_provider.dart';
 
 // ---------------------------------------------------------------------------
@@ -105,8 +106,15 @@ class FoodsUnitsAdminNotifier
       await _store([
         for (final m in _current) m['id'] == id ? updated : m,
       ]);
+      await _patchRecipes(id, updated);
     }
   }
+
+  /// Gecachte Rezepte auf den neuen Stand bringen (siehe
+  /// [RecipesNotifier.replaceFoodUnitEverywhere]).
+  Future<void> _patchRecipes(String id, Map<String, dynamic>? replacement) =>
+      ref.read(recipesProvider.notifier).replaceFoodUnitEverywhere(
+          unit: arg == FoodUnitKind.unit, id: id, replacement: replacement);
 
   Future<void> delete(Map<String, dynamic> item) async {
     final api = ref.read(apiServiceProvider);
@@ -117,6 +125,7 @@ class FoodsUnitsAdminNotifier
       await api.deleteUnit(id);
     }
     await _store(_current.where((m) => m['id'] != id).toList());
+    await _patchRecipes(id, null);
   }
 
   /// [from] in [to] zusammenführen — [from] verschwindet.
@@ -130,5 +139,6 @@ class FoodsUnitsAdminNotifier
       await api.mergeUnits(fromId, toId);
     }
     await _store(_current.where((m) => m['id'] != fromId).toList());
+    await _patchRecipes(fromId, to);
   }
 }

@@ -137,6 +137,38 @@ class PendingCategoryChange {
   int get hashCode => Object.hash(itemId, labelId);
 }
 
+/// Offline umbenannter Artikel. Gab es in der iOS-App nicht — dort ging die
+/// Umbenennung beim nächsten Abgleich verloren. [clearFood]/[clearUnit]: der
+/// Artikel war mit einem Lebensmittel verknüpft und wurde bewusst umbenannt
+/// (siehe ShoppingListNotifier.editItem).
+class PendingNoteChange {
+  final String itemId;
+  final String note;
+  final bool clearFood;
+  final bool clearUnit;
+
+  const PendingNoteChange({
+    required this.itemId,
+    required this.note,
+    this.clearFood = false,
+    this.clearUnit = false,
+  });
+
+  factory PendingNoteChange.fromJson(Map<String, dynamic> json) =>
+      PendingNoteChange(
+        itemId: json['itemId']?.toString() ?? '',
+        note: json['note']?.toString() ?? '',
+        clearFood: json['clearFood'] == true,
+        clearUnit: json['clearUnit'] == true,
+      );
+  Map<String, dynamic> toJson() => {
+        'itemId': itemId,
+        'note': note,
+        'clearFood': clearFood,
+        'clearUnit': clearUnit,
+      };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregated state
 // ---------------------------------------------------------------------------
@@ -147,6 +179,7 @@ class PendingShoppingChangesState {
   final List<PendingDeleteChange> deletes;
   final List<PendingAddChange> adds;
   final List<PendingCategoryChange> categories;
+  final List<PendingNoteChange> notes;
 
   const PendingShoppingChangesState({
     this.checks = const [],
@@ -154,6 +187,7 @@ class PendingShoppingChangesState {
     this.deletes = const [],
     this.adds = const [],
     this.categories = const [],
+    this.notes = const [],
   });
 
   bool get hasChanges =>
@@ -161,7 +195,8 @@ class PendingShoppingChangesState {
       quantities.isNotEmpty ||
       deletes.isNotEmpty ||
       adds.isNotEmpty ||
-      categories.isNotEmpty;
+      categories.isNotEmpty ||
+      notes.isNotEmpty;
 
   PendingShoppingChangesState copyWith({
     List<PendingCheckChange>? checks,
@@ -169,6 +204,7 @@ class PendingShoppingChangesState {
     List<PendingDeleteChange>? deletes,
     List<PendingAddChange>? adds,
     List<PendingCategoryChange>? categories,
+    List<PendingNoteChange>? notes,
   }) {
     return PendingShoppingChangesState(
       checks: checks ?? this.checks,
@@ -176,6 +212,7 @@ class PendingShoppingChangesState {
       deletes: deletes ?? this.deletes,
       adds: adds ?? this.adds,
       categories: categories ?? this.categories,
+      notes: notes ?? this.notes,
     );
   }
 }

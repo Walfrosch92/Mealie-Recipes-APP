@@ -73,6 +73,7 @@ ShoppingFood _$ShoppingFoodFromJson(Map<String, dynamic> json) => ShoppingFood(
               .toList(),
       onHand: json['onHand'] as bool?,
       labelId: json['labelId'] as String?,
+      aliases: _parseFoodAliases(json['aliases']),
     );
 
 Map<String, dynamic> _$ShoppingFoodToJson(ShoppingFood instance) =>
@@ -83,6 +84,7 @@ Map<String, dynamic> _$ShoppingFoodToJson(ShoppingFood instance) =>
       'householdsWithIngredientFood': instance.householdsWithIngredientFood,
       'onHand': instance.onHand,
       'labelId': instance.labelId,
+      'aliases': instance.aliases,
     };
 
 ShoppingUnit _$ShoppingUnitFromJson(Map<String, dynamic> json) => ShoppingUnit(

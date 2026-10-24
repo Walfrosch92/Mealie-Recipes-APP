@@ -35,6 +35,7 @@ const List<ImportLanguage> kImportLanguages = [
   ImportLanguage('et', 'Eesti', '🇪🇪'),
   ImportLanguage('fi', 'Suomi', '🇫🇮'),
   ImportLanguage('fr', 'Français', '🇫🇷'),
+  ImportLanguage('fr-CA', 'Français (Canada)', '🇨🇦'),
   ImportLanguage('he', 'עברית', '🇮🇱'),
   ImportLanguage('hi', 'हिन्दी', '🇮🇳'),
   ImportLanguage('hr', 'Hrvatski', '🇭🇷'),

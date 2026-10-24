@@ -211,7 +211,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _loadingLists = true);
     try {
       final tmpSettings = AppSettings(
-        serverUrl: _urlCtrl.text.trim(),
+        serverUrl: _cleanServerUrl,
         apiToken: _tokenCtrl.text.trim(),
         householdId: _householdCtrl.text.trim(),
         sendOptionalHeaders: _tempSendHeaders,
@@ -220,6 +220,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
       final svc = ApiService(tmpSettings);
       final lists = await svc.fetchShoppingLists();
+      if (!mounted) return;
       setState(() {
         _shoppingLists = lists;
         if (_tempShoppingListId.isEmpty && lists.isNotEmpty) {
@@ -230,7 +231,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (e) {
       HapticFeedback.vibrate();
     } finally {
-      setState(() => _loadingLists = false);
+      if (mounted) setState(() => _loadingLists = false);
     }
   }
 
@@ -240,7 +241,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // Erfolg (token, generatedId, version) zurück — Persistieren übernimmt
   // weiterhin „Änderungen speichern", wie bei jedem anderen Feld hier.
   Future<void> _openRenewTokenSheet() async {
-    final url = _urlCtrl.text.trim();
+    final url = _cleanServerUrl;
     if (url.isEmpty) {
       final l = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context)
@@ -437,6 +438,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // (Debounce-Timer der Text-Felder, sofortiger Aufruf bei Toggle/Dropdown/
   // Segmented-Änderungen). So landet bei JEDER Änderung immer der komplette
   // aktuelle Stand in den Settings — nicht nur das gerade geänderte Feld.
+  /// Server-Adresse ohne Leerzeichen und Schrägstrich am Ende — wie im
+  /// Setup. Sonst entstehen „…com//api/media/…"-Bildadressen (manche
+  /// Proxys liefern dann 404, der Bild-Cache findet sie nicht wieder).
+  String get _cleanServerUrl =>
+      _urlCtrl.text.trim().replaceAll(RegExp(r'/+$'), '');
+
   Future<void> _persistAll() async {
     final current =
         ref.read(settingsProvider).valueOrNull ?? const AppSettings();
@@ -454,7 +461,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
     await ref.read(settingsProvider.notifier).save(current.copyWith(
           shoppingCategoryOrder: listOrder,
-          serverUrl: _urlCtrl.text.trim(),
+          serverUrl: _cleanServerUrl,
           apiToken: _tokenCtrl.text.trim(),
           householdId: _householdCtrl.text.trim(),
           shoppingListId: _tempShoppingListId,
@@ -1404,6 +1411,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'de',
                   'en',
                   'fr',
+                  'fr_CA',
                   'es',
                   'hu',
                   'nl',
@@ -1520,6 +1528,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       // Pops über den Dialog-Context (Root- vs. Branch-Navigator).
       builder: (dialogCtx) => AlertDialog(
+        // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+        scrollable: true,
         backgroundColor: context.appCard,
         title: Text(l.supportContact, style: TextStyle(color: context.appFg)),
         content: Column(
@@ -1579,11 +1589,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         hintLine: l.supportMailHint,
       );
       if (!ok && mounted) {
-        // Ohne Mail-App bleibt nur die Adresse — die soll der Nutzer nicht
-        // abtippen müssen.
+        // Ohne Mail-App: Adresse in die Zwischenablage UND das Teilen-Menü
+        // öffnen, damit man mit Gmail, Outlook o. Ä. trotzdem schreiben kann.
         copyAddress();
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l.supportNoMailApp(address))));
+        await SupportMailService.shareText(
+          subject: l.supportMailSubject,
+          languageCode: _tempLang,
+          hintLine: l.supportMailHint,
+          sharePositionOrigin: shareOrigin,
+        );
       }
       return;
     }
@@ -1608,6 +1624,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         'de' => '🇩🇪',
         'en' => '🇬🇧',
         'fr' => '🇫🇷',
+        'fr_CA' => '🇨🇦',
         'es' => '🇪🇸',
         'hu' => '🇭🇺',
         'nl' => '🇳🇱',
@@ -1622,6 +1639,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         'de' => 'Deutsch',
         'en' => 'English',
         'fr' => 'Français',
+        'fr_CA' => 'Français (Canada)',
         'es' => 'Español',
         'hu' => 'Magyar',
         'nl' => 'Nederlands',
@@ -2062,7 +2080,7 @@ class _ModernField extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: Colors.grey,
+                color: context.appFgTertiary,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -2372,7 +2390,9 @@ class _AddReminderLocationSheetState extends State<_AddReminderLocationSheet> {
         right: 16,
         top: 16,
       ),
-      child: Column(
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2445,7 +2465,7 @@ class _AddReminderLocationSheetState extends State<_AddReminderLocationSheet> {
           ],
           const SizedBox(height: 16),
         ],
-      ),
+      )),
     );
   }
 }

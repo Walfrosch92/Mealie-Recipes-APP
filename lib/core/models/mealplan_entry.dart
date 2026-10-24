@@ -29,6 +29,11 @@ class MealplanEntry {
   @JsonKey(fromJson: _idToStringNullable)
   final String? recipeId;
 
+  /// Portionen-Faktor des Eintrags (Mealie ab 3.29, Default 1). `null` =
+  /// älterer Server bzw. alter Cache. Muss beim PUT mitgeschickt werden,
+  /// sonst setzt Mealie ihn auf 1 zurück.
+  final double? recipeScale;
+
   const MealplanEntry({
     required this.id,
     this.groupId,
@@ -40,6 +45,7 @@ class MealplanEntry {
     this.householdId,
     this.userId,
     this.recipeId,
+    this.recipeScale,
   });
 
   factory MealplanEntry.fromJson(Map<String, dynamic> json) =>

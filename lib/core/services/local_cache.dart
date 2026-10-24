@@ -34,6 +34,7 @@ class LocalCache {
   static const _pendingDeleteKey = 'pendingDeleteChanges';
   static const _pendingAddKey = 'pendingAddChanges';
   static const _pendingCategoryKey = 'pendingCategoryChanges';
+  static const _pendingNoteKey = 'pendingNoteChanges';
   // SendTo persistence — survive App-Neustarts.
   // Empfänger: empfangene Rezepte + Dedupe-Set für sendIds (gegen
   // Sender-Retry-Duplikate). Sender (Android-only): Outgoing-Queue für
@@ -416,6 +417,16 @@ class LocalCache {
       _readJsonList('cache_$key');
 
   // ── internal helpers ──────────────────────────────────────────────────────
+
+  static Future<void> savePendingNoteChanges(
+      List<PendingNoteChange> changes) async {
+    await _writeJsonList(_pendingNoteKey, changes.map((c) => c.toJson()));
+  }
+
+  static Future<List<PendingNoteChange>> loadPendingNoteChanges() async {
+    final raw = await _readJsonList(_pendingNoteKey);
+    return raw.map((e) => PendingNoteChange.fromJson(e)).toList();
+  }
 
   static Future<void> _writeJsonList(
       String key, Iterable<Map<String, dynamic>> items) async {

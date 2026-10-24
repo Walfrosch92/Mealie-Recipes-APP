@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/utils/search_match.dart';
+import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../organizers/providers/organizers_provider.dart'
     show ownHouseholdSlugProvider;
@@ -157,6 +158,18 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
         (a['name'] as String).trim(),
   ];
 
+  void _rebuild() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Duplikat-/Alias-Hinweise live beim Tippen.
+    _name.addListener(_rebuild);
+    _aliasCtrl.addListener(_rebuild);
+  }
+
   @override
   void dispose() {
     for (final c in [
@@ -173,6 +186,42 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
     super.dispose();
   }
 
+  // ── Begriffe der ANDEREN Einträge (Vorschläge + Duplikat-Prüfung) ──
+  Iterable<Map<String, dynamic>> get _others =>
+      widget.allItems.where((m) => _item == null || m['id'] != _item!['id']);
+
+  /// Alle Begriffe eines Eintrags: Name, Mehrzahl, Aliasse (bei Einheiten
+  /// auch die Abkürzungen) — genau das, worüber Mealie ihn erkennt.
+  List<String> _termsOf(Map<String, dynamic> m) => [
+        for (final k in [
+          'name',
+          'pluralName',
+          if (_isUnit) 'abbreviation',
+          if (_isUnit) 'pluralAbbreviation',
+        ])
+          if ((m[k] as String?)?.trim().isNotEmpty == true)
+            (m[k] as String).trim(),
+        for (final a in (m['aliases'] as List?) ?? const [])
+          if (a is Map && (a['name'] as String?)?.trim().isNotEmpty == true)
+            (a['name'] as String).trim(),
+      ];
+
+  late final List<String> _otherTerms = {
+    for (final m in _others) ..._termsOf(m),
+  }.toList();
+
+  /// Name des anderen Eintrags, der [text] schon trägt (sonst null).
+  String? _ownerOf(String text) {
+    final q = normalizeForSearch(text);
+    if (q.isEmpty) return null;
+    for (final m in _others) {
+      if (_termsOf(m).any((t) => normalizeForSearch(t) == q)) {
+        return foodUnitName(m);
+      }
+    }
+    return null;
+  }
+
   void _addAlias() {
     final v = _aliasCtrl.text.trim();
     if (v.isEmpty) return;
@@ -186,6 +235,12 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
     final name = _name.text.trim();
     if (name.isEmpty) {
       setState(() => _nameError = true);
+      return;
+    }
+    // Neu anlegen, obwohl es den Begriff schon gibt → nicht doppelt anlegen
+    // (Mealie würde sonst zwei gleiche Einträge führen).
+    if (_item == null && _ownerOf(name) != null) {
+      setState(() {});
       return;
     }
     final data = <String, dynamic>{
@@ -413,6 +468,36 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
         ],
       ];
 
+  /// Name: beim Neuanlegen mit Vorschlägen der vorhandenen Einträge — ein
+  /// exakter Treffer wird gesperrt („Gibt es schon"), beim Umbenennen nur
+  /// als Hinweis gezeigt.
+  Widget _nameField(AppLocalizations l) {
+    final owner = _ownerOf(_name.text);
+    final String? error = _nameError
+        ? l.required
+        : (owner != null && _item == null ? l.nameAlreadyExists(owner) : null);
+    final String? helper =
+        owner != null && _item != null ? l.nameAlreadyExists(owner) : null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: AutocompleteField(
+        controller: _name,
+        options: _otherTerms,
+        style: TextStyle(color: context.appFg),
+        onTapOutside: (_) => FocusScope.of(context).unfocus(),
+        decoration: InputDecoration(
+          labelText: l.name,
+          errorText: error,
+          helperText: helper,
+          helperMaxLines: 2,
+          errorMaxLines: 2,
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTokens.rSm)),
+        ),
+      ),
+    );
+  }
+
   Widget _aliasEditor(AppLocalizations l) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -434,15 +519,26 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
             ),
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: TextField(
+            // Vorschläge aus den Begriffen der anderen Einträge; gehört der
+            // Alias schon zu einem anderen Eintrag, ein Hinweis darunter
+            // (Mealie könnte ihn sonst nicht eindeutig zuordnen).
+            child: AutocompleteField(
               controller: _aliasCtrl,
-              textCapitalization: TextCapitalization.sentences,
+              options: _otherTerms,
               onSubmitted: (_) => _addAlias(),
               onTapOutside: (_) => FocusScope.of(context).unfocus(),
               style: TextStyle(color: context.appFg),
               decoration: InputDecoration(
                 hintText: l.aliasAddHint,
                 isDense: true,
+                helperText: () {
+                  final owner = _ownerOf(_aliasCtrl.text);
+                  return owner == null
+                      ? null
+                      : l.aliasBelongsTo(_aliasCtrl.text.trim(), owner);
+                }(),
+                helperMaxLines: 3,
+                helperStyle: const TextStyle(color: Colors.orange),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTokens.rSm)),
                 suffixIcon: IconButton(
@@ -493,6 +589,7 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
                     ].where((t) => t.isNotEmpty).join(' — '),
                     style: TextStyle(color: context.appFg)),
                 trailing: IconButton(
+                  tooltip: AppLocalizations.of(context)!.a11yRemove,
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () => setState(() => _subs.removeAt(i)),
                 ),
@@ -536,9 +633,7 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _field(_name, l.name,
-                      autofocus: _item == null,
-                      error: _nameError ? l.required : null),
+                  _nameField(l),
                   _field(_plural, l.pluralNameLabel),
                   if (_isUnit) ..._unitFields(l) else ..._foodFields(l),
                   _aliasEditor(l),

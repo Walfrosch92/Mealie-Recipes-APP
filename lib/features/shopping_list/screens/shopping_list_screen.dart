@@ -12,10 +12,13 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/models/shopping_item.dart';
+import '../../../core/providers/permissions_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/ingredient_display.dart';
+import '../../../core/utils/search_match.dart' show normalizeForSearch, searchTerms;
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
+import '../utils/shopping_input_parse.dart';
 import '../../../shared/widgets/deletable_chip.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/liquid_glass.dart';
@@ -30,6 +33,7 @@ import '../widgets/shopping_list_switch_sheet.dart';
 import 'google_tasks_import_screen.dart';
 import 'reminders_import_screen.dart';
 import 'sync_changes_sheet.dart';
+import '../../../shared/widgets/error_view.dart';
 
 class ShoppingListScreen extends ConsumerStatefulWidget {
   const ShoppingListScreen({super.key});
@@ -46,8 +50,43 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   final _unitCtrl = TextEditingController();
   final _qtyFocus = FocusNode();
   final _unitFocus = FocusNode();
+  // Wie Mealie 3.29: EIN Eingabefeld; der Pfeil klappt Menge, Einheit und
+  // Notiz für einen strukturierten Artikel auf (in beiden Modi).
+  final _noteCtrl = TextEditingController();
+  final _noteFocus = FocusNode();
+  bool _showDetails = false;
   ShoppingLabel? _selectedLabel;
   bool _inputFocused = false;
+  bool _creatingFood = false;
+
+  // Suche in der Liste (wie Mealie 3.29): erst ab [_kSearchMinItems]
+  // Einträgen angeboten, blendet Nicht-Treffer an Ort und Stelle aus —
+  // Gruppierung und Reihenfolge bleiben.
+  static const _kSearchMinItems = 20;
+  bool _searchOpen = false;
+  final _searchCtrl = TextEditingController();
+
+  void _toggleSearch() => setState(() {
+        _searchOpen = !_searchOpen;
+        // Zu = leer, damit keine unsichtbare Suche Einträge versteckt.
+        if (!_searchOpen) _searchCtrl.clear();
+      });
+
+  /// Name/Notiz, Lebensmittel (auch Plural), Einheit und Abteilung — wie die
+  /// Webapp; jedes Suchwort muss vorkommen.
+  static bool _itemMatches(ShoppingItem item, List<String> terms) {
+    if (terms.isEmpty) return true;
+    final haystack = normalizeForSearch([
+      item.displayName,
+      item.note,
+      item.food?.name,
+      item.food?.pluralName,
+      item.unit?.name,
+      item.unit?.abbreviation,
+      item.label?.name,
+    ].whereType<String>().join(' '));
+    return terms.every(haystack.contains);
+  }
 
   @override
   void initState() {
@@ -57,6 +96,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     _focusNode.addListener(_syncInputFocus);
     _qtyFocus.addListener(_syncInputFocus);
     _unitFocus.addListener(_syncInputFocus);
+    _noteFocus.addListener(_syncInputFocus);
     // Controller-Listener: ohne den blieb der Plus-Button beim Tippen grau
     // (Issue 4a) — das Build-Bracket evaluiert ctrl.text einmal, und ohne
     // Notifier rebuildet die _InputBar erst beim nächsten anderen setState.
@@ -71,35 +111,84 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   }
 
   void _syncInputFocus() {
-    setState(() => _inputFocused =
-        _focusNode.hasFocus || _qtyFocus.hasFocus || _unitFocus.hasFocus);
+    setState(() => _inputFocused = _focusNode.hasFocus ||
+        _qtyFocus.hasFocus ||
+        _unitFocus.hasFocus ||
+        _noteFocus.hasFocus);
   }
 
   @override
   void dispose() {
+    _searchCtrl.dispose();
     _ctrl.dispose();
     _qtyCtrl.dispose();
     _unitCtrl.dispose();
+    _noteCtrl.dispose();
+    _noteFocus.dispose();
     _focusNode.dispose();
     _qtyFocus.dispose();
     _unitFocus.dispose();
     super.dispose();
   }
 
-  void _addItem() {
-    final note = _ctrl.text.trim();
-    if (note.isEmpty) return;
+  /// [newFood]: gerade per „Als neues Lebensmittel speichern" angelegt —
+  /// sonst wird der Text gegen den Katalog aufgelöst (Name/Plural/Alias).
+  /// „200 Gramm Butter" im Eingabefeld → strukturiert (App-Eigenheit, siehe
+  /// shopping_input_parse.dart). Nicht, wenn Menge/Einheit schon in den
+  /// aufgeklappten Details stehen — die haben Vorrang.
+  ShoppingInput? _parsedInput() {
+    if (_showDetails &&
+        (_qtyCtrl.text.trim().isNotEmpty || _unitCtrl.text.trim().isNotEmpty)) {
+      return null;
+    }
+    return parseShoppingInput(_ctrl.text,
+        ref.read(unitsCatalogProvider).valueOrNull ?? const <ShoppingUnit>[]);
+  }
 
-    final exact =
-        ref.read(settingsProvider).valueOrNull?.addExactQuantities ?? false;
+  /// Der eigentliche Artikelname des Eingabefelds (ohne Menge/Einheit).
+  String _typedName() => _parsedInput()?.name ?? _ctrl.text.trim();
+
+  /// Vorschläge im Eingabefeld: nach einer Menge erst Einheiten (dann mit
+  /// Leerzeichen, damit gleich der Artikel folgt), sonst Lebensmittel.
+  AutocompleteSlot _mainSlot(
+      String text, List<String> foodOptions, List<String> unitOptions) {
+    final slot = shoppingInputSlot(
+        text, ref.read(unitsCatalogProvider).valueOrNull ?? const []);
+    if (!slot.unitSlot) {
+      return AutocompleteSlot(
+          prefix: slot.prefix, query: slot.query, options: foodOptions);
+    }
+    final unitKeys = {for (final u in unitOptions) u.toLowerCase()};
+    return AutocompleteSlot(
+      prefix: slot.prefix,
+      query: slot.query,
+      options: [...unitOptions, ...foodOptions],
+      suffixFor: (o) => unitKeys.contains(o.toLowerCase()) ? ' ' : '',
+    );
+  }
+
+  void _addItem({ShoppingFood? newFood}) {
+    final typed = _ctrl.text.trim();
+    if (typed.isEmpty) return;
+
     double qty = 1;
     ShoppingUnit? unit;
     String? unitText;
     ShoppingFood? food;
-    if (exact) {
-      // Menge: Komma-Dezimalen tolerieren; leer/unparsebar → 1.
-      final rawQty = _qtyCtrl.text.trim().replaceAll(',', '.');
-      if (rawQty.isNotEmpty) qty = double.tryParse(rawQty) ?? 1;
+    String? extraNote;
+    var note = typed;
+    final parsed = _parsedInput();
+    if (parsed != null) {
+      qty = parsed.quantity;
+      unit = parsed.unit;
+      note = parsed.name;
+    }
+    // Aufgeklappte Details (Pfeil) — in beiden Modi wie in der Webapp.
+    if (_showDetails) {
+      // Menge: Brüche („1/8", „1 1/2", „½") und Komma-Dezimalen; leer/
+      // unlesbar → 1. (Vorher wurde aus „1/8" stillschweigend 1.)
+      final parsedQty = parseQuantityInput(_qtyCtrl.text);
+      if (parsedQty != null && parsedQty > 0) qty = parsedQty;
       // Einheit gegen den Server-Katalog auflösen (Name/Abkürzung/Mehr-
       // sprach-Token) → strukturierter Add; ohne Treffer als Freitext in
       // den Artikeltext einbetten (Konvention von addIngredient).
@@ -109,12 +198,15 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             ref.read(unitsCatalogProvider).valueOrNull ?? const [], typedUnit);
         if (unit == null) unitText = typedUnit;
       }
-      // Exakter Namenstreffer im Foods-Katalog → echtes Food-Item wie ein
-      // Webapp-Add (foodId + isFood, Label/Kategorie des Foods greift).
-      // Kein Treffer → addItem legt das Food serverseitig neu an.
-      food = resolveFoodByName(
-          ref.read(foodsCatalogProvider).valueOrNull ?? const [], note);
+      final n = _noteCtrl.text.trim();
+      if (n.isNotEmpty) extraNote = n;
     }
+    // Wie Mealie 3.29, in BEIDEN Modi: exakter Treffer (Name, Plural, Alias)
+    // im Lebensmittel-Katalog → echtes Food-Item (foodId, Abteilung des
+    // Lebensmittels). Kein Treffer → Notiz-Artikel mit genau diesem Text.
+    food = newFood ??
+        resolveFoodByName(
+            ref.read(foodsCatalogProvider).valueOrNull ?? const [], note);
 
     // Lehnt der Server das Item ab (kein Netzwerkfehler, z. B. HTTP 422),
     // wirft addItem jetzt — das wurde früher still verschluckt und der
@@ -128,6 +220,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           unit: unit,
           unitText: unitText,
           food: food,
+          extraNote: extraNote,
         )
         .catchError((Object e) {
       if (!mounted) return;
@@ -139,15 +232,63 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     _ctrl.clear();
     _qtyCtrl.clear();
     _unitCtrl.clear();
+    _noteCtrl.clear();
     _selectedLabel = null;
     // Issue 4c: Keyboard schließen damit der „Einkauf abschließen"-Button
     // wieder erscheint (der ist nur sichtbar wenn !inputFocused).
     _focusNode.unfocus();
     _qtyFocus.unfocus();
     _unitFocus.unfocus();
+    _noteFocus.unfocus();
     setState(() {});
     // Success feedback
     HapticFeedback.lightImpact();
+  }
+
+  /// Getippter Text ist (noch) kein Lebensmittel → anbieten, ihn als neues
+  /// Lebensmittel zu speichern (Mealie 3.29 „Als neues Lebensmittel
+  /// speichern"). Nur mit dem Recht dazu und online — sonst bleibt es beim
+  /// Notiz-Artikel.
+  String? _newFoodCandidate(bool offline) {
+    final text = _typedName();
+    if (text.isEmpty || offline) return null;
+    if (!ref.watch(userPermissionsProvider).mayOrganize) return null;
+    final foods = ref.watch(foodsCatalogProvider).valueOrNull;
+    if (foods == null || resolveFoodByName(foods, text) != null) return null;
+    return text;
+  }
+
+  Future<void> _addAsNewFood() async {
+    final name = _typedName();
+    if (name.isEmpty || _creatingFood) return;
+    final l = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _creatingFood = true);
+    try {
+      final created =
+          await ref.read(apiServiceProvider).createFood(name);
+      final id = created?['id'] as String?;
+      final foodName = (created?['name'] as String?)?.trim() ?? '';
+      if (id == null || id.isEmpty || foodName.isEmpty) {
+        throw StateError('createFood ohne id');
+      }
+      // Katalog neu laden → das neue Lebensmittel erscheint sofort als
+      // Vorschlag und wird ab jetzt automatisch erkannt.
+      ref.invalidate(foodsCatalogProvider);
+      if (!mounted) return;
+      _addItem(
+          newFood: ShoppingFood(
+        id: id,
+        name: foodName,
+        pluralName: (created?['pluralName'] as String?)?.trim(),
+        labelId: created?['labelId'] as String?,
+      ));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(
+          content: Text(userErrorMessage(e, '${l.createFailed}: $name'))));
+    } finally {
+      if (mounted) setState(() => _creatingFood = false);
+    }
   }
 
   void _showArchiveConfirm(BuildContext context, AppLocalizations l) {
@@ -227,21 +368,19 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final collapsed = settings?.collapsedShoppingCategories ?? [];
     final labels = labelsAsync.valueOrNull ?? [];
     final isOffline = ref.watch(shoppingOfflineProvider);
-    final exactQuantities = settings?.addExactQuantities ?? false;
     // Kataloge für die Autovervollständigung (cache-first, offline-fähig).
-    // Foods in BEIDEN Modi (Artikelname), Einheiten nur im Exakt-Modus.
+    // Foods im Eingabefeld, Einheiten im aufklappbaren Detail-Feld.
     final foodOptions =
         (ref.watch(foodsCatalogProvider).valueOrNull ?? const <ShoppingFood>[])
             .map((f) => f.name ?? '')
             .where((n) => n.isNotEmpty)
             .toList();
-    final unitOptions = exactQuantities
-        ? ((ref.watch(unitsCatalogProvider).valueOrNull ??
-                const <ShoppingUnit>[])
-            .map((u) => u.name ?? '')
-            .where((n) => n.isNotEmpty)
-            .toList())
-        : const <String>[];
+    // Einheiten für das aufklappbare Detail-Feld (beide Modi).
+    final unitOptions = (ref.watch(unitsCatalogProvider).valueOrNull ??
+            const <ShoppingUnit>[])
+        .map((u) => u.name ?? '')
+        .where((n) => n.isNotEmpty)
+        .toList();
     // Noch nicht zum Server synchronisierte Adds (Offline-Dummies) — deren
     // Zeilen bekommen ein Cloud-Badge, damit sichtbar ist, dass sie in der
     // Webapp noch fehlen. `watch`: nach dem Auto-Sync verschwindet das Badge.
@@ -289,7 +428,19 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           ],
         ),
         actions: [
+          // Suche erst bei langen Listen; offen bleibt sie sichtbar, damit
+          // sie sich auch schließen lässt, wenn die Liste schrumpft.
+          if (_searchOpen ||
+              (listAsync.valueOrNull?.length ?? 0) > _kSearchMinItems)
+            IconButton(
+              tooltip: _searchOpen ? l.close : l.search,
+              icon: Icon(
+                  _searchOpen ? Icons.search_off_rounded : Icons.search_rounded,
+                  color: _searchOpen ? AppTokens.accentDeep : context.appFg),
+              onPressed: _toggleSearch,
+            ),
           IconButton(
+            tooltip: AppLocalizations.of(context)!.reload,
             icon: Icon(Icons.refresh, color: context.appFg),
             onPressed: () async {
               // Kataloge mit anstoßen (cache-first: still im Hintergrund),
@@ -336,26 +487,61 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           top: false,
           child: listAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(e.toString(), style: TextStyle(color: context.appFgSub)),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () =>
-                        ref.read(shoppingListProvider.notifier).refresh(),
-                    child: Text(l.retry),
-                  ),
-                ],
-              ),
+            error: (e, _) => ErrorRetryView(
+              error: e,
+              onRetry: () => ref.read(shoppingListProvider.notifier).refresh(),
             ),
-            data: (items) => Column(
+            data: (allItems) {
+              final terms =
+                  _searchOpen ? searchTerms(_searchCtrl.text) : const <String>[];
+              final items = terms.isEmpty
+                  ? allItems
+                  : allItems.where((i) => _itemMatches(i, terms)).toList();
+              return Column(
               children: [
+                if (_searchOpen)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: TextField(
+                      controller: _searchCtrl,
+                      autofocus: true,
+                      textInputAction: TextInputAction.search,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: l.shoppingSearchHint,
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: _searchCtrl.text.isEmpty
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.clear_rounded),
+                                onPressed: () =>
+                                    setState(_searchCtrl.clear),
+                              ),
+                        isDense: true,
+                        filled: true,
+                        fillColor: context.appCard,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
                 // Item list
                 Expanded(
                   child: items.isEmpty
-                      ? _ShoppingDoneEmptyState(l: l)
+                      ? (terms.isNotEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Text(l.shoppingSearchNoMatches,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: context.appFgSub,
+                                        fontSize: 15)),
+                              ),
+                            )
+                          : _ShoppingDoneEmptyState(l: l))
                       : RefreshIndicator(
                           onRefresh: () async {
                             ref.invalidate(foodsCatalogProvider);
@@ -441,13 +627,22 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   unitCtrl: _unitCtrl,
                   qtyFocus: _qtyFocus,
                   unitFocus: _unitFocus,
-                  exactQuantities: exactQuantities,
+                  noteCtrl: _noteCtrl,
+                  noteFocus: _noteFocus,
+                  showDetails: _showDetails,
+                  onToggleDetails: () =>
+                      setState(() => _showDetails = !_showDetails),
                   foodOptions: foodOptions,
                   unitOptions: unitOptions,
                   selectedLabel: _selectedLabel,
                   labels: labels,
                   inputFocused: _inputFocused,
                   onAdd: _addItem,
+                  mainSlot: (text) =>
+                      _mainSlot(text, foodOptions, unitOptions),
+                  newFoodName: _newFoodCandidate(isOffline),
+                  creatingFood: _creatingFood,
+                  onAddAsNewFood: _addAsNewFood,
                   onLabelSelected: (label) =>
                       setState(() => _selectedLabel = label),
                   onCreateLabel: () async {
@@ -477,7 +672,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         ? 0
                         : GlassTabBar.height),
               ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -675,9 +871,9 @@ class _ShoppingItemList extends StatelessWidget {
         if (completedFooter != null) completedFooter,
         const _LinkedRecipesSection(),
       ]),
-      onReorder: (oldIndex, newIndex) {
+      // newIndex ist bei onReorderItem schon korrigiert.
+      onReorderItem: (oldIndex, newIndex) {
         final keys = List<String>.from(sortedKeys);
-        if (newIndex > oldIndex) newIndex -= 1;
         final moved = keys.removeAt(oldIndex);
         keys.insert(newIndex, moved);
         onReorderCategories(keys);
@@ -930,7 +1126,7 @@ class _LinkedRecipesSectionState extends ConsumerState<_LinkedRecipesSection> {
 
     String fmt(num? q) {
       final v = (q ?? 1).toDouble();
-      return v == v.roundToDouble() ? '${v.toInt()}' : v.toStringAsFixed(1);
+      return formatQuantity(v); // ¼ statt „0.3"
     }
 
     return Column(children: [
@@ -988,6 +1184,7 @@ class _LinkedRecipesSectionState extends ConsumerState<_LinkedRecipesSection> {
                     )
                   : Row(mainAxisSize: MainAxisSize.min, children: [
                       IconButton(
+                        tooltip: AppLocalizations.of(context)!.a11yDecrease,
                         icon: const Icon(Icons.remove_circle_outline_rounded),
                         color: context.appFgSub,
                         onPressed: () => _run(recipeId,
@@ -998,6 +1195,7 @@ class _LinkedRecipesSectionState extends ConsumerState<_LinkedRecipesSection> {
                               color: context.appFg,
                               fontWeight: FontWeight.w700)),
                       IconButton(
+                        tooltip: AppLocalizations.of(context)!.a11yIncrease,
                         icon: const Icon(Icons.add_circle_outline_rounded),
                         color: AppTokens.accentDeep,
                         onPressed: () =>
@@ -1090,8 +1288,8 @@ class _CompletedSection extends StatelessWidget {
                     // erledigte Zeilen haben keinen Stepper, daher Menge im
                     // Text. Exakt AUS: nur der Name (1x-Stückkauf-Sicht).
                     exactQuantities ? _exactItemText(item) : item.displayName,
-                    style: const TextStyle(
-                        color: Colors.grey,
+                    style: TextStyle(
+                        color: context.appFgTertiary,
                         decoration: TextDecoration.lineThrough),
                   ),
                 ),
@@ -1135,10 +1333,16 @@ class _ItemRow extends StatefulWidget {
 class _ItemRowState extends State<_ItemRow> {
   late double _qty;
 
+  /// Schrittweite der +/- Knöpfe als Nenner (1 = ganze Schritte, 8 =
+  /// Achtel …). Wird nur feiner, nie gröber — eine Zeile mit ⅛ zählt in
+  /// Achteln weiter, auch über ganze Zahlen hinweg (⅞ → 1 → 1⅛).
+  int _stepDen = 1;
+
   @override
   void initState() {
     super.initState();
     _qty = widget.item.effectiveQuantity;
+    _stepDen = stepDenominatorFor(_qty, 1);
   }
 
   @override
@@ -1146,6 +1350,7 @@ class _ItemRowState extends State<_ItemRow> {
     super.didUpdateWidget(old);
     if (old.item.quantity != widget.item.quantity) {
       _qty = widget.item.effectiveQuantity;
+      _stepDen = stepDenominatorFor(_qty, _stepDen);
     }
   }
 
@@ -1239,9 +1444,10 @@ class _ItemRowState extends State<_ItemRow> {
                 icon: Icons.remove,
                 onTap: () {
                   if (shownQty > 0) {
-                    // Bruchmengen (z. B. 0.5 aus „exakte Mengen") nicht ins
-                    // Negative schieben — unter 1 geht es direkt auf 0.
-                    final newQty = shownQty > 1 ? shownQty - 1 : 0.0;
+                    // Bruchmengen zählen in ihrem Bruch (⅛ → 0 statt einen
+                    // ganzen Schritt); ganze Zahlen wie bisher, unter 1 → 0.
+                    final newQty = stepQuantity(
+                        shownQty, -1, (!exact && hasUnit) ? 1 : _stepDen);
                     setState(() => _qty = newQty);
                     widget.onQuantityChange(item, newQty,
                         clearUnit: !exact && hasUnit);
@@ -1263,7 +1469,9 @@ class _ItemRowState extends State<_ItemRow> {
               _CircleButton(
                 icon: Icons.add,
                 onTap: () {
-                  final newQty = shownQty + 1;
+                  // ⅛ + → ¼ (2/8) statt 1⅛ — Schritt im Bruch der Zeile.
+                  final newQty = stepQuantity(
+                      shownQty, 1, (!exact && hasUnit) ? 1 : _stepDen);
                   setState(() => _qty = newQty);
                   widget.onQuantityChange(item, newQty,
                       clearUnit: !exact && hasUnit);
@@ -1360,10 +1568,8 @@ class _ItemRowState extends State<_ItemRow> {
 // Stepper-Mengenanzeige: ganze Zahlen ohne Nachkommastelle, exakte Mengen
 // aus Rezepten (z. B. 0.5 l) mit einer Dezimalstelle — `truncate()` würde
 // 0.5 als "0" anzeigen.
-String _fmtStepQty(double q) {
-  if (q == q.truncateToDouble()) return q.truncate().toString();
-  return q.toStringAsFixed(1);
-}
+// Brüche wie „1/8" bleiben als Bruch sichtbar (statt „0.1").
+String _fmtStepQty(double q) => formatQuantityInput(q);
 
 // Voller Webapp-Spiegel-Text im Exakt-Modus: „<Menge> <Einheit> <Name>"
 // (Menge nur wenn > 0, Einheit bevorzugt als Abkürzung — wie Mealie-Web).
@@ -1467,13 +1673,20 @@ class _EditItemSheetState extends ConsumerState<_EditItemSheet> {
   // letzter Stepper-Stand.
   double _effectiveQty() {
     if (!_exact) return _qty;
-    final parsed = double.tryParse(_qtyCtrl.text.trim().replaceAll(',', '.'));
+    final parsed = parseQuantityInput(_qtyCtrl.text);
     return (parsed == null || parsed <= 0) ? _qty : parsed;
   }
 
+  /// Schrittweite wie in der Listenzeile: im Bruch der Menge (⅛ → ¼),
+  /// sonst ganze Schritte; wird nur feiner.
+  int _stepDen = 1;
+
   void _stepQty(double delta) {
-    final next = _effectiveQty() + delta;
-    if (next <= 0) return; // nicht unter die kleinste sinnvolle Menge
+    final current = _effectiveQty();
+    if (_exact) _stepDen = stepDenominatorFor(current, _stepDen);
+    final next =
+        stepQuantity(current, delta > 0 ? 1 : -1, _exact ? _stepDen : 1);
+    if (next <= 0) return; // im Bearbeiten nicht unter den kleinsten Schritt
     setState(() {
       _qty = next;
       _qtyCtrl.text = _fmtStepQty(_qty);
@@ -1524,8 +1737,15 @@ class _EditItemSheetState extends ConsumerState<_EditItemSheet> {
           Text(l.itemNote,
               style: TextStyle(color: context.appFgSub, fontSize: 13)),
           const SizedBox(height: 6),
-          TextField(
+          // Lebensmittel-Vorschläge: ein gewähltes Lebensmittel wird beim
+          // Speichern auch verknüpft (Abteilung, Webapp-Anzeige).
+          AutocompleteField(
             controller: _nameCtrl,
+            options: [
+              for (final f in ref.watch(foodsCatalogProvider).valueOrNull ??
+                  const <ShoppingFood>[])
+                if ((f.name ?? '').isNotEmpty) f.name!,
+            ],
             style: TextStyle(color: context.appFg),
             decoration: InputDecoration(
               filled: true,
@@ -1562,8 +1782,10 @@ class _EditItemSheetState extends ConsumerState<_EditItemSheet> {
                   child: TextField(
                     controller: _qtyCtrl,
                     textAlign: TextAlign.center,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    // Brüche tippbar („1/8") — Zahlentastatur hat kein „/".
+                    keyboardType: quantityKeyboardType,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     style: TextStyle(
                         color: context.appFg,
                         fontSize: 18,
@@ -1938,7 +2160,11 @@ class _InputBar extends StatelessWidget {
   final TextEditingController unitCtrl;
   final FocusNode qtyFocus;
   final FocusNode unitFocus;
-  final bool exactQuantities;
+  // Aufklappbare Details (Pfeil im Eingabefeld): Menge, Einheit, Notiz.
+  final TextEditingController noteCtrl;
+  final FocusNode noteFocus;
+  final bool showDetails;
+  final VoidCallback onToggleDetails;
   // Server-Kataloge für die Autovervollständigung beim Tippen.
   final List<String> foodOptions;
   final List<String> unitOptions;
@@ -1946,6 +2172,14 @@ class _InputBar extends StatelessWidget {
   final List<ShoppingLabel> labels;
   final bool inputFocused;
   final VoidCallback onAdd;
+
+  /// Teil-Vorschläge im Eingabefeld („200 Gramm But…").
+  final AutocompleteSlot Function(String text) mainSlot;
+
+  /// Getippter Text, der noch kein Lebensmittel ist (null = kein Angebot).
+  final String? newFoodName;
+  final bool creatingFood;
+  final VoidCallback onAddAsNewFood;
   final ValueChanged<ShoppingLabel?> onLabelSelected;
   final VoidCallback onCreateLabel;
   final ValueChanged<ShoppingLabel> onDeleteLabel;
@@ -1959,13 +2193,20 @@ class _InputBar extends StatelessWidget {
     required this.unitCtrl,
     required this.qtyFocus,
     required this.unitFocus,
-    required this.exactQuantities,
+    required this.noteCtrl,
+    required this.noteFocus,
+    required this.showDetails,
+    required this.onToggleDetails,
     required this.foodOptions,
     required this.unitOptions,
     required this.selectedLabel,
     required this.labels,
     required this.inputFocused,
     required this.onAdd,
+    required this.mainSlot,
+    required this.newFoodName,
+    required this.creatingFood,
+    required this.onAddAsNewFood,
     required this.onLabelSelected,
     required this.onCreateLabel,
     required this.onDeleteLabel,
@@ -2014,49 +2255,62 @@ class _InputBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Text field(s) + add button. Exakt-Modus: [Menge][Einheit][Artikel]
-          // — so lässt sich „200 g Butter" direkt eintippen statt 200× Plus.
+          // Unbekannter Artikel: Standard ist ein Notiz-Artikel (Plus-Knopf),
+          // als Lebensmittel nur auf ausdrücklichen Wunsch — wie Mealie 3.29.
+          if (newFoodName != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTokens.accentDeep,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  onPressed: creatingFood ? null : onAddAsNewFood,
+                  icon: creatingFood
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.add_circle_outline_rounded, size: 18),
+                  label: Text(l.saveAsNewFood(newFoodName!),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              ),
+            ),
+          // EIN Eingabefeld wie in Mealie 3.29; der Pfeil klappt die Details
+          // für einen strukturierten Artikel auf („200 g Butter").
           Row(
             children: [
-              if (exactQuantities) ...[
-                SizedBox(
-                  width: 58,
-                  child: TextField(
-                    controller: qtyCtrl,
-                    focusNode: qtyFocus,
-                    style: TextStyle(color: context.appFg),
-                    textAlign: TextAlign.center,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: _dec(context, '1'),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                SizedBox(
-                  width: 86,
-                  child: AutocompleteField(
-                    controller: unitCtrl,
-                    focusNode: unitFocus,
-                    options: unitOptions,
-                    style: TextStyle(color: context.appFg),
-                    decoration: _dec(context, l.ingredientUnit),
-                    // Overlay über der Tastatur → nach OBEN öffnen.
-                    openDirection: OptionsViewOpenDirection.up,
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
               Expanded(
                 child: AutocompleteField(
                   controller: ctrl,
                   focusNode: focusNode,
                   options: foodOptions,
+                  slotBuilder: mainSlot,
                   style: TextStyle(color: context.appFg),
                   // 4b: Enter-Taste der System-Tastatur soll absenden statt
                   // einen Zeilenumbruch zu setzen. `done` aktiviert das
                   // „Fertig"/„Senden"-Action-Symbol auf iOS und Android.
                   textInputAction: TextInputAction.done,
-                  decoration: _dec(context, l.addItemPlaceholder),
+                  decoration: _dec(context, l.addItemPlaceholder).copyWith(
+                    suffixIcon: IconButton(
+                      tooltip: showDetails
+                          ? l.shoppingFewerOptions
+                          : l.shoppingMoreOptions,
+                      icon: AnimatedRotation(
+                        turns: showDetails ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(Icons.keyboard_arrow_down_rounded,
+                            color: showDetails
+                                ? AppTokens.accentDeep
+                                : context.appFgSub),
+                      ),
+                      onPressed: onToggleDetails,
+                    ),
+                  ),
                   openDirection: OptionsViewOpenDirection.up,
                   onSubmitted: (_) => onAdd(),
                 ),
@@ -2086,6 +2340,51 @@ class _InputBar extends StatelessWidget {
               ),
             ],
           ),
+          if (showDetails) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                SizedBox(
+                  width: 64,
+                  child: TextField(
+                    controller: qtyCtrl,
+                    focusNode: qtyFocus,
+                    style: TextStyle(color: context.appFg),
+                    textAlign: TextAlign.center,
+                    // Brüche tippbar („1/8") — Zahlentastatur hat kein „/".
+                    keyboardType: quantityKeyboardType,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    decoration: _dec(context, '1'),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 96,
+                  child: AutocompleteField(
+                    controller: unitCtrl,
+                    focusNode: unitFocus,
+                    options: unitOptions,
+                    style: TextStyle(color: context.appFg),
+                    decoration: _dec(context, l.ingredientUnit),
+                    // Overlay über der Tastatur → nach OBEN öffnen.
+                    openDirection: OptionsViewOpenDirection.up,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: TextField(
+                    controller: noteCtrl,
+                    focusNode: noteFocus,
+                    style: TextStyle(color: context.appFg),
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => onAdd(),
+                    decoration: _dec(context, l.ingredientNote),
+                  ),
+                ),
+              ],
+            ),
+          ],
 
           // Label chips — mirrors iOS categoryChip row
           const SizedBox(height: 8),

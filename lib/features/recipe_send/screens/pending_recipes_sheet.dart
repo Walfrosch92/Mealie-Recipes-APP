@@ -81,9 +81,9 @@ class _PendingRecipesSheetState extends ConsumerState<PendingRecipesSheet> {
     });
   }
 
-  void _dismiss() {
-    // Komplette pending-Liste clearen damit der App-Listener nicht direkt
-    // wieder feuert (er triggert auf transition empty→nonempty).
+  /// „Verwerfen": empfangene Rezepte von diesem Gerät entfernen. Hieß
+  /// vorher „Später", hat aber schon immer verworfen.
+  void _discard() {
     ref.read(pendingRecipesProvider.notifier).clear();
     if (context.canPop()) context.pop();
   }
@@ -121,8 +121,8 @@ class _PendingRecipesSheetState extends ConsumerState<PendingRecipesSheet> {
       appBar: AppBar(
         title: Text(l.pendingRecipesTitle),
         leading: TextButton(
-          onPressed: _dismiss,
-          child: Text(l.pendingRecipesLater,
+          onPressed: _discard,
+          child: Text(l.pendingRecipesDiscard,
               style: TextStyle(color: context.appFgSub)),
         ),
         leadingWidth: 100,

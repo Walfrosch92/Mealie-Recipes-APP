@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
 import '../models/shopping_reminder_location.dart';
 import '../services/log_manager.dart';
+import '../utils/meal_types.dart';
 
 // ---------------------------------------------------------------------------
 // Keys
@@ -44,7 +45,8 @@ const _kShoppingReminderLocations = 'shoppingReminderLocations';
 const _kOfflineRecipeImages = 'offlineRecipeImages';
 // Würfel-Filter im Mahlzeitenplan: ein Key pro Mahlzeit.
 const _kMealDiceFilterPrefix = 'mealDiceFilter_';
-const _kMealDiceSlots = ['breakfast', 'lunch', 'dinner'];
+// Alle Mealie-Mahlzeitentypen (vorher nur Frühstück/Mittag/Abend).
+const _kMealDiceSlots = kMealTypes;
 const _kHideMealDiceAutoHint = 'hideMealDiceAutoHint';
 const _kMealDiceUseMealieRules = 'mealDiceUseMealieRules';
 
@@ -65,7 +67,6 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   @override
   Future<AppSettings> build() async {
     _secure = const FlutterSecureStorage(
-      aOptions: AndroidOptions(encryptedSharedPreferences: true),
       // macOS: klassischer Schlüsselbund — der Data-Protection-Keychain
       // (Standard) braucht die Keychain-Sharing-Berechtigung samt
       // Developer-Team, sonst schlägt jeder Zugriff fehl (-34018).
@@ -73,7 +74,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       // diesen Eintrag löschen kann, ohne andere Flutter-Apps zu treffen.
       mOptions: MacOsOptions(
         accountName: 'Walfrosch92.MealieRecipes',
-        useDataProtectionKeyChain: false,
+        usesDataProtectionKeychain: false,
       ),
     );
     _prefs = await SharedPreferences.getInstance();
@@ -88,7 +89,10 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   AppSettings _load() {
     final token = _prefs.getString(_kApiToken) ?? '';
     return AppSettings(
-      serverUrl: _prefs.getString(_kServerUrl) ?? '',
+      // Ältere Stände ohne Bereinigung (Schrägstrich am Ende → „//api").
+      serverUrl: (_prefs.getString(_kServerUrl) ?? '')
+          .trim()
+          .replaceAll(RegExp(r'/+$'), ''),
       apiToken: token,
       householdId: _prefs.getString(_kHouseholdId) ?? '',
       shoppingListId: _prefs.getString(_kShoppingListId) ?? '',
@@ -157,7 +161,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
 
   Future<void> save(AppSettings next) async {
     // Secure storage NUR schreiben, wenn sich das Token wirklich geändert
-    // hat — der Keychain- (iOS) bzw. EncryptedSharedPreferences-Zugriff
+    // hat — der Keychain- (iOS) bzw. Keystore-Zugriff
     // (Android) ist mit Abstand die teuerste Operation hier, lief bisher
     // aber bei JEDER Autosave-Auslösung mit (Listen-Dropdown, jedes
     // debouncte Textfeld, jeder Toggle) — auch wenn sich am Token gar nichts

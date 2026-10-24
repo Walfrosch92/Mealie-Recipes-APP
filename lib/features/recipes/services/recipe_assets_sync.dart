@@ -19,7 +19,8 @@ import '../providers/recipes_provider.dart';
 // blendet die Webapp die Anhänge in der Ansicht aus.
 // ---------------------------------------------------------------------------
 
-/// Dateiendungen, die Mealie als Anhang annimmt (ASSET_ALLOWED_EXTENSIONS).
+/// Dateiendungen, die Mealie als Anhang annimmt (ASSET_ALLOWED_EXTENSIONS)
+/// — bis Mealie 3.28.
 const kAllowedAssetExtensions = [
   'pdf',
   'jpg',
@@ -35,6 +36,31 @@ const kAllowedAssetExtensions = [
   'json',
 ];
 
+/// Ab Mealie 3.29 zusätzlich erlaubt (Videos, Audio, Dokumente, HEIC).
+const kAllowedAssetExtensions329 = [
+  'heic',
+  'heif',
+  'm4v',
+  'mov',
+  'mp4',
+  'webm',
+  'm4a',
+  'mp3',
+  'docx',
+  'odt',
+  'rtf',
+];
+
+/// Erlaubte Endungen für den verbundenen Server ([mealie329] siehe
+/// `mealie329Provider`) — was der Server ablehnt, wird gar nicht angeboten.
+List<String> allowedAssetExtensions({required bool mealie329}) => [
+      ...kAllowedAssetExtensions,
+      if (mealie329) ...kAllowedAssetExtensions329,
+    ];
+
+const kVideoAssetExtensions = {'mp4', 'mov', 'm4v', 'webm'};
+const kAudioAssetExtensions = {'mp3', 'm4a'};
+
 /// mdi-Icon wie in der Webapp-Auswahl, passend zur Dateiendung.
 String assetIconForExtension(String ext) => switch (ext.toLowerCase()) {
       'pdf' => 'mdi-file-pdf-box',
@@ -44,8 +70,13 @@ String assetIconForExtension(String ext) => switch (ext.toLowerCase()) {
       'gif' ||
       'webp' ||
       'bmp' ||
-      'avif' =>
+      'avif' ||
+      'heic' ||
+      'heif' =>
         'mdi-file-image',
+      'mp4' || 'mov' || 'm4v' || 'webm' => 'mdi-file-video',
+      'mp3' || 'm4a' => 'mdi-file-music',
+      'docx' || 'odt' || 'rtf' => 'mdi-file-document',
       'json' => 'mdi-code-json',
       _ => 'mdi-file',
     };

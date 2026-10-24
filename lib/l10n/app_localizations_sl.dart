@@ -9,9 +9,6 @@ class AppLocalizationsSl extends AppLocalizations {
   AppLocalizationsSl([String locale = 'sl']) : super(locale);
 
   @override
-  String get appTitle => 'Mealie Recipes';
-
-  @override
   String get endCookingMode => 'Končaj način kuhanja';
 
   @override
@@ -99,15 +96,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get searchRecipe => 'Išči recept…';
 
   @override
-  String get loadingRecipes => 'Nalaganje receptov…';
-
-  @override
   String get loadingRecipe => 'Nalaganje recepta…';
-
-  @override
-  String errorLoadingRecipes(String error) {
-    return 'Napaka pri nalaganju receptov: $error';
-  }
 
   @override
   String get errorLoadingRecipe => 'Recepta ni bilo mogoče naložiti.';
@@ -161,7 +150,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get ingredients => 'Sestavine';
 
   @override
-  String get instructions => 'Priprava';
+  String get instructions => 'Navodila';
 
   @override
   String get tags => 'Značke';
@@ -191,30 +180,13 @@ class AppLocalizationsSl extends AppLocalizations {
   String get servings => 'Porcije';
 
   @override
-  String get adjustQuantity => 'Prilagodi količino';
-
-  @override
-  String get startTimer => 'Zaženi časovnik';
-
-  @override
-  String runningTimer(int minutes, String seconds) {
-    return 'Časovnik: $minutes:$seconds';
-  }
-
-  @override
   String get planMeal => 'Načrtuj obrok';
-
-  @override
-  String get displayAlwaysOn => 'Ohrani zaslon vklopljen';
 
   @override
   String get addAllIngredients => 'Dodaj vse sestavine';
 
   @override
   String get addSelectedIngredients => 'Dodaj izbrane sestavine';
-
-  @override
-  String get addIngredientsTitle => 'Sestavine dodane';
 
   @override
   String get addIngredientsMessage =>
@@ -388,16 +360,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get sendToDevice => 'Pošlji na napravo';
 
   @override
-  String get sendToDevicePickerTitle => 'Pošlji na napravo';
-
-  @override
-  String get sendToAllDevices => 'Pošlji na vse naprave';
-
-  @override
   String get timerFinished => 'Časovnik je potekel!';
-
-  @override
-  String get timerFinishedBody => 'Časovnik tvojega recepta je potekel.';
 
   @override
   String get timer => 'Časovnik';
@@ -406,21 +369,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get newTimer => 'Nov časovnik';
 
   @override
-  String get timerDetails => 'Podrobnosti časovnika';
-
-  @override
   String get timerNamePlaceholder => 'Ime časovnika';
 
   @override
-  String get timerNameHint => 'Daj časovniku opisno ime.';
-
-  @override
   String get durationLabel => 'Trajanje';
-
-  @override
-  String minutesCount(int count) {
-    return '$count min';
-  }
 
   @override
   String get start => 'Začni';
@@ -449,31 +401,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get cookingMode => 'Način kuhanja';
 
   @override
-  String activeRecipesCount(int count) {
-    return 'Aktivnih receptov: $count';
-  }
-
-  @override
   String get endAll => 'Končaj vse';
 
   @override
   String get end => 'Končaj';
-
-  @override
-  String get endAllRecipesTitle => 'Končam vse recepte?';
-
-  @override
-  String endAllRecipesMessage(int count) {
-    return 'Ali želiš končati vse aktivne kuharske seje ($count)?';
-  }
-
-  @override
-  String get endRecipeTitle => 'Končam recept?';
-
-  @override
-  String endRecipeMessage(String name) {
-    return 'Ali želiš končati kuhanje recepta \"$name\"?';
-  }
 
   @override
   String get noActiveTimers => 'Ni aktivnih časovnikov';
@@ -487,11 +418,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get browseRecipes => 'Prebrskaj recepte';
-
-  @override
-  String timersPausedCount(int count) {
-    return 'Zaustavljenih časovnikov: $count';
-  }
 
   @override
   String get cookFriends => 'Kuhanje s prijatelji';
@@ -531,13 +457,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get joinSession => 'Pridruži se seji';
 
   @override
-  String get hostEndedSessionTitle => 'Seja je končana';
-
-  @override
   String get hostEndedSessionMessage => 'Gostitelj je končal skupno kuhanje.';
-
-  @override
-  String get shoppingListEmpty => 'Tvoj nakupovalni seznam je prazen.';
 
   @override
   String get addItem => 'Dodaj artikel';
@@ -549,19 +469,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get unlabeledCategory => 'Brez oznake';
 
   @override
-  String get reorderCategories => 'Preuredi kategorije';
-
-  @override
-  String get archiveChecked => 'Arhiviraj odkljukane artikle';
-
-  @override
   String get archivedLists => '📦 Arhivirani nakupi';
-
-  @override
-  String get syncChanges => 'Sinhroniziraj spremembe';
-
-  @override
-  String get noSyncChanges => 'Ni sprememb za sinhronizacijo';
 
   @override
   String get postimportAction => 'Po uvozu';
@@ -645,48 +553,13 @@ class AppLocalizationsSl extends AppLocalizations {
   String get selectRecipe => 'Izberi recept';
 
   @override
-  String get orFreeText => 'ali prosto besedilo';
-
-  @override
-  String get entryNote => 'Opomba';
-
-  @override
-  String get noMealEntries => 'Za ta teden ni vnosov.';
-
-  @override
   String get importRecipe => 'Uvozi recept';
-
-  @override
-  String get importFromUrl => 'Uvoz iz URL-ja';
-
-  @override
-  String get importFromImage => 'Uvoz iz fotografije';
-
-  @override
-  String get importFromJson => 'Uvoz iz JSON-a';
 
   @override
   String get url => 'URL';
 
   @override
-  String get urlPlaceholder => 'https://...';
-
-  @override
   String get importLanguage => 'Jezik za OCR';
-
-  @override
-  String get importing => 'Uvažanje…';
-
-  @override
-  String get importSuccess => 'Recept uspešno uvožen!';
-
-  @override
-  String importError(String error) {
-    return 'Uvoz ni uspel: $error';
-  }
-
-  @override
-  String get pasteJson => 'Sem prilepi JSON';
 
   @override
   String get setupTitle => 'Dobrodošli v Mealie Recipes';
@@ -714,9 +587,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get shoppingListId => 'Nakupovalni seznam';
-
-  @override
-  String get shoppingListIdPlaceholder => 'Izberi nakupovalni seznam';
 
   @override
   String get setupHouseholdListTitle => 'Gospodinjstvo in nakupovalni seznam';
@@ -753,12 +623,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get connect => 'Poveži';
 
   @override
-  String get connecting => 'Povezovanje…';
-
-  @override
-  String get connectionSuccess => 'Povezava uspešna!';
-
-  @override
   String connectionError(String error) {
     return 'Povezava ni uspela: $error';
   }
@@ -773,19 +637,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get settingsSaved => 'Nastavitve shranjene';
 
   @override
-  String get serverSettings => 'Strežnik';
-
-  @override
-  String get displaySettings => 'Prikaz';
-
-  @override
-  String get notificationSettings => 'Obvestila';
-
-  @override
   String get securitySettings => 'Varnost';
-
-  @override
-  String get aboutSettings => 'O aplikaciji';
 
   @override
   String get showRecipeImages => 'Prikaži slike receptov';
@@ -801,12 +653,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get biometricLockDescription => 'Odkleni aplikacijo z biometrijo';
-
-  @override
-  String get criticalAlerts => 'Kritična opozorila';
-
-  @override
-  String get criticalAlertsDescription => 'Alarm časovnika tudi v tihem načinu';
 
   @override
   String get enableLogging => 'Omogoči beleženje';
@@ -840,28 +686,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get leftoverFinder => 'Iskalnik receptov';
 
   @override
-  String get leftoverFinderSubtitle =>
-      'Najdi recepte s sestavinami, ki jih imaš';
-
-  @override
   String get addIngredient => 'Dodaj sestavino';
-
-  @override
-  String get ingredientPlaceholder => 'npr. jajca';
-
-  @override
-  String get findRecipes => 'Najdi recepte';
-
-  @override
-  String get matchingRecipes => 'Ustrezni recepti';
-
-  @override
-  String get noMatchingRecipes => 'Za te sestavine ni najdenih receptov.';
-
-  @override
-  String matchPercent(int percent) {
-    return '$percent % ujemanje';
-  }
 
   @override
   String get biometricPrompt =>
@@ -871,15 +696,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get biometricFailed => 'Overitev ni uspela';
 
   @override
-  String get whatsNew => 'Novosti';
-
-  @override
   String get pendingRecipesTitle => 'Prejeti recepti';
-
-  @override
-  String pendingRecipesMessage(String sender, String name) {
-    return '$sender ti pošilja recept: \"$name\"';
-  }
 
   @override
   String pendingRecipesFrom(Object names) {
@@ -890,12 +707,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get pendingRecipesOpenCooking => 'Odpri način kuhanja';
 
   @override
-  String get pendingRecipesLater => 'Pozneje';
-
-  @override
-  String get openRecipe => 'Odpri recept';
-
-  @override
   String get dismiss => 'Opusti';
 
   @override
@@ -903,9 +714,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get recipeName => 'Ime recepta';
-
-  @override
-  String get recipeDescription => 'Opis';
 
   @override
   String get prepTime => 'Priprava (min)';
@@ -953,30 +761,10 @@ class AppLocalizationsSl extends AppLocalizations {
   String get categories => 'Kategorije';
 
   @override
-  String get selectCategories => 'Izberi kategorije';
-
-  @override
-  String get selectTags => 'Izberi značke';
-
-  @override
-  String get uploadImage => 'Naloži sliko';
-
-  @override
-  String get removeImage => 'Odstrani sliko';
-
-  @override
   String get saveChanges => 'Shrani spremembe';
 
   @override
-  String get saving => 'Shranjevanje…';
-
-  @override
   String get saveSuccess => 'Recept shranjen.';
-
-  @override
-  String saveError(String error) {
-    return 'Shranjevanje ni uspelo: $error';
-  }
 
   @override
   String get newCategory => 'Nova kategorija';
@@ -986,19 +774,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get setRating => 'Nastavi oceno';
-
-  @override
-  String get removeRating => 'Odstrani oceno';
-
-  @override
-  String get ratingRemoved => 'Ocena odstranjena';
-
-  @override
-  String get googleTasksImport => 'Uvoz iz Google Opravil';
-
-  @override
-  String get googleTasksImportDescription =>
-      'Uvozi vnose iz Google Opravil na svoj nakupovalni seznam.';
 
   @override
   String get homeWelcome => 'Dobrodošli v Mealie Recipes! 👋';
@@ -1016,9 +791,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get other => 'Drugo';
-
-  @override
-  String get viewRecipes => '📖 Ogled receptov';
 
   @override
   String get addRecipe => '➕ Dodaj recept';
@@ -1039,9 +811,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get resteverwertung => '🥗 Iskalnik receptov';
 
   @override
-  String get newRecipeUpload => 'Naloži nov recept';
-
-  @override
   String get copyCode => 'Kopiraj kodo';
 
   @override
@@ -1054,23 +823,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get waitingForFriends => 'Čakanje na prijatelje…';
 
   @override
-  String get endSharing => 'Končaj deljenje';
-
-  @override
-  String get cookFriendsDescription =>
-      'Povabi prijatelja, da skupaj skuhata ta recept';
-
-  @override
   String get sessionCode => 'KODA SEJE';
-
-  @override
-  String get adjustQuantityLabel => 'Prilagodi količino za ta recept:';
-
-  @override
-  String get timerStartForStep => 'Časovnik za korak';
-
-  @override
-  String get enterRecipeUrl => 'Vnesi URL recepta';
 
   @override
   String get loading => 'Nalaganje…';
@@ -1083,9 +836,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get addItemPlaceholder => 'Dodaj artikel…';
-
-  @override
-  String get addSuccessToast => 'Dodano!';
 
   @override
   String get completedItems => 'Opravljeno';
@@ -1143,18 +893,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get allDeleteConfirm => 'Izbriši vse';
 
   @override
-  String get portionen => 'Porcije';
-
-  @override
-  String get timerForStep => 'Zaženi časovnik za ta korak';
-
-  @override
-  String get weekNavPrev => 'Prejšnji teden';
-
-  @override
-  String get weekNavNext => 'Naslednji teden';
-
-  @override
   String get noMealsThisWeek => 'Ni načrtovanih obrokov';
 
   @override
@@ -1164,43 +902,7 @@ class AppLocalizationsSl extends AppLocalizations {
   String get availableWeeks => 'Razpoložljivi tedni:';
 
   @override
-  String weekRange(Object end, Object start, Object week) {
-    return '$week. teden ($start – $end)';
-  }
-
-  @override
   String get currentWeek => 'Trenutni teden';
-
-  @override
-  String get rezepteAktualisieren => 'Posodobi recepte';
-
-  @override
-  String get leftoverWhatTitle => 'Kaj to naredi?';
-
-  @override
-  String get leftoverWhatBody =>
-      'Ta funkcija znova naloži vse recepte s strežnika in posodobi lokalni predpomnilnik.';
-
-  @override
-  String get leftoverDescription =>
-      'Vnesi razpoložljive sestavine, da najdeš ustrezne recepte in porabiš ostanke.';
-
-  @override
-  String get leftoverIngredientsHeader => 'Sestavine doma';
-
-  @override
-  String get leftoverSuggestions => 'Predlogi receptov';
-
-  @override
-  String get leftoverNoMatches => 'Ni ustreznih receptov.';
-
-  @override
-  String get leftoverEnterIngredient => 'Vnesi sestavino';
-
-  @override
-  String matchingPercentText(int percent, int count, int total) {
-    return '$percent % ujemanje ($count/$total)';
-  }
 
   @override
   String get weekAbbreviation => 'Teden';
@@ -1210,9 +912,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get selectDate => 'Izberi datum';
-
-  @override
-  String get selectSlot => 'Izberi obrok';
 
   @override
   String get selectedRecipe => 'Izbrani recept';
@@ -1244,11 +943,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get entriesPlural => 'vnosov';
-
-  @override
-  String listTitle(int n) {
-    return 'Seznam $n';
-  }
 
   @override
   String get deleteAllConfirmTitle => 'Izbrišem vse?';
@@ -1299,9 +993,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get startCooking => 'Začni kuhati';
 
   @override
-  String get hostNoRecipe => 'Odpri iz recepta, da gostiš sejo';
-
-  @override
   String get uploadToOwnServer => 'Shrani na moj strežnik';
 
   @override
@@ -1319,12 +1010,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get appIcon => 'Ikona aplikacije';
-
-  @override
-  String get appIconClassic => 'Classic';
-
-  @override
-  String get appIconModern => 'Modern';
 
   @override
   String get name => 'Ime';
@@ -1367,7 +1052,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get offlineRecipeImagesHint =>
-      'Prenese vse slike receptov v to napravo, da so prikazane tudi brez povezave. Pri velikih zbirkah lahko to zasede več sto MB. Izklop izbriše shranjene slike.';
+      'Prenese vse slike receptov v napravo – tudi slike v korakih in opombah –, da so vidne brez povezave. Velike zbirke lahko zasedejo več sto MB. Izklop izbriše shranjene slike.';
 
   @override
   String offlineRecipeImagesStatus(int count, int total, String size) {
@@ -1402,7 +1087,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get exactQuantitiesSubtitle =>
-      'Sestavine in vneseni artikli ohranijo količino in enoto (npr. 200 g masla) namesto 1x na artikel — manjkajoča živila aplikacija ustvari na strežniku';
+      'Sestavine in vneseni artikli ohranijo količino in enoto (npr. 200 g masla) namesto 1x na artikel';
 
   @override
   String get remindToShop => 'Opomni me na nakupovanje';
@@ -1524,12 +1209,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get loginInvalidCredentials => 'Napačno uporabniško ime ali geslo.';
 
   @override
-  String get loginAndGenerateToken => 'Prijava in ustvarjanje žetona';
-
-  @override
-  String get loggingIn => 'Prijavljanje…';
-
-  @override
   String get apiTokenSaveHint =>
       'Žeton uporabljen — spodaj tapni „Shrani spremembe“.';
 
@@ -1591,9 +1270,6 @@ class AppLocalizationsSl extends AppLocalizations {
       'Sestavine ločene – tapni „Shrani spremembe“, da uveljaviš';
 
   @override
-  String get reparseNone => 'Ni sestavin za ločevanje';
-
-  @override
   String get tagsAndCategories => 'Značke, kategorije in pripomočki';
 
   @override
@@ -1624,12 +1300,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String importCount(int count) {
     return 'Uvozi $count';
   }
-
-  @override
-  String get activeRecipeTimer => 'Aktivni časovnik recepta';
-
-  @override
-  String get linkIngredients => 'Poveži sestavine';
 
   @override
   String get noIngredientsToLink => 'Ni še sestavin za povezavo';
@@ -1695,7 +1365,7 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String supportNoMailApp(String email) {
-    return 'Nobene poštne aplikacije ni bilo mogoče najti. Naslov kopiran: $email';
+    return 'Ni nastavljene poštne aplikacije – naslov kopiran: $email. Izberi drugo aplikacijo za pisanje.';
   }
 
   @override
@@ -1733,9 +1403,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get preparingPdf => 'Obdelava PDF...';
 
   @override
-  String get shareRecipeTitle => 'Deli recept';
-
-  @override
   String get recipeOptionsTitle => 'Možnosti';
 
   @override
@@ -1749,9 +1416,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get recipeTime => 'Čas';
-
-  @override
-  String get ingredientSectionTitle => 'Razdelek';
 
   @override
   String get addIngredientSection => 'Dodaj razdelek';
@@ -1812,9 +1476,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get toolOnHand => 'Na voljo';
-
-  @override
-  String get mealDiceSettingsTitle => 'Filter kocke';
 
   @override
   String get mealDiceSettingsHint =>
@@ -2382,9 +2043,6 @@ class AppLocalizationsSl extends AppLocalizations {
   String get userManagementTitle => 'Upravljanje z uporabniki';
 
   @override
-  String get usersTitle => 'Uporabniki';
-
-  @override
   String get editUserTitle => 'Uredi uporabnika';
 
   @override
@@ -2430,9 +2088,6 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get resetLockedUsersAction => 'Ponastavi zaklenjene uporabnike';
-
-  @override
-  String get membersTitle => 'Člani';
 
   @override
   String get inviteLinkTitle => 'Povezava za povabilo';
@@ -4186,4 +3841,361 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get updateSourceHint =>
       'Posodobitve prihajajo iz izdaj Mealie Recipes na GitHubu in se namestijo le, če jih je podpisal razvijalec (macOS).';
+
+  @override
+  String get errorNoConnection =>
+      'Strežnik Mealie ni dosegljiv. Preveri internetno povezavo in naslov strežnika.';
+
+  @override
+  String get errorTimeout => 'Strežnik se predolgo ni odzval. Poskusi znova.';
+
+  @override
+  String get errorUnauthorized =>
+      'Prijava je potekla ali žeton API ni več veljaven. Znova se prijavi v nastavitvah.';
+
+  @override
+  String get errorServer =>
+      'Strežnik Mealie je javil napako. Poskusi znova pozneje.';
+
+  @override
+  String get errorNotFound =>
+      'Na strežniku ni bilo najdeno – morda je bilo izbrisano.';
+
+  @override
+  String get errorCertificate =>
+      'Varnostnemu potrdilu strežnika ni mogoče zaupati.';
+
+  @override
+  String get errorGeneric => 'Nekaj je šlo narobe. Poskusi znova.';
+
+  @override
+  String get offlineLabel => 'Brez povezave';
+
+  @override
+  String offlineSince(String time) {
+    return 'Brez povezave · stanje $time';
+  }
+
+  @override
+  String get mealplanEntryActions => 'Možnosti obroka';
+
+  @override
+  String get mealplanMoveAction => 'Premakni';
+
+  @override
+  String get mealplanMoveTitle => 'Premakni obrok';
+
+  @override
+  String get mealplanMoveDate => 'Datum';
+
+  @override
+  String mealplanMovedTo(String date) {
+    return 'Premaknjeno na $date';
+  }
+
+  @override
+  String get mealplanShowWeek => 'Prikaži';
+
+  @override
+  String get mealplanMoveFailed => 'Obroka ni bilo mogoče premakniti';
+
+  @override
+  String get recentlyViewedTitle => 'Nedavno ogledano';
+
+  @override
+  String get recentlyViewedEmpty =>
+      'Recepti, ki jih odpreš, se prikažejo tukaj.';
+
+  @override
+  String get recentlyViewedClear => 'Počisti zgodovino';
+
+  @override
+  String get recentlyViewedClearMessage =>
+      'Seznam nedavno ogledanih receptov na tej napravi bo izpraznjen. Recepti sami ostanejo.';
+
+  @override
+  String get recentlyViewedClearConfirm => 'Počisti';
+
+  @override
+  String get duplicatesTitle => 'Iskalnik dvojnikov';
+
+  @override
+  String get duplicatesScanning => 'Iskanje podvojenih receptov …';
+
+  @override
+  String get duplicatesNone => 'Ni najdenih podvojenih receptov.';
+
+  @override
+  String duplicatesFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Najdenih $count možnih dvojnikov.',
+      few: 'Najdeni $count možni dvojniki.',
+      two: 'Najdena 2 možna dvojnika.',
+      one: 'Najden 1 možen dvojnik.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesIntro => 'Tapni recept, ki naj ostane, nato združi.';
+
+  @override
+  String get duplicatesReasonSource => 'Isti vir';
+
+  @override
+  String get duplicatesReasonName => 'Isto ime';
+
+  @override
+  String duplicatesReasonSimilar(int percent) {
+    return 'Podobno · $percent % enakih sestavin';
+  }
+
+  @override
+  String get duplicatesKeeps => 'Ostane';
+
+  @override
+  String get duplicatesWillBeDeleted => 'Bo izbrisan';
+
+  @override
+  String get duplicatesMerge => 'Združi';
+
+  @override
+  String get duplicatesNotDuplicate => 'Ni dvojnik';
+
+  @override
+  String get duplicatesMergeTitle => 'Združim recepte?';
+
+  @override
+  String duplicatesMergeMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count drugih receptov bo izbrisanih',
+      few: '$count drugi recepti bodo izbrisani',
+      two: '2 druga recepta bosta izbrisana',
+      one: '1 drug recept bo izbrisan',
+    );
+    return '»$name« ostane. $_temp0.\n\nKategorije, oznake, pripomočki, opombe, načrtovani obroki tvojega gospodinjstva in tvoj priljubljeni se prenesejo. Komentarji, časovnica in priloge izbrisanih receptov se izgubijo.';
+  }
+
+  @override
+  String get duplicatesMerged => 'Recepti združeni';
+
+  @override
+  String duplicatesIngredientCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sestavin',
+      few: '$count sestavine',
+      two: '2 sestavini',
+      one: '1 sestavina',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duplicatesResetIgnored(int count) {
+    return 'Znova prikaži skrite pare ($count)';
+  }
+
+  @override
+  String get duplicatesRescan => 'Išči znova';
+
+  @override
+  String get duplicatesOpenRecipe => 'Odpri recept';
+
+  @override
+  String get duplicatesMergeNoEditHint =>
+      'Recepta, ki ostane, ne smeš urejati (tuj zaklenjen recept ali iz drugega gospodinjstva). Kategorije, oznake, pripomočki in opombe se zato ne prenesejo – le načrtovani obroki in tvoj priljubljeni.';
+
+  @override
+  String get recipeOtherHouseholdHint =>
+      'Iz drugega gospodinjstva – urejanje je tam zaklenjeno';
+
+  @override
+  String foodsSavedAsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count novih živil je ostalo',
+      few: '$count nova živila so ostala',
+      two: '2 novi živili sta ostali',
+      one: '1 novo živilo je ostalo',
+    );
+    return 'Shranjeno. $_temp0 kot opomba sestavine – za ustvarjanje živil potrebuješ v Mealie pravico »Uporabnik lahko upravlja živila, oznake in kategorije«.';
+  }
+
+  @override
+  String get a11yRemove => 'Odstrani';
+
+  @override
+  String get a11yDecrease => 'Manj';
+
+  @override
+  String get a11yIncrease => 'Več';
+
+  @override
+  String get a11yShowPassword => 'Pokaži geslo';
+
+  @override
+  String get a11yHidePassword => 'Skrij geslo';
+
+  @override
+  String get a11yClearSearch => 'Počisti iskanje';
+
+  @override
+  String get notesQueuedOffline =>
+      'Brez povezave – opomba bo poslana, ko bo strežnik spet dosegljiv.';
+
+  @override
+  String get timelineQueuedOffline =>
+      'Brez povezave – vpis v časovnico bo dodan, ko bo strežnik spet dosegljiv.';
+
+  @override
+  String get syncSectionName => 'Preimenovano';
+
+  @override
+  String get pendingRecipesDiscard => 'Zavrzi';
+
+  @override
+  String get undo => 'Razveljavi';
+
+  @override
+  String timerStoppedSnack(String name) {
+    return 'Časovnik »$name« ustavljen';
+  }
+
+  @override
+  String get cookFriendsEndConfirm =>
+      'Končam sejo za vse? Vsi gostje bodo prekinjeni.';
+
+  @override
+  String get weekStartSyncHint =>
+      'Shrani se v Mealie – velja za celo gospodinjstvo, tudi v spletni aplikaciji.';
+
+  @override
+  String get weekStartNoPermission =>
+      'Prihaja iz Mealie. Spremeni ga lahko le, kdor sme upravljati gospodinjstvo.';
+
+  @override
+  String get assetsUnsupported329 =>
+      'Mealie podpira PDF, slike, videoposnetke (MP4, MOV, WebM), zvok (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV in JSON.';
+
+  @override
+  String get assetsRecordVideo => 'Posnemi video';
+
+  @override
+  String get assetsChooseVideo => 'Izberi video';
+
+  @override
+  String get shoppingSearchHint => 'Išči po seznamu';
+
+  @override
+  String get shoppingSearchNoMatches => 'Noben izdelek ne ustreza iskanju.';
+
+  @override
+  String get mealplanServingsTitle => 'Načrtovane porcije';
+
+  @override
+  String get mealplanServingsHint =>
+      'Samo za ta vnos v načrtu obrokov – sam recept ostane nespremenjen. Odpiranje recepta in nakupovalni seznam uporabljata te porcije.';
+
+  @override
+  String get calendarFeedTitle => 'Naroči se na koledar';
+
+  @override
+  String get calendarFeedSubtitle =>
+      'Prikaži načrt obrokov v Googlovem, Applovem ali drugem koledarju';
+
+  @override
+  String get calendarFeedDescription =>
+      'Naroči se na načrt obrokov svojega gospodinjstva v Google Koledarju, Applovem koledarju, Home Assistantu ali kateri koli drugi aplikaciji, ki podpira povezave iCal. Vsak, ki ima povezavo, lahko vidi tvoj načrt obrokov.';
+
+  @override
+  String get calendarFeedOff =>
+      'Povezava do koledarja je za tvoje gospodinjstvo izklopljena.';
+
+  @override
+  String get calendarFeedAskManager =>
+      'Prosi nekoga, ki lahko upravlja gospodinjstvo, da jo vklopi.';
+
+  @override
+  String get calendarFeedTurnOn => 'Vklopi';
+
+  @override
+  String get calendarFeedTurnOff => 'Izklopi';
+
+  @override
+  String get calendarFeedReset => 'Ponastavi povezavo';
+
+  @override
+  String get calendarFeedResetHint =>
+      'Ponastavitev ali izklop povezave ustavi posodabljanje obstoječih naročnin.';
+
+  @override
+  String get calendarFeedIncludeNotes => 'Vključi zapiske';
+
+  @override
+  String get calendarFeedTimesHint =>
+      'Tapni obrok, da nastaviš uro. Obroki brez ure so prikazani kot celodnevni dogodki.';
+
+  @override
+  String get calendarFeedMealTypes => 'Tip obroka';
+
+  @override
+  String get calendarFeedSubscribe => 'Naroči se v koledarju';
+
+  @override
+  String get calendarFeedNoApp =>
+      'Nobene aplikacije za koledar ni bilo mogoče odpreti. Kopiraj povezavo in jo v koledar dodaj kot naročnino.';
+
+  @override
+  String get calendarFeedPublicHint =>
+      'Povezava deluje brez prijave – deli jo le z ljudmi, ki smejo videti tvoj načrt obrokov.';
+
+  @override
+  String get recipeShareLinkMenu => 'Povezava za deljenje in koda QR';
+
+  @override
+  String get recipeShareShowQr => 'Prikaži kodo QR';
+
+  @override
+  String get recipeShareScanQr =>
+      'Skeniraj s kamero telefona, da odpreš ta recept';
+
+  @override
+  String get recipeShareQrShare => 'Deli sliko';
+
+  @override
+  String get recipeShareQrFailed => 'Slike kode QR ni bilo mogoče ustvariti';
+
+  @override
+  String get mealplanSettingsTitle => 'Nastavitve jedilnika';
+
+  @override
+  String get mealDiceRulesTitle => 'Pravila kocke';
+
+  @override
+  String saveAsNewFood(String name) {
+    return 'Shrani »$name« kot novo živilo';
+  }
+
+  @override
+  String get shoppingMoreOptions => 'Več možnosti';
+
+  @override
+  String get shoppingFewerOptions => 'Manj možnosti';
+
+  @override
+  String nameAlreadyExists(String name) {
+    return 'Že obstaja: $name';
+  }
+
+  @override
+  String aliasBelongsTo(String alias, String name) {
+    return '»$alias« že pripada »$name« – raje združi oba.';
+  }
 }

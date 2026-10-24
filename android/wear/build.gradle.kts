@@ -3,7 +3,6 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     // Compose-Compiler-Plugin (Kotlin 2.0+ Pflicht) — die Wear-UI ist Compose.
     id("org.jetbrains.kotlin.plugin.compose")
 }
@@ -25,10 +24,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -93,4 +88,12 @@ dependencies {
     implementation("androidx.wear.protolayout:protolayout:1.2.0")
     implementation("androidx.wear.protolayout:protolayout-material:1.2.0")
     implementation("com.google.guava:guava:33.2.1-android")
+}
+
+// Kotlin-Compileroptionen in der neuen Schreibweise (der frühere
+// `kotlinOptions`-Block im android { } ist ab Kotlin 2.x veraltet).
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }

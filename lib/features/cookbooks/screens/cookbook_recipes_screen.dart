@@ -9,6 +9,7 @@ import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 // RecipeCard wird 1:1 aus der Rezeptliste wiederverwendet (public dort).
 import '../../recipes/screens/recipe_list_screen.dart';
 import '../providers/cookbooks_provider.dart';
+import '../../../shared/widgets/error_view.dart';
 
 // ---------------------------------------------------------------------------
 // CookbookRecipesScreen — Rezepte EINES Kochbuchs. OFFLINE-FIRST: die
@@ -51,21 +52,10 @@ class CookbookRecipesScreen extends ConsumerWidget {
           top: false,
           child: recipesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(e.toString(),
-                      style: TextStyle(color: context.appFgSub),
-                      textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () =>
-                        ref.invalidate(cookbookRecipeIdsProvider(cookbookId)),
-                    child: Text(l.retry),
-                  ),
-                ],
-              ),
+            error: (e, _) => ErrorRetryView(
+              error: e,
+              onRetry: () =>
+                  ref.invalidate(cookbookRecipeIdsProvider(cookbookId)),
             ),
             data: (recipes) => recipes.isEmpty
                 ? Center(

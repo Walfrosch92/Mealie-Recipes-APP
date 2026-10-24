@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -12,6 +11,7 @@ import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/gradient_button.dart' show SheetHandle;
 import '../../recipes/providers/recipes_provider.dart';
 import '../screens/recipe_actions_screen.dart' show recipeActionsProvider;
+import '../../recipes/widgets/recipe_share_link_dialog.dart';
 import 'tool_widgets.dart';
 
 // ---------------------------------------------------------------------------
@@ -67,9 +67,7 @@ Future<void> showRecipeWebToolsSheet(BuildContext context, WidgetRef ref,
             }),
             tile(Icons.link_rounded, l.recipeShareLink, () {
               Navigator.pop(sheetCtx);
-              showDialog(
-                  context: context,
-                  builder: (_) => _ShareDialog(recipe: recipe));
+              showRecipeShareLinkDialog(context, recipe);
             }),
             tile(Icons.data_object_rounded, l.recipeExportJson, () {
               Navigator.pop(sheetCtx);
@@ -122,6 +120,8 @@ Future<void> _duplicate(
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
+      // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+      scrollable: true,
       backgroundColor: ctx.appCard,
       title: Text(l.recipeDuplicate),
       content: TextField(
@@ -204,159 +204,5 @@ Future<void> _runAction(BuildContext context, WidgetRef ref,
     }
   } catch (e) {
     if (context.mounted) showToolError(context, l.recipeActionFailed, e);
-  }
-}
-
-class _ShareDialog extends ConsumerStatefulWidget {
-  final RecipeDetail recipe;
-  const _ShareDialog({required this.recipe});
-
-  @override
-  ConsumerState<_ShareDialog> createState() => _ShareDialogState();
-}
-
-class _ShareDialogState extends ConsumerState<_ShareDialog> {
-  List<Map<String, dynamic>>? _tokens;
-  DateTime _expires = DateTime.now().add(const Duration(days: 30));
-  bool _busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final list =
-          await ref.read(apiServiceProvider).fetchShareTokens(widget.recipe.id);
-      if (mounted) setState(() => _tokens = list);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _tokens ??= const []);
-      showToolError(context, AppLocalizations.of(context)!.loadFailed, e);
-    }
-  }
-
-  String _link(String tokenId) => '${_webBase(ref)}/shared/r/$tokenId';
-
-  Future<void> _guard(String fail, Future<void> Function() op) async {
-    setState(() => _busy = true);
-    try {
-      await op();
-    } catch (e) {
-      if (mounted) showToolError(context, fail, e);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final tokens = _tokens;
-    return AlertDialog(
-      backgroundColor: context.appCard,
-      title: Text(l.recipeShareLink),
-      content: SizedBox(
-        width: 520,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(l.recipeShareDescription,
-                  style: TextStyle(color: context.appFgSub, fontSize: 13)),
-              const SizedBox(height: 10),
-              Row(children: [
-                Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.event_rounded),
-                    title: Text(l.recipeShareExpiration),
-                    subtitle: Text(
-                        MaterialLocalizations.of(context)
-                            .formatMediumDate(_expires),
-                        style: TextStyle(color: context.appFg)),
-                    onTap: () async {
-                      final now = DateTime.now();
-                      final d = await showDatePicker(
-                        context: context,
-                        initialDate: _expires,
-                        firstDate: now,
-                        lastDate: DateTime(now.year + 10),
-                      );
-                      if (d != null) setState(() => _expires = d);
-                    },
-                  ),
-                ),
-                FilledButton.icon(
-                  onPressed: _busy
-                      ? null
-                      : () => _guard(l.createFailed, () async {
-                            await ref
-                                .read(apiServiceProvider)
-                                .createShareToken(widget.recipe.id, _expires);
-                            await _load();
-                          }),
-                  icon: const Icon(Icons.add_link_rounded),
-                  label: Text(l.recipeShareCreate),
-                ),
-              ]),
-              const Divider(),
-              if (tokens == null)
-                const ToolEmpty('', loading: true)
-              else if (tokens.isEmpty)
-                ToolEmpty(l.recipeShareEmpty)
-              else
-                for (final t in tokens)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.link_rounded),
-                    title: SelectableText(_link(t['id'].toString()),
-                        style: TextStyle(color: context.appFg, fontSize: 13)),
-                    subtitle: Text(
-                        l.recipeShareExpiresAt(formatToolDate(
-                            context, t['expiresAt'], time: false)),
-                        style:
-                            TextStyle(color: context.appFgSub, fontSize: 12)),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          tooltip: l.copy,
-                          icon: const Icon(Icons.copy_rounded),
-                          onPressed: () async {
-                            await Clipboard.setData(
-                                ClipboardData(text: _link(t['id'].toString())));
-                            if (context.mounted) {
-                              showToolMessage(context, l.recipeShareCopied);
-                            }
-                          },
-                        ),
-                        IconButton(
-                          tooltip: l.delete,
-                          icon: const Icon(Icons.delete_outline_rounded),
-                          onPressed: _busy
-                              ? null
-                              : () => _guard(l.deleteFailed, () async {
-                                    await ref
-                                        .read(apiServiceProvider)
-                                        .deleteShareToken(t['id'].toString());
-                                    await _load();
-                                  }),
-                        ),
-                      ],
-                    ),
-                  ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context), child: Text(l.close)),
-      ],
-    );
   }
 }

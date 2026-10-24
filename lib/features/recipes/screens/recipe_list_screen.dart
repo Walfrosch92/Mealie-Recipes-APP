@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
+import '../../../core/api/api_service.dart' show userErrorMessage;
 import '../../../core/models/app_settings.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -21,6 +22,7 @@ import '../providers/favorites_provider.dart';
 import '../providers/recipes_provider.dart';
 import '../widgets/recipe_filter_sheet.dart';
 import '../../../shared/widgets/recipe_image.dart';
+import '../../../shared/widgets/error_view.dart';
 
 // Akzent für Tag-Tints (Orange, Premium-Redesign).
 const _accent = Color(0xFFFF8A00);
@@ -211,21 +213,9 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
               Expanded(
                 child: recipesAsync.when(
                   loading: () => const _RecipeListSkeleton(),
-                  error: (e, _) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(l.errorLoadingRecipes(e.toString()),
-                            style: TextStyle(color: context.appFgSub),
-                            textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: () =>
-                              ref.read(recipesProvider.notifier).refresh(),
-                          child: Text(l.retry),
-                        ),
-                      ],
-                    ),
+                  error: (e, _) => ErrorRetryView(
+                    error: e,
+                    onRetry: () => ref.read(recipesProvider.notifier).refresh(),
                   ),
                   data: (_) {
                     // Empty + active filters → tray empty state with reset button
@@ -520,6 +510,7 @@ class _TopSearchBar extends StatelessWidget {
               Icon(Icons.search_rounded, color: context.appFgSub, size: 21),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
+                  tooltip: AppLocalizations.of(context)!.a11yClearSearch,
                   icon: Icon(Icons.clear_rounded,
                       color: context.appFgSub, size: 19),
                   onPressed: onClear,
@@ -602,9 +593,21 @@ class RecipeCard extends ConsumerWidget {
                           left: 6,
                           child: _FavoriteHeart(
                             isFavorite: isFav,
-                            onTap: () => ref
-                                .read(favoritesProvider.notifier)
-                                .toggle(id: recipe.id, slug: recipe.slug),
+                            onTap: () async {
+                              final messenger = ScaffoldMessenger.of(context);
+                              final l = AppLocalizations.of(context)!;
+                              try {
+                                await ref
+                                    .read(favoritesProvider.notifier)
+                                    .toggle(id: recipe.id, slug: recipe.slug);
+                              } catch (e) {
+                                // Herz springt zurück (Rollback) — sagen,
+                                // warum, statt still.
+                                messenger.showSnackBar(SnackBar(
+                                    content: Text(
+                                        userErrorMessage(e, l.saveFailed))));
+                              }
+                            },
                           ),
                         ),
                       ],

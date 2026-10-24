@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:dio/dio.dart' show DioException, DioExceptionType;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
@@ -9,6 +11,7 @@ import '../../../core/models/shopping_item.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/local_cache.dart';
 import '../../../core/services/log_manager.dart';
+import '../../../core/utils/ingredient_display.dart' show snapQuantity;
 import '../../../core/utils/ingredient_parse.dart';
 import '../models/pending_changes.dart';
 import '../services/network_error.dart';
@@ -290,16 +293,75 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
   // blieben so dauerhaft nur lokal sichtbar und erschienen nie in der
   // Webapp. Das Sheet bleibt für die echten Konfliktfälle
   // (Check/Menge/Kategorie/Delete) unverändert bestehen.
+  // ── Offline vorgemerkte Rezept-Verknüpfungen ─────────────────────────────
+  static const _kPendingRecipeRefs = 'pending_shopping_recipe_refs';
+
+  Future<void> _queueRecipeReference(String listId, String recipeId) async {
+    if (listId.isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList(_kPendingRecipeRefs) ?? <String>[];
+      list.add('$listId|$recipeId');
+      await prefs.setStringList(_kPendingRecipeRefs, list);
+    } catch (_) {}
+  }
+
+  bool _syncingRefs = false;
+
+  /// Nach dem Senden der Pending-Adds: Verknüpfungen nachtragen. Netzfehler
+  /// → bleibt stehen; andere Fehler (alte Mealie-Version) → verwerfen.
+  Future<void> _syncPendingRecipeRefs() async {
+    if (_syncingRefs) return;
+    _syncingRefs = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList(_kPendingRecipeRefs) ?? <String>[];
+      if (list.isEmpty) return;
+      final api = ref.read(apiServiceProvider);
+      final rest = <String>[];
+      var any = false;
+      for (var i = 0; i < list.length; i++) {
+        final parts = list[i].split('|');
+        if (parts.length != 2) continue;
+        try {
+          await api.addShoppingListRecipeReference(parts[0], parts[1]);
+          any = true;
+        } catch (e) {
+          if (isNetworkError(e)) {
+            rest.addAll(list.sublist(i));
+            break;
+          }
+          LogManager.shared
+              .log('⚠️ Vorgemerkte Rezept-Verknüpfung verworfen: $e');
+        }
+      }
+      await prefs.setStringList(_kPendingRecipeRefs, rest);
+      if (any) unawaited(ref.read(shoppingListsProvider.notifier).refresh());
+    } catch (_) {
+    } finally {
+      _syncingRefs = false;
+    }
+  }
+
   void _onLoadSuccess(List<ShoppingItem> items) {
     ref.read(shoppingServerSnapshotProvider.notifier).state = items;
     ref.read(shoppingOfflineProvider.notifier).state = false;
     final pending = ref.read(pendingShoppingChangesProvider);
     if (pending.adds.isNotEmpty) {
-      Future.microtask(_syncPendingAddsSilently);
+      // Verknüpfungen erst NACH den Zutaten (Reihenfolge wie online).
+      Future.microtask(() async {
+        await _syncPendingAddsSilently();
+        await _syncPendingRecipeRefs();
+      });
+    } else {
+      Future.microtask(_syncPendingRecipeRefs);
     }
+    Future.microtask(
+        () => ref.read(shoppingListsProvider.notifier).flushPendingOrder());
     final hasConflicts = pending.checks.isNotEmpty ||
         pending.quantities.isNotEmpty ||
         pending.categories.isNotEmpty ||
+        pending.notes.isNotEmpty ||
         pending.deletes.isNotEmpty;
     if (hasConflicts) {
       // Auto-Trigger: nach erfolgreichem Reload mit pending changes den
@@ -408,8 +470,11 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
   //                   eingebettet („Tüte Butter"), gleiche Konvention wie
   //                   addIngredient. Schließen sich mit [unit] aus.
   //   • [food]      — aufgelöstes Server-Food → echtes Food-Item (foodId +
-  //                   isFood, leere note) wie ein Webapp-Add. Ohne Treffer
-  //                   legt der Exakt-Modus das Food serverseitig NEU an.
+  //                   isFood, leere note) wie ein Webapp-Add — in BEIDEN
+  //                   Modi. Ohne Treffer bleibt der Artikel eine Notiz wie in
+  //                   Mealie 3.29; ein neues Lebensmittel entsteht nur auf
+  //                   ausdrücklichen Wunsch (Einkaufsliste „Als neues
+  //                   Lebensmittel speichern" → Aufrufer übergibt es hier).
   // Im Exakt-Modus wird außerdem wie bei addIngredient zusammengeführt:
   // gleicher Artikel + gleiche Einheit → Menge addieren (bzw. abgehakte mit
   // der neuen Menge wieder öffnen) statt ein Duplikat anzulegen.
@@ -421,6 +486,9 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     ShoppingUnit? unit,
     String? unitText,
     ShoppingFood? food,
+    // Zusatz-Notiz aus den aufgeklappten Details („reife"). Bei Lebensmitteln
+    // die Notiz des Artikels, sonst wie die Webapp mit „, " angehängt.
+    String? extraNote,
   }) async {
     final settings = ref.read(settingsProvider).valueOrNull;
     final listId = shoppingListId ?? settings?.shoppingListId ?? '';
@@ -429,37 +497,18 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     final exact = settings?.addExactQuantities ?? false;
     final api = ref.read(apiServiceProvider);
 
-    // Fehlt das Food noch auf dem Server, legt die App es im Exakt-Modus
-    // selbst an (POST /api/foods) — der Artikel wird damit ein echtes
-    // Food-Item wie in der Webapp und der Katalog lernt den neuen Eintrag
-    // für künftige Vorschläge. createFood behandelt Namens-Dubletten selbst
-    // (Fallback-Lookup per Name). Offline/Fehler → der Add bleibt wie
-    // bisher ein Notiz-Artikel.
-    var resolvedFood = food;
-    if (exact && resolvedFood == null && note.isNotEmpty) {
-      try {
-        final created = await api.createFood(note);
-        final id = created?['id'] as String?;
-        final name = (created?['name'] as String?)?.trim() ?? '';
-        if (id != null && id.isNotEmpty && name.isNotEmpty) {
-          resolvedFood = ShoppingFood(
-            id: id,
-            name: name,
-            pluralName: (created?['pluralName'] as String?)?.trim(),
-          );
-          // Katalog neu laden, damit der neue Eintrag sofort als
-          // Autovervollständigungs-Vorschlag auftaucht.
-          ref.invalidate(foodsCatalogProvider);
-        }
-      } catch (_) {/* Notiz-Artikel-Fallback */}
-    }
-
+    final resolvedFood = food;
     final asFood = (resolvedFood?.id ?? '').isNotEmpty;
     final embedUnit = (unitText ?? '').trim();
-    // Artikeltext für Notiz-Items; bei Food-Match bleibt die note leer.
-    final itemText = embedUnit.isEmpty ? note : '$embedUnit $note';
+    final extra = (extraNote ?? '').trim();
+    // Artikeltext für Notiz-Items; bei Food-Match bleibt die note leer
+    // (bzw. trägt nur die Zusatz-Notiz).
+    final baseText = embedUnit.isEmpty ? note : '$embedUnit $note';
+    final itemText = extra.isEmpty ? baseText : '$baseText, $extra';
 
-    if (exact) {
+    // Mit Zusatz-Notiz nicht lokal zusammenführen — „Butter, reife" ist ein
+    // eigener Wunsch (der Server entscheidet wie bei der Webapp selbst).
+    if (exact && extra.isEmpty) {
       // Dubletten-Merge wie addIngredient: verglichen wird der fertige
       // Anzeigename gegen displayName, plus identische strukturierte Einheit
       // (g ≠ EL → separater Artikel).
@@ -475,7 +524,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
             await updateQuantity(i, quantity);
             await toggleChecked(i.copyWith(quantity: quantity));
           } else {
-            await updateQuantity(i, (i.quantity ?? 1) + quantity);
+            await updateQuantity(i, snapQuantity((i.quantity ?? 1) + quantity));
           }
           return;
         }
@@ -485,12 +534,13 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     try {
       final item = await api.addShoppingItem(ShoppingItemCreate(
         shoppingListId: listId,
-        note: asFood ? '' : itemText,
+        note: asFood ? extra : itemText,
         isFood: asFood ? true : null,
         quantity: quantity,
         foodId: resolvedFood?.id,
         unitId: unit?.id,
-        labelId: label?.id,
+        // Ohne gewählte Abteilung die des Lebensmittels — wie die Webapp.
+        labelId: label?.id ?? resolvedFood?.labelId,
       ));
       // Echo-Lücken stopfen: liefert der Server food/unit (noch) nicht
       // aufgelöst zurück, das lokal aufgelöste Objekt einsetzen — sonst
@@ -516,9 +566,10 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
       // einbetten, damit sie offline nicht verloren geht.
       final unitLabel = unit?.name?.trim() ?? embedUnit;
       final baseName = asFood ? (resolvedFood!.name ?? note).trim() : note;
+      final pendingText = unitLabel.isEmpty ? baseName : '$unitLabel $baseName';
       await _enqueuePendingAdd(
           listId: listId,
-          note: unitLabel.isEmpty ? baseName : '$unitLabel $baseName',
+          note: extra.isEmpty ? pendingText : '$pendingText, $extra',
           label: label,
           quantity: quantity);
     }
@@ -604,7 +655,240 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
   /// die Rezept-Verknüpfung und die Liste führt das Rezept unter „verknüpfte
   /// Rezepte". [ingredients] = Auswahl (sonst alle). Gibt die Zahl der vom
   /// Server abgelehnten Zutaten zurück; der Aufrufer refresht danach.
+  ///
+  /// Online macht das wie die Webapp der SERVER in einem Aufruf
+  /// ([_addRecipeViaServer]): Mengen × Faktor, Einheiten, Lebensmittel,
+  /// Abteilungen, Zusammenführen mit offenen Artikeln, Rezept-Verknüpfung.
+  /// Offline (oder falls der Server den Aufruf ablehnt) wie bisher Zutat für
+  /// Zutat mit Offline-Warteschlange ([_addRecipeLegacy]).
   Future<int> addRecipe({
+    required String shoppingListId,
+    required RecipeDetail recipe,
+    required double multiplier,
+    Iterable<Ingredient>? ingredients,
+    bool Function(Ingredient)? skipIf,
+  }) async {
+    if (shoppingListId.isEmpty) return 0;
+    final selected = (ingredients ?? recipe.recipeIngredient).toList();
+    // Jede Zutat nur EINMAL prüfen — der Aufrufer zählt die Treffer
+    // („x vorrätig übersprungen"); fällt der Server-Weg auf den alten Weg
+    // zurück, würde sonst doppelt gezählt.
+    final memo = <String, bool>{};
+    final checkOnce = skipIf == null
+        ? null
+        : (Ingredient ing) => memo.putIfAbsent(
+            '${ing.referenceId}|${ing.food?.id}|${ing.note}|${ing.quantity}',
+            () => skipIf(ing));
+    try {
+      await _addRecipeViaServer(
+        shoppingListId: shoppingListId,
+        recipe: recipe,
+        multiplier: multiplier,
+        selected: selected,
+        skipIf: checkOnce,
+      );
+      return 0;
+    } on _AmbiguousRecipePost catch (e) {
+      // Anfrage kam an, nur die Antwort blieb aus — der Server hat die
+      // Zutaten sehr wahrscheinlich schon angelegt. NICHT nochmal Zutat für
+      // Zutat (sonst doppelt), nur den Stand neu laden.
+      LogManager.shared
+          .log('⏳ Rezept zur Liste: Antwort blieb aus (${recipe.slug}): $e');
+      await _silentRefresh();
+      return 0;
+    } catch (e) {
+      LogManager.shared.log(isNetworkError(e)
+          ? '📴 Rezept offline zur Liste (${recipe.slug}) — Warteschlange'
+          : '⚠️ Rezept über Server fehlgeschlagen (${recipe.slug}): $e — '
+              'Zutat für Zutat');
+    }
+    return _addRecipeLegacy(
+      shoppingListId: shoppingListId,
+      recipe: recipe,
+      multiplier: multiplier,
+      ingredients: selected,
+      skipIf: checkOnce,
+    );
+  }
+
+  Future<void> _addRecipeViaServer({
+    required String shoppingListId,
+    required RecipeDetail recipe,
+    required double multiplier,
+    required List<Ingredient> selected,
+    bool Function(Ingredient)? skipIf,
+  }) async {
+    final api = ref.read(apiServiceProvider);
+    final exact =
+        ref.read(settingsProvider).valueOrNull?.addExactQuantities ?? false;
+
+    // Rohe Zutaten vom Server — wie die Webapp sie schickt: komplette
+    // Lebensmittel (inkl. Abteilung) und komplette verlinkte Unterrezepte.
+    final raw = await api.fetchRecipeRaw(recipe.id);
+    final rawIngs = _rawIngredientList(raw);
+
+    // Ausgewählte (gecachte) Zutaten den rohen zuordnen: per referenceId,
+    // sonst per Position (wenn Cache und Server gleich lang sind), sonst
+    // das App-Modell selbst (dann ohne Abteilung — der Server rät sie).
+    final byRef = <String, Map<String, dynamic>>{
+      for (final m in rawIngs)
+        if ((m['referenceId'] as String?)?.isNotEmpty == true)
+          m['referenceId'] as String: m,
+    };
+    final sameShape = rawIngs.length == recipe.recipeIngredient.length;
+    Map<String, dynamic> rawFor(Ingredient ing) {
+      final refId = ing.referenceId;
+      if (refId != null && byRef[refId] != null) return byRef[refId]!;
+      if (sameShape) {
+        final i = recipe.recipeIngredient.indexOf(ing);
+        if (i >= 0) return rawIngs[i];
+      }
+      return ing.toJson();
+    }
+
+    final unitLookup = exact ? null : await _ensureUnitLookup();
+    final aus = _AusDedupe(state.valueOrNull ?? const <ShoppingItem>[]);
+    final payload = <Map<String, dynamic>>[];
+    for (final ing in selected) {
+      final m = await _prepareServerIngredient(
+        Map<String, dynamic>.from(rawFor(ing)),
+        exact: exact,
+        skipIf: skipIf,
+        unitLookup: unitLookup,
+        aus: aus,
+        depth: 0,
+      );
+      if (m != null) payload.add(m);
+    }
+
+    // Einfacher Modus: immer „1×" — Faktor 1, damit der Server die Menge 1
+    // nicht vervielfacht und „Rezept entfernen" genau 1× wieder abzieht.
+    try {
+      await api.addRecipeIngredientsToShoppingList(
+          shoppingListId, recipe.id, exact ? multiplier : 1, payload);
+    } on DioException catch (e) {
+      // Gesendet, aber keine (rechtzeitige) Antwort → Ergebnis unbekannt.
+      // Verbindungsfehler/-Timeout = nie angekommen → Rückfall ist sicher.
+      if (e.type == DioExceptionType.receiveTimeout) {
+        throw _AmbiguousRecipePost(e);
+      }
+      rethrow;
+    }
+    unawaited(ref.read(shoppingListsProvider.notifier).refresh());
+    await _silentRefresh();
+  }
+
+  static List<Map<String, dynamic>> _rawIngredientList(dynamic recipeMap) {
+    final list = recipeMap is Map ? recipeMap['recipeIngredient'] : null;
+    return [
+      for (final e in (list is List ? list : const []))
+        if (e is Map) Map<String, dynamic>.from(e),
+    ];
+  }
+
+  /// Eine rohe Zutat für den Server vorbereiten. `null` = nicht senden
+  /// (reine Abschnitts-Überschrift, „Im Haushalt vorrätig", im einfachen
+  /// Modus schon auf der Liste). Verlinkte Unterrezepte werden rekursiv
+  /// genauso gefiltert — der Server löst sie selbst auf, braucht dafür aber
+  /// das komplette Unterrezept (fehlt es, wird es nachgeladen).
+  Future<Map<String, dynamic>?> _prepareServerIngredient(
+    Map<String, dynamic> m, {
+    required bool exact,
+    required bool Function(Ingredient)? skipIf,
+    required Map<String, String>? unitLookup,
+    required _AusDedupe aus,
+    required int depth,
+  }) async {
+    final ing = Ingredient.fromJson(m);
+    final food = ing.food?.name?.trim() ?? '';
+
+    // Verlinktes Unterrezept („1 Béchamelsauce").
+    final linked = m['referencedRecipe'];
+    if (food.isEmpty && linked is Map && linked['id'] != null) {
+      if (depth >= 3) return null; // Schutz vor Endlos-Verlinkung
+      var sub = Map<String, dynamic>.from(linked);
+      if (sub['recipeIngredient'] is! List) {
+        sub = await ref
+            .read(apiServiceProvider)
+            .fetchRecipeRaw(sub['slug'] as String? ?? sub['id'] as String);
+      }
+      final subIngs = <Map<String, dynamic>>[];
+      for (final s in _rawIngredientList(sub)) {
+        final p = await _prepareServerIngredient(s,
+            exact: exact,
+            skipIf: skipIf,
+            unitLookup: unitLookup,
+            aus: aus,
+            depth: depth + 1);
+        if (p != null) subIngs.add(p);
+      }
+      if (subIngs.isEmpty) return null;
+      sub['recipeIngredient'] = subIngs;
+      m['referencedRecipe'] = sub;
+      // Einfacher Modus: Unterrezept nicht vervielfachen (Server rechnet
+      // Menge der Verknüpfung × Faktor, 0 zählt als 1).
+      if (!exact) m['quantity'] = 0;
+      return m;
+    }
+
+    if (!ing.hasContent) return null; // reine Abschnitts-Überschrift
+    if (skipIf != null && skipIf(ing)) return null;
+
+    final note = ing.note?.trim() ?? '';
+    final hasFood = ing.food?.id != null && food.isNotEmpty;
+
+    if (exact) {
+      // Unstrukturierte Zutat („200 g Gouda", ohne Lebensmittel und Menge):
+      // führende Zahl ins Mengenfeld, damit der Server sie mit dem Faktor
+      // skaliert (die Webapp würde „200 g Gouda" unverändert übernehmen).
+      if (!hasFood && (ing.quantity ?? 0) == 0 && note.isNotEmpty) {
+        final (qty, rest) = _splitLeadingNumber(note);
+        if (qty != null && rest.isNotEmpty) {
+          m['quantity'] = qty;
+          m['note'] = rest;
+        }
+      }
+      return m;
+    }
+
+    // ── Einfacher Modus: „1× Butter" ─────────────────────────────────────
+    final unitName = ing.unit?.name?.trim() ?? '';
+    // Parser-Sonderfall „4 Eier (Größe M)": das Nomen steckt in der Einheit.
+    final unitCarriesName = ing.unit?.id != null &&
+        unitName.isNotEmpty &&
+        food.length > 2 &&
+        food.startsWith('(') &&
+        food.endsWith(')');
+    String name;
+    if (hasFood) {
+      name = unitCarriesName ? '$unitName $food' : food;
+    } else {
+      final units = unitLookup ?? const <String, String>{};
+      name = splitIngredientNote(note, units).food;
+      if (name.isEmpty) name = _nameFromNote(note, ing.unit?.name?.trim());
+    }
+    name = name.trim();
+    if (name.isEmpty) return null;
+    // Schon auf der Liste (offen oder abgehakt) oder doppelt im Rezept →
+    // nicht nochmal (sonst addiert der Server zu „2× Butter").
+    if (!aus.claim(name, hasFood ? ing.food!.id : null)) return null;
+
+    m['quantity'] = 1;
+    m['disableAmount'] = false;
+    if (hasFood) {
+      // Nur der Artikel — keine Zubereitungs-Notiz („geschmolzen").
+      m['note'] = '';
+      if (!unitCarriesName) m['unit'] = null;
+    } else {
+      m['note'] = name;
+      m['unit'] = null;
+      m['food'] = null;
+    }
+    return m;
+  }
+
+  /// Bisheriger Weg Zutat für Zutat — offline mit Warteschlange.
+  Future<int> _addRecipeLegacy({
     required String shoppingListId,
     required RecipeDetail recipe,
     required double multiplier,
@@ -629,7 +913,12 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
           .addShoppingListRecipeReference(shoppingListId, recipe.id);
       unawaited(ref.read(shoppingListsProvider.notifier).refresh());
     } catch (e) {
-      // Offline/alte Mealie-Version: Zutaten sind trotzdem auf der Liste,
+      // Offline: vormerken — die Zutaten kommen über die Pending-Adds an, die
+      // Verknüpfung (und damit das „−" der Webapp) sonst nie.
+      if (isNetworkError(e)) {
+        await _queueRecipeReference(shoppingListId, recipe.id);
+      }
+      // Alte Mealie-Version o. Ä.: Zutaten sind trotzdem auf der Liste,
       // nur ohne Eintrag unter „verknüpfte Rezepte".
       LogManager.shared.log('⚠️ Rezept-Verknüpfung nicht gesetzt: $e');
     }
@@ -739,8 +1028,10 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
             // _PortionStepper) ist i. Allg. kein exakter Binärbruch (z. B.
             // 6 × 4/6 = 3.9999999999999996 statt 4.0), sonst würde diese
             // Float-Rundung dauerhaft im gespeicherten Artikel landen.
-            quantity = double.parse(
-                (ingredient.quantity! * multiplier).toStringAsFixed(2));
+            // Exakte Koch-Brüche speichern (⅛ = 0.125) — auf 2 Stellen
+            // gerundet stand sonst 0.13 auf dem Server (Webapp-Anzeige,
+            // Summen beim Zusammenführen, +/- im Bruch-Raster).
+            quantity = snapQuantity(ingredient.quantity! * multiplier);
             final unit = ingredient.unit?.name?.trim() ?? '';
             if (ingredient.unit?.id != null && unit.isNotEmpty) {
               // Einheit strukturiert mitgeben — Server und Webapp zeigen den
@@ -757,8 +1048,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
           // Mengenfeld, der Rest ("g Gouda") wird der Artikeltext.
           final (parsedQty, rest) = _splitLeadingNumber(note);
           if (parsedQty != null && rest.isNotEmpty) {
-            quantity =
-                double.parse((parsedQty * multiplier).toStringAsFixed(2));
+            quantity = snapQuantity(parsedQty * multiplier);
             name = rest;
           } else {
             name = note;
@@ -813,7 +1103,8 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
             await updateQuantity(match, quantity);
             await toggleChecked(match.copyWith(quantity: quantity));
           } else {
-            await updateQuantity(match, (match.quantity ?? 1) + quantity);
+            await updateQuantity(
+                match, snapQuantity((match.quantity ?? 1) + quantity));
           }
         }
         return true;
@@ -1011,17 +1302,37 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
         trimmed.isNotEmpty &&
         trimmed.toLowerCase() != shownName.toLowerCase();
     final keepNote = trimmed.isEmpty || (item.foodLeads && !renamedFoodItem);
-    final updated = item.copyWith(
-      note: keepNote ? item.note : trimmed,
-      quantity: quantity,
-      label: label,
-      clearLabel: clearLabel,
-      clearFood: renamedFoodItem,
-      // Bei unitCarriesName-Items steckt der alte Produktname in der Einheit
-      // („Eier") — die muss beim Rename mit weg, sonst hängt der Exakt-Modus
-      // sie weiter vor den neuen Namen.
-      clearUnit: renamedFoodItem && item.unitCarriesName,
-    );
+    // Umbenannt auf ein bekanntes Lebensmittel (Name/Plural/Alias, z. B. per
+    // Vorschlag gewählt) → wie beim Hinzufügen damit VERKNÜPFEN statt zum
+    // Notiz-Artikel zu machen. Eine Zusatznotiz eines Food-Items bleibt.
+    final renamed = trimmed.isNotEmpty &&
+        trimmed.toLowerCase() != shownName.toLowerCase();
+    final linkFood = renamed
+        ? resolveFoodByName(
+            ref.read(foodsCatalogProvider).valueOrNull ?? const [], trimmed)
+        : null;
+    final relink = linkFood != null && linkFood.id != item.food?.id;
+    final updated = relink
+        ? item.copyWith(
+            note: item.foodLeads ? (item.note ?? '') : '',
+            food: linkFood,
+            quantity: quantity,
+            label: label,
+            clearLabel: clearLabel,
+            // Alter Produktname in der Einheit („Eier (Größe M)") muss weg.
+            clearUnit: item.unitCarriesName,
+          )
+        : item.copyWith(
+            note: keepNote ? item.note : trimmed,
+            quantity: quantity,
+            label: label,
+            clearLabel: clearLabel,
+            clearFood: renamedFoodItem,
+            // Bei unitCarriesName-Items steckt der alte Produktname in der
+            // Einheit („Eier") — die muss beim Rename mit weg, sonst hängt
+            // der Exakt-Modus sie weiter vor den neuen Namen.
+            clearUnit: renamedFoodItem && item.unitCarriesName,
+          );
     _updateLocal(updated);
     await _persistLocalCache();
     _scheduleWatchResync(); // Uhr nach dem Edit sauber nachziehen
@@ -1042,9 +1353,25 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
         await pending.addCategory(
             PendingCategoryChange(itemId: item.id, labelId: label?.id));
       }
-      // Note-Änderung wird nicht in Swift gespiegelt (kein PendingNoteChange);
-      // sie bleibt lokal sichtbar und geht beim nächsten erfolgreichen Server-
-      // Reload verloren — bewusste 1:1-Übernahme des iOS-Verhaltens.
+      // Umbenennung ebenfalls vormerken (früher wie in iOS verloren).
+      // Offline kennt die Warteschlange keine Food-Verknüpfung — eine
+      // Umbenennung auf ein Lebensmittel wird dort als Text-Umbenennung
+      // nachgeholt (der Name stimmt, nur ohne Verknüpfung).
+      if (relink) {
+        await pending.addNote(PendingNoteChange(
+          itemId: item.id,
+          note: trimmed,
+          clearFood: item.food != null,
+          clearUnit: item.unitCarriesName,
+        ));
+      } else if (updated.note != item.note || renamedFoodItem) {
+        await pending.addNote(PendingNoteChange(
+          itemId: item.id,
+          note: updated.note ?? '',
+          clearFood: renamedFoodItem,
+          clearUnit: renamedFoodItem && item.unitCarriesName,
+        ));
+      }
     }
   }
 
@@ -1236,39 +1563,64 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     Map<String, bool> selectedCheckChanges = const {},
     Map<String, bool> selectedQuantityChanges = const {},
     Map<String, bool> selectedCategoryChanges = const {},
+    Map<String, bool> selectedNoteChanges = const {},
   }) async {
     final api = ref.read(apiServiceProvider);
     final pendingNotifier = ref.read(pendingShoppingChangesProvider.notifier);
     final pending = ref.read(pendingShoppingChangesProvider);
 
+    // Scheitert eine Änderung erneut am NETZ (Verbindung bricht während des
+    // Abgleichs ab), bleibt sie vorgemerkt und wird beim nächsten Abgleich
+    // wiederholt — vorher wurde die Warteschlange trotzdem komplett geleert
+    // und die offline gemachten Änderungen waren verloren. Lehnt der Server
+    // dagegen endgültig ab (4xx, z. B. Artikel inzwischen gelöscht), fällt
+    // sie weg: ein erneuter Versuch hätte dasselbe Ergebnis.
+    final keepDeletes = <PendingDeleteChange>[];
+    final keepAdds = <PendingAddChange>[];
+    final failedItemIds = <String>{};
+
     // 1) Deletes
     for (final c in pending.deletes) {
       try {
         await api.deleteShoppingItem(c.itemId);
-      } catch (_) {/* ignore — wird beim nächsten Sync erneut versucht */}
+      } catch (e) {
+        if (isNetworkError(e)) keepDeletes.add(c);
+      }
     }
     await pendingNotifier.clearDeletes();
+    for (final c in keepDeletes) {
+      await pendingNotifier.addDelete(c);
+    }
 
-    // 2) Adds
+    // 2) Adds — jeweils in IHRE Liste (offline erfasst auf Liste A, danach
+    // auf B gewechselt → gehört trotzdem auf A), wie _syncPendingAddsSilently.
     final settings = ref.read(settingsProvider).valueOrNull;
     final listId = settings?.shoppingListId ?? '';
     for (final c in pending.adds) {
+      final target = c.shoppingListId.isNotEmpty ? c.shoppingListId : listId;
+      if (target.isEmpty) continue;
       try {
         await api.addShoppingItem(ShoppingItemCreate(
-          shoppingListId: listId,
+          shoppingListId: target,
           note: c.note,
           quantity: c.quantity,
           labelId: c.labelId,
         ));
-      } catch (_) {/* siehe oben */}
+      } catch (e) {
+        if (isNetworkError(e)) keepAdds.add(c);
+      }
     }
     await pendingNotifier.clearAdds();
+    for (final c in keepAdds) {
+      await pendingNotifier.addAdd(c);
+    }
 
     // 3) Updates pro itemId zusammenfassen (mirror Swift).
     final allChangedIds = <String>{
       ...pending.checks.map((c) => c.itemId),
       ...pending.quantities.map((c) => c.itemId),
       ...pending.categories.map((c) => c.itemId),
+      ...pending.notes.map((c) => c.itemId),
     };
     final list = state.valueOrNull ?? const <ShoppingItem>[];
     for (final itemId in allChangedIds) {
@@ -1281,6 +1633,14 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
       final useCheck = selectedCheckChanges[itemId] ?? true;
       final useQty = selectedQuantityChanges[itemId] ?? true;
       final useCat = selectedCategoryChanges[itemId] ?? true;
+      final useNote = selectedNoteChanges[itemId] ?? true;
+      if (useNote) {
+        for (final c in pending.notes) {
+          if (c.itemId != itemId) continue;
+          merged = merged.copyWith(
+              note: c.note, clearFood: c.clearFood, clearUnit: c.clearUnit);
+        }
+      }
       if (useCheck) {
         final c = pending.checks.firstWhere(
           (c) => c.itemId == itemId,
@@ -1317,13 +1677,32 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
       }
       try {
         await api.updateShoppingItem(merged);
-      } catch (_) {/* siehe oben */}
+      } catch (e) {
+        if (isNetworkError(e)) failedItemIds.add(itemId);
+      }
     }
 
-    // 4) Pending leeren
+    // 4) Pending leeren — außer den am Netz gescheiterten (siehe oben).
     await pendingNotifier.clearChecks();
     await pendingNotifier.clearQuantities();
     await pendingNotifier.clearCategories();
+    await pendingNotifier.clearNotes();
+    for (final c in pending.notes) {
+      if (failedItemIds.contains(c.itemId)) await pendingNotifier.addNote(c);
+    }
+    for (final c in pending.checks) {
+      if (failedItemIds.contains(c.itemId)) await pendingNotifier.addCheck(c);
+    }
+    for (final c in pending.quantities) {
+      if (failedItemIds.contains(c.itemId)) {
+        await pendingNotifier.addQuantity(c);
+      }
+    }
+    for (final c in pending.categories) {
+      if (failedItemIds.contains(c.itemId)) {
+        await pendingNotifier.addCategory(c);
+      }
+    }
 
     // 5) Cache + Server-Reload
     await _persistLocalCache();
@@ -1344,3 +1723,36 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
 }
 
 final Random _uuidRandom = Random.secure();
+
+class _AmbiguousRecipePost implements Exception {
+  final Object cause;
+  _AmbiguousRecipePost(this.cause);
+  @override
+  String toString() => cause.toString();
+}
+
+/// Einfacher Modus: was schon auf der Liste steht (offen ODER abgehakt) bzw.
+/// in dieser Übernahme schon vorkommt, kommt nicht nochmal dazu — gleiche
+/// Regel wie bisher (Name, ohne Groß/Klein), zusätzlich gleiches
+/// Lebensmittel (der Server würde offene Artikel sonst zu „2×" addieren).
+class _AusDedupe {
+  final Set<String> _names;
+  final Set<String> _foodIds;
+
+  _AusDedupe(List<ShoppingItem> existing)
+      : _names = {for (final i in existing) i.displayName.trim().toLowerCase()},
+        _foodIds = {
+          for (final i in existing)
+            if (!i.checked && (i.food?.id ?? '').isNotEmpty) i.food!.id!,
+        };
+
+  /// true = neu, darf auf die Liste (und ist ab jetzt vergeben).
+  bool claim(String name, String? foodId) {
+    final key = name.trim().toLowerCase();
+    if (_names.contains(key)) return false;
+    if (foodId != null && _foodIds.contains(foodId)) return false;
+    _names.add(key);
+    if (foodId != null) _foodIds.add(foodId);
+    return true;
+  }
+}

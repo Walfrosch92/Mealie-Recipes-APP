@@ -67,6 +67,24 @@ class SupportMailService {
     }
   }
 
+  /// Ausweg ohne eingerichtete Mail-App (z. B. nur Gmail/Outlook installiert):
+  /// Text mit Adresse und Diagnose über das System-Teilen-Menü — dort lässt
+  /// sich jede App wählen. Vorher endete der Weg mit einem kaum sichtbaren
+  /// Hinweis, schreiben konnte man nichts.
+  static Future<void> shareText({
+    required String subject,
+    required String languageCode,
+    required String hintLine,
+    Rect? sharePositionOrigin,
+  }) async {
+    final head = await diagnostics(languageCode);
+    await SharePlus.instance.share(ShareParams(
+      text: '$supportAddress\n\n$hintLine\n\n\n---\n$head\n',
+      subject: subject,
+      sharePositionOrigin: sharePositionOrigin,
+    ));
+  }
+
   /// Schreibt die Logs als .txt in den Temp-Ordner und öffnet das Share-Sheet,
   /// damit der Nutzer sie an eine Mail (oder einen anderen Kanal) anhängen
   /// kann. [sharePositionOrigin] verhindert den iPad-Absturz des Popovers.
@@ -83,11 +101,11 @@ class SupportMailService {
     // Exporte sammeln sich nicht im Temp-Ordner an.
     final file = File('${dir.path}/mealie-recipes-logs.txt');
     await file.writeAsString('$head\n\n${'-' * 40}\n\n$logs\n');
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'text/plain')],
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path, mimeType: 'text/plain')],
       subject: subject,
       text: '$hintLine\n\n$supportAddress\n\n---\n$head\n',
       sharePositionOrigin: sharePositionOrigin,
-    );
+    ));
   }
 }

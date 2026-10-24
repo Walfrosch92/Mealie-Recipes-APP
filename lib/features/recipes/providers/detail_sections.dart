@@ -23,6 +23,7 @@ abstract final class DetailSection {
   static const comments = 'comments';
   static const assets = 'assets';
   static const timeline = 'timeline';
+  static const source = 'source'; // „Ursprüngliche URL" am Seitenende
 }
 
 const kCollapsedDetailSectionsKey = 'collapsedDetailSections';

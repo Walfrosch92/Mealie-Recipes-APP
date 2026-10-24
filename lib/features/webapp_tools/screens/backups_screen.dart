@@ -104,6 +104,8 @@ class _BackupsScreenState extends ConsumerState<BackupsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
+          // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+          scrollable: true,
           backgroundColor: ctx.appCard,
           title: Text(l.backupRestore),
           content: SizedBox(

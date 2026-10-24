@@ -4,6 +4,7 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../theme/app_colors.dart';
 import 'gradient_button.dart';
+import 'keyboard_aware_sheet.dart';
 
 // ---------------------------------------------------------------------------
 // Auswahl-Sheet wie Mealies „SearchFilter": Suchfeld + Mehrfachauswahl,
@@ -103,7 +104,9 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
           : a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
 
-    return FractionallySizedBox(
+    // Bei offener Tastatur volle Höhe über der Tastatur — sonst lagen
+    // Treffer und „Fertig" beim Suchen verdeckt.
+    return KeyboardAwareSheet(
       heightFactor: 0.85,
       child: Column(children: [
         const SheetHandle(),

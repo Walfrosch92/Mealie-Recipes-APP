@@ -59,6 +59,8 @@ class RecipeTimer {
   });
 
   RecipeTimer copyWith({
+    String? shareId,
+    int? totalSeconds,
     int? remainingSeconds,
     bool? isRunning,
     bool? isFinished,
@@ -66,11 +68,11 @@ class RecipeTimer {
   }) {
     return RecipeTimer(
       id: id,
-      shareId: shareId,
+      shareId: shareId ?? this.shareId,
       name: name,
       recipeName: recipeName,
       recipeId: recipeId,
-      totalSeconds: totalSeconds,
+      totalSeconds: totalSeconds ?? this.totalSeconds,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       isRunning: isRunning ?? this.isRunning,
       isFinished: isFinished ?? this.isFinished,
@@ -518,6 +520,97 @@ class TimerNotifier extends Notifier<List<RecipeTimer>> {
             .read(cookFriendsProvider.notifier)
             .sendMessage(PeerMessage.timerStopped(removed!.shareId!));
       }
+    }
+  }
+
+  /// Abgelaufenen Timer um [minutes] verlängern („+1"/„+5" am grünen Chip):
+  /// Alarm aus, derselbe Timer (Name, Rezept, Chip-Platz) läuft neu los.
+  void extendFinished(int id, int minutes) {
+    final old = state.where((t) => t.id == id && t.isFinished).firstOrNull;
+    if (old == null) return;
+    final seconds = minutes * 60;
+    // Geteilter Timer (Kochen mit Freunden): beim Gast ist er ebenfalls
+    // fertig — dort den alten beenden und unter neuer shareId neu starten
+    // (applyRemoteTimerStarted ignoriert bekannte shareIds).
+    final cf = ref.read(cookFriendsProvider);
+    final shared = old.shareId != null && cf.role != CookFriendsRole.none;
+    final newShareId = shared ? _newUuidV4() : old.shareId;
+    final extended = old.copyWith(
+      shareId: newShareId,
+      totalSeconds: seconds,
+      remainingSeconds: seconds,
+      isRunning: true,
+      isFinished: false,
+      endAt: DateTime.now().add(Duration(seconds: seconds)),
+    );
+    state = [for (final t in state) t.id == id ? extended : t];
+    // Zugestellte „Fertig"-Benachrichtigung + Uhr-Banner wegräumen, Ton aus.
+    NotificationService.cancel(id);
+    WatchBridge.dismissFinishedAlarm([id]);
+    _stopAlarmIfNoneRinging();
+    NotificationService.scheduleTimerFinished(
+      id: extended.id,
+      timerName: extended.name,
+      recipeName: extended.recipeName,
+      inSeconds: seconds,
+      recipeId: extended.recipeId,
+    );
+    _ensureTicker();
+    _lastWatchSig = null; // Uhr soll den Neustart sofort sehen
+    _updateLiveActivity();
+    _persist();
+    if (shared && newShareId != null) {
+      final peers = ref.read(cookFriendsProvider.notifier);
+      peers.sendMessage(PeerMessage.timerStopped(old.shareId!));
+      peers.sendMessage(PeerMessage.timerStarted(
+        shareId: newShareId,
+        name: extended.name,
+        recipeName: extended.recipeName,
+        remainingSeconds: seconds,
+      ));
+    }
+  }
+
+  /// „Rückgängig" nach versehentlichem Beenden: denselben Timer (gleiche
+  /// id, gleiche Endzeit) wiederherstellen. Läuft er weiter, zählt er dort
+  /// weiter, wo er ohne das Beenden stünde; ist er inzwischen abgelaufen,
+  /// gibt es nichts zurückzuholen.
+  void restoreTimer(RecipeTimer t) {
+    if (state.any((x) => x.id == t.id)) return;
+    var restored = t;
+    if (t.isRunning && t.endAt != null) {
+      final remaining = _remainingFrom(t.endAt!, DateTime.now());
+      if (remaining <= 0) return;
+      restored = t.copyWith(remainingSeconds: remaining);
+    }
+    // Geteilter Timer: beim Beenden ging „timerStopped" an die Gäste — dort
+    // unter neuer shareId neu anlegen (bekannte shareIds werden ignoriert).
+    final cf = ref.read(cookFriendsProvider);
+    final shared = t.shareId != null && cf.role != CookFriendsRole.none;
+    if (shared) restored = restored.copyWith(shareId: _newUuidV4());
+    state = [...state, restored];
+    if (restored.isRunning) {
+      NotificationService.scheduleTimerFinished(
+        id: restored.id,
+        timerName: restored.name,
+        recipeName: restored.recipeName,
+        inSeconds: restored.remainingSeconds,
+        recipeId: restored.recipeId,
+      );
+      _ensureTicker();
+    }
+    _lastWatchSig = null;
+    _updateLiveActivity();
+    _persist();
+    if (shared) {
+      final peers = ref.read(cookFriendsProvider.notifier);
+      peers.sendMessage(PeerMessage.timerStarted(
+        shareId: restored.shareId!,
+        name: restored.name,
+        recipeName: restored.recipeName,
+        remainingSeconds: restored.remainingSeconds,
+      ));
+      if (!restored.isRunning) _broadcastSharedTimerState(restored);
     }
   }
 

@@ -12,6 +12,7 @@ import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../recipes/providers/recipes_provider.dart';
 import '../models/recipe_draft.dart';
+import '../../../shared/widgets/keyboard_aware_sheet.dart';
 import 'edit_common.dart';
 
 // ---------------------------------------------------------------------------
@@ -55,8 +56,9 @@ class _RecipePickerSheetState extends ConsumerState<_RecipePickerSheet> {
             terms.isEmpty || terms.every(normalizeForSearch(r.name).contains))
         .toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    return SizedBox(
-      height: MediaQuery.sizeOf(context).height * 0.8,
+    // Trefferliste bleibt beim Tippen über der Tastatur sichtbar.
+    return KeyboardAwareSheet(
+      heightFactor: 0.8,
       child: Column(
         children: [
           EditSheetHeader(

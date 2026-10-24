@@ -29,6 +29,7 @@ import '../../../core/providers/permissions_provider.dart';
 import '../../whats_new/whats_new.dart';
 import '../../webapp_tools/screens/update_screen.dart';
 import '../../webapp_tools/services/app_updater.dart';
+import '../../../core/utils/meal_types.dart';
 
 /// Ein „Heute kochen"-Eintrag: das Rezept + ein Pillen-Label (geplante
 /// Mahlzeit-Art bzw. „Vorschlag").
@@ -243,13 +244,7 @@ class HomeScreen extends ConsumerWidget {
     final byId = {for (final r in recipes) r.id: r};
 
     // Mahlzeiten-Reihenfolge für ein sinnvolles Durchrotieren.
-    int order(String t) => switch (t.toLowerCase()) {
-          'breakfast' => 0,
-          'lunch' => 1,
-          'dinner' => 2,
-          'side' => 3,
-          _ => 4,
-        };
+    int order(String t) => mealTypeOrder(t);
     final planned = todaysEntries
         .where((e) => (e.recipe?.id ?? '').isNotEmpty)
         .toList()
@@ -296,20 +291,16 @@ class HomeScreen extends ConsumerWidget {
     return h;
   }
 
-  String _slotLabel(String entryType, AppLocalizations l) {
-    switch (entryType.toLowerCase()) {
-      case 'breakfast':
-        return l.breakfast;
-      case 'lunch':
-        return l.lunch;
-      case 'dinner':
-        return l.dinner;
-      default:
-        return l.homePlanned;
-    }
-  }
+  // Alle Mealie-Mahlzeitentypen; unbekannter Typ → „Geplant".
+  String _slotLabel(String entryType, AppLocalizations l) =>
+      kMealTypes.contains(entryType.toLowerCase())
+          ? mealTypeLabel(entryType, l)
+          : l.homePlanned;
 
-  int _dayOfYear(DateTime d) => d.difference(DateTime(d.year, 1, 1)).inDays;
+  // In UTC — lokal verschob die Sommerzeit den Tageswechsel um eine Stunde.
+  int _dayOfYear(DateTime d) => DateTime.utc(d.year, d.month, d.day)
+      .difference(DateTime.utc(d.year, 1, 1))
+      .inDays;
 }
 
 // ---------------------------------------------------------------------------
@@ -674,12 +665,17 @@ class _Tile extends StatelessWidget {
   final int? count;
   final VoidCallback? onTap;
 
+  /// Oben rechts liegt etwas über der Kachel (Pinnadel in „Weiteres") —
+  /// die Zahl rückt dann links daneben, statt verdeckt zu werden.
+  final bool hasOverlay;
+
   const _Tile({
     required this.icon,
     required this.color,
     required this.label,
     required this.onTap,
     this.count,
+    this.hasOverlay = false,
   });
 
   @override
@@ -687,7 +683,11 @@ class _Tile extends StatelessWidget {
     return BounceTap(
       onTap: onTap,
       child: Container(
-        height: 104,
+        // Mindesthöhe statt fester Höhe: lange Namen (pl „Zarządzanie
+        // gospodarstwem domowym", de „Haushaltsverwaltung") bekommen eine
+        // zweite Zeile statt „…" — die Reihe wächst dann gemeinsam mit
+        // (_tileGrid: IntrinsicHeight).
+        constraints: const BoxConstraints(minHeight: 104),
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: context.appCard,
@@ -696,10 +696,19 @@ class _Tile extends StatelessWidget {
           boxShadow: context.appShadowSm,
         ),
         child: Stack(
+          // passthrough: die Höhe aus dem Raster (IntrinsicHeight) bis zur
+          // Spalte durchreichen — sonst stünde der Name nie unten.
+          fit: StackFit.passthrough,
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // min: im Raster erzwingt die feste Höhe trotzdem volle
+              // Höhe (Symbol oben, Name unten); als Zieh-Vorschau (lose
+              // Höhe) nur so hoch wie der Inhalt, mindestens 104.
+              // Bewusst kein LayoutBuilder — IntrinsicHeight im Raster
+              // fragt die natürliche Höhe ab, das kann er nicht.
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 44,
@@ -714,9 +723,10 @@ class _Tile extends StatelessWidget {
                   ),
                   child: iconOrApple(icon, color: color.iconColor, size: 23),
                 ),
+                const SizedBox(height: 8),
                 Text(
                   label,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: context.appFg,
@@ -729,8 +739,11 @@ class _Tile extends StatelessWidget {
             ),
             if (count != null && count! > 0)
               Positioned(
+                // Pinnadel: 8 vom Rand, 32 breit → endet 40 vom Rand. Die
+                // Zahl sitzt 16 vom Rand (1 Rahmen + 15 Innenabstand) →
+                // 31 weiter links lässt 7 Luft zur Nadel; gleiche Höhe.
                 top: 0,
-                right: 0,
+                right: hasOverlay ? 31 : 0,
                 child: Container(
                   constraints: const BoxConstraints(minWidth: 24),
                   height: 24,
@@ -783,6 +796,7 @@ class _DraggableTile extends StatelessWidget {
       label: item.label,
       count: item.count,
       onTap: item.onTap,
+      hasOverlay: overlay != null,
     );
 
     return DragTarget<int>(
@@ -836,7 +850,9 @@ class _DraggableTile extends StatelessWidget {
 Widget _tileGrid(int cols, int count, Widget Function(int i) tile) {
   final rows = <Widget>[];
   for (var i = 0; i < count; i += cols) {
-    rows.add(Row(
+    rows.add(IntrinsicHeight(
+        child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var c = 0; c < cols; c++) ...[
           if (c > 0) const SizedBox(width: 12),
@@ -845,7 +861,7 @@ Widget _tileGrid(int cols, int count, Widget Function(int i) tile) {
           ),
         ],
       ],
-    ));
+    )));
     if (i + cols < count) rows.add(const SizedBox(height: 12));
   }
   return Column(children: rows);
@@ -955,6 +971,8 @@ List<_QuickItem> _allTilesUnfiltered(BuildContext context, AppLocalizations l,
           l.timelineTitle, null, () => context.push('/timeline')),
       _QuickItem('favorites', Icons.favorite_rounded, _TileColor.orange,
           l.favoritesTitle, null, () => context.push('/favorites')),
+      _QuickItem('recent', Icons.history_rounded, _TileColor.green,
+          l.recentlyViewedTitle, null, () => context.push('/recent')),
       _QuickItem('leftovers', Icons.search_rounded, _TileColor.purple,
           _clean(l.resteverwertung), null, () => context.push('/leftovers')),
       _QuickItem('cookbooks', Icons.menu_book_rounded, _TileColor.purple,
@@ -973,6 +991,8 @@ List<_QuickItem> _allTilesUnfiltered(BuildContext context, AppLocalizations l,
           l.labelsTitle, null, () => context.push('/data/labels')),
       _QuickItem('shoppinglists', Icons.list_alt_rounded, _TileColor.blue,
           l.listManagementTitle, null, () => context.push('/shopping-lists')),
+      _QuickItem('duplicates', Icons.difference_rounded, _TileColor.blue,
+          l.duplicatesTitle, null, () => context.push('/duplicates')),
       _QuickItem('users', Icons.manage_accounts_rounded, _TileColor.purple,
           l.userManagementTitle, null, () => context.push('/users')),
       _QuickItem('households', Icons.house_rounded, _TileColor.green,
@@ -1254,6 +1274,9 @@ class _ShoppingReminderHealthCheckState
     if (ok || !mounted) return;
     final l = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      // Mit Knopf bleibt eine SnackBar seit Flutter 3.29 sonst STEHEN
+      // (persist = action != null) — erst ein Neustart räumte sie weg.
+      persist: false,
       content: Text(l.shoppingReminderInactiveHint),
       duration: const Duration(seconds: 8),
       action: SnackBarAction(

@@ -20,6 +20,7 @@ MealplanEntry _$MealplanEntryFromJson(Map<String, dynamic> json) =>
       householdId: _idToStringNullable(json['householdId']),
       userId: _idToStringNullable(json['userId']),
       recipeId: _idToStringNullable(json['recipeId']),
+      recipeScale: (json['recipeScale'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$MealplanEntryToJson(MealplanEntry instance) =>
@@ -34,6 +35,7 @@ Map<String, dynamic> _$MealplanEntryToJson(MealplanEntry instance) =>
       'householdId': instance.householdId,
       'userId': instance.userId,
       'recipeId': instance.recipeId,
+      'recipeScale': instance.recipeScale,
     };
 
 MealplanEntryCreate _$MealplanEntryCreateFromJson(Map<String, dynamic> json) =>

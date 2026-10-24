@@ -182,7 +182,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
     } catch (e) {
       // Übersetzte Server-Meldung („KI nicht aktiviert" …) statt der rohen
       // DioException, sofern vorhanden.
-      _showError(mealieErrorMessage(e) ?? (_useAi ? aiFailedText : '$e'));
+      _showError(userErrorMessage(e, _useAi ? aiFailedText : null));
     } finally {
       if (mounted) {
         setState(() {
@@ -222,10 +222,8 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
 
   void _reorderPages(int oldIndex, int newIndex) {
     if (_isBusy) return;
-    setState(() {
-      if (newIndex > oldIndex) newIndex -= 1;
-      _pages.insert(newIndex, _pages.removeAt(oldIndex));
-    });
+    // newIndex ist bei onReorderItem schon korrigiert.
+    setState(() => _pages.insert(newIndex, _pages.removeAt(oldIndex)));
   }
 
   // Galerie und Kamera teilen sich dieselben Grenzen: 2048 px reichen, damit
@@ -280,18 +278,16 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
 
   Future<void> _addPageFromPdf() async {
     if (!_canAddPages) return;
-    final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-        allowMultiple: false,
-        withData: false);
-    if (!mounted || result == null || result.files.isEmpty) return;
-    final picked = result.files.first;
+    final picked = await FilePicker.pickFile(
+        type: FileType.custom, allowedExtensions: ['pdf']);
+    if (!mounted || picked == null) return;
     final path = picked.path;
     if (path == null) return;
 
     // 10 MB check — mirrors iOS maxFileSize
-    if (picked.size > _maxFileSize) {
+    final size = picked.lengthSync() ?? await picked.length() ?? 0;
+    if (!mounted) return;
+    if (size > _maxFileSize) {
       _showError(AppLocalizations.of(context)!.pdfTooLarge);
       return;
     }
@@ -304,7 +300,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       }
       if (mounted) _addPages([imageFile]);
     } catch (e) {
-      _showError(e.toString());
+      _showError(userErrorMessage(e));
     } finally {
       if (mounted) setState(() => _state = _UploadState.idle);
     }
@@ -327,7 +323,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       // Auswahl BEWUSST stehen lassen: nach einem Fehlschlag (Timeout, fehlender
       // KI-Key, Server offline) kann direkt neu gesendet werden, ohne alle
       // Seiten noch einmal auszuwählen.
-      _showError(e.toString());
+      _showError(userErrorMessage(e));
     } finally {
       if (mounted) setState(() => _state = _UploadState.idle);
     }
@@ -405,7 +401,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       await ref.read(recipesProvider.notifier).upsertOne(detail);
       _showSuccess(detail.id);
     } catch (e) {
-      _showError(mealieErrorMessage(e) ?? e.toString());
+      _showError(userErrorMessage(e));
     } finally {
       if (mounted) setState(() => _state = _UploadState.idle);
     }
@@ -422,6 +418,8 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+        scrollable: true,
         backgroundColor: context.appCard,
         title:
             Text(l.uploadSuccessTitle, style: TextStyle(color: context.appFg)),
@@ -510,7 +508,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.zero,
             itemCount: _pages.length,
-            onReorder: _reorderPages,
+            onReorderItem: _reorderPages,
             proxyDecorator: (child, _, __) => Material(
               color: Colors.transparent,
               child: child,

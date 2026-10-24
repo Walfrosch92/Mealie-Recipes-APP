@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:bonsoir/bonsoir.dart';
+import '../../../core/utils/mdns_host.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_service.dart';
@@ -498,7 +499,7 @@ class CookFriendsNotifier extends Notifier<CookFriendsState> {
         port: _servicePort,
       );
       _broadcast = BonsoirBroadcast(service: service);
-      await _broadcast!.ready;
+      await _broadcast!.initialize();
       await _broadcast!.start();
 
       final initial = _buildSharedStateFromLocalSessions();
@@ -592,28 +593,29 @@ class CookFriendsNotifier extends Notifier<CookFriendsState> {
       // Exception.
       final discovery = BonsoirDiscovery(type: _serviceType);
       _discovery = discovery;
-      await discovery.ready;
+      await discovery.initialize();
 
       final completer = Completer<String?>();
       String? hostIp;
 
       _discoverySub = discovery.eventStream!.listen((event) {
-        final svc = event.service;
-        if (svc == null) return;
-        // bonsoir 5.x: a found service must be resolved before its host/IP is
-        // known. Without this resolve step the resolved event never fires and
+        // A found service must be resolved before its host/IP is known.
+        // Without this resolve step the resolved event never fires and
         // discovery times out (the cross-platform iOS↔Android symptom).
-        if (event.type == BonsoirDiscoveryEventType.discoveryServiceFound) {
-          if (_matchesCode(svc.name, upperCode)) {
-            svc.resolve(discovery.serviceResolver);
-          }
-        } else if (event.type ==
-            BonsoirDiscoveryEventType.discoveryServiceResolved) {
-          if (svc is ResolvedBonsoirService &&
-              _matchesCode(svc.name, upperCode)) {
-            hostIp = svc.host;
-            if (!completer.isCompleted) completer.complete(hostIp);
-          }
+        switch (event) {
+          case BonsoirDiscoveryServiceFoundEvent(:final service):
+            if (_matchesCode(service.name, upperCode)) {
+              service.resolve(discovery.serviceResolver);
+            }
+          case BonsoirDiscoveryServiceResolvedEvent(:final service) ||
+                BonsoirDiscoveryServiceUpdatedEvent(:final service):
+            final ip = preferredHostAddress(service);
+            if (ip != null && _matchesCode(service.name, upperCode)) {
+              hostIp = ip;
+              if (!completer.isCompleted) completer.complete(hostIp);
+            }
+          default:
+            break;
         }
       }, onError: (Object e) {
         // Native Bonsoir-Fehler kommen als Stream-Error (z. B. iOS

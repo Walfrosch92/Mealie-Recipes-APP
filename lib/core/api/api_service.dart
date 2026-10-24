@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -15,6 +16,7 @@ import '../models/mealplan_entry.dart';
 import '../models/mealplan_rule.dart';
 import '../models/timeline_event.dart';
 import '../providers/settings_provider.dart';
+import '../services/connection_monitor.dart';
 import '../services/local_cache.dart';
 import '../services/log_manager.dart';
 
@@ -154,9 +156,21 @@ class ApiService {
       onResponse: (response, handler) {
         LogManager.shared
             .log('✅ ${response.statusCode} ${response.requestOptions.uri}');
+        if (_isOwnServer(response.requestOptions.uri)) {
+          ConnectionMonitor.instance.reportReachable();
+        }
         handler.next(response);
       },
       onError: (e, handler) {
+        // Offline-Hinweis: keine Antwort = nicht erreichbar; jede Antwort
+        // (auch 401/500) heißt, der Server ist da.
+        if (_isOwnServer(e.requestOptions.uri)) {
+          if (isConnectionError(e)) {
+            ConnectionMonitor.instance.reportUnreachable();
+          } else if (e.response != null) {
+            ConnectionMonitor.instance.reportReachable();
+          }
+        }
         final status = e.response?.statusCode;
         final body = e.response?.data;
         LogManager.shared
@@ -356,12 +370,37 @@ class ApiService {
   // Recipe detail
   // -------------------------------------------------------------------------
 
-  Future<RecipeDetail> fetchRecipeDetail(String id) async {
+  /// [householdLastMade]: Mealie ≥ 3.29 liefert `lastMade` nicht mehr im
+  /// Rezept, sondern nur noch pro Haushalt — dann wird es mit einer zweiten
+  /// Anfrage nachgeholt. Der Massen-Abgleich schaltet das ab (eine Anfrage
+  /// pro Rezept mehr) und behält stattdessen den gecachten Wert.
+  Future<RecipeDetail> fetchRecipeDetail(String id,
+      {bool householdLastMade = true}) async {
     final resp = await _dio.get(_path('/api/recipes/$id'));
+    final json = Map<String, dynamic>.from(resp.data as Map);
+    if (householdLastMade && !json.containsKey('lastMade')) {
+      final lastMade = await fetchHouseholdLastMade(
+          json['slug'] as String? ?? id);
+      if (lastMade != null) json['lastMade'] = lastMade;
+    }
     // Frisch vom Server mit dem aktuellen Modell gelesen → aktuelle
     // Cache-Version (steuert das einmalige Nachladen alter Cache-Einträge).
-    return RecipeDetail.fromJson(resp.data as Map<String, dynamic>)
+    return RecipeDetail.fromJson(json)
         .copyWith(cacheSchema: kRecipeCacheSchema);
+  }
+
+  /// „Zuletzt gekocht" des eigenen Haushalts (GET
+  /// /households/self/recipes/{slug}) — seit Mealie 3.29 die einzige Quelle.
+  /// `null` bei nie gekocht oder Fehler.
+  Future<String?> fetchHouseholdLastMade(String slug) async {
+    try {
+      final resp =
+          await _dio.get(_path('/api/households/self/recipes/$slug'));
+      final v = (resp.data as Map?)?['lastMade'];
+      return v is String && v.isNotEmpty ? v : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Rohes Rezept-JSON (Editor: behält beim Speichern alle Felder, auch
@@ -626,6 +665,16 @@ class ApiService {
     return resp.data ?? const <int>[];
   }
 
+  /// Bild über seine volle URL (z. B. Schrittbild/Anhang aus dem Rezepttext).
+  /// Eigener Server → mit Anmeldung (Interceptor), fremde Seiten ohne.
+  Future<List<int>> fetchImageBytesFromUrl(String url) async {
+    final resp = await _dio.get<List<int>>(
+      url,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return resp.data ?? const <int>[];
+  }
+
   // -------------------------------------------------------------------------
   // Import from URL
   // -------------------------------------------------------------------------
@@ -824,7 +873,7 @@ class ApiService {
           responseType: ResponseType.stream,
           headers: {
             'Accept': 'text/event-stream',
-            'Accept-Language': settings.selectedLanguage,
+            'Accept-Language': settings.selectedLanguage.replaceAll('_', '-'),
           },
           receiveTimeout: const Duration(minutes: 15),
         ),
@@ -847,7 +896,11 @@ class ApiService {
   // -------------------------------------------------------------------------
 
   Future<List<CategorySummary>> fetchCategories() async {
-    final resp = await _dio.get(_path('/api/organizers/categories'));
+    // perPage=-1: Mealie paginiert sonst auf 50 — die Dubletten-Prüfung
+    // beim Anlegen im Editor übersah ab dem 51. Eintrag vorhandene und
+    // legte doppelt an (UNIQUE-Slug → HTTP 500).
+    final resp = await _dio.get(_path('/api/organizers/categories'),
+        queryParameters: {'perPage': -1});
     final data = resp.data as Map<String, dynamic>;
     return (data['items'] as List<dynamic>? ?? [])
         .map((e) => CategorySummary.fromJson(e as Map<String, dynamic>))
@@ -855,7 +908,11 @@ class ApiService {
   }
 
   Future<List<TagSummary>> fetchTags() async {
-    final resp = await _dio.get(_path('/api/organizers/tags'));
+    // perPage=-1: Mealie paginiert sonst auf 50 — die Dubletten-Prüfung
+    // beim Anlegen im Editor übersah ab dem 51. Eintrag vorhandene und
+    // legte doppelt an (UNIQUE-Slug → HTTP 500).
+    final resp = await _dio
+        .get(_path('/api/organizers/tags'), queryParameters: {'perPage': -1});
     final data = resp.data as Map<String, dynamic>;
     return (data['items'] as List<dynamic>? ?? [])
         .map((e) => TagSummary.fromJson(e as Map<String, dynamic>))
@@ -1058,6 +1115,24 @@ class ApiService {
     ]);
   }
 
+  /// Rezept-Zutaten wie Mealies „Zur Einkaufsliste" in EINEM Aufruf: der
+  /// Server legt die Artikel an (Menge × [scale], Einheit, Lebensmittel,
+  /// Abteilung, Rezept-Verknüpfung), führt mit offenen Artikeln zusammen
+  /// (inkl. Einheiten-Umrechnung) und zählt das Rezept unter „verknüpfte
+  /// Rezepte" um [scale] hoch. [ingredients] = Mealie-RecipeIngredient-JSON
+  /// (wie GET /recipes liefert, ggf. von der App gefiltert/angepasst).
+  Future<void> addRecipeIngredientsToShoppingList(String listId,
+      String recipeId, double scale, List<Map<String, dynamic>> ingredients) async {
+    await _dio
+        .post(_path('/api/households/shopping/lists/$listId/recipe'), data: [
+      {
+        'recipeId': recipeId,
+        'recipeIncrementQuantity': scale,
+        'recipeIngredients': ingredients,
+      }
+    ]);
+  }
+
   /// Rezept von der Liste nehmen (−1): Mealie zieht die Mengen dieses
   /// Rezepts von den offenen Artikeln ab und löscht leere — wie das „−" in
   /// der Webapp.
@@ -1140,7 +1215,9 @@ class ApiService {
       _path('/api/households/shopping/items'),
       queryParameters: {
         'shoppingListId': settings.shoppingListId,
-        'perPage': 500,
+        // ALLE: abgehakte Artikel bleiben in Mealie stehen und zählen mit —
+        // bei 500 fehlten in lange genutzten Listen sonst offene Artikel.
+        'perPage': -1,
       },
     );
     final data = resp.data as Map<String, dynamic>;
@@ -1718,7 +1795,9 @@ class ApiService {
   Future<List<MealplanEntry>> fetchAllMealplanEntries() async {
     final resp = await _dio.get(
       _path('/api/households/mealplans'),
-      queryParameters: {'perPage': 1000, 'orderBy': 'date'},
+      // ALLE: bei 1000 + aufsteigender Sortierung fehlten nach gut einem
+      // Jahr Nutzung (3 Mahlzeiten/Tag) ausgerechnet die AKTUELLEN Wochen.
+      queryParameters: {'perPage': -1, 'orderBy': 'date'},
     );
     final data = resp.data as Map<String, dynamic>;
     return (data['items'] as List<dynamic>? ?? [])
@@ -1734,11 +1813,74 @@ class ApiService {
     return MealplanEntry.fromJson(resp.data as Map<String, dynamic>);
   }
 
+  /// Eintrag auf anderen Tag / andere Mahlzeit verschieben. Mealie:
+  /// PUT /households/mealplans/{id} mit dem GANZEN Eintrag
+  /// (UpdatePlanEntry: id, groupId, userId, date, entryType, title, text,
+  /// recipeId, ab 3.29 recipeScale) — fehlende Felder würden sonst
+  /// zurückgesetzt.
+  /// [recipeId] ersetzt das verknüpfte Rezept (Doppelte Rezepte
+  /// zusammenführen), sonst bleibt es.
+  Future<MealplanEntry> updateMealplanEntry(MealplanEntry entry,
+      {required String date,
+      required String entryType,
+      String? recipeId,
+      double? recipeScale}) async {
+    recipeId ??= entry.recipeId ?? entry.recipe?.id;
+    recipeScale ??= entry.recipeScale;
+    final resp = await _dio.put(
+      _path('/api/households/mealplans/${entry.id}'),
+      data: {
+        'id': int.tryParse(entry.id) ?? entry.id,
+        'groupId': entry.groupId,
+        'userId': entry.userId,
+        'date': date,
+        'entryType': entryType,
+        'title': entry.title ?? '',
+        'text': entry.text ?? '',
+        'recipeId': (recipeId?.isEmpty ?? true) ? null : recipeId,
+        // Mealie ≥ 3.29: Portionen-Faktor, fehlt er, wird er auf 1 gesetzt.
+        if (recipeScale != null) 'recipeScale': recipeScale,
+      },
+    );
+    return MealplanEntry.fromJson(resp.data as Map<String, dynamic>);
+  }
+
   Future<void> deleteMealplanEntry(String entryId) async {
     await _dio.delete(_path('/api/households/mealplans/$entryId'));
   }
 
   // -------------------------------------------------------------------------
+  // Kalender-Abo des Mahlzeitplans (Mealie ≥ 3.29) — /households/mealplans/
+  // ical. Das Token steckt im öffentlichen Feed-Link; null = abgeschaltet.
+  // Ein-/Ausschalten bzw. neu erzeugen nur mit „Haushalt verwalten".
+  Future<String?> fetchMealplanIcalToken() async {
+    final resp = await _dio.get(_path('/api/households/mealplans/ical'));
+    return (resp.data as Map?)?['mealplanIcalToken'] as String?;
+  }
+
+  /// Einschalten bzw. neues Token (alte Abos laufen dann ins Leere).
+  Future<String?> createMealplanIcalToken() async {
+    final resp = await _dio.post(_path('/api/households/mealplans/ical'),
+        data: const <String, dynamic>{});
+    return (resp.data as Map?)?['mealplanIcalToken'] as String?;
+  }
+
+  Future<void> deleteMealplanIcalToken() async {
+    await _dio.delete(_path('/api/households/mealplans/ical'));
+  }
+
+  /// Öffentlicher Feed-Link (ohne Anmeldung abrufbar).
+  String mealplanIcalFeedUrl(String token, Map<String, List<String>> query) {
+    // Wie recipeAssetUrl: Server-URL + Pfad (ein Unterpfad in der
+    // Server-URL bleibt erhalten, Uri.resolve würde ihn verwerfen).
+    final server = settings.serverUrl.replaceAll(RegExp(r'/+$'), '');
+    final uri = Uri.parse(
+        '$server${_path('/api/households/mealplans/ical/$token')}');
+    return query.isEmpty
+        ? uri.toString()
+        : uri.replace(queryParameters: query).toString();
+  }
+
   // Mahlzeitenplan-Regeln (Zufallsrezepte) — /api/households/mealplans/rules
   // -------------------------------------------------------------------------
 
@@ -2324,10 +2466,39 @@ class AiImportException implements Exception {
 }
 
 /// Lesbare Fehlermeldung aus einer Mealie-Antwort (`{"detail": {"message":
-/// …}}` bzw. `{"detail": "…"}`), sonst `null`.
+/// …}}` bzw. `{"detail": "…"}`). Ohne Server-Meldung: verständlicher Text
+/// für Verbindungsprobleme, Zeitüberschreitung, abgelaufene Anmeldung,
+/// Serverfehler (statt technischem `DioException`-Rohtext), sonst `null`.
 String? mealieErrorMessage(Object error) {
   if (error is AiImportException) return error.message;
+  final l = currentAppL10n;
+  if (error is SocketException || error is HttpException) {
+    return l?.errorNoConnection;
+  }
+  if (error is TimeoutException) return l?.errorTimeout;
   if (error is! DioException) return null;
+  switch (error.type) {
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+      return l?.errorTimeout;
+    case DioExceptionType.connectionError:
+      return l?.errorNoConnection;
+    case DioExceptionType.badCertificate:
+      return l?.errorCertificate;
+    case DioExceptionType.unknown:
+      if (error.error is SocketException ||
+          error.error is HttpException ||
+          error.error is HandshakeException) {
+        return l?.errorNoConnection;
+      }
+    default:
+      break;
+  }
+  final status = error.response?.statusCode;
+  // 401 = Token ungültig/abgelaufen — Mealies Text („Not authenticated")
+  // hilft niemandem weiter.
+  if (status == 401 && l != null) return l.errorUnauthorized;
   final data = error.response?.data;
   // 403 = Mealie verweigert die Aktion (Rechte) — statt der englischen
   // Server-Meldung einen übersetzten, erklärenden Text liefern.
@@ -2358,7 +2529,38 @@ String? mealieErrorMessage(Object error) {
     }
     if (detail is String) return detail;
   }
+  if (status != null && status >= 500 && l != null) return l.errorServer;
+  if (status == 404 && l != null) return l.errorNotFound;
   return null;
+}
+
+/// Text für die Oberfläche: Server-/Verbindungsgrund, sonst [fallback]
+/// bzw. eine allgemeine Meldung — nie technischer Rohtext.
+String userErrorMessage(Object error, [String? fallback]) =>
+    mealieErrorMessage(error) ??
+    fallback ??
+    currentAppL10n?.errorGeneric ??
+    'Something went wrong';
+
+/// Anmeldung abgelaufen / Token ungültig (→ „Einstellungen öffnen").
+bool isAuthError(Object error) =>
+    error is DioException && error.response?.statusCode == 401;
+
+/// Server nicht erreichbar (keine Antwort: offline, Zeitüberschreitung).
+bool isConnectionError(Object error) {
+  if (error is SocketException || error is TimeoutException) return true;
+  if (error is! DioException) return false;
+  return switch (error.type) {
+    DioExceptionType.connectionTimeout ||
+    DioExceptionType.sendTimeout ||
+    DioExceptionType.receiveTimeout ||
+    DioExceptionType.connectionError =>
+      true,
+    DioExceptionType.unknown => error.error is SocketException ||
+        error.error is HttpException ||
+        error.error is HandshakeException,
+    _ => false,
+  };
 }
 
 /// Liest den SSE-Strom von `/create/ai/stream` bis `done` (→ Slug) oder

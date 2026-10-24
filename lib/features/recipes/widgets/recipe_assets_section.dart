@@ -3,11 +3,14 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/api/api_service.dart' show mealieErrorMessage;
 import '../../../core/models/recipe_detail.dart';
+import '../../../core/utils/mealie_version.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/photo_source_sheet.dart';
 import '../../../shared/widgets/section_header.dart';
@@ -35,19 +38,26 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
 
   Future<void> _add() async {
     final l = AppLocalizations.of(context)!;
+    final mealie329 = ref.read(mealie329Provider);
+    final allowed = allowedAssetExtensions(mealie329: mealie329);
+    final unsupported =
+        mealie329 ? l.assetsUnsupported329 : l.assetsUnsupported;
     final source = await showModalBottomSheet<String>(
+      isScrollControlled: true,
       context: context,
       useRootNavigator: true,
       backgroundColor: context.appCard,
       builder: (ctx) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: Icon(Icons.insert_drive_file_rounded, color: ctx.appFg),
               title:
                   Text(l.assetsChooseFile, style: TextStyle(color: ctx.appFg)),
-              subtitle: Text(l.assetsUnsupported,
+              subtitle: Text(unsupported,
                   style: TextStyle(color: ctx.appFgSub, fontSize: 12)),
               onTap: () => Navigator.pop(ctx, 'file'),
             ),
@@ -64,18 +74,40 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
                   style: TextStyle(color: ctx.appFg)),
               onTap: () => Navigator.pop(ctx, 'photo'),
             ),
+            // Videos nimmt Mealie erst ab 3.29 an.
+            if (mealie329) ...[
+              if (PlatformFeatures.camera)
+                ListTile(
+                  leading:
+                      Icon(Icons.videocam_rounded, color: ctx.appFg),
+                  title: Text(l.assetsRecordVideo,
+                      style: TextStyle(color: ctx.appFg)),
+                  onTap: () => Navigator.pop(ctx, 'videoCamera'),
+                ),
+              ListTile(
+                leading:
+                    Icon(Icons.video_library_rounded, color: ctx.appFg),
+                title: Text(l.assetsChooseVideo,
+                    style: TextStyle(color: ctx.appFg)),
+                onTap: () => Navigator.pop(ctx, 'videoGallery'),
+              ),
+            ],
           ],
-        ),
+        )),
       ),
     );
     if (source == null || !mounted) return;
 
     File? file;
     if (source == 'file') {
-      final res = await FilePicker.platform.pickFiles(
-          type: FileType.custom, allowedExtensions: kAllowedAssetExtensions);
-      final path = res?.files.single.path;
+      final res = await FilePicker.pickFile(
+          type: FileType.custom, allowedExtensions: allowed);
+      final path = res?.path;
       if (path != null) file = File(path);
+    } else if (source == 'videoCamera' || source == 'videoGallery') {
+      file = await _pickVideo(source == 'videoCamera'
+          ? ImageSource.camera
+          : ImageSource.gallery);
     } else {
       file = await pickPhotoWithSource(context);
     }
@@ -84,9 +116,9 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
     final fileName = file.path.split('/').last;
     final dot = fileName.lastIndexOf('.');
     final ext = dot < 0 ? '' : fileName.substring(dot + 1).toLowerCase();
-    if (!kAllowedAssetExtensions.contains(ext)) {
+    if (!allowed.contains(ext)) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l.assetsUnsupported)));
+          .showSnackBar(SnackBar(content: Text(unsupported)));
       return;
     }
 
@@ -107,12 +139,30 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
     }
   }
 
+  Future<File?> _pickVideo(ImageSource source) async {
+    final l = AppLocalizations.of(context)!;
+    try {
+      final picked = await ImagePicker().pickVideo(source: source);
+      return picked == null ? null : File(picked.path);
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.code == 'camera_access_denied'
+                ? l.cameraPermissionDenied
+                : l.assetsUploadFailed)));
+      }
+      return null;
+    }
+  }
+
   Future<String?> _askName(String initial) async {
     final l = AppLocalizations.of(context)!;
     final ctrl = TextEditingController(text: initial);
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+        scrollable: true,
         backgroundColor: ctx.appCard,
         title: Text(l.assetsAdd),
         content: TextField(
@@ -170,6 +220,8 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
   IconData _icon(RecipeAsset a) {
     if (a.isPdf) return Icons.picture_as_pdf_rounded;
     if (a.isImage) return Icons.image_rounded;
+    if (a.isVideo) return Icons.movie_rounded;
+    if (a.isMedia) return Icons.audiotrack_rounded;
     if (a.extension == 'json') return Icons.data_object_rounded;
     if (a.isText) return Icons.description_rounded;
     return Icons.insert_drive_file_rounded;

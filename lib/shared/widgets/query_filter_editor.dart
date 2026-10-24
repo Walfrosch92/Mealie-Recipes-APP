@@ -11,6 +11,8 @@ import '../../features/organizers/providers/organizers_provider.dart';
 import '../../features/shopping_list/providers/shopping_list_provider.dart'
     show shoppingLabelsProvider;
 import '../theme/app_colors.dart';
+import 'keyboard_aware_sheet.dart';
+import '../../core/utils/mealie_version.dart';
 
 // ---------------------------------------------------------------------------
 // Filter-Baukasten für Mealie-`queryFilterString`s — geteilt zwischen
@@ -60,6 +62,21 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
   List<CookbookFilterRow> _rows = [];
 
   final Map<CookbookFilterField, List<QueryFilterOption>> _options = {};
+
+  /// Angebotene Felder: was der Server nicht kennt (z. B. Gesamtzeit vor
+  /// Mealie 3.29) fällt weg — außer eine bestehende Zeile nutzt es schon.
+  List<CookbookFilterField> get _fields {
+    // read statt watch: wird auch aus initState (_newRow) aufgerufen; build
+    // beobachtet den Provider selbst.
+    final new329 = ref.read(mealie329Provider);
+    return [
+      for (final f in widget.fields)
+        if (new329 ||
+            !kMealie329FilterFields.contains(f) ||
+            _rows.any((r) => r.field == f))
+          f,
+    ];
+  }
   bool _optionsLoading = true;
 
   @override
@@ -90,7 +107,7 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
   }
 
   CookbookFilterRow _newRow() =>
-      CookbookFilterRow()..setField(widget.fields.first);
+      CookbookFilterRow()..setField(_fields.first);
 
   @override
   void didUpdateWidget(covariant QueryFilterEditor old) {
@@ -268,6 +285,7 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(mealie329Provider);
     final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -322,7 +340,7 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
                     child: _FilterRowCard(
                       row: _rows[i],
                       l: l,
-                      fields: widget.fields,
+                      fields: _fields,
                       fieldLabel: (f) => _fieldLabel(l, f),
                       opLabel: (op) => _opLabel(l, _rows[i].field, op),
                       valueSummary: _valueSummary(_rows[i]),
@@ -420,6 +438,7 @@ class _FilterRowCard extends StatelessWidget {
                 ),
               ),
               IconButton(
+                tooltip: AppLocalizations.of(context)!.delete,
                 icon: const Icon(Icons.delete_outline_rounded),
                 color: Colors.red,
                 onPressed: onDelete,
@@ -534,6 +553,7 @@ class _NumberValueState extends State<_NumberValue> {
     final step = row.field == CookbookFilterField.totalTime ? 5 : 1;
     return Row(children: [
       IconButton(
+        tooltip: AppLocalizations.of(context)!.a11yDecrease,
         onPressed: n > 0 ? () => _set(n - step) : null,
         icon: const Icon(Icons.remove_circle_outline_rounded),
       ),
@@ -552,6 +572,7 @@ class _NumberValueState extends State<_NumberValue> {
         ),
       ),
       IconButton(
+        tooltip: AppLocalizations.of(context)!.a11yIncrease,
         onPressed: () => _set(n + step),
         icon: const Icon(Icons.add_circle_outline_rounded),
       ),
@@ -611,15 +632,11 @@ class _ValuePickerSheetState extends State<_ValuePickerSheet> {
             .where((o) => o.name.toLowerCase().contains(query))
             .toList();
 
+    // KeyboardAwareSheet: Trefferliste bleibt über der Tastatur sichtbar.
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.75,
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+      child: KeyboardAwareSheet(
+        heightFactor: 0.75,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

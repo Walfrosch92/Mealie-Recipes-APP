@@ -9,9 +9,6 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
-  String get appTitle => 'Mealie Recipes';
-
-  @override
   String get endCookingMode => 'Encerrar modo de cozinha';
 
   @override
@@ -101,15 +98,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get searchRecipe => 'Buscar receita...';
 
   @override
-  String get loadingRecipes => 'Carregando receitas...';
-
-  @override
   String get loadingRecipe => 'Carregando receita...';
-
-  @override
-  String errorLoadingRecipes(String error) {
-    return 'Erro ao carregar a receita: $error';
-  }
 
   @override
   String get errorLoadingRecipe => 'Não foi possível carregar a receita.';
@@ -163,7 +152,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get ingredients => 'Ingredientes';
 
   @override
-  String get instructions => 'Instruções';
+  String get instructions => 'Modo de Preparo';
 
   @override
   String get tags => 'Tags';
@@ -193,30 +182,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get servings => 'Porções';
 
   @override
-  String get adjustQuantity => 'Ajustar quantidade';
-
-  @override
-  String get startTimer => 'Iniciar temporizador';
-
-  @override
-  String runningTimer(int minutes, String seconds) {
-    return 'Temporizador: $minutes:$seconds';
-  }
-
-  @override
   String get planMeal => 'Planejar Receita';
-
-  @override
-  String get displayAlwaysOn => 'Manter tela acesa';
 
   @override
   String get addAllIngredients => 'Adicionar todos os ingredientes';
 
   @override
   String get addSelectedIngredients => 'Adicionar ingredientes selecionados';
-
-  @override
-  String get addIngredientsTitle => 'Ingredientes adicionados';
 
   @override
   String get addIngredientsMessage =>
@@ -283,7 +255,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get cookbookPublicLabel => 'Livro de receitas público';
 
   @override
-  String get cookbookPublicSubtitle => 'Visível para outras casas no servidor';
+  String get cookbookPublicSubtitle =>
+      'Visível para outros domicílios no servidor';
 
   @override
   String get cookbookRawModeEnter => 'Editar como texto';
@@ -387,16 +360,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sendToDevice => 'Enviar para dispositivo';
 
   @override
-  String get sendToDevicePickerTitle => 'Enviar para dispositivo';
-
-  @override
-  String get sendToAllDevices => 'Enviar para todos os dispositivos';
-
-  @override
   String get timerFinished => 'Temporizador finalizado!';
-
-  @override
-  String get timerFinishedBody => 'O temporizador da sua receita finalizou.';
 
   @override
   String get timer => 'Temporizador';
@@ -405,21 +369,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get newTimer => 'Novo temporizador';
 
   @override
-  String get timerDetails => 'Detalhes do temporizador';
-
-  @override
   String get timerNamePlaceholder => 'Nome do temporizador';
 
   @override
-  String get timerNameHint => 'Dê um nome descritivo a seu temporizador.';
-
-  @override
   String get durationLabel => 'Duração';
-
-  @override
-  String minutesCount(int count) {
-    return '$count minutos';
-  }
 
   @override
   String get start => 'Começar';
@@ -448,31 +401,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get cookingMode => 'Modo cozinha';
 
   @override
-  String activeRecipesCount(int count) {
-    return '$count receitas ativas';
-  }
-
-  @override
   String get endAll => 'Parar todas';
 
   @override
   String get end => 'Parar';
-
-  @override
-  String get endAllRecipesTitle => 'Parar todas as sessões de cozinha?';
-
-  @override
-  String endAllRecipesMessage(int count) {
-    return 'Você quer parar todas as $count sessões de cozinha?';
-  }
-
-  @override
-  String get endRecipeTitle => 'Parar receita?';
-
-  @override
-  String endRecipeMessage(String name) {
-    return 'Você quer parar a sessão de cozinha para \"$name\"?';
-  }
 
   @override
   String get noActiveTimers => 'Nenhum tomporizador ativo';
@@ -486,11 +418,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get browseRecipes => 'Mostrar receitas';
-
-  @override
-  String timersPausedCount(int count) {
-    return '$count temporizador(es) pausado(s)';
-  }
 
   @override
   String get cookFriends => 'Cozinhar com amigos';
@@ -530,13 +457,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get joinSession => 'Entrar em sessão';
 
   @override
-  String get hostEndedSessionTitle => 'Sessão finalizada';
-
-  @override
   String get hostEndedSessionMessage => 'O host encerrou a sessão.';
-
-  @override
-  String get shoppingListEmpty => 'Sua lista de compras está vazia.';
 
   @override
   String get addItem => 'Adicionar item';
@@ -548,19 +469,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unlabeledCategory => 'Descategorizado';
 
   @override
-  String get reorderCategories => 'Reorganizar categorias';
-
-  @override
-  String get archiveChecked => 'Arquivar itens marcados';
-
-  @override
   String get archivedLists => '📦 Compras arquivadas';
-
-  @override
-  String get syncChanges => 'Sincronizar mudanças';
-
-  @override
-  String get noSyncChanges => 'Sem mudanças para sincronizar';
 
   @override
   String get postimportAction => 'Após a importação';
@@ -610,7 +519,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get offlineBadge => 'Offline';
 
   @override
-  String get mealplanTitle => '📅 Plano alimentar';
+  String get mealplanTitle => '📅 Plano de refeições';
 
   @override
   String get mealplanSelectMode => 'Selecionar várias receitas';
@@ -643,48 +552,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get selectRecipe => 'Selecione a receita';
 
   @override
-  String get orFreeText => 'ou texto livre';
-
-  @override
-  String get entryNote => 'Nota';
-
-  @override
-  String get noMealEntries => 'Sem entradas essa semana.';
-
-  @override
   String get importRecipe => 'Importar receita';
-
-  @override
-  String get importFromUrl => 'Importar de URL';
-
-  @override
-  String get importFromImage => 'Importar de foto';
-
-  @override
-  String get importFromJson => 'Importar de JSON';
 
   @override
   String get url => 'URL';
 
   @override
-  String get urlPlaceholder => 'https://...';
-
-  @override
   String get importLanguage => 'Languagem para OCR';
-
-  @override
-  String get importing => 'Importando...';
-
-  @override
-  String get importSuccess => 'Receita importada com sucesso!';
-
-  @override
-  String importError(String error) {
-    return 'Erro ao importar: $error';
-  }
-
-  @override
-  String get pasteJson => 'Colo o JSON aqui';
 
   @override
   String get setupTitle => 'Bem-vindo ao Mealie Recipes';
@@ -705,7 +579,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get apiTokenPlaceholder => 'Seu token de API';
 
   @override
-  String get householdId => 'Casa';
+  String get householdId => 'Domicílio';
 
   @override
   String get householdIdPlaceholder => 'Familia';
@@ -714,17 +588,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shoppingListId => 'ID da lista de compras';
 
   @override
-  String get shoppingListIdPlaceholder => 'Selecione uma lista de compras';
-
-  @override
-  String get setupHouseholdListTitle => 'Casa e lista de compras';
+  String get setupHouseholdListTitle => 'Domicílio e lista de compras';
 
   @override
   String get shoppingListLabel => 'Lista de compras';
 
   @override
   String get setupHouseholdManualHint =>
-      'Não foi possível carregar as casas — digite o nome manualmente.';
+      'Não foi possível carregar os domicílios — digite o nome manualmente.';
 
   @override
   String get setupExactTitle => 'Quantidades na lista de compras';
@@ -751,12 +622,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get connect => 'Connectar';
 
   @override
-  String get connecting => 'Conectando...';
-
-  @override
-  String get connectionSuccess => 'Conectado com sucesso!';
-
-  @override
   String connectionError(String error) {
     return 'Erro de conexão: $error';
   }
@@ -771,19 +636,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSaved => 'Configurações salvas';
 
   @override
-  String get serverSettings => 'Servidor';
-
-  @override
-  String get displaySettings => 'Tela';
-
-  @override
-  String get notificationSettings => 'Notificações';
-
-  @override
   String get securitySettings => 'Segurança';
-
-  @override
-  String get aboutSettings => 'Sobre';
 
   @override
   String get showRecipeImages => 'Mostrar imagens de receitas';
@@ -800,12 +653,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get biometricLockDescription =>
       'Desbloqueie o aplicativo com digital/reconhecimento facial';
-
-  @override
-  String get criticalAlerts => 'Alertas críticos';
-
-  @override
-  String get criticalAlertsDescription => 'Alarm de timer com som desativado';
 
   @override
   String get enableLogging => 'Ativar logs';
@@ -839,29 +686,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get leftoverFinder => 'Localizador de receitas';
 
   @override
-  String get leftoverFinderSubtitle =>
-      'Encontre receitas que usam os ingredientes que você tem';
-
-  @override
   String get addIngredient => 'Adicionar ingredientes';
-
-  @override
-  String get ingredientPlaceholder => 'ex. ovos';
-
-  @override
-  String get findRecipes => 'Encontrar receitas';
-
-  @override
-  String get matchingRecipes => 'receitas encontradas';
-
-  @override
-  String get noMatchingRecipes =>
-      'Nenhuma receita encontrada para esses ingredientes.';
-
-  @override
-  String matchPercent(int percent) {
-    return '$percent%';
-  }
 
   @override
   String get biometricPrompt => 'Autentique-se para abrir Mealie Recipes';
@@ -870,15 +695,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get biometricFailed => 'Falha de autenticação';
 
   @override
-  String get whatsNew => 'O que há de novo';
-
-  @override
   String get pendingRecipesTitle => 'Receita recebida';
-
-  @override
-  String pendingRecipesMessage(String sender, String name) {
-    return 'Você recebeu uma receita de $sender: \"$name\"';
-  }
 
   @override
   String pendingRecipesFrom(Object names) {
@@ -889,12 +706,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get pendingRecipesOpenCooking => 'Abrir modo cozinha';
 
   @override
-  String get pendingRecipesLater => 'Depois';
-
-  @override
-  String get openRecipe => 'Abrir receita';
-
-  @override
   String get dismiss => 'Ignorar';
 
   @override
@@ -902,9 +713,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recipeName => 'Nome da receita';
-
-  @override
-  String get recipeDescription => 'Descrição';
 
   @override
   String get prepTime => 'Tempo de preparao (min)';
@@ -919,7 +727,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get recipeServings => 'Porções';
 
   @override
-  String get rating => 'Nota';
+  String get rating => 'Avaliação';
 
   @override
   String get addIngredientLine => 'Adicionar ingrediente';
@@ -952,30 +760,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get categories => 'Categorias';
 
   @override
-  String get selectCategories => 'Selecionar categorias';
-
-  @override
-  String get selectTags => 'Selecionar tags';
-
-  @override
-  String get uploadImage => 'Upload de imagem';
-
-  @override
-  String get removeImage => 'Remover imagem';
-
-  @override
   String get saveChanges => 'Salvar mudanças';
 
   @override
-  String get saving => 'Salvando...';
-
-  @override
   String get saveSuccess => 'Receita salva.';
-
-  @override
-  String saveError(String error) {
-    return 'Não foi possível salvar: $error';
-  }
 
   @override
   String get newCategory => 'Nova categoria';
@@ -984,20 +772,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get newTag => 'Nova tag';
 
   @override
-  String get setRating => 'Definir nota';
-
-  @override
-  String get removeRating => 'Remover nota';
-
-  @override
-  String get ratingRemoved => 'Nota removida';
-
-  @override
-  String get googleTasksImport => 'Importar do Google Tarefas';
-
-  @override
-  String get googleTasksImportDescription =>
-      'Importar do Google Tarefas a sua lista de compras.';
+  String get setRating => 'Definir avaliação';
 
   @override
   String get homeWelcome => 'Bem-vindo ao Mealie Recipes! 👋';
@@ -1017,9 +792,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get other => 'Outro';
 
   @override
-  String get viewRecipes => '📖 Ver Receitas';
-
-  @override
   String get addRecipe => '➕ Adicionar receita';
 
   @override
@@ -1032,13 +804,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shoppingCompletedSubtitle => 'Tudo no carrinho! 🎉';
 
   @override
-  String get essensplan => '📅 Plano alimentar';
+  String get essensplan => '📅 Plano de refeições';
 
   @override
   String get resteverwertung => '🥗 Localizador de receitas';
-
-  @override
-  String get newRecipeUpload => 'Upload de receita nova';
 
   @override
   String get copyCode => 'Copiar código';
@@ -1053,22 +822,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get waitingForFriends => 'Aguardando amigos...';
 
   @override
-  String get endSharing => 'Encerrar compartilhamento';
-
-  @override
-  String get cookFriendsDescription => 'Convidar um amigo para cozinhar junto';
-
-  @override
   String get sessionCode => 'CÓDIGO DE SESSÃO';
-
-  @override
-  String get adjustQuantityLabel => 'Ajuste a quantidade para essa receita:';
-
-  @override
-  String get timerStartForStep => 'Temporizador para essa etapa';
-
-  @override
-  String get enterRecipeUrl => 'Coloque o link da receita';
 
   @override
   String get loading => 'Carregando...';
@@ -1082,9 +836,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get addItemPlaceholder => 'Adicionar item...';
-
-  @override
-  String get addSuccessToast => 'Adicionado!';
 
   @override
   String get completedItems => 'Completo';
@@ -1143,18 +894,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get allDeleteConfirm => 'Apagar tudo';
 
   @override
-  String get portionen => 'Porções';
-
-  @override
-  String get timerForStep => 'Iniciar temporizador para essa etapa';
-
-  @override
-  String get weekNavPrev => 'Semana anterior';
-
-  @override
-  String get weekNavNext => 'Próxima semana';
-
-  @override
   String get noMealsThisWeek => 'Nenhuma receita planejada';
 
   @override
@@ -1164,43 +903,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get availableWeeks => 'Semanas disponíveis:';
 
   @override
-  String weekRange(Object end, Object start, Object week) {
-    return 'Semana $week ($start – $end)';
-  }
-
-  @override
   String get currentWeek => 'Semana Atual';
-
-  @override
-  String get rezepteAktualisieren => 'Atualizar receitas';
-
-  @override
-  String get leftoverWhatTitle => 'O que isso faz?';
-
-  @override
-  String get leftoverWhatBody =>
-      'Essa função recarrega todas as receitas do servidor, e atualiza o cache local.';
-
-  @override
-  String get leftoverDescription =>
-      'Adicione os ingredientes disponíveis para achar receitas e usá-los.';
-
-  @override
-  String get leftoverIngredientsHeader => 'Ingredientes em casa';
-
-  @override
-  String get leftoverSuggestions => 'Sugestão de receitas';
-
-  @override
-  String get leftoverNoMatches => 'Nenhuma receita encontrada.';
-
-  @override
-  String get leftoverEnterIngredient => 'Adicione o ingrediente';
-
-  @override
-  String matchingPercentText(int percent, int count, int total) {
-    return '$percent% ($count/$total)';
-  }
 
   @override
   String get weekAbbreviation => 'Semana';
@@ -1210,9 +913,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get selectDate => 'Selecionar data';
-
-  @override
-  String get selectSlot => 'Selecionar refeição';
 
   @override
   String get selectedRecipe => 'Receita selecionada';
@@ -1244,11 +944,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get entriesPlural => 'entradas';
-
-  @override
-  String listTitle(int n) {
-    return 'Lista $n';
-  }
 
   @override
   String get deleteAllConfirmTitle => 'Apagar tudo?';
@@ -1297,9 +992,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get startCooking => 'Começar a cozinhar';
 
   @override
-  String get hostNoRecipe => 'Abra de uma receita para iniciar a sessão';
-
-  @override
   String get uploadToOwnServer => 'Salvar no meu serividor';
 
   @override
@@ -1317,12 +1009,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appIcon => 'Ícone do app';
-
-  @override
-  String get appIconClassic => 'Classico';
-
-  @override
-  String get appIconModern => 'Moderno';
 
   @override
   String get name => 'Nome';
@@ -1364,7 +1050,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get offlineRecipeImagesHint =>
-      'Baixa todas as imagens das receitas para este dispositivo, para que também apareçam sem conexão. Em coleções grandes, isso pode ocupar várias centenas de MB. Desativar exclui as imagens salvas.';
+      'Baixa todas as imagens das receitas para o dispositivo – incluindo as imagens dos passos e das notas – para exibi-las sem conexão. Coleções grandes podem ocupar várias centenas de MB. Desativar apaga as imagens salvas.';
 
   @override
   String offlineRecipeImagesStatus(int count, int total, String size) {
@@ -1399,7 +1085,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get exactQuantitiesSubtitle =>
-      'Ingredientes e itens digitados mantêm quantidade e unidade (ex.: 200 g de manteiga) em vez de 1x por item — alimentos que faltam são criados no servidor';
+      'Ingredientes e itens digitados mantêm quantidade e unidade (ex.: 200 g de manteiga) em vez de 1x por item';
 
   @override
   String get remindToShop => 'Lembre-me de fazer compras';
@@ -1522,12 +1208,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get loginInvalidCredentials => 'Usuário ou senha incorretos.';
 
   @override
-  String get loginAndGenerateToken => 'Entrar e gerar token';
-
-  @override
-  String get loggingIn => 'Entrando…';
-
-  @override
   String get apiTokenSaveHint =>
       'Token aplicado — toque em “Salvar alterações” abaixo.';
 
@@ -1588,9 +1268,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ingredientes divididos – aperte “Salvar mudanças” para aplicar';
 
   @override
-  String get reparseNone => 'Nenhum ingrediente divisível encontrado';
-
-  @override
   String get tagsAndCategories => 'Tags, categorias e ferramentas';
 
   @override
@@ -1621,12 +1298,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String importCount(int count) {
     return 'Importar $count';
   }
-
-  @override
-  String get activeRecipeTimer => 'Temporizador de receita ativo';
-
-  @override
-  String get linkIngredients => 'Vincular ingredientes';
 
   @override
   String get noIngredientsToLink => 'Ainda não há ingredientes para vincular';
@@ -1692,7 +1363,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String supportNoMailApp(String email) {
-    return 'Nenhum app de e-mail encontrado. Endereço copiado: $email';
+    return 'Nenhum app de e-mail configurado – endereço copiado: $email. Escolha outro app para nos escrever.';
   }
 
   @override
@@ -1728,9 +1399,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get preparingPdf => 'Processando PDF...';
 
   @override
-  String get shareRecipeTitle => 'Compartilhar receita';
-
-  @override
   String get recipeOptionsTitle => 'Opções';
 
   @override
@@ -1744,9 +1412,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recipeTime => 'Tempo';
-
-  @override
-  String get ingredientSectionTitle => 'Seção';
 
   @override
   String get addIngredientSection => 'Adicionar seção';
@@ -1805,9 +1470,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get toolOnHand => 'Disponível';
-
-  @override
-  String get mealDiceSettingsTitle => 'Filtro do dado';
 
   @override
   String get mealDiceSettingsHint =>
@@ -2147,7 +1809,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aliasAddHint => 'Adicionar apelido';
 
   @override
-  String get foodOnHand => 'Disponível na casa';
+  String get foodOnHand => 'Disponível no domicílio';
 
   @override
   String get timelineChildRecipesTitle =>
@@ -2373,9 +2035,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get userManagementTitle => 'Gerenciamento de usuários';
 
   @override
-  String get usersTitle => 'Usuários';
-
-  @override
   String get editUserTitle => 'Editar Usuário';
 
   @override
@@ -2421,9 +2080,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get resetLockedUsersAction => 'Redefinir Usuários Bloqueados';
-
-  @override
-  String get membersTitle => 'Membros';
 
   @override
   String get inviteLinkTitle => 'Link de convite';
@@ -2605,7 +2261,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get originalUrlLabel => 'URL original';
+  String get originalUrlLabel => 'URL Original';
 
   @override
   String get copyTextAction => 'Copiar texto';
@@ -4155,4 +3811,356 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get updateSourceHint =>
       'As atualizações vêm dos lançamentos do Mealie Recipes no GitHub e só são instaladas se assinadas pelo desenvolvedor (macOS).';
+
+  @override
+  String get errorNoConnection =>
+      'Não foi possível acessar seu servidor Mealie. Verifique a conexão com a internet e o endereço do servidor.';
+
+  @override
+  String get errorTimeout =>
+      'O servidor demorou demais para responder. Tente novamente.';
+
+  @override
+  String get errorUnauthorized =>
+      'Seu login expirou ou o token de API não é mais válido. Entre novamente nas configurações.';
+
+  @override
+  String get errorServer =>
+      'O servidor Mealie relatou um erro. Tente novamente mais tarde.';
+
+  @override
+  String get errorNotFound =>
+      'Não encontrado no servidor — pode ter sido excluído.';
+
+  @override
+  String get errorCertificate =>
+      'O certificado de segurança do servidor não é confiável.';
+
+  @override
+  String get errorGeneric => 'Algo deu errado. Tente novamente.';
+
+  @override
+  String get offlineLabel => 'Offline';
+
+  @override
+  String offlineSince(String time) {
+    return 'Offline · atualizado $time';
+  }
+
+  @override
+  String get mealplanEntryActions => 'Opções da refeição';
+
+  @override
+  String get mealplanMoveAction => 'Mover';
+
+  @override
+  String get mealplanMoveTitle => 'Mover refeição';
+
+  @override
+  String get mealplanMoveDate => 'Data';
+
+  @override
+  String mealplanMovedTo(String date) {
+    return 'Movido para $date';
+  }
+
+  @override
+  String get mealplanShowWeek => 'Ver';
+
+  @override
+  String get mealplanMoveFailed => 'Não foi possível mover a refeição';
+
+  @override
+  String get recentlyViewedTitle => 'Vistas recentemente';
+
+  @override
+  String get recentlyViewedEmpty =>
+      'As receitas que você abrir aparecerão aqui.';
+
+  @override
+  String get recentlyViewedClear => 'Limpar histórico';
+
+  @override
+  String get recentlyViewedClearMessage =>
+      'A lista de receitas vistas recentemente neste dispositivo será limpa. As receitas continuam salvas.';
+
+  @override
+  String get recentlyViewedClearConfirm => 'Limpar';
+
+  @override
+  String get duplicatesTitle => 'Localizador de duplicados';
+
+  @override
+  String get duplicatesScanning => 'Procurando receitas duplicadas…';
+
+  @override
+  String get duplicatesNone => 'Nenhuma receita duplicada encontrada.';
+
+  @override
+  String duplicatesFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count possíveis duplicados encontrados.',
+      one: '1 possível duplicado encontrado.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesIntro =>
+      'Toque na receita que deve ficar e depois mescle.';
+
+  @override
+  String get duplicatesReasonSource => 'Mesma fonte';
+
+  @override
+  String get duplicatesReasonName => 'Mesmo nome';
+
+  @override
+  String duplicatesReasonSimilar(int percent) {
+    return 'Semelhante · $percent% de ingredientes iguais';
+  }
+
+  @override
+  String get duplicatesKeeps => 'Fica';
+
+  @override
+  String get duplicatesWillBeDeleted => 'Será excluída';
+
+  @override
+  String get duplicatesMerge => 'Mesclar';
+
+  @override
+  String get duplicatesNotDuplicate => 'Não é duplicado';
+
+  @override
+  String get duplicatesMergeTitle => 'Mesclar receitas?';
+
+  @override
+  String duplicatesMergeMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count outras receitas serão excluídas',
+      one: '1 outra receita será excluída',
+    );
+    return '“$name” fica. $_temp0.\n\nCategorias, tags, ferramentas, notas, refeições planejadas do seu domicílio e seu favorito são transferidos. Comentários, linha do tempo e anexos das receitas excluídas são perdidos.';
+  }
+
+  @override
+  String get duplicatesMerged => 'Receitas mescladas';
+
+  @override
+  String duplicatesIngredientCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ingredientes',
+      one: '1 ingrediente',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duplicatesResetIgnored(int count) {
+    return 'Mostrar pares ocultos novamente ($count)';
+  }
+
+  @override
+  String get duplicatesRescan => 'Pesquisar novamente';
+
+  @override
+  String get duplicatesOpenRecipe => 'Abrir receita';
+
+  @override
+  String get duplicatesMergeNoEditHint =>
+      'Você não pode editar a receita que fica (receita bloqueada de outra pessoa ou de outro domicílio). Por isso categorias, tags, ferramentas e notas não são transferidos – apenas refeições planejadas e seu favorito.';
+
+  @override
+  String get recipeOtherHouseholdHint =>
+      'De outro domicílio – a edição está bloqueada lá';
+
+  @override
+  String foodsSavedAsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alimentos novos ficaram',
+      one: '1 alimento novo ficou',
+    );
+    return 'Salvo. $_temp0 como nota do ingrediente – criar alimentos exige a permissão “O usuário pode gerenciar alimentos, tags e categorias” no Mealie.';
+  }
+
+  @override
+  String get a11yRemove => 'Remover';
+
+  @override
+  String get a11yDecrease => 'Menos';
+
+  @override
+  String get a11yIncrease => 'Mais';
+
+  @override
+  String get a11yShowPassword => 'Mostrar senha';
+
+  @override
+  String get a11yHidePassword => 'Ocultar senha';
+
+  @override
+  String get a11yClearSearch => 'Limpar pesquisa';
+
+  @override
+  String get notesQueuedOffline =>
+      'Offline – a nota será enviada assim que o servidor estiver acessível novamente.';
+
+  @override
+  String get timelineQueuedOffline =>
+      'Offline – será adicionado à linha do tempo assim que o servidor estiver acessível novamente.';
+
+  @override
+  String get syncSectionName => 'Renomeado';
+
+  @override
+  String get pendingRecipesDiscard => 'Descartar';
+
+  @override
+  String get undo => 'Desfazer';
+
+  @override
+  String timerStoppedSnack(String name) {
+    return 'Temporizador “$name” parado';
+  }
+
+  @override
+  String get cookFriendsEndConfirm =>
+      'Encerrar a sessão para todos? Todos os convidados serão desconectados.';
+
+  @override
+  String get weekStartSyncHint =>
+      'Salvo no Mealie – vale para todo o seu domicílio, também no app web.';
+
+  @override
+  String get weekStartNoPermission =>
+      'Vem do Mealie. Só quem pode gerenciar o domicílio pode alterar.';
+
+  @override
+  String get assetsUnsupported329 =>
+      'O Mealie suporta PDF, imagens, vídeos (MP4, MOV, WebM), áudio (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV e JSON.';
+
+  @override
+  String get assetsRecordVideo => 'Gravar vídeo';
+
+  @override
+  String get assetsChooseVideo => 'Escolher vídeo';
+
+  @override
+  String get shoppingSearchHint => 'Pesquisar na lista';
+
+  @override
+  String get shoppingSearchNoMatches => 'Nenhum item corresponde à pesquisa.';
+
+  @override
+  String get mealplanServingsTitle => 'Porções planejadas';
+
+  @override
+  String get mealplanServingsHint =>
+      'Apenas para esta entrada do plano de refeições — a receita em si não muda. Abrir a receita e adicioná-la à lista de compras usam estas porções.';
+
+  @override
+  String get calendarFeedTitle => 'Assinar calendário';
+
+  @override
+  String get calendarFeedSubtitle =>
+      'Mostrar o plano de refeições no Google, Apple ou outro calendário';
+
+  @override
+  String get calendarFeedDescription =>
+      'Assine o plano de refeições da sua casa no Google Agenda, Calendário da Apple, Home Assistant ou qualquer outro app compatível com links iCal. Qualquer pessoa com o link pode ver seu plano de refeições.';
+
+  @override
+  String get calendarFeedOff =>
+      'O link do calendário está desativado para sua casa.';
+
+  @override
+  String get calendarFeedAskManager =>
+      'Peça a alguém que possa gerenciar sua casa para ativá-lo.';
+
+  @override
+  String get calendarFeedTurnOn => 'Ativar';
+
+  @override
+  String get calendarFeedTurnOff => 'Desativar';
+
+  @override
+  String get calendarFeedReset => 'Redefinir link';
+
+  @override
+  String get calendarFeedResetHint =>
+      'Redefinir ou desativar o link faz as assinaturas existentes pararem de atualizar.';
+
+  @override
+  String get calendarFeedIncludeNotes => 'Incluir notas';
+
+  @override
+  String get calendarFeedTimesHint =>
+      'Toque em uma refeição para definir o horário. Refeições sem horário aparecem como eventos de dia inteiro.';
+
+  @override
+  String get calendarFeedMealTypes => 'Tipo de refeição';
+
+  @override
+  String get calendarFeedSubscribe => 'Assinar no calendário';
+
+  @override
+  String get calendarFeedNoApp =>
+      'Não foi possível abrir nenhum app de calendário. Copie o link e adicione-o ao seu calendário como assinatura.';
+
+  @override
+  String get calendarFeedPublicHint =>
+      'O link funciona sem login — compartilhe apenas com quem pode ver seu plano de refeições.';
+
+  @override
+  String get recipeShareLinkMenu => 'Link de compartilhamento e QR code';
+
+  @override
+  String get recipeShareShowQr => 'Mostrar QR code';
+
+  @override
+  String get recipeShareScanQr =>
+      'Escaneie com a câmera do celular para abrir esta receita';
+
+  @override
+  String get recipeShareQrShare => 'Compartilhar imagem';
+
+  @override
+  String get recipeShareQrFailed =>
+      'Não foi possível criar a imagem do QR code';
+
+  @override
+  String get mealplanSettingsTitle => 'Configurações de plano de refeições';
+
+  @override
+  String get mealDiceRulesTitle => 'Regras do dado';
+
+  @override
+  String saveAsNewFood(String name) {
+    return 'Salvar \"$name\" como novo alimento';
+  }
+
+  @override
+  String get shoppingMoreOptions => 'Mais opções';
+
+  @override
+  String get shoppingFewerOptions => 'Menos opções';
+
+  @override
+  String nameAlreadyExists(String name) {
+    return 'Já existe: $name';
+  }
+
+  @override
+  String aliasBelongsTo(String alias, String name) {
+    return '\"$alias\" já pertence a \"$name\" — melhor mesclar os dois.';
+  }
 }

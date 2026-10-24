@@ -161,7 +161,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(mealieErrorMessage(e) ?? e.toString(),
+                    Text(userErrorMessage(e),
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.appFgSub)),
                     const SizedBox(height: 12),
@@ -557,9 +557,13 @@ class _AdminUserSheetState extends ConsumerState<_AdminUserSheet> {
       final link = '$server/reset-password/?token=$token';
       await Clipboard.setData(ClipboardData(text: link));
       messenger.showSnackBar(SnackBar(
+        // Mit Knopf bleibt eine SnackBar seit Flutter 3.29 sonst STEHEN
+        // (persist = action != null) — erst ein Neustart räumte sie weg.
+        persist: false,
         content: Text(l.passwordResetLinkCopied),
         action: SnackBarAction(
-            label: l.assetsShare, onPressed: () => Share.share(link)),
+            label: l.assetsShare,
+            onPressed: () => SharePlus.instance.share(ShareParams(text: link))),
       ));
     } catch (e) {
       messenger.showSnackBar(
@@ -1051,7 +1055,9 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(
           20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
-      child: Column(
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1074,7 +1080,7 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
                 : Text(l.changePasswordAction),
           ),
         ],
-      ),
+      )),
     );
   }
 }
@@ -1129,7 +1135,9 @@ class _PermissionsSheetState extends ConsumerState<_PermissionsSheet> {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      child: Column(
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1148,7 +1156,7 @@ class _PermissionsSheetState extends ConsumerState<_PermissionsSheet> {
             child: Text(l.save),
           ),
         ],
-      ),
+      )),
     );
   }
 }
@@ -1186,6 +1194,7 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
           .read(apiServiceProvider)
           .createInviteToken(uses: uses < 1 ? 1 : uses);
       final server = ref.read(settingsProvider).valueOrNull?.serverUrl ?? '';
+      if (!mounted) return;
       setState(() {
         _token = token;
         _link = '$server/register?token=$token';
@@ -1265,7 +1274,8 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => Share.share(_link!),
+                    onPressed: () =>
+                        SharePlus.instance.share(ShareParams(text: _link!)),
                     icon: const Icon(Icons.ios_share_rounded),
                     label: Text(l.assetsShare),
                   ),

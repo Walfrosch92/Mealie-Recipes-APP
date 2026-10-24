@@ -9,9 +9,6 @@ class AppLocalizationsHu extends AppLocalizations {
   AppLocalizationsHu([String locale = 'hu']) : super(locale);
 
   @override
-  String get appTitle => 'Mealie Recipes';
-
-  @override
   String get endCookingMode => 'Főzési mód befejezése';
 
   @override
@@ -99,15 +96,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get searchRecipe => 'Recept keresése…';
 
   @override
-  String get loadingRecipes => 'Receptek betöltése…';
-
-  @override
   String get loadingRecipe => 'Recept betöltése…';
-
-  @override
-  String errorLoadingRecipes(String error) {
-    return 'Hiba a receptek betöltésekor: $error';
-  }
 
   @override
   String get errorLoadingRecipe => 'A recept betöltése nem sikerült.';
@@ -191,30 +180,13 @@ class AppLocalizationsHu extends AppLocalizations {
   String get servings => 'Adagok';
 
   @override
-  String get adjustQuantity => 'Mennyiség módosítása';
-
-  @override
-  String get startTimer => 'Időzítő indítása';
-
-  @override
-  String runningTimer(int minutes, String seconds) {
-    return 'Időzítő: $minutes:$seconds';
-  }
-
-  @override
   String get planMeal => 'Étkezés tervezése';
-
-  @override
-  String get displayAlwaysOn => 'Képernyő ébren tartása';
 
   @override
   String get addAllIngredients => 'Összes hozzávaló hozzáadása';
 
   @override
   String get addSelectedIngredients => 'Kijelölt hozzávalók hozzáadása';
-
-  @override
-  String get addIngredientsTitle => 'Hozzávalók hozzáadva';
 
   @override
   String get addIngredientsMessage =>
@@ -386,16 +358,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get sendToDevice => 'Küldés eszközre';
 
   @override
-  String get sendToDevicePickerTitle => 'Küldés eszközre';
-
-  @override
-  String get sendToAllDevices => 'Küldés minden eszközre';
-
-  @override
   String get timerFinished => 'Az időzítő lejárt!';
-
-  @override
-  String get timerFinishedBody => 'A recept időzítője lejárt.';
 
   @override
   String get timer => 'Időzítő';
@@ -404,21 +367,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get newTimer => 'Új időzítő';
 
   @override
-  String get timerDetails => 'Időzítő részletei';
-
-  @override
   String get timerNamePlaceholder => 'Időzítő neve';
 
   @override
-  String get timerNameHint => 'Adj az időzítőnek beszédes nevet.';
-
-  @override
   String get durationLabel => 'Időtartam';
-
-  @override
-  String minutesCount(int count) {
-    return '$count perc';
-  }
 
   @override
   String get start => 'Indítás';
@@ -447,31 +399,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get cookingMode => 'Főzési mód';
 
   @override
-  String activeRecipesCount(int count) {
-    return '$count aktív recept';
-  }
-
-  @override
   String get endAll => 'Összes befejezése';
 
   @override
   String get end => 'Befejezés';
-
-  @override
-  String get endAllRecipesTitle => 'Befejezed az összes receptet?';
-
-  @override
-  String endAllRecipesMessage(int count) {
-    return 'Befejezed mind a(z) $count aktív főzést?';
-  }
-
-  @override
-  String get endRecipeTitle => 'Befejezed a receptet?';
-
-  @override
-  String endRecipeMessage(String name) {
-    return 'Befejezed a(z) \"$name\" főzését?';
-  }
 
   @override
   String get noActiveTimers => 'Nincs aktív időzítő';
@@ -485,11 +416,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get browseRecipes => 'Receptek böngészése';
-
-  @override
-  String timersPausedCount(int count) {
-    return '$count időzítő szüneteltetve';
-  }
 
   @override
   String get cookFriends => 'Főzés barátokkal';
@@ -529,13 +455,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get joinSession => 'Csatlakozás munkamenethez';
 
   @override
-  String get hostEndedSessionTitle => 'A munkamenet véget ért';
-
-  @override
   String get hostEndedSessionMessage => 'A házigazda befejezte a közös főzést.';
-
-  @override
-  String get shoppingListEmpty => 'A bevásárlólistád üres.';
 
   @override
   String get addItem => 'Tétel hozzáadása';
@@ -547,19 +467,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get unlabeledCategory => 'Címke nélkül';
 
   @override
-  String get reorderCategories => 'Kategóriák átrendezése';
-
-  @override
-  String get archiveChecked => 'Kipipált tételek archiválása';
-
-  @override
   String get archivedLists => '📦 Archivált bevásárlások';
-
-  @override
-  String get syncChanges => 'Változások szinkronizálása';
-
-  @override
-  String get noSyncChanges => 'Nincs szinkronizálandó változás';
 
   @override
   String get postimportAction => 'Importálás után';
@@ -642,48 +550,13 @@ class AppLocalizationsHu extends AppLocalizations {
   String get selectRecipe => 'Recept kiválasztása';
 
   @override
-  String get orFreeText => 'vagy szabad szöveg';
-
-  @override
-  String get entryNote => 'Jegyzet';
-
-  @override
-  String get noMealEntries => 'Nincs bejegyzés erre a hétre.';
-
-  @override
   String get importRecipe => 'Recept importálása';
-
-  @override
-  String get importFromUrl => 'Importálás URL-ből';
-
-  @override
-  String get importFromImage => 'Importálás fotóból';
-
-  @override
-  String get importFromJson => 'Importálás JSON-ből';
 
   @override
   String get url => 'URL';
 
   @override
-  String get urlPlaceholder => 'https://...';
-
-  @override
   String get importLanguage => 'OCR nyelve';
-
-  @override
-  String get importing => 'Importálás…';
-
-  @override
-  String get importSuccess => 'A recept sikeresen importálva!';
-
-  @override
-  String importError(String error) {
-    return 'Az importálás nem sikerült: $error';
-  }
-
-  @override
-  String get pasteJson => 'Illeszd be ide a JSON-t';
 
   @override
   String get setupTitle => 'Üdvözöl a Mealie Recipes';
@@ -711,9 +584,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get shoppingListId => 'Bevásárlólista';
-
-  @override
-  String get shoppingListIdPlaceholder => 'Válassz bevásárlólistát';
 
   @override
   String get setupHouseholdListTitle => 'Háztartás és bevásárlólista';
@@ -750,12 +620,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get connect => 'Kapcsolódás';
 
   @override
-  String get connecting => 'Kapcsolódás…';
-
-  @override
-  String get connectionSuccess => 'Sikeres kapcsolódás!';
-
-  @override
   String connectionError(String error) {
     return 'A kapcsolódás nem sikerült: $error';
   }
@@ -770,19 +634,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settingsSaved => 'Beállítások mentve';
 
   @override
-  String get serverSettings => 'Szerver';
-
-  @override
-  String get displaySettings => 'Megjelenítés';
-
-  @override
-  String get notificationSettings => 'Értesítések';
-
-  @override
   String get securitySettings => 'Biztonság';
-
-  @override
-  String get aboutSettings => 'Névjegy';
 
   @override
   String get showRecipeImages => 'Receptképek megjelenítése';
@@ -798,12 +650,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get biometricLockDescription => 'Alkalmazás feloldása biometriával';
-
-  @override
-  String get criticalAlerts => 'Kritikus riasztások';
-
-  @override
-  String get criticalAlertsDescription => 'Időzítő-riasztás néma módban is';
 
   @override
   String get enableLogging => 'Naplózás bekapcsolása';
@@ -837,28 +683,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get leftoverFinder => 'Receptkereső';
 
   @override
-  String get leftoverFinderSubtitle =>
-      'Találj recepteket a meglévő hozzávalóidhoz';
-
-  @override
   String get addIngredient => 'Hozzávaló hozzáadása';
-
-  @override
-  String get ingredientPlaceholder => 'pl. tojás';
-
-  @override
-  String get findRecipes => 'Receptek keresése';
-
-  @override
-  String get matchingRecipes => 'Találó receptek';
-
-  @override
-  String get noMatchingRecipes => 'Nincs recept ezekhez a hozzávalókhoz.';
-
-  @override
-  String matchPercent(int percent) {
-    return '$percent% egyezés';
-  }
 
   @override
   String get biometricPrompt =>
@@ -868,15 +693,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get biometricFailed => 'A hitelesítés nem sikerült';
 
   @override
-  String get whatsNew => 'Újdonságok';
-
-  @override
   String get pendingRecipesTitle => 'Kapott receptek';
-
-  @override
-  String pendingRecipesMessage(String sender, String name) {
-    return '$sender receptet küldött neked: \"$name\"';
-  }
 
   @override
   String pendingRecipesFrom(Object names) {
@@ -887,12 +704,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get pendingRecipesOpenCooking => 'Főzési mód megnyitása';
 
   @override
-  String get pendingRecipesLater => 'Később';
-
-  @override
-  String get openRecipe => 'Recept megnyitása';
-
-  @override
   String get dismiss => 'Elvetés';
 
   @override
@@ -900,9 +711,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get recipeName => 'Recept neve';
-
-  @override
-  String get recipeDescription => 'Leírás';
 
   @override
   String get prepTime => 'Előkészítés (perc)';
@@ -950,30 +758,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get categories => 'Kategóriák';
 
   @override
-  String get selectCategories => 'Kategóriák kiválasztása';
-
-  @override
-  String get selectTags => 'Címkék kiválasztása';
-
-  @override
-  String get uploadImage => 'Kép feltöltése';
-
-  @override
-  String get removeImage => 'Kép eltávolítása';
-
-  @override
   String get saveChanges => 'Változások mentése';
 
   @override
-  String get saving => 'Mentés…';
-
-  @override
   String get saveSuccess => 'Recept mentve.';
-
-  @override
-  String saveError(String error) {
-    return 'A mentés nem sikerült: $error';
-  }
 
   @override
   String get newCategory => 'Új kategória';
@@ -983,19 +771,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get setRating => 'Értékelés megadása';
-
-  @override
-  String get removeRating => 'Értékelés törlése';
-
-  @override
-  String get ratingRemoved => 'Értékelés törölve';
-
-  @override
-  String get googleTasksImport => 'Importálás a Google Feladatokból';
-
-  @override
-  String get googleTasksImportDescription =>
-      'Elemek importálása a Google Feladatokból a bevásárlólistádra.';
 
   @override
   String get homeWelcome => 'Üdvözöl a Mealie Recipes! 👋';
@@ -1013,9 +788,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get other => 'Egyéb';
-
-  @override
-  String get viewRecipes => '📖 Receptek megtekintése';
 
   @override
   String get addRecipe => '➕ Recept hozzáadása';
@@ -1036,9 +808,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get resteverwertung => '🥗 Receptkereső';
 
   @override
-  String get newRecipeUpload => 'Új recept feltöltése';
-
-  @override
   String get copyCode => 'Kód másolása';
 
   @override
@@ -1051,23 +820,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get waitingForFriends => 'Várakozás a barátokra…';
 
   @override
-  String get endSharing => 'Megosztás befejezése';
-
-  @override
-  String get cookFriendsDescription =>
-      'Hívj meg egy barátot, hogy együtt főzzétek meg ezt a receptet';
-
-  @override
   String get sessionCode => 'MUNKAMENET-KÓD';
-
-  @override
-  String get adjustQuantityLabel => 'Mennyiség módosítása ehhez a recepthez:';
-
-  @override
-  String get timerStartForStep => 'Időzítő a lépéshez';
-
-  @override
-  String get enterRecipeUrl => 'Add meg a recept URL-jét';
 
   @override
   String get loading => 'Betöltés…';
@@ -1081,9 +834,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get addItemPlaceholder => 'Tétel hozzáadása…';
-
-  @override
-  String get addSuccessToast => 'Hozzáadva!';
 
   @override
   String get completedItems => 'Kész';
@@ -1141,18 +891,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get allDeleteConfirm => 'Összes törlése';
 
   @override
-  String get portionen => 'Adagok';
-
-  @override
-  String get timerForStep => 'Időzítő indítása ehhez a lépéshez';
-
-  @override
-  String get weekNavPrev => 'Előző hét';
-
-  @override
-  String get weekNavNext => 'Következő hét';
-
-  @override
   String get noMealsThisWeek => 'Nincs betervezett étkezés';
 
   @override
@@ -1162,43 +900,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get availableWeeks => 'Elérhető hetek:';
 
   @override
-  String weekRange(Object end, Object start, Object week) {
-    return '$week. hét ($start – $end)';
-  }
-
-  @override
   String get currentWeek => 'Aktuális hét';
-
-  @override
-  String get rezepteAktualisieren => 'Receptek frissítése';
-
-  @override
-  String get leftoverWhatTitle => 'Mit csinál ez?';
-
-  @override
-  String get leftoverWhatBody =>
-      'Ez a funkció újratölti az összes receptet a szerverről, és frissíti a helyi gyorsítótárat.';
-
-  @override
-  String get leftoverDescription =>
-      'Add meg az otthon lévő hozzávalókat, hogy találó recepteket kapj, és felhasználd a maradékokat.';
-
-  @override
-  String get leftoverIngredientsHeader => 'Otthoni hozzávalók';
-
-  @override
-  String get leftoverSuggestions => 'Receptjavaslatok';
-
-  @override
-  String get leftoverNoMatches => 'Nem található megfelelő recept.';
-
-  @override
-  String get leftoverEnterIngredient => 'Hozzávaló megadása';
-
-  @override
-  String matchingPercentText(int percent, int count, int total) {
-    return '$percent% egyezés ($count/$total)';
-  }
 
   @override
   String get weekAbbreviation => 'Hét';
@@ -1208,9 +910,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get selectDate => 'Dátum kiválasztása';
-
-  @override
-  String get selectSlot => 'Étkezés kiválasztása';
 
   @override
   String get selectedRecipe => 'Kiválasztott recept';
@@ -1242,11 +941,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get entriesPlural => 'bejegyzés';
-
-  @override
-  String listTitle(int n) {
-    return '$n. lista';
-  }
 
   @override
   String get deleteAllConfirmTitle => 'Mindent törölsz?';
@@ -1298,10 +992,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get startCooking => 'Főzés indítása';
 
   @override
-  String get hostNoRecipe =>
-      'Nyisd meg egy receptből, hogy munkamenetet indíts';
-
-  @override
   String get uploadToOwnServer => 'Mentés a saját szerveremre';
 
   @override
@@ -1319,12 +1009,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get appIcon => 'Alkalmazásikon';
-
-  @override
-  String get appIconClassic => 'Classic';
-
-  @override
-  String get appIconModern => 'Modern';
 
   @override
   String get name => 'Név';
@@ -1366,7 +1050,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get offlineRecipeImagesHint =>
-      'Letölti az összes receptképet erre az eszközre, hogy kapcsolat nélkül is megjelenjenek. Nagy gyűjteményeknél ez több száz MB-ot is elfoglalhat. Kikapcsoláskor a mentett képek törlődnek.';
+      'Az összes receptképet letölti az eszközre – a lépések és jegyzetek képeit is –, hogy kapcsolat nélkül is megjelenjenek. Nagy gyűjtemények több száz MB-ot is elfoglalhatnak. Kikapcsoláskor a mentett képek törlődnek.';
 
   @override
   String offlineRecipeImagesStatus(int count, int total, String size) {
@@ -1401,7 +1085,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get exactQuantitiesSubtitle =>
-      'A hozzávalók és a beírt tételek megtartják a mennyiséget és a mértékegységet (pl. 200 g vaj) darabonkénti 1x helyett — a hiányzó alapanyagokat az app létrehozza a szerveren';
+      'A hozzávalók és a beírt tételek megtartják a mennyiséget és a mértékegységet (pl. 200 g vaj) darabonkénti 1x helyett';
 
   @override
   String get remindToShop => 'Emlékeztess bevásárolni';
@@ -1522,12 +1206,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get loginInvalidCredentials => 'Hibás felhasználónév vagy jelszó.';
 
   @override
-  String get loginAndGenerateToken => 'Bejelentkezés és token létrehozása';
-
-  @override
-  String get loggingIn => 'Bejelentkezés…';
-
-  @override
   String get apiTokenSaveHint =>
       'Token alkalmazva — kérlek koppints lent a „Változtatások mentése” gombra.';
 
@@ -1588,9 +1266,6 @@ class AppLocalizationsHu extends AppLocalizations {
       'Hozzávalók szétválasztva – koppints a „Változások mentése” gombra az alkalmazáshoz';
 
   @override
-  String get reparseNone => 'Nem található szétválasztható hozzávaló';
-
-  @override
   String get tagsAndCategories => 'Címkék, kategóriák és eszközök';
 
   @override
@@ -1622,12 +1297,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String importCount(int count) {
     return '$count importálása';
   }
-
-  @override
-  String get activeRecipeTimer => 'Aktív receptidőzítő';
-
-  @override
-  String get linkIngredients => 'Hozzávalók összekapcsolása';
 
   @override
   String get noIngredientsToLink => 'Még nincs összekapcsolható hozzávaló';
@@ -1693,7 +1362,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String supportNoMailApp(String email) {
-    return 'Nem található levelezőalkalmazás. Cím másolva: $email';
+    return 'Nincs beállítva levelezőalkalmazás – a cím kimásolva: $email. Válassz másik alkalmazást az íráshoz.';
   }
 
   @override
@@ -1729,9 +1398,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get preparingPdf => 'PDF feldolgozása...';
 
   @override
-  String get shareRecipeTitle => 'Recept megosztása';
-
-  @override
   String get recipeOptionsTitle => 'Lehetőségek';
 
   @override
@@ -1745,9 +1411,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get recipeTime => 'Idő';
-
-  @override
-  String get ingredientSectionTitle => 'Szakasz';
 
   @override
   String get addIngredientSection => 'Szakasz hozzáadása';
@@ -1806,9 +1469,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get toolOnHand => 'Megvan';
-
-  @override
-  String get mealDiceSettingsTitle => 'Kockaszűrő';
 
   @override
   String get mealDiceSettingsHint =>
@@ -2025,10 +1685,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'Egy recept sem felel meg az étkezéshez tartozó Mealie-szabályoknak.';
 
   @override
-  String get mealTypeSide => 'Köret';
+  String get mealTypeSide => 'Kisétkezés';
 
   @override
-  String get mealTypeSnack => 'Nasi';
+  String get mealTypeSnack => 'Rágcsa';
 
   @override
   String get mealTypeDrink => 'Ital';
@@ -2373,9 +2033,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get userManagementTitle => 'Felhasználók kezelése';
 
   @override
-  String get usersTitle => 'Felhasználók';
-
-  @override
   String get editUserTitle => 'Felhasználó szerkesztése';
 
   @override
@@ -2421,9 +2078,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get resetLockedUsersAction => 'Zárolt felhasználók feloldása';
-
-  @override
-  String get membersTitle => 'Tagok';
 
   @override
   String get inviteLinkTitle => 'Meghívó link';
@@ -2763,7 +2417,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get parserOpenai => 'OpenAI elemző';
 
   @override
-  String get parserApp => 'Offline (app)';
+  String get parserApp => 'Offline (alkalmazás)';
 
   @override
   String get parseFailed => 'Az elemzés sikertelen';
@@ -4148,4 +3802,350 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get updateSourceHint =>
       'A frissítések a Mealie Recipes GitHub-kiadásaiból érkeznek, és csak a fejlesztő által aláírva települnek (macOS).';
+
+  @override
+  String get errorNoConnection =>
+      'A Mealie-szerver nem érhető el. Ellenőrizd az internetkapcsolatot és a szerver címét.';
+
+  @override
+  String get errorTimeout =>
+      'A szerver túl sokáig nem válaszolt. Próbáld újra.';
+
+  @override
+  String get errorUnauthorized =>
+      'A bejelentkezésed lejárt, vagy az API-token már nem érvényes. Jelentkezz be újra a beállításokban.';
+
+  @override
+  String get errorServer =>
+      'A Mealie-szerver hibát jelzett. Próbáld újra később.';
+
+  @override
+  String get errorNotFound =>
+      'Nem található a szerveren – lehet, hogy törölték.';
+
+  @override
+  String get errorCertificate =>
+      'A szerver biztonsági tanúsítványa nem megbízható.';
+
+  @override
+  String get errorGeneric => 'Valami hiba történt. Próbáld újra.';
+
+  @override
+  String get offlineLabel => 'Offline';
+
+  @override
+  String offlineSince(String time) {
+    return 'Offline · utolsó szinkron: $time';
+  }
+
+  @override
+  String get mealplanEntryActions => 'Étkezés beállításai';
+
+  @override
+  String get mealplanMoveAction => 'Áthelyezés';
+
+  @override
+  String get mealplanMoveTitle => 'Étkezés áthelyezése';
+
+  @override
+  String get mealplanMoveDate => 'Dátum';
+
+  @override
+  String mealplanMovedTo(String date) {
+    return 'Áthelyezve: $date';
+  }
+
+  @override
+  String get mealplanShowWeek => 'Megjelenítés';
+
+  @override
+  String get mealplanMoveFailed => 'Az étkezést nem sikerült áthelyezni';
+
+  @override
+  String get recentlyViewedTitle => 'Nemrég megtekintett';
+
+  @override
+  String get recentlyViewedEmpty => 'A megnyitott receptek itt jelennek meg.';
+
+  @override
+  String get recentlyViewedClear => 'Előzmények törlése';
+
+  @override
+  String get recentlyViewedClearMessage =>
+      'A nemrég megtekintett receptek listája törlődik ezen az eszközön. Maguk a receptek megmaradnak.';
+
+  @override
+  String get recentlyViewedClearConfirm => 'Törlés';
+
+  @override
+  String get duplicatesTitle => 'Duplikátumkereső';
+
+  @override
+  String get duplicatesScanning => 'Ismétlődő receptek keresése…';
+
+  @override
+  String get duplicatesNone => 'Nem található ismétlődő recept.';
+
+  @override
+  String duplicatesFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lehetséges duplikátum található.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesIntro =>
+      'Koppints a megtartandó receptre, majd vond össze.';
+
+  @override
+  String get duplicatesReasonSource => 'Azonos forrás';
+
+  @override
+  String get duplicatesReasonName => 'Azonos név';
+
+  @override
+  String duplicatesReasonSimilar(int percent) {
+    return 'Hasonló · $percent% azonos hozzávaló';
+  }
+
+  @override
+  String get duplicatesKeeps => 'Megmarad';
+
+  @override
+  String get duplicatesWillBeDeleted => 'Törlődik';
+
+  @override
+  String get duplicatesMerge => 'Összevonás';
+
+  @override
+  String get duplicatesNotDuplicate => 'Nem duplikátum';
+
+  @override
+  String get duplicatesMergeTitle => 'Összevonod a recepteket?';
+
+  @override
+  String duplicatesMergeMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count további recept törlődik',
+    );
+    return '„$name” megmarad. $_temp0.\n\nA kategóriák, címkék, eszközök, jegyzetek, háztartásod tervezett étkezései és a kedvenced átkerülnek. A törölt receptek hozzászólásai, idővonala és mellékletei elvesznek.';
+  }
+
+  @override
+  String get duplicatesMerged => 'Receptek összevonva';
+
+  @override
+  String duplicatesIngredientCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hozzávaló',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duplicatesResetIgnored(int count) {
+    return 'Elrejtett párok újra megjelenítése ($count)';
+  }
+
+  @override
+  String get duplicatesRescan => 'Keresés újra';
+
+  @override
+  String get duplicatesOpenRecipe => 'Recept megnyitása';
+
+  @override
+  String get duplicatesMergeNoEditHint =>
+      'A megmaradó receptet nem szerkesztheted (más zárolt receptje vagy másik háztartásé). Ezért a kategóriák, címkék, eszközök és jegyzetek nem kerülnek át – csak a tervezett étkezések és a kedvenced.';
+
+  @override
+  String get recipeOtherHouseholdHint =>
+      'Másik háztartásból – ott a szerkesztés zárolva van';
+
+  @override
+  String foodsSavedAsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count új alapanyag',
+    );
+    return 'Mentve. $_temp0 a hozzávaló jegyzeteként maradt – alapanyag létrehozásához a Mealie-ben „A felhasználó kezelheti az ételeket, a címkéket és a kategóriákat” jogosultság kell.';
+  }
+
+  @override
+  String get a11yRemove => 'Eltávolítás';
+
+  @override
+  String get a11yDecrease => 'Kevesebb';
+
+  @override
+  String get a11yIncrease => 'Több';
+
+  @override
+  String get a11yShowPassword => 'Jelszó megjelenítése';
+
+  @override
+  String get a11yHidePassword => 'Jelszó elrejtése';
+
+  @override
+  String get a11yClearSearch => 'Keresés törlése';
+
+  @override
+  String get notesQueuedOffline =>
+      'Offline – a jegyzetet elküldjük, amint a szerver újra elérhető.';
+
+  @override
+  String get timelineQueuedOffline =>
+      'Offline – amint a szerver újra elérhető, bekerül az idővonalra.';
+
+  @override
+  String get syncSectionName => 'Átnevezve';
+
+  @override
+  String get pendingRecipesDiscard => 'Elvetés';
+
+  @override
+  String get undo => 'Visszavonás';
+
+  @override
+  String timerStoppedSnack(String name) {
+    return '„$name” időzítő leállítva';
+  }
+
+  @override
+  String get cookFriendsEndConfirm =>
+      'Befejezed a munkamenetet mindenkinek? Minden vendég kapcsolata megszakad.';
+
+  @override
+  String get weekStartSyncHint =>
+      'A Mealie-ben mentődik – az egész háztartásodra érvényes, a webalkalmazásban is.';
+
+  @override
+  String get weekStartNoPermission =>
+      'A Mealie-ből származik. Csak az módosíthatja, aki kezelheti a háztartást.';
+
+  @override
+  String get assetsUnsupported329 =>
+      'A Mealie támogatja a PDF-et, képeket, videókat (MP4, MOV, WebM), hangfájlokat (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV és JSON fájlokat.';
+
+  @override
+  String get assetsRecordVideo => 'Videó felvétele';
+
+  @override
+  String get assetsChooseVideo => 'Videó kiválasztása';
+
+  @override
+  String get shoppingSearchHint => 'Keresés a listában';
+
+  @override
+  String get shoppingSearchNoMatches => 'Egy tétel sem felel meg a keresésnek.';
+
+  @override
+  String get mealplanServingsTitle => 'Tervezett adagok';
+
+  @override
+  String get mealplanServingsHint =>
+      'Csak ehhez az étkezési terv bejegyzéshez – maga a recept nem változik. A recept megnyitása és a bevásárlólista ezeket az adagokat használja.';
+
+  @override
+  String get calendarFeedTitle => 'Feliratkozás naptárra';
+
+  @override
+  String get calendarFeedSubtitle =>
+      'Az étkezési terv megjelenítése a Google, Apple vagy más naptárban';
+
+  @override
+  String get calendarFeedDescription =>
+      'Iratkozz fel a háztartásod étkezési tervére a Google Naptárból, az Apple Naptárból, a Home Assistantből vagy bármely más, iCal-linkeket támogató alkalmazásból. A linkkel bárki láthatja az étkezési tervedet.';
+
+  @override
+  String get calendarFeedOff =>
+      'A naptárlink ki van kapcsolva a háztartásodban.';
+
+  @override
+  String get calendarFeedAskManager =>
+      'Kérj meg valakit, aki kezelheti a háztartást, hogy kapcsolja be.';
+
+  @override
+  String get calendarFeedTurnOn => 'Bekapcsolás';
+
+  @override
+  String get calendarFeedTurnOff => 'Kikapcsolás';
+
+  @override
+  String get calendarFeedReset => 'Link visszaállítása';
+
+  @override
+  String get calendarFeedResetHint =>
+      'A link visszaállítása vagy kikapcsolása után a meglévő feliratkozások nem frissülnek.';
+
+  @override
+  String get calendarFeedIncludeNotes => 'Jegyzetek belefoglalása';
+
+  @override
+  String get calendarFeedTimesHint =>
+      'Koppints egy étkezésre az időpont megadásához. Az időpont nélküli étkezések egész napos eseményként jelennek meg.';
+
+  @override
+  String get calendarFeedMealTypes => 'Étel típusa';
+
+  @override
+  String get calendarFeedSubscribe => 'Feliratkozás a naptárban';
+
+  @override
+  String get calendarFeedNoApp =>
+      'Nem sikerült naptáralkalmazást megnyitni. Másold ki a linket, és add hozzá a naptáradhoz feliratkozásként.';
+
+  @override
+  String get calendarFeedPublicHint =>
+      'A link bejelentkezés nélkül is működik – csak olyanokkal oszd meg, akik láthatják az étkezési tervedet.';
+
+  @override
+  String get recipeShareLinkMenu => 'Megosztási link és QR-kód';
+
+  @override
+  String get recipeShareShowQr => 'QR kód megjelenítése';
+
+  @override
+  String get recipeShareScanQr =>
+      'Olvasd be a telefon kamerájával a recept megnyitásához';
+
+  @override
+  String get recipeShareQrShare => 'Kép megosztása';
+
+  @override
+  String get recipeShareQrFailed => 'Nem sikerült létrehozni a QR-kód képét';
+
+  @override
+  String get mealplanSettingsTitle => 'Menütervező beállításai';
+
+  @override
+  String get mealDiceRulesTitle => 'Kockaszabályok';
+
+  @override
+  String saveAsNewFood(String name) {
+    return '„$name” mentése új élelmiszerként';
+  }
+
+  @override
+  String get shoppingMoreOptions => 'További lehetőségek';
+
+  @override
+  String get shoppingFewerOptions => 'Kevesebb lehetőség';
+
+  @override
+  String nameAlreadyExists(String name) {
+    return 'Már létezik: $name';
+  }
+
+  @override
+  String aliasBelongsTo(String alias, String name) {
+    return '„$alias” már ehhez tartozik: „$name” – inkább vond össze a kettőt.';
+  }
 }

@@ -38,6 +38,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
   final List<_Row> _rows = [_Row()];
   bool _showOrganizers = false;
   int _reportsReload = 0;
+  bool _allowPop = false;
 
   @override
   void dispose() {
@@ -64,6 +65,8 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+        scrollable: true,
         backgroundColor: ctx.appCard,
         title: Text(l.bulkAddTitle),
         content: SizedBox(
@@ -171,66 +174,96 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final canStart = _rows.any((r) => r.url.text.trim().isNotEmpty);
-    return ToolPage(
-      title: l.bulkImportTitle,
-      description: l.bulkImportDescription,
-      children: [
-        ToolCard(
-          children: [
-            for (var i = 0; i < _rows.length; i++) _rowWidget(l, i),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => setState(() => _rows.add(_Row())),
-                  icon: const Icon(Icons.add_rounded),
-                  label: Text(l.bulkImportAddRow),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _pasteMany,
-                  icon: const Icon(Icons.playlist_add_rounded),
-                  label: Text(l.bulkAddTitle),
-                ),
-                TextButton.icon(
-                  onPressed: () => setState(() {
-                    for (final r in _rows) {
-                      r.url.dispose();
-                    }
-                    _rows
-                      ..clear()
-                      ..add(_Row());
-                  }),
-                  icon: const Icon(Icons.clear_all_rounded),
-                  label: Text(l.clearAll),
-                ),
-              ],
-            ),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              value: _showOrganizers,
-              onChanged: (v) => setState(() => _showOrganizers = v),
-              title: Text(l.bulkImportSetOrganizers,
-                  style: TextStyle(color: context.appFg)),
-            ),
-            const SizedBox(height: 8),
-            AsyncActionButton(
-              expand: true,
-              icon: Icons.cloud_download_rounded,
-              label: l.bulkImportStart,
-              onPressed: canStart ? _start : null,
-            ),
-          ],
-        ),
-        ReportListCard(
-          type: 'bulk_import',
-          title: l.bulkImportReports,
-          reloadToken: _reportsReload,
-          onReportFinished: () =>
-              ref.read(recipesProvider.notifier).reconcileNow(),
-        ),
-      ],
+    // Eingetippte/eingefügte Adressen nicht still beim Zurück verlieren.
+    return PopScope(
+      canPop: !canStart || _allowPop,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            scrollable: true,
+            content: Text(l.discardChangesConfirm),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l.cancel)),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(ctx).colorScheme.error),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l.discardChanges),
+              ),
+            ],
+          ),
+        );
+        if (ok != true || !mounted) return;
+        setState(() => _allowPop = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) Navigator.of(context).pop();
+        });
+      },
+      child: ToolPage(
+        title: l.bulkImportTitle,
+        description: l.bulkImportDescription,
+        children: [
+          ToolCard(
+            children: [
+              for (var i = 0; i < _rows.length; i++) _rowWidget(l, i),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => setState(() => _rows.add(_Row())),
+                    icon: const Icon(Icons.add_rounded),
+                    label: Text(l.bulkImportAddRow),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _pasteMany,
+                    icon: const Icon(Icons.playlist_add_rounded),
+                    label: Text(l.bulkAddTitle),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => setState(() {
+                      for (final r in _rows) {
+                        r.url.dispose();
+                      }
+                      _rows
+                        ..clear()
+                        ..add(_Row());
+                    }),
+                    icon: const Icon(Icons.clear_all_rounded),
+                    label: Text(l.clearAll),
+                  ),
+                ],
+              ),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _showOrganizers,
+                onChanged: (v) => setState(() => _showOrganizers = v),
+                title: Text(l.bulkImportSetOrganizers,
+                    style: TextStyle(color: context.appFg)),
+              ),
+              const SizedBox(height: 8),
+              AsyncActionButton(
+                expand: true,
+                icon: Icons.cloud_download_rounded,
+                label: l.bulkImportStart,
+                onPressed: canStart ? _start : null,
+              ),
+            ],
+          ),
+          ReportListCard(
+            type: 'bulk_import',
+            title: l.bulkImportReports,
+            reloadToken: _reportsReload,
+            onReportFinished: () =>
+                ref.read(recipesProvider.notifier).reconcileNow(),
+          ),
+        ],
+      ),
     );
   }
 

@@ -200,7 +200,9 @@ class _RandomRecipesSheetState extends State<_RandomRecipesSheet> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: Column(
+        child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -231,7 +233,7 @@ class _RandomRecipesSheetState extends State<_RandomRecipesSheet> {
                   onTap: () => Navigator.of(context).pop(r),
                 )),
           ],
-        ),
+        )),
       ),
     );
   }

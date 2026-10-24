@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:bonsoir/bonsoir.dart';
+import '../../../core/utils/mdns_host.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -504,7 +505,7 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
         attributes: {_txtDeviceIdKey: _deviceId},
       );
       _broadcast = BonsoirBroadcast(service: service);
-      await _broadcast!.ready;
+      await _broadcast!.initialize();
       await _broadcast!.start();
       LogManager.shared
           .log('📡 SendTo: Advertising „$_deviceName" ($_serviceType)');
@@ -514,7 +515,7 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
 
     try {
       _discovery = BonsoirDiscovery(type: _serviceType);
-      await _discovery!.ready;
+      await _discovery!.initialize();
       await _discovery!.start();
       _discoverySub = _discovery!.eventStream!
           .listen(_onDiscoveryEvent, onError: _onMDnsError);
@@ -589,9 +590,9 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
       final discovery = BonsoirDiscovery(type: _serviceType);
       _broadcast = broadcast;
       _discovery = discovery;
-      await broadcast.ready;
+      await broadcast.initialize();
       await broadcast.start();
-      await discovery.ready;
+      await discovery.initialize();
       // Während der awaits abgebaut? Dann die frischen Instanzen gleich
       // wieder stoppen statt sie zu verwaisen.
       if (!identical(_discovery, discovery)) {
@@ -761,12 +762,13 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
     // eine unhandled Exception.
     final discovery = _discovery;
     if (discovery == null) return;
-    if (event.type == BonsoirDiscoveryEventType.discoveryServiceFound) {
-      event.service?.resolve(discovery.serviceResolver);
+    if (event case BonsoirDiscoveryServiceFoundEvent(:final service)) {
+      service.resolve(discovery.serviceResolver);
       return;
     }
-    if (event.type == BonsoirDiscoveryEventType.discoveryServiceResolved) {
-      final svc = event.service as ResolvedBonsoirService;
+    if (event
+        case BonsoirDiscoveryServiceResolvedEvent(service: final svc) ||
+            BonsoirDiscoveryServiceUpdatedEvent(service: final svc)) {
       // TXT-Keys sind laut DNS-SD case-insensitiv, aber bonsoir liefert sie je
       // nach Plattform unterschiedlich (iOS NetService vs Android/iPad
       // NsdManager). Exakt nach 'mealieDeviceId' zu suchen lässt iOS↔Android-
@@ -778,8 +780,8 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
       } else if (svc.name == _deviceName) {
         return;
       }
-      final host = svc.host;
-      if (host == null || host.isEmpty) {
+      final host = preferredHostAddress(svc);
+      if (host == null) {
         LogManager.shared
             .log('🔎 SendTo: Peer ohne Host verworfen (${svc.name})');
         return;
@@ -809,12 +811,9 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
       // Peers ist eine neue Lieferchance, auch wenn der Peer schon in
       // state war.
       unawaited(_retryOutgoingForPeer(peer));
-    } else if (event.type == BonsoirDiscoveryEventType.discoveryServiceLost) {
-      final svc = event.service;
-      if (svc == null) return;
-      final lostId = svc is ResolvedBonsoirService
-          ? _txtAttr(svc.attributes, _txtDeviceIdKey)
-          : null;
+    } else if (event
+        case BonsoirDiscoveryServiceLostEvent(service: final svc)) {
+      final lostId = _txtAttr(svc.attributes, _txtDeviceIdKey);
       if (lostId != null && lostId.isNotEmpty) {
         _mDnsPeers.removeWhere((p) => p.deviceId == lostId);
       } else {

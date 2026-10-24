@@ -9,9 +9,6 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Mealie Recipes';
-
-  @override
   String get endCookingMode => 'End cooking mode';
 
   @override
@@ -99,15 +96,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchRecipe => 'Search recipe...';
 
   @override
-  String get loadingRecipes => 'Loading recipes...';
-
-  @override
   String get loadingRecipe => 'Loading recipe...';
-
-  @override
-  String errorLoadingRecipes(String error) {
-    return 'Error loading recipes: $error';
-  }
 
   @override
   String get errorLoadingRecipe => 'Could not load recipe.';
@@ -191,30 +180,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servings => 'Servings';
 
   @override
-  String get adjustQuantity => 'Adjust quantity';
-
-  @override
-  String get startTimer => 'Start Timer';
-
-  @override
-  String runningTimer(int minutes, String seconds) {
-    return 'Timer: $minutes:$seconds';
-  }
-
-  @override
   String get planMeal => 'Plan Meal';
-
-  @override
-  String get displayAlwaysOn => 'Keep screen on';
 
   @override
   String get addAllIngredients => 'Add all ingredients';
 
   @override
   String get addSelectedIngredients => 'Add selected ingredients';
-
-  @override
-  String get addIngredientsTitle => 'Ingredients added';
 
   @override
   String get addIngredientsMessage =>
@@ -386,16 +358,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendToDevice => 'Send to device';
 
   @override
-  String get sendToDevicePickerTitle => 'Send to device';
-
-  @override
-  String get sendToAllDevices => 'Send to all devices';
-
-  @override
   String get timerFinished => 'Timer finished!';
-
-  @override
-  String get timerFinishedBody => 'Your recipe timer has finished.';
 
   @override
   String get timer => 'Timer';
@@ -404,21 +367,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTimer => 'New Timer';
 
   @override
-  String get timerDetails => 'Timer Details';
-
-  @override
   String get timerNamePlaceholder => 'Timer name';
 
   @override
-  String get timerNameHint => 'Give your timer a descriptive name.';
-
-  @override
   String get durationLabel => 'Duration';
-
-  @override
-  String minutesCount(int count) {
-    return '$count minutes';
-  }
 
   @override
   String get start => 'Start';
@@ -447,31 +399,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cookingMode => 'Cooking Mode';
 
   @override
-  String activeRecipesCount(int count) {
-    return '$count active recipes';
-  }
-
-  @override
   String get endAll => 'End all';
 
   @override
   String get end => 'End';
-
-  @override
-  String get endAllRecipesTitle => 'End all recipes?';
-
-  @override
-  String endAllRecipesMessage(int count) {
-    return 'Do you want to end all $count active cooking sessions?';
-  }
-
-  @override
-  String get endRecipeTitle => 'End recipe?';
-
-  @override
-  String endRecipeMessage(String name) {
-    return 'Do you want to end the cooking session for \"$name\"?';
-  }
 
   @override
   String get noActiveTimers => 'No active timers';
@@ -485,11 +416,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get browseRecipes => 'Browse recipes';
-
-  @override
-  String timersPausedCount(int count) {
-    return '$count timer(s) paused';
-  }
 
   @override
   String get cookFriends => 'Cook with Friends';
@@ -529,14 +455,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinSession => 'Join session';
 
   @override
-  String get hostEndedSessionTitle => 'Session ended';
-
-  @override
   String get hostEndedSessionMessage =>
       'The host has ended the cooking session.';
-
-  @override
-  String get shoppingListEmpty => 'Your shopping list is empty.';
 
   @override
   String get addItem => 'Add item';
@@ -548,19 +468,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlabeledCategory => 'Unlabeled';
 
   @override
-  String get reorderCategories => 'Reorder categories';
-
-  @override
-  String get archiveChecked => 'Archive checked items';
-
-  @override
   String get archivedLists => '📦 Archived purchases';
-
-  @override
-  String get syncChanges => 'Sync changes';
-
-  @override
-  String get noSyncChanges => 'No sync changes';
 
   @override
   String get postimportAction => 'After import';
@@ -643,48 +551,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectRecipe => 'Select recipe';
 
   @override
-  String get orFreeText => 'or free text';
-
-  @override
-  String get entryNote => 'Note';
-
-  @override
-  String get noMealEntries => 'No entries for this week.';
-
-  @override
   String get importRecipe => 'Import Recipe';
-
-  @override
-  String get importFromUrl => 'Import from URL';
-
-  @override
-  String get importFromImage => 'Import from photo';
-
-  @override
-  String get importFromJson => 'Import from JSON';
 
   @override
   String get url => 'URL';
 
   @override
-  String get urlPlaceholder => 'https://...';
-
-  @override
   String get importLanguage => 'Language for OCR';
-
-  @override
-  String get importing => 'Importing...';
-
-  @override
-  String get importSuccess => 'Recipe imported successfully!';
-
-  @override
-  String importError(String error) {
-    return 'Import failed: $error';
-  }
-
-  @override
-  String get pasteJson => 'Paste JSON here';
 
   @override
   String get setupTitle => 'Welcome to Mealie Recipes';
@@ -712,9 +585,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shoppingListId => 'Shopping list ID';
-
-  @override
-  String get shoppingListIdPlaceholder => 'Select a shopping list';
 
   @override
   String get setupHouseholdListTitle => 'Household & shopping list';
@@ -751,12 +621,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connect => 'Connect';
 
   @override
-  String get connecting => 'Connecting...';
-
-  @override
-  String get connectionSuccess => 'Connection successful!';
-
-  @override
   String connectionError(String error) {
     return 'Connection failed: $error';
   }
@@ -771,19 +635,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSaved => 'Settings saved';
 
   @override
-  String get serverSettings => 'Server';
-
-  @override
-  String get displaySettings => 'Display';
-
-  @override
-  String get notificationSettings => 'Notifications';
-
-  @override
   String get securitySettings => 'Security';
-
-  @override
-  String get aboutSettings => 'About';
 
   @override
   String get showRecipeImages => 'Show recipe images';
@@ -799,12 +651,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get biometricLockDescription => 'Unlock app with biometrics';
-
-  @override
-  String get criticalAlerts => 'Critical alerts';
-
-  @override
-  String get criticalAlertsDescription => 'Timer alarm even in silent mode';
 
   @override
   String get enableLogging => 'Enable logging';
@@ -837,27 +683,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leftoverFinder => 'Recipe Finder';
 
   @override
-  String get leftoverFinderSubtitle => 'Find recipes with ingredients you have';
-
-  @override
   String get addIngredient => 'Add ingredient';
-
-  @override
-  String get ingredientPlaceholder => 'e.g. eggs';
-
-  @override
-  String get findRecipes => 'Find recipes';
-
-  @override
-  String get matchingRecipes => 'Matching recipes';
-
-  @override
-  String get noMatchingRecipes => 'No recipes found for these ingredients.';
-
-  @override
-  String matchPercent(int percent) {
-    return '$percent% match';
-  }
 
   @override
   String get biometricPrompt => 'Authenticate to open Mealie Recipes';
@@ -866,15 +692,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get biometricFailed => 'Authentication failed';
 
   @override
-  String get whatsNew => 'What\'s New';
-
-  @override
   String get pendingRecipesTitle => 'Received recipes';
-
-  @override
-  String pendingRecipesMessage(String sender, String name) {
-    return 'You received a recipe from $sender: \"$name\"';
-  }
 
   @override
   String pendingRecipesFrom(Object names) {
@@ -885,12 +703,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingRecipesOpenCooking => 'Open cooking mode';
 
   @override
-  String get pendingRecipesLater => 'Later';
-
-  @override
-  String get openRecipe => 'Open recipe';
-
-  @override
   String get dismiss => 'Dismiss';
 
   @override
@@ -898,9 +710,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeName => 'Recipe name';
-
-  @override
-  String get recipeDescription => 'Description';
 
   @override
   String get prepTime => 'Prep time (min)';
@@ -948,30 +757,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categories => 'Categories';
 
   @override
-  String get selectCategories => 'Select categories';
-
-  @override
-  String get selectTags => 'Select tags';
-
-  @override
-  String get uploadImage => 'Upload image';
-
-  @override
-  String get removeImage => 'Remove image';
-
-  @override
   String get saveChanges => 'Save changes';
 
   @override
-  String get saving => 'Saving...';
-
-  @override
   String get saveSuccess => 'Recipe saved.';
-
-  @override
-  String saveError(String error) {
-    return 'Could not save: $error';
-  }
 
   @override
   String get newCategory => 'New category';
@@ -981,19 +770,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setRating => 'Set rating';
-
-  @override
-  String get removeRating => 'Remove rating';
-
-  @override
-  String get ratingRemoved => 'Rating removed';
-
-  @override
-  String get googleTasksImport => 'Import from Google Tasks';
-
-  @override
-  String get googleTasksImportDescription =>
-      'Import items from Google Tasks to your shopping list.';
 
   @override
   String get homeWelcome => 'Welcome to Mealie Recipes! 👋';
@@ -1011,9 +787,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get other => 'Other';
-
-  @override
-  String get viewRecipes => '📖 View Recipes';
 
   @override
   String get addRecipe => '➕ Add Recipe';
@@ -1034,9 +807,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resteverwertung => '🥗 Recipe Finder';
 
   @override
-  String get newRecipeUpload => 'Upload New Recipe';
-
-  @override
   String get copyCode => 'Copy Code';
 
   @override
@@ -1049,23 +819,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waitingForFriends => 'Waiting for friends...';
 
   @override
-  String get endSharing => 'End Sharing';
-
-  @override
-  String get cookFriendsDescription =>
-      'Invite a friend to cook this recipe together';
-
-  @override
   String get sessionCode => 'SESSION CODE';
-
-  @override
-  String get adjustQuantityLabel => 'Adjust quantity for this recipe:';
-
-  @override
-  String get timerStartForStep => 'Timer for step';
-
-  @override
-  String get enterRecipeUrl => 'Enter recipe URL';
 
   @override
   String get loading => 'Loading...';
@@ -1078,9 +832,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addItemPlaceholder => 'Add item...';
-
-  @override
-  String get addSuccessToast => 'Added!';
 
   @override
   String get completedItems => 'Completed';
@@ -1138,18 +889,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allDeleteConfirm => 'Delete all';
 
   @override
-  String get portionen => 'Servings';
-
-  @override
-  String get timerForStep => 'Start timer for this step';
-
-  @override
-  String get weekNavPrev => 'Previous week';
-
-  @override
-  String get weekNavNext => 'Next week';
-
-  @override
   String get noMealsThisWeek => 'No meals planned';
 
   @override
@@ -1159,43 +898,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get availableWeeks => 'Available weeks:';
 
   @override
-  String weekRange(Object end, Object start, Object week) {
-    return 'Week $week ($start – $end)';
-  }
-
-  @override
   String get currentWeek => 'Current Week';
-
-  @override
-  String get rezepteAktualisieren => 'Update recipes';
-
-  @override
-  String get leftoverWhatTitle => 'What does this do?';
-
-  @override
-  String get leftoverWhatBody =>
-      'This function reloads all recipes from the server and updates the local cache.';
-
-  @override
-  String get leftoverDescription =>
-      'Enter available ingredients to find matching recipes and use up leftovers.';
-
-  @override
-  String get leftoverIngredientsHeader => 'Ingredients at home';
-
-  @override
-  String get leftoverSuggestions => 'Recipe suggestions';
-
-  @override
-  String get leftoverNoMatches => 'No matching recipes found.';
-
-  @override
-  String get leftoverEnterIngredient => 'Enter ingredient';
-
-  @override
-  String matchingPercentText(int percent, int count, int total) {
-    return '$percent% match ($count/$total)';
-  }
 
   @override
   String get weekAbbreviation => 'Week';
@@ -1205,9 +908,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectDate => 'Select date';
-
-  @override
-  String get selectSlot => 'Select meal';
 
   @override
   String get selectedRecipe => 'Selected recipe';
@@ -1239,11 +939,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entriesPlural => 'entries';
-
-  @override
-  String listTitle(int n) {
-    return 'List $n';
-  }
 
   @override
   String get deleteAllConfirmTitle => 'Delete all?';
@@ -1294,9 +989,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startCooking => 'Start cooking';
 
   @override
-  String get hostNoRecipe => 'Open from a recipe to host a session';
-
-  @override
   String get uploadToOwnServer => 'Save to my server';
 
   @override
@@ -1314,12 +1006,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appIcon => 'App icon';
-
-  @override
-  String get appIconClassic => 'Classic';
-
-  @override
-  String get appIconModern => 'Modern';
 
   @override
   String get name => 'Name';
@@ -1361,7 +1047,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineRecipeImagesHint =>
-      'Downloads all recipe images to this device so they also show without a connection. With large collections this can take up several hundred MB. Turning it off deletes the saved images.';
+      'Downloads all recipe images to the device – including the images in the steps and notes – so they show without a connection. Large collections can take up several hundred MB. Turning this off deletes the stored images.';
 
   @override
   String offlineRecipeImagesStatus(int count, int total, String size) {
@@ -1396,7 +1082,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exactQuantitiesSubtitle =>
-      'Ingredients & typed items keep quantity and unit (e.g. 200 g butter) instead of 1x per item — missing foods are created on the server';
+      'Ingredients & typed items keep quantity and unit (e.g. 200 g butter) instead of 1x per item';
 
   @override
   String get remindToShop => 'Remind me to shop';
@@ -1517,12 +1203,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginInvalidCredentials => 'Username or password is incorrect.';
 
   @override
-  String get loginAndGenerateToken => 'Log in & generate token';
-
-  @override
-  String get loggingIn => 'Signing in…';
-
-  @override
   String get apiTokenSaveHint =>
       'Token applied — please tap “Save changes” below.';
 
@@ -1581,9 +1261,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reparseDone => 'Ingredients split – tap “Save changes” to apply';
 
   @override
-  String get reparseNone => 'No splittable ingredients found';
-
-  @override
   String get tagsAndCategories => 'Tags, categories & tools';
 
   @override
@@ -1614,12 +1291,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String importCount(int count) {
     return 'Import $count';
   }
-
-  @override
-  String get activeRecipeTimer => 'Active recipe timer';
-
-  @override
-  String get linkIngredients => 'Link ingredients';
 
   @override
   String get noIngredientsToLink => 'No ingredients to link yet';
@@ -1685,7 +1356,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String supportNoMailApp(String email) {
-    return 'No mail app found. Address copied: $email';
+    return 'No mail app set up – address copied: $email. Choose another app to write to us.';
   }
 
   @override
@@ -1721,9 +1392,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preparingPdf => 'Processing PDF...';
 
   @override
-  String get shareRecipeTitle => 'Share recipe';
-
-  @override
   String get recipeOptionsTitle => 'Options';
 
   @override
@@ -1737,9 +1405,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeTime => 'Time';
-
-  @override
-  String get ingredientSectionTitle => 'Section';
 
   @override
   String get addIngredientSection => 'Add section';
@@ -1798,9 +1463,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolOnHand => 'On hand';
-
-  @override
-  String get mealDiceSettingsTitle => 'Dice filter';
 
   @override
   String get mealDiceSettingsHint =>
@@ -2363,9 +2025,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userManagementTitle => 'User Management';
 
   @override
-  String get usersTitle => 'Users';
-
-  @override
   String get editUserTitle => 'Edit User';
 
   @override
@@ -2409,9 +2068,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetLockedUsersAction => 'Reset Locked Users';
-
-  @override
-  String get membersTitle => 'Members';
 
   @override
   String get inviteLinkTitle => 'Invite Link';
@@ -4130,4 +3786,353 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get updateSourceHint =>
       'Updates come from the GitHub releases of Mealie Recipes and are only installed if they are signed by the developer (macOS).';
+
+  @override
+  String get errorNoConnection =>
+      'Can\'t reach your Mealie server. Check your internet connection and the server address.';
+
+  @override
+  String get errorTimeout =>
+      'The server took too long to respond. Please try again.';
+
+  @override
+  String get errorUnauthorized =>
+      'Your sign-in has expired or the API token is no longer valid. Please sign in again in the settings.';
+
+  @override
+  String get errorServer =>
+      'The Mealie server reported an error. Please try again later.';
+
+  @override
+  String get errorNotFound =>
+      'Not found on the server — it may have been deleted.';
+
+  @override
+  String get errorCertificate =>
+      'The server\'s security certificate is not trusted.';
+
+  @override
+  String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get offlineLabel => 'Offline';
+
+  @override
+  String offlineSince(String time) {
+    return 'Offline · last synced $time';
+  }
+
+  @override
+  String get mealplanEntryActions => 'Meal options';
+
+  @override
+  String get mealplanMoveAction => 'Move';
+
+  @override
+  String get mealplanMoveTitle => 'Move meal';
+
+  @override
+  String get mealplanMoveDate => 'Date';
+
+  @override
+  String mealplanMovedTo(String date) {
+    return 'Moved to $date';
+  }
+
+  @override
+  String get mealplanShowWeek => 'Show';
+
+  @override
+  String get mealplanMoveFailed => 'Could not move the meal';
+
+  @override
+  String get recentlyViewedTitle => 'Recently viewed';
+
+  @override
+  String get recentlyViewedEmpty => 'Recipes you open will appear here.';
+
+  @override
+  String get recentlyViewedClear => 'Clear history';
+
+  @override
+  String get recentlyViewedClearMessage =>
+      'The list of recently viewed recipes on this device will be cleared. The recipes themselves stay.';
+
+  @override
+  String get recentlyViewedClearConfirm => 'Clear';
+
+  @override
+  String get duplicatesTitle => 'Duplicate finder';
+
+  @override
+  String get duplicatesScanning => 'Searching for duplicate recipes…';
+
+  @override
+  String get duplicatesNone => 'No duplicate recipes found.';
+
+  @override
+  String duplicatesFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count possible duplicates found.',
+      one: '1 possible duplicate found.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesIntro => 'Tap the recipe that should stay, then merge.';
+
+  @override
+  String get duplicatesReasonSource => 'Same source';
+
+  @override
+  String get duplicatesReasonName => 'Same name';
+
+  @override
+  String duplicatesReasonSimilar(int percent) {
+    return 'Similar · $percent % same ingredients';
+  }
+
+  @override
+  String get duplicatesKeeps => 'Stays';
+
+  @override
+  String get duplicatesWillBeDeleted => 'Will be deleted';
+
+  @override
+  String get duplicatesMerge => 'Merge';
+
+  @override
+  String get duplicatesNotDuplicate => 'Not a duplicate';
+
+  @override
+  String get duplicatesMergeTitle => 'Merge recipes?';
+
+  @override
+  String duplicatesMergeMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count other recipes will be deleted',
+      one: '1 other recipe will be deleted',
+    );
+    return '\"$name\" stays. $_temp0.\n\nCategories, tags, tools, notes, planned meals of your household and your favorite are moved over. Comments, timeline and attachments of the deleted recipes are lost.';
+  }
+
+  @override
+  String get duplicatesMerged => 'Recipes merged';
+
+  @override
+  String duplicatesIngredientCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ingredients',
+      one: '1 ingredient',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duplicatesResetIgnored(int count) {
+    return 'Show hidden pairs again ($count)';
+  }
+
+  @override
+  String get duplicatesRescan => 'Search again';
+
+  @override
+  String get duplicatesOpenRecipe => 'Open recipe';
+
+  @override
+  String get duplicatesMergeNoEditHint =>
+      'You may not edit the recipe that stays (someone else\'s recipe that is locked or from another household). Its categories, tags, tools and notes therefore stay as they are; only planned meals and your favorite are moved over.';
+
+  @override
+  String get recipeOtherHouseholdHint =>
+      'From another household – editing is locked there';
+
+  @override
+  String foodsSavedAsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new foods were',
+      one: '1 new food was',
+    );
+    return 'Saved. $_temp0 kept as an ingredient note – creating foods needs the \"User can manage foods, tags, and categories\" permission in Mealie.';
+  }
+
+  @override
+  String get a11yRemove => 'Remove';
+
+  @override
+  String get a11yDecrease => 'Less';
+
+  @override
+  String get a11yIncrease => 'More';
+
+  @override
+  String get a11yShowPassword => 'Show password';
+
+  @override
+  String get a11yHidePassword => 'Hide password';
+
+  @override
+  String get a11yClearSearch => 'Clear search';
+
+  @override
+  String get notesQueuedOffline =>
+      'Offline – the note will be sent as soon as the server is reachable again.';
+
+  @override
+  String get timelineQueuedOffline =>
+      'Offline – it will be added to the timeline as soon as the server is reachable again.';
+
+  @override
+  String get syncSectionName => 'Renamed';
+
+  @override
+  String get pendingRecipesDiscard => 'Discard';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String timerStoppedSnack(String name) {
+    return 'Timer \"$name\" stopped';
+  }
+
+  @override
+  String get cookFriendsEndConfirm =>
+      'End the session for everyone? All guests will be disconnected.';
+
+  @override
+  String get weekStartSyncHint =>
+      'Saved in Mealie – applies to your whole household, also in the web app.';
+
+  @override
+  String get weekStartNoPermission =>
+      'Set in Mealie by your household. Only members who may manage the household can change it.';
+
+  @override
+  String get assetsUnsupported329 =>
+      'Mealie supports PDF, images, videos (MP4, MOV, WebM), audio (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV and JSON.';
+
+  @override
+  String get assetsRecordVideo => 'Record video';
+
+  @override
+  String get assetsChooseVideo => 'Choose video';
+
+  @override
+  String get shoppingSearchHint => 'Search this list';
+
+  @override
+  String get shoppingSearchNoMatches => 'No items match your search.';
+
+  @override
+  String get mealplanServingsTitle => 'Planned servings';
+
+  @override
+  String get mealplanServingsHint =>
+      'Only for this meal plan entry — the recipe itself stays unchanged. Opening the recipe and adding it to the shopping list use these servings.';
+
+  @override
+  String get calendarFeedTitle => 'Subscribe to calendar';
+
+  @override
+  String get calendarFeedSubtitle =>
+      'Show the meal plan in Google, Apple or any other calendar';
+
+  @override
+  String get calendarFeedDescription =>
+      'Subscribe to your household\'s meal plan from Google Calendar, Apple Calendar, Home Assistant or any other app that supports iCal links. Anyone with the link can see your meal plan.';
+
+  @override
+  String get calendarFeedOff =>
+      'The calendar link is turned off for your household.';
+
+  @override
+  String get calendarFeedAskManager =>
+      'Ask someone who can manage your household to turn it on.';
+
+  @override
+  String get calendarFeedTurnOn => 'Turn on';
+
+  @override
+  String get calendarFeedTurnOff => 'Turn off';
+
+  @override
+  String get calendarFeedReset => 'Reset link';
+
+  @override
+  String get calendarFeedResetHint =>
+      'Resetting or turning off the link stops existing subscriptions from updating.';
+
+  @override
+  String get calendarFeedIncludeNotes => 'Include notes';
+
+  @override
+  String get calendarFeedTimesHint =>
+      'Tap a meal to set its time. Meals without a time are shown as all-day events.';
+
+  @override
+  String get calendarFeedMealTypes => 'Meal Type';
+
+  @override
+  String get calendarFeedSubscribe => 'Subscribe in calendar';
+
+  @override
+  String get calendarFeedNoApp =>
+      'No calendar app could be opened. Copy the link and add it to your calendar as a subscription.';
+
+  @override
+  String get calendarFeedPublicHint =>
+      'The link works without signing in — only share it with people who may see your meal plan.';
+
+  @override
+  String get recipeShareLinkMenu => 'Share link & QR code';
+
+  @override
+  String get recipeShareShowQr => 'Show QR Code';
+
+  @override
+  String get recipeShareScanQr =>
+      'Scan with a phone camera to open this recipe';
+
+  @override
+  String get recipeShareQrShare => 'Share image';
+
+  @override
+  String get recipeShareQrFailed => 'Could not create the QR code image';
+
+  @override
+  String get mealplanSettingsTitle => 'Meal Plan Settings';
+
+  @override
+  String get mealDiceRulesTitle => 'Dice rules';
+
+  @override
+  String saveAsNewFood(String name) {
+    return 'Save \"$name\" as a new food';
+  }
+
+  @override
+  String get shoppingMoreOptions => 'More options';
+
+  @override
+  String get shoppingFewerOptions => 'Fewer options';
+
+  @override
+  String nameAlreadyExists(String name) {
+    return 'Already exists: $name';
+  }
+
+  @override
+  String aliasBelongsTo(String alias, String name) {
+    return '\"$alias\" already belongs to \"$name\" — better merge the two.';
+  }
 }

@@ -15,10 +15,17 @@ import Foundation
 
 enum WatchL10n {
     static func t(_ key: String, _ lang: String) -> String {
-        (table[lang] ?? table["de"]!)[key] ?? table["de"]![key] ?? key
+        // Regionale Variante (z. B. "fr_CA") → eigene Einträge, sonst die
+        // Grundsprache ("fr"), sonst Deutsch.
+        let base = String(lang.split(separator: "_").first ?? "")
+        return table[lang]?[key] ?? table[base]?[key] ?? table["de"]![key] ?? key
     }
 
     private static let table: [String: [String: String]] = [
+        // Französisch (Kanada): nur Abweichungen, Rest kommt aus "fr".
+        "fr_CA": [
+            "shoppingHeader": "Épicerie",
+        ],
         "de": [
             "noActiveTimer": "Kein aktiver Timer",
             "openPhoneHint": "Starte einen Timer im Kochmodus auf dem Handy.",
@@ -147,7 +154,7 @@ enum WatchL10n {
         ],
         "nb": [
             "noActiveTimer": "Ingen aktiv timer",
-            "openPhoneHint": "Start en timer i kokemodus på telefonen.",
+            "openPhoneHint": "Start en timer i tilberedelsesmodus på telefonen.",
             "pause": "Pause",
             "resume": "Fortsett",
             "stop": "Stopp",

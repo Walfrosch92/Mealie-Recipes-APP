@@ -5,6 +5,8 @@ import '../../core/models/recipe_detail.dart';
 import '../theme/app_colors.dart';
 import 'markdown_text.dart';
 import 'section_header.dart';
+import '../../features/recipes/services/recipe_text_image.dart'
+    show appendToTextField;
 
 // ---------------------------------------------------------------------------
 // Wiederverwendbare Bausteine zum Anzeigen/Anlegen/Löschen einer einzelnen
@@ -18,61 +20,116 @@ import 'section_header.dart';
 Future<RecipeNote?> showNoteEditorDialog(
   BuildContext context, {
   RecipeNote? initial,
-}) async {
-  final l = AppLocalizations.of(context)!;
-  final titleCtrl = TextEditingController(text: initial?.title ?? '');
-  final textCtrl = TextEditingController(text: initial?.text ?? '');
-  try {
-    return await showDialog<RecipeNote>(
+  // Bild hochladen und als `<img>` einfügen (null = kein Knopf, z. B. ohne
+  // Recht zum Bearbeiten oder im Gastmodus).
+  Future<String?> Function()? onPickImage,
+}) =>
+    showDialog<RecipeNote>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: ctx.appCard,
-        title: Text(initial == null ? l.addNote : l.editNote,
-            style: TextStyle(color: ctx.appFg)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleCtrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              style: TextStyle(color: ctx.appFg),
-              decoration: InputDecoration(hintText: l.noteTitleHint),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: textCtrl,
-              minLines: 3,
-              maxLines: 6,
-              textCapitalization: TextCapitalization.sentences,
-              style: TextStyle(color: ctx.appFg),
-              decoration: InputDecoration(hintText: l.noteTextHint),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l.cancel),
+      builder: (_) =>
+          _NoteEditorDialog(initial: initial, onPickImage: onPickImage),
+    );
+
+/// Eigenes StatefulWidget, das seine Controller selbst besitzt und erst beim
+/// Abbau freigibt — vorher wurden sie direkt nach `showDialog` freigegeben,
+/// während der Dialog noch ausblendete („TextEditingController used after
+/// being disposed").
+class _NoteEditorDialog extends StatefulWidget {
+  final RecipeNote? initial;
+  final Future<String?> Function()? onPickImage;
+  const _NoteEditorDialog({this.initial, this.onPickImage});
+
+  @override
+  State<_NoteEditorDialog> createState() => _NoteEditorDialogState();
+}
+
+class _NoteEditorDialogState extends State<_NoteEditorDialog> {
+  late final _titleCtrl =
+      TextEditingController(text: widget.initial?.title ?? '');
+  late final _textCtrl =
+      TextEditingController(text: widget.initial?.text ?? '');
+  bool _uploading = false;
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _textCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    setState(() => _uploading = true);
+    final tag = await widget.onPickImage!();
+    if (!mounted) return;
+    if (tag != null) appendToTextField(_textCtrl, tag);
+    setState(() => _uploading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return AlertDialog(
+      // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+      scrollable: true,
+      backgroundColor: context.appCard,
+      title: Text(widget.initial == null ? l.addNote : l.editNote,
+          style: TextStyle(color: context.appFg)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _titleCtrl,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            style: TextStyle(color: context.appFg),
+            decoration: InputDecoration(hintText: l.noteTitleHint),
           ),
-          FilledButton(
-            onPressed: () {
-              final text = textCtrl.text.trim();
-              if (text.isEmpty) {
-                Navigator.pop(ctx);
-                return;
-              }
-              Navigator.pop(
-                  ctx, RecipeNote(title: titleCtrl.text.trim(), text: text));
-            },
-            child: Text(l.save),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _textCtrl,
+            minLines: 3,
+            maxLines: 6,
+            textCapitalization: TextCapitalization.sentences,
+            style: TextStyle(color: context.appFg),
+            decoration: InputDecoration(hintText: l.noteTextHint),
           ),
+          if (widget.onPickImage != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _uploading ? null : _pickImage,
+                icon: _uploading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.add_photo_alternate_outlined, size: 18),
+                label: Text(l.insertStepImageAction),
+              ),
+            ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l.cancel),
+        ),
+        FilledButton(
+          onPressed: _uploading
+              ? null
+              : () {
+                  final text = _textCtrl.text.trim();
+                  if (text.isEmpty) {
+                    Navigator.pop(context);
+                    return;
+                  }
+                  Navigator.pop(context,
+                      RecipeNote(title: _titleCtrl.text.trim(), text: text));
+                },
+          child: Text(l.save),
+        ),
+      ],
     );
-  } finally {
-    titleCtrl.dispose();
-    textCtrl.dispose();
   }
 }
 
@@ -106,12 +163,19 @@ class RecipeNoteCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
+  /// Für Bilder in der Notiz (Mealie-Asset-Pfade + Anmeldung nur am eigenen
+  /// Server). Ohne Server (Gastmodus) erscheinen nur absolute Bild-URLs.
+  final String? serverUrl;
+  final String? apiToken;
+
   const RecipeNoteCard({
     super.key,
     required this.note,
     this.editable = false,
     this.onEdit,
     this.onDelete,
+    this.serverUrl,
+    this.apiToken,
   });
 
   @override
@@ -149,9 +213,12 @@ class RecipeNoteCard extends StatelessWidget {
                               fontWeight: FontWeight.w700),
                         ),
                       ),
+                    // Bilder in Notizen anzeigen (antippen = groß), wie in
+                    // den Schritten — vorher still ausgeblendet.
                     MarkdownText(
                       text: note.text,
-                      showImages: false,
+                      serverUrl: serverUrl,
+                      apiToken: apiToken,
                       style: TextStyle(
                           color: context.appFgSub, fontSize: 14, height: 1.45),
                     ),

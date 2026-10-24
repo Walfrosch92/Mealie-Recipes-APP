@@ -2,12 +2,15 @@ import '../utils/safe_path.dart';
 import 'dart:async';
 import 'dart:io';
 
+import 'dart:convert' show utf8;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../api/api_service.dart';
 import '../models/recipe_detail.dart';
+import '../utils/markdown_parse.dart' show embeddedImageUrls;
 import 'log_manager.dart';
 
 // ---------------------------------------------------------------------------
@@ -63,6 +66,15 @@ class RecipeImageStore {
 
   /// recipeId → gespeichertes Bild.
   final Map<String, _StoredImage> _index = {};
+
+  /// Bilder IN Schritten und Notizen (Markdown/HTML im Text), Schlüssel =
+  /// Hash der URL → Datei in `MealieImages/steps/`. Mealie hat für sie kein
+  /// eigenes Feld, sie hängen nur an ihrer Adresse.
+  final Map<String, File> _contentIndex = {};
+  final Map<String, int> _contentBytes = {};
+  final Set<String> _contentInFlight = {};
+  final Set<String> _contentMissing = {};
+  static const _contentFolder = 'steps';
 
   /// Stand für die Anzeige in den Einstellungen.
   final ValueNotifier<RecipeImageStats> stats =
@@ -123,6 +135,18 @@ class RecipeImageStore {
     } catch (e) {
       LogManager.shared.log('⚠️ Bildspeicher nicht lesbar: $e');
     }
+    try {
+      final cdir = await _contentDir();
+      await for (final entity in cdir.list()) {
+        if (entity is! File) continue;
+        final name = entity.uri.pathSegments.last;
+        if (name.endsWith('.tmp')) {
+          await _deleteQuietly(entity);
+          continue;
+        }
+        _contentIndex[name] = entity;
+      }
+    } catch (_) {}
     _publishStats();
     // Größen erst danach und ohne await: init() läuft vor dem ersten Frame,
     // und tausende stat()-Aufrufe sollen den Start nicht aufhalten. Die
@@ -131,6 +155,11 @@ class RecipeImageStore {
   }
 
   Future<void> _measureSizes() async {
+    for (final e in Map.of(_contentIndex).entries) {
+      try {
+        _contentBytes[e.key] = await e.value.length();
+      } catch (_) {}
+    }
     for (final stored in List.of(_index.values)) {
       if (stored.bytes != null) continue;
       try {
@@ -145,6 +174,10 @@ class RecipeImageStore {
   /// Lokale Datei zum Rezept, falls vorhanden. Synchron, damit Widgets beim
   /// Bauen direkt entscheiden können (lokal vs. Netzwerk).
   File? fileFor(String recipeId) => _index[recipeId]?.file;
+
+  /// Lokale Kopie eines Bildes aus einem Schritt-/Notiztext, falls
+  /// gespeichert (sonst null → Netzwerk).
+  File? fileForUrl(String url) => _contentIndex[_urlKey(url)];
 
   /// Gleicht die gespeicherten Bilder mit [recipes] ab und lädt fehlende bzw.
   /// geänderte nach. [prune] nur setzen, wenn [recipes] die VOLLSTÄNDIGE
@@ -218,6 +251,7 @@ class RecipeImageStore {
     if (todo.isEmpty) {
       _incomplete = false;
       _logNotStored(req.recipes, wanted);
+      await _syncContentImages(req, gen);
       return;
     }
 
@@ -256,6 +290,7 @@ class RecipeImageStore {
         '${aborted ? " — abgebrochen (Server nicht erreichbar)" : ""}'
         '${_incomplete ? ", wird fortgesetzt" : ""}');
     _logNotStored(req.recipes, wanted);
+    if (!aborted) await _syncContentImages(req, gen);
   }
 
   /// Nennt die Rezepte, die ein Bild haben sollten, aber keine lokale Kopie
@@ -304,6 +339,127 @@ class RecipeImageStore {
     // Explizit angefordert: ein früheres 404 nicht als endgültig werten.
     _missing.remove(recipe.id);
     await _download(api, recipe.id, key, _generation);
+  }
+
+  /// Bilder in Schritten/Notizen EINES Rezepts nachladen (Detail-Besuch,
+  /// Import, Bearbeiten) — unabhängig davon, ob das Hauptbild schon da ist.
+  Future<void> ensureContent(RecipeDetail recipe, ApiService api) async {
+    await init();
+    final urls = _contentUrls(recipe, api.settings.serverUrl);
+    final gen = _generation;
+    for (final url in urls) {
+      if (_contentIndex.containsKey(_urlKey(url))) continue;
+      await _downloadContent(api, url, gen);
+    }
+  }
+
+  // ── Bilder in Schritten & Notizen ─────────────────────────────────────────
+
+  static List<String> _contentUrls(RecipeDetail r, String serverUrl) => [
+        for (final step in r.recipeInstructions)
+          ...embeddedImageUrls(step.text, serverUrl),
+        for (final note in r.notes) ...embeddedImageUrls(note.text, serverUrl),
+      ];
+
+  Future<void> _syncContentImages(_SyncRequest req, int gen) async {
+    final base = req.api.settings.serverUrl;
+    final wanted = <String, String>{}; // Schlüssel → URL
+    for (final r in req.recipes) {
+      for (final url in _contentUrls(r, base)) {
+        wanted[_urlKey(url)] = url;
+      }
+    }
+    if (req.prune) {
+      final orphans =
+          _contentIndex.keys.where((k) => !wanted.containsKey(k)).toList();
+      for (final k in orphans) {
+        final f = _contentIndex.remove(k);
+        _contentBytes.remove(k);
+        if (f != null) await _deleteQuietly(f);
+      }
+    }
+    final todo = [
+      for (final e in wanted.entries)
+        if (!_contentIndex.containsKey(e.key) &&
+            !_contentMissing.contains(e.key) &&
+            !_contentInFlight.contains(e.key))
+          e.value,
+    ];
+    _publishStats();
+    if (todo.isEmpty) return;
+    LogManager.shared.log('🖼️ Schritt-/Notizbilder: ${todo.length} zu laden');
+    var failures = 0;
+    for (var start = 0; start < todo.length; start += _parallel) {
+      if (gen != _generation) return;
+      final end =
+          (start + _parallel) > todo.length ? todo.length : start + _parallel;
+      final results = await Future.wait([
+        for (var i = start; i < end; i++)
+          _downloadContent(req.api, todo[i], gen),
+      ]);
+      failures = results.contains(_DownloadResult.failed) ? failures + 1 : 0;
+      if (failures >= _maxConsecutiveFailures) {
+        _incomplete = true;
+        return;
+      }
+      if (end < todo.length) await Future.delayed(_pause);
+    }
+  }
+
+  Future<_DownloadResult> _downloadContent(
+      ApiService api, String url, int gen) async {
+    final key = _urlKey(url);
+    _contentInFlight.add(key);
+    File? tmp;
+    try {
+      // Anmeldung nur am eigenen Server (Interceptor), fremde Seiten ohne.
+      final bytes = await api.fetchImageBytesFromUrl(url);
+      if (gen != _generation) return _DownloadResult.failed;
+      if (bytes.isEmpty) {
+        _contentMissing.add(key);
+        return _DownloadResult.missing;
+      }
+      final dir = await _contentDir();
+      final target = File('${dir.path}/$key');
+      tmp = File('${target.path}.tmp');
+      await tmp.writeAsBytes(bytes, flush: true);
+      if (gen != _generation) return _DownloadResult.failed;
+      await tmp.rename(target.path);
+      tmp = null;
+      _contentIndex[key] = target;
+      _contentBytes[key] = bytes.length;
+      _publishStats();
+      return _DownloadResult.ok;
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 404 || code == 403) {
+        _contentMissing.add(key);
+        return _DownloadResult.missing;
+      }
+      return _DownloadResult.failed;
+    } catch (_) {
+      return _DownloadResult.failed;
+    } finally {
+      _contentInFlight.remove(key);
+      if (tmp != null) await _deleteQuietly(tmp);
+    }
+  }
+
+  /// FNV-1a (64 Bit) der URL als Dateiname — stabil, ohne Zusatzpaket.
+  static String _urlKey(String url) {
+    var h = 0xcbf29ce484222325;
+    for (final c in utf8.encode(url)) {
+      h ^= c;
+      h *= 0x100000001b3;
+    }
+    return '${h.toUnsigned(64).toRadixString(16).padLeft(16, '0')}.img';
+  }
+
+  Future<Directory> _contentDir() async {
+    final base = await _dir();
+    final dir = Directory('${base.path}/$_contentFolder');
+    if (!await dir.exists()) await dir.create(recursive: true);
+    return dir;
   }
 
   Future<_DownloadResult> _download(
@@ -368,6 +524,9 @@ class RecipeImageStore {
     _pending = null;
     _index.clear();
     _missing.clear();
+    _contentIndex.clear();
+    _contentBytes.clear();
+    _contentMissing.clear();
     _incomplete = false;
     _total = 0;
     try {
@@ -396,6 +555,11 @@ class RecipeImageStore {
     var bytes = 0;
     for (final s in _index.values) {
       bytes += s.bytes ?? 0;
+    }
+    // Schritt-/Notizbilder zählen beim Speicherplatz mit (nicht bei der
+    // Anzahl „x von y Rezeptbildern").
+    for (final b in _contentBytes.values) {
+      bytes += b;
     }
     // Rezepte, deren Bild der Server mit 404 beantwortet (Bildeintrag ohne
     // Datei), kann niemand speichern. Nicht mitzählen, sonst bleibt die

@@ -46,22 +46,26 @@ struct WidgetL10n {
     /// Alle 10 App-Sprachen (Codes wie in der App: Norwegisch = "nb",
     /// Portugiesisch (Brasilien) = "pt"). Unbekannt → Englisch.
     func s(_ key: String) -> String {
-        return WidgetL10n.table[key]?[lang] ?? WidgetL10n.table[key]?["en"] ?? key
+        // Regionale Variante (z. B. "fr_CA") → eigene Einträge, sonst die
+        // Grundsprache ("fr"), sonst Englisch.
+        let base = String(lang.split(separator: "_").first ?? "")
+        return WidgetL10n.table[key]?[lang] ?? WidgetL10n.table[key]?[base]
+            ?? WidgetL10n.table[key]?["en"] ?? key
     }
 
     static let supported: Set<String> = ["de", "en", "fr", "es", "nl", "hu", "nb", "pl", "pt", "sl"]
 
     private static let table: [String: [String: String]] = [
-        "breakfast": ["de": "Frühstück", "en": "Breakfast", "fr": "Petit-déjeuner", "es": "Desayuno", "nl": "Ontbijt", "hu": "Reggeli", "nb": "Frokost", "pl": "Śniadanie", "pt": "Café da manhã", "sl": "Zajtrk"],
-        "lunch": ["de": "Mittagessen", "en": "Lunch", "fr": "Déjeuner", "es": "Almuerzo", "nl": "Lunch", "hu": "Ebéd", "nb": "Lunsj", "pl": "Obiad", "pt": "Almoço", "sl": "Kosilo"],
-        "dinner": ["de": "Abendessen", "en": "Dinner", "fr": "Dîner", "es": "Cena", "nl": "Diner", "hu": "Vacsora", "nb": "Middag", "pl": "Kolacja", "pt": "Jantar", "sl": "Večerja"],
+        "breakfast": ["de": "Frühstück", "en": "Breakfast", "fr": "Petit-déjeuner", "fr_CA": "Déjeuner", "es": "Desayuno", "nl": "Ontbijt", "hu": "Reggeli", "nb": "Frokost", "pl": "Śniadanie", "pt": "Café da manhã", "sl": "Zajtrk"],
+        "lunch": ["de": "Mittagessen", "en": "Lunch", "fr": "Déjeuner", "fr_CA": "Dîner", "es": "Almuerzo", "nl": "Lunch", "hu": "Ebéd", "nb": "Lunsj", "pl": "Obiad", "pt": "Almoço", "sl": "Kosilo"],
+        "dinner": ["de": "Abendessen", "en": "Dinner", "fr": "Dîner", "fr_CA": "Souper", "es": "Cena", "nl": "Diner", "hu": "Vacsora", "nb": "Middag", "pl": "Kolacja", "pt": "Jantar", "sl": "Večerja"],
         "today": ["de": "Heute", "en": "Today", "fr": "Aujourd'hui", "es": "Hoy", "nl": "Vandaag", "hu": "Ma", "nb": "I dag", "pl": "Dzisiaj", "pt": "Hoje", "sl": "Danes"],
         "tomorrow": ["de": "Morgen", "en": "Tomorrow", "fr": "Demain", "es": "Mañana", "nl": "Morgen", "hu": "Holnap", "nb": "I morgen", "pl": "Jutro", "pt": "Amanhã", "sl": "Jutri"],
         "nothing_planned": ["de": "Nichts geplant", "en": "Nothing planned", "fr": "Rien de prévu", "es": "Nada planificado", "nl": "Niets gepland", "hu": "Nincs terv", "nb": "Ingenting planlagt", "pl": "Nic nie zaplanowano", "pt": "Nada planejado", "sl": "Nič načrtovano"],
-        "meal_plan": ["de": "Essensplan", "en": "Meal Plan", "fr": "Plan de repas", "es": "Plan de comidas", "nl": "Maaltijdplan", "hu": "Étkezési terv", "nb": "Måltidsplan", "pl": "Plan posiłków", "pt": "Plano alimentar", "sl": "Jedilnik"],
+        "meal_plan": ["de": "Essensplan", "en": "Meal Plan", "fr": "Menus", "es": "Plan de comidas", "nl": "Maaltijdplan", "hu": "Étkezési terv", "nb": "Måltidsplan", "pl": "Plan posiłków", "pt": "Plano de refeições", "sl": "Jedilnik"],
         "no_meals": ["de": "Keine Mahlzeiten geplant", "en": "No meals planned", "fr": "Aucun repas prévu", "es": "Sin comidas planificadas", "nl": "Geen maaltijden gepland", "hu": "Nincs betervezett étkezés", "nb": "Ingen måltider planlagt", "pl": "Brak zaplanowanych posiłków", "pt": "Nenhuma refeição planejada", "sl": "Ni načrtovanih obrokov"],
-        "shopping": ["de": "Einkauf", "en": "Shopping", "fr": "Courses", "es": "Compra", "nl": "Boodschappen", "hu": "Bevásárlás", "nb": "Handel", "pl": "Zakupy", "pt": "Compras", "sl": "Nakup"],
-        "shopping_list": ["de": "Einkaufsliste", "en": "Shopping List", "fr": "Liste de courses", "es": "Lista de la compra", "nl": "Boodschappenlijst", "hu": "Bevásárlólista", "nb": "Handleliste", "pl": "Lista zakupów", "pt": "Lista de compras", "sl": "Nakupovalni seznam"],
+        "shopping": ["de": "Einkauf", "en": "Shopping", "fr": "Courses", "fr_CA": "Épicerie", "es": "Compra", "nl": "Boodschappen", "hu": "Bevásárlás", "nb": "Handel", "pl": "Zakupy", "pt": "Compras", "sl": "Nakup"],
+        "shopping_list": ["de": "Einkaufsliste", "en": "Shopping List", "fr": "Liste de courses", "fr_CA": "Liste d'épicerie", "es": "Lista de la compra", "nl": "Boodschappenlijst", "hu": "Bevásárlólista", "nb": "Handleliste", "pl": "Lista zakupów", "pt": "Lista de compras", "sl": "Nakupovalni seznam"],
         "open": ["de": "offen", "en": "open", "fr": "ouverts", "es": "abiertos", "nl": "open", "hu": "nyitott", "nb": "åpne", "pl": "otwarte", "pt": "em aberto", "sl": "odprto"],
         "all_done": ["de": "Alles da!", "en": "All done!", "fr": "Tout prêt!", "es": "¡Todo!", "nl": "Alles klaar!", "hu": "Minden megvan!", "nb": "Alt er klart!", "pl": "Wszystko jest!", "pt": "Tudo pronto!", "sl": "Vse je tu!"],
         "all_completed": ["de": "Alles erledigt!", "en": "All completed!", "fr": "Tout terminé!", "es": "¡Todo hecho!", "nl": "Alles klaar!", "hu": "Minden kész!", "nb": "Alt fullført!", "pl": "Wszystko gotowe!", "pt": "Tudo concluído!", "sl": "Vse opravljeno!"],
@@ -69,8 +73,8 @@ struct WidgetL10n {
         "more": ["de": "weitere", "en": "more", "fr": "autres", "es": "más", "nl": "meer", "hu": "további", "nb": "flere", "pl": "więcej", "pt": "mais", "sl": "več"],
         "daily_recipe": ["de": "Rezept des Tages", "en": "Recipe of the Day", "fr": "Recette du jour", "es": "Receta del día", "nl": "Recept van de dag", "hu": "A nap receptje", "nb": "Dagens oppskrift", "pl": "Przepis dnia", "pt": "Receita do dia", "sl": "Recept dneva"],
         "no_recipes": ["de": "Keine Rezepte", "en": "No recipes", "fr": "Aucune recette", "es": "Sin recetas", "nl": "Geen recepten", "hu": "Nincsenek receptek", "nb": "Ingen oppskrifter", "pl": "Brak przepisów", "pt": "Nenhuma receita", "sl": "Ni receptov"],
-        "desc_shopping": ["de": "Zeigt offene Artikel der Einkaufsliste.", "en": "Shows open items on your shopping list.", "fr": "Affiche les articles restants de la liste de courses.", "es": "Muestra los artículos pendientes de la lista de la compra.", "nl": "Toont openstaande artikelen van de boodschappenlijst.", "hu": "Megjeleníti a bevásárlólista nyitott tételeit.", "nb": "Viser åpne varer på handlelisten.", "pl": "Pokazuje otwarte pozycje listy zakupów.", "pt": "Mostra os itens em aberto da lista de compras.", "sl": "Prikaže odprte artikle nakupovalnega seznama."],
-        "desc_mealplan": ["de": "Zeigt den Essensplan für heute und morgen.", "en": "Shows the meal plan for today and tomorrow.", "fr": "Affiche le plan de repas d'aujourd'hui et de demain.", "es": "Muestra el plan de comidas de hoy y mañana.", "nl": "Toont het maaltijdplan voor vandaag en morgen.", "hu": "Megjeleníti a mai és holnapi étkezési tervet.", "nb": "Viser måltidsplanen for i dag og i morgen.", "pl": "Pokazuje plan posiłków na dziś i jutro.", "pt": "Mostra o plano alimentar de hoje e amanhã.", "sl": "Prikaže jedilnik za danes in jutri."],
+        "desc_shopping": ["de": "Zeigt offene Artikel der Einkaufsliste.", "en": "Shows open items on your shopping list.", "fr": "Affiche les articles restants de la liste de courses.", "fr_CA": "Affiche les articles restants de la liste d'épicerie.", "es": "Muestra los artículos pendientes de la lista de la compra.", "nl": "Toont openstaande artikelen van de boodschappenlijst.", "hu": "Megjeleníti a bevásárlólista nyitott tételeit.", "nb": "Viser åpne varer på handlelisten.", "pl": "Pokazuje otwarte pozycje listy zakupów.", "pt": "Mostra os itens em aberto da lista de compras.", "sl": "Prikaže odprte artikle nakupovalnega seznama."],
+        "desc_mealplan": ["de": "Zeigt den Essensplan für heute und morgen.", "en": "Shows the meal plan for today and tomorrow.", "fr": "Affiche les menus d'aujourd'hui et de demain.", "es": "Muestra el plan de comidas de hoy y mañana.", "nl": "Toont het maaltijdplan voor vandaag en morgen.", "hu": "Megjeleníti a mai és holnapi étkezési tervet.", "nb": "Viser måltidsplanen for i dag og i morgen.", "pl": "Pokazuje plan posiłków na dziś i jutro.", "pt": "Mostra o plano de refeições de hoje e amanhã.", "sl": "Prikaže jedilnik za danes in jutri."],
         "desc_daily": ["de": "Zeigt täglich ein neues Zufallsrezept.", "en": "Shows a new random recipe every day.", "fr": "Affiche chaque jour une nouvelle recette au hasard.", "es": "Muestra cada día una nueva receta al azar.", "nl": "Toont elke dag een nieuw willekeurig recept.", "hu": "Minden nap egy új véletlenszerű receptet mutat.", "nb": "Viser en ny tilfeldig oppskrift hver dag.", "pl": "Codziennie pokazuje nowy losowy przepis.", "pt": "Mostra uma nova receita aleatória todos os dias.", "sl": "Vsak dan prikaže nov naključen recept."],
     ]
 }
@@ -89,6 +93,7 @@ enum WidgetSharedStore {
             return saved
         }
         for pref in Locale.preferredLanguages {
+            if pref.lowercased().hasPrefix("fr-ca") { return "fr_CA" }
             var code = String(pref.prefix(2)).lowercased()
             if code == "no" { code = "nb" }
             if WidgetL10n.supported.contains(code) { return code }
@@ -247,8 +252,11 @@ enum WidgetServerSync {
 /// Artikeltext wie in der App (_shoppingItemText): „exakte Mengen" AN =
 /// „150 g Joghurt", AUS = Stückkauf-Sicht; Brüche + Plural wie dort.
 enum ShoppingText {
+    // Synchron zu formatQuantity in lib/core/utils/ingredient_display.dart:
+    // 1/16 als Text (kein Glyph), Text-Brüche mit Leerzeichen („1 1/16"),
+    // sonst bis zu 2 Nachkommastellen ohne Nullen am Ende.
     private static let fractions: [(Double, String)] = [
-        (0.1, "⅒"), (0.125, "⅛"), (0.1667, "⅙"), (0.2, "⅕"), (0.25, "¼"),
+        (0.0625, "1/16"), (0.1, "⅒"), (0.125, "⅛"), (0.1667, "⅙"), (0.2, "⅕"), (0.25, "¼"),
         (0.3333, "⅓"), (0.375, "⅜"), (0.4, "⅖"), (0.5, "½"), (0.6, "⅗"),
         (0.625, "⅝"), (0.6667, "⅔"), (0.75, "¾"), (0.8, "⅘"), (0.8333, "⅚"),
         (0.875, "⅞"),
@@ -264,14 +272,21 @@ enum ShoppingText {
         if clean == clean.rounded(.towardZero) { return String(Int(clean)) }
         let whole = Int(clean.rounded(.towardZero))
         let frac = clean - Double(whole)
+        func mixed(_ glyph: String) -> String {
+            guard whole > 0 else { return glyph }
+            return glyph.contains("/") ? "\(whole) \(glyph)" : "\(whole)\(glyph)"
+        }
         for (value, glyph) in fractions where abs(frac - value) < 0.015 {
-            return whole > 0 ? "\(whole)\(glyph)" : glyph
+            return mixed(glyph)
         }
         for (value, glyph) in fractions where frac < value {
-            if value - frac < 0.03 { return "< " + (whole > 0 ? "\(whole)\(glyph)" : glyph) }
+            if value - frac < 0.03 { return "< " + mixed(glyph) }
             break
         }
-        return String(format: "%.1f", clean)
+        var text = String(format: "%.2f", clean)
+        while text.hasSuffix("0") { text.removeLast() }
+        if text.hasSuffix(".") { text.removeLast() }
+        return text
     }
 
     static func shouldPluralize(_ q: Double) -> Bool { round(q, 2) > 1 }

@@ -38,6 +38,7 @@ const _kSetupLanguages = [
   'de',
   'en',
   'fr',
+  'fr_CA',
   'es',
   'hu',
   'nl',
@@ -191,6 +192,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         LogManager.shared.log('❌ Verbindungstest [$ver] fehlgeschlagen: $e');
       }
     }
+    if (!mounted) return;
     setState(() {
       _error = AppLocalizations.of(context)!.connectionFailedCheck;
     });
@@ -228,6 +230,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         LogManager.shared.log('❌ Login [$ver] fehlgeschlagen: $e');
       }
     }
+    if (!mounted) return;
     setState(() => _error = _loginErrorMessage(lastError));
     LogManager.shared.log('❌ Setup-Login endgültig fehlgeschlagen'
         '${lastError != null ? ' — letzter Fehler: $lastError' : ''}');
@@ -696,6 +699,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
+                  tooltip: _obscurePassword
+                      ? AppLocalizations.of(context)!.a11yShowPassword
+                      : AppLocalizations.of(context)!.a11yHidePassword,
                   icon: Icon(_obscurePassword
                       ? Icons.visibility_off
                       : Icons.visibility),
@@ -1046,6 +1052,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         'de' => '🇩🇪',
         'en' => '🇬🇧',
         'fr' => '🇫🇷',
+        'fr_CA' => '🇨🇦',
         'es' => '🇪🇸',
         'hu' => '🇭🇺',
         'nl' => '🇳🇱',
@@ -1060,6 +1067,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         'de' => 'Deutsch',
         'en' => 'English',
         'fr' => 'Français',
+        'fr_CA' => 'Français (Canada)',
         'es' => 'Español',
         'hu' => 'Magyar',
         'nl' => 'Nederlands',

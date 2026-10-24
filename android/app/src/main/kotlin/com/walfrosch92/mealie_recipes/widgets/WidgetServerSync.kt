@@ -153,8 +153,11 @@ internal fun JsonObject.str(key: String): String {
 
 /** Artikeltext wie in der App (_shoppingItemText), inkl. Brüche + Plural. */
 internal object ShoppingText {
+    // Synchron zu formatQuantity in lib/core/utils/ingredient_display.dart:
+    // 1/16 als Text (kein Glyph), Text-Brüche mit Leerzeichen („1 1/16"),
+    // sonst bis zu 2 Nachkommastellen ohne Nullen am Ende.
     private val FRACTIONS = listOf(
-        0.1 to "⅒", 0.125 to "⅛", 0.1667 to "⅙", 0.2 to "⅕", 0.25 to "¼",
+        0.0625 to "1/16", 0.1 to "⅒", 0.125 to "⅛", 0.1667 to "⅙", 0.2 to "⅕", 0.25 to "¼",
         0.3333 to "⅓", 0.375 to "⅜", 0.4 to "⅖", 0.5 to "½", 0.6 to "⅗",
         0.625 to "⅝", 0.6667 to "⅔", 0.75 to "¾", 0.8 to "⅘", 0.8333 to "⅚",
         0.875 to "⅞",
@@ -170,16 +173,22 @@ internal object ShoppingText {
         if (clean == kotlin.math.truncate(clean)) return clean.toLong().toString()
         val whole = clean.toLong()
         val frac = clean - whole
+        fun mixed(glyph: String): String = when {
+            whole <= 0 -> glyph
+            glyph.contains('/') -> "$whole $glyph"
+            else -> "$whole$glyph"
+        }
         for ((value, glyph) in FRACTIONS) {
-            if (abs(frac - value) < 0.015) return if (whole > 0) "$whole$glyph" else glyph
+            if (abs(frac - value) < 0.015) return mixed(glyph)
         }
         for ((value, glyph) in FRACTIONS) {
             if (frac < value) {
-                if (value - frac < 0.03) return "< " + (if (whole > 0) "$whole$glyph" else glyph)
+                if (value - frac < 0.03) return "< " + mixed(glyph)
                 break
             }
         }
-        return String.format(java.util.Locale.US, "%.1f", clean)
+        return String.format(java.util.Locale.US, "%.2f", clean)
+            .trimEnd('0').trimEnd('.')
     }
 
     fun shouldPluralize(q: Double): Boolean = round(q, 2) > 1

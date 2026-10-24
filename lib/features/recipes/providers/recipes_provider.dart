@@ -225,8 +225,10 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
         !settings.isConfigured) {
       return;
     }
-    unawaited(
-        RecipeImageStore.shared.ensure(recipe, ref.read(apiServiceProvider)));
+    final api = ref.read(apiServiceProvider);
+    unawaited(RecipeImageStore.shared.ensure(recipe, api));
+    // Bilder in Schritten/Notizen gleich mit (offline im Kochmodus).
+    unawaited(RecipeImageStore.shared.ensureContent(recipe, api));
   }
 
   /// Startet [op], sofern nicht schon ein Durchlauf läuft — sonst wird der
@@ -344,6 +346,45 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
         (r) => r.copyWith(
             recipeCategory:
                 r.recipeCategory.where((c) => c.id != categoryId).toList()));
+  }
+
+  /// Nach Bearbeiten/Zusammenführen/Löschen einer Einheit ([unit] = true)
+  /// bzw. eines Lebensmittels: alle Zutaten mit [id] auf [replacement]
+  /// (rohes Server-Objekt, `null` = entfernt) umstellen. Nötig, weil Mealie
+  /// dabei nur die Zutaten-Zeilen ändert, NICHT `dateUpdated` der Rezepte —
+  /// der Abgleich würde die betroffenen Rezepte sonst nie neu laden (alte
+  /// Einheit/Schalter in der Anzeige, falsche Rezept-Zählung).
+  Future<void> replaceFoodUnitEverywhere(
+      {required bool unit,
+      required String id,
+      Map<String, dynamic>? replacement}) async {
+    bool hit(Ingredient i) => unit ? i.unit?.id == id : i.food?.id == id;
+    final newUnit = unit && replacement != null
+        ? IngredientUnit.fromJson(replacement)
+        : null;
+    final newFood = !unit && replacement != null
+        ? IngredientFood.fromJson(replacement)
+        : null;
+    await _stripOrganizer(
+        (r) => r.recipeIngredient.any(hit),
+        (r) => r.copyWith(
+            recipeIngredient: r.recipeIngredient
+                .map((i) => !hit(i)
+                    ? i
+                    : Ingredient(
+                        referenceId: i.referenceId,
+                        quantity: i.quantity,
+                        unit: unit ? newUnit : i.unit,
+                        food: unit ? i.food : newFood,
+                        note: i.note,
+                        isFood: i.isFood,
+                        disableAmount: i.disableAmount,
+                        title: i.title,
+                        referencedRecipe: i.referencedRecipe,
+                        originalText: i.originalText,
+                        isCompleted: i.isCompleted,
+                      ))
+                .toList()));
   }
 
   Future<void> _stripOrganizer(bool Function(RecipeDetail) affected,
@@ -749,7 +790,16 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
   /// Aufrufer filtert die `null`s einfach heraus.
   Future<RecipeDetail?> _fetchDetailOrNull(ApiService api, String id) async {
     try {
-      return await api.fetchRecipeDetail(id);
+      final d = await api.fetchRecipeDetail(id, householdLastMade: false);
+      // Mealie ≥ 3.29 schickt kein `lastMade` mehr mit (nur noch pro
+      // Haushalt, siehe fetchRecipeDetail) — gecachten Wert behalten. Er
+      // kann nur wachsen, ein älterer Stand wird also nie fälschlich
+      // überschrieben.
+      if (d.lastMade == null) {
+        final old = state.valueOrNull?.where((r) => r.id == id).firstOrNull;
+        if (old?.lastMade != null) return d.copyWith(lastMade: old!.lastMade);
+      }
+      return d;
     } catch (_) {
       return null;
     }

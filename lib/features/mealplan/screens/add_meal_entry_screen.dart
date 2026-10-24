@@ -19,7 +19,9 @@ import '../../recipes/providers/recipes_provider.dart';
 import '../providers/mealplan_provider.dart';
 import '../providers/mealplan_rules_provider.dart';
 import '../../../shared/widgets/recipe_image.dart';
+import '../widgets/meal_type_chip_row.dart';
 import '../../../core/utils/search_match.dart';
+import '../../../shared/widgets/error_view.dart';
 
 // ---------------------------------------------------------------------------
 // Essenstyp → Kategorie-Stichwörter (Issue: intelligente Würfel-Filterung).
@@ -73,6 +75,69 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'middag',
     'kveldsmat',
   ],
+  // Weitere Mealie-Mahlzeitentypen. Bewusst KEINE mehrdeutigen Teilwörter
+  // („ital" = hu Getränk steckt in „Italienisch", „nasi" in „Nasi Goreng").
+  'side': [
+    'beilage',
+    'side',
+    'guarnición',
+    'acompañamiento',
+    'segundo plato',
+    'accompagnement',
+    'köret',
+    'kisétkezés',
+    'bijgerecht',
+    'dodatek',
+    'przystawk',
+    'acompanhamento',
+    'priloga',
+    'tilbehør',
+  ],
+  'snack': [
+    'snack',
+    'zwischenmahlzeit',
+    'imbiss',
+    'merienda',
+    'tentempié',
+    'goûter',
+    'collation',
+    'rágcsa',
+    'uzsonna',
+    'tussendoortje',
+    'przekąsk',
+    'lanche',
+    'petisco',
+    'prigrizek',
+    'mellommåltid',
+  ],
+  'drink': [
+    'getränk',
+    'drink',
+    'bebida',
+    'boisson',
+    'italok',
+    'drankje',
+    'dranken',
+    'napój',
+    'napoje',
+    'pijača',
+    'napitek',
+    'drikke',
+    'cocktail',
+    'smoothie',
+  ],
+  'dessert': [
+    'dessert',
+    'nachspeise',
+    'nachtisch',
+    'postre',
+    'desszert',
+    'toetje',
+    'nagerecht',
+    'deser',
+    'sobremesa',
+    'sladic',
+  ],
 };
 
 /// Eigene Würfel-Auswahl (Zahnrad im Mahlzeitenplan): ein Rezept passt, wenn
@@ -88,8 +153,21 @@ bool recipeMatchesDiceFilter(RecipeDetail recipe, List<String> filter) =>
       return false;
     });
 
-bool _matchesMealType(RecipeDetail recipe, String slot) {
-  final keywords = _mealTypeCategoryKeywords[slot];
+/// Québec/Kanada verschiebt die Mahlzeiten-Wörter: „déjeuner" = Frühstück,
+/// „dîner" = Mittagessen, „souper" = Abendessen (in Frankreich: déjeuner =
+/// Mittag, dîner = Abend). Bei App-Sprache „fr_CA" gelten deshalb diese
+/// Listen statt der gemeinsamen.
+const Map<String, List<String>> _quebecMealKeywords = {
+  'breakfast': ['déjeuner', 'dejeuner', 'breakfast'],
+  'lunch': ['dîner', 'diner', 'lunch'],
+  'dinner': ['souper', 'dinner', 'supper'],
+};
+
+bool _matchesMealType(RecipeDetail recipe, String slot, {bool quebec = false}) {
+  final keywords = quebec
+      // Québec weicht nur bei den Hauptmahlzeiten ab — sonst gemeinsam.
+      ? (_quebecMealKeywords[slot] ?? _mealTypeCategoryKeywords[slot])
+      : _mealTypeCategoryKeywords[slot];
   if (keywords == null) return true; // unbekannter Slot -> kein Filter
   return recipe.recipeCategory.any((c) {
     final name = c.name.toLowerCase();
@@ -198,12 +276,14 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
     // zufällig aus allen übrigen Rezepten auf (statt eine Fehlermeldung zu
     // zeigen) — es gibt also immer 3 Vorschläge, sobald genug Rezepte
     // insgesamt vorhanden sind.
+    final quebec =
+        ref.read(settingsProvider).valueOrNull?.selectedLanguage == 'fr_CA';
     final matching = allRecipes
-        .where((r) => _matchesMealType(r, _selectedSlot))
+        .where((r) => _matchesMealType(r, _selectedSlot, quebec: quebec))
         .toList()
       ..shuffle(_diceRandom);
     final others = allRecipes
-        .where((r) => !_matchesMealType(r, _selectedSlot))
+        .where((r) => !_matchesMealType(r, _selectedSlot, quebec: quebec))
         .toList()
       ..shuffle(_diceRandom);
     final combined = [...matching, ...others].take(3).toList();
@@ -284,6 +364,8 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
         final l = AppLocalizations.of(ctx)!;
         return StatefulBuilder(
           builder: (ctx, setLocal) => AlertDialog(
+            // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+            scrollable: true,
             backgroundColor: ctx.appCard,
             title: Row(
               children: [
@@ -372,7 +454,7 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
       if (!mounted) return;
       setState(() => _submitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(userErrorMessage(e))),
       );
     }
   }
@@ -576,10 +658,12 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
                             : recipesAsync.when(
                                 loading: () => const Center(
                                     child: CircularProgressIndicator()),
-                                error: (e, _) => Center(
-                                    child: Text(e.toString(),
-                                        style: TextStyle(
-                                            color: context.appFgSub))),
+                                error: (e, _) => ErrorRetryView(
+                                  error: e,
+                                  onRetry: () => ref
+                                      .read(recipesProvider.notifier)
+                                      .refresh(),
+                                ),
                                 data: (recipes) => _recipeList(
                                     context, recipes, l, baseUrl, token),
                               ),
@@ -690,54 +774,18 @@ class _SlotSegmented extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final slots = [
-      ('breakfast', '🍳 ${l.breakfast}'),
-      ('lunch', '🥪 ${l.lunch}'),
-      ('dinner', '🍽 ${l.dinner}'),
-    ];
-
+    // Alle Mahlzeitentypen wie in Mealie-Web (vorher nur Frühstück/Mittag/
+    // Abend) — eine Zeile, seitlich wischbar.
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: context.appCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.appSeparator, width: 1),
         boxShadow: context.appShadowSm,
       ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        children: slots.map((s) {
-          final isSelected = selected == s.$1;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(s.$1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: isSelected ? AppTokens.accentGradient : null,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: isSelected
-                      ? const [
-                          BoxShadow(
-                              color: Color(0x40FF7800),
-                              blurRadius: 10,
-                              offset: Offset(0, 3))
-                        ]
-                      : null,
-                ),
-                child: Text(s.$2,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: isSelected ? Colors.white : context.appFgSub,
-                        fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500)),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: MealTypeChipRow(selected: selected, onChanged: onChanged),
     );
   }
 }

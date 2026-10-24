@@ -44,6 +44,8 @@ class TimelineEventCard extends ConsumerWidget {
     final text = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+        scrollable: true,
         backgroundColor: ctx.appCard,
         title: Text(l.timelineEditNote),
         content: TextField(

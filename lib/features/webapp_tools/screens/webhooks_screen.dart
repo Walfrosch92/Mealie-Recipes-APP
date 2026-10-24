@@ -209,6 +209,8 @@ class _WebhookDialogState extends State<_WebhookDialog> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return AlertDialog(
+      // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+      scrollable: true,
       backgroundColor: context.appCard,
       title: Text(widget.hook == null ? l.webhookNew : l.webhookEdit),
       content: SizedBox(

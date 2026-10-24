@@ -12,3 +12,12 @@
 -keep class * extends com.google.gson.reflect.TypeToken
 -keep public class * implements java.lang.reflect.Type
 -keep class com.dexterous.** { *; }
+
+# WorkManager (kommt transitiv über Jetpack Glance, work-runtime 2.7.1 mit
+# Room 2.2.5) erzeugt seine Datenbank per Reflection:
+# Class.forName("…WorkDatabase_Impl").newInstance(). Die Consumer-Regel von
+# Room 2.2.5 („-keep class * extends RoomDatabase“) hält im R8-Full-Mode
+# (AGP 9) nur die Klasse, NICHT den parameterlosen Konstruktor → Absturz beim
+# App-Start „Failed to create an instance of androidx.work.impl.WorkDatabase“
+# (androidx.startup.InitializationProvider). Konstruktor ausdrücklich behalten.
+-keep class * extends androidx.room.RoomDatabase { <init>(); }

@@ -33,6 +33,7 @@ class _SyncChangesSheetState extends ConsumerState<SyncChangesSheet> {
   final Map<String, bool> _useLocalCheck = {};
   final Map<String, bool> _useLocalQuantity = {};
   final Map<String, bool> _useLocalCategory = {};
+  final Map<String, bool> _useLocalNote = {};
   bool _syncing = false;
 
   bool _useLocal(Map<String, bool> map, String id) => map[id] ?? true;
@@ -146,6 +147,27 @@ class _SyncChangesSheetState extends ConsumerState<SyncChangesSheet> {
                         );
                       }).toList(),
                     ),
+                  if (pending.notes.isNotEmpty)
+                    _Section(
+                      title: l.syncSectionName,
+                      children: pending.notes.map((c) {
+                        final localItem = _findItem(local, c.itemId);
+                        final serverItem = _findItem(server, c.itemId);
+                        if (localItem == null || serverItem == null) {
+                          return const SizedBox.shrink();
+                        }
+                        return _ConflictRow(
+                          title: localItem.displayName,
+                          localValue: c.note,
+                          serverValue: serverItem.displayName,
+                          useLocal: _useLocal(_useLocalNote, c.itemId),
+                          onChanged: (v) =>
+                              setState(() => _useLocalNote[c.itemId] = v),
+                          localLabel: l.syncLocalLabel,
+                          serverLabel: l.syncServerLabel,
+                        );
+                      }).toList(),
+                    ),
                   if (pending.adds.isNotEmpty)
                     _Section(
                       title: l.syncSectionAdditions,
@@ -196,6 +218,7 @@ class _SyncChangesSheetState extends ConsumerState<SyncChangesSheet> {
             selectedCheckChanges: Map<String, bool>.from(_useLocalCheck),
             selectedQuantityChanges: Map<String, bool>.from(_useLocalQuantity),
             selectedCategoryChanges: Map<String, bool>.from(_useLocalCategory),
+            selectedNoteChanges: Map<String, bool>.from(_useLocalNote),
           );
       if (context.mounted) Navigator.pop(context);
     } finally {

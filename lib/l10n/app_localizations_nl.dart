@@ -9,9 +9,6 @@ class AppLocalizationsNl extends AppLocalizations {
   AppLocalizationsNl([String locale = 'nl']) : super(locale);
 
   @override
-  String get appTitle => 'Mealie Recipes';
-
-  @override
   String get endCookingMode => 'Kookmodus beëindigen';
 
   @override
@@ -99,15 +96,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get searchRecipe => 'Recept zoeken...';
 
   @override
-  String get loadingRecipes => 'Recepten laden...';
-
-  @override
   String get loadingRecipe => 'Recept laden...';
-
-  @override
-  String errorLoadingRecipes(String error) {
-    return 'Fout bij laden: $error';
-  }
 
   @override
   String get errorLoadingRecipe => 'Recept kon niet geladen worden.';
@@ -161,7 +150,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get ingredients => 'Ingrediënten';
 
   @override
-  String get instructions => 'Instructies';
+  String get instructions => 'Bereidingswijze';
 
   @override
   String get tags => 'Tags';
@@ -191,30 +180,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get servings => 'Porties';
 
   @override
-  String get adjustQuantity => 'Hoeveelheid aanpassen';
-
-  @override
-  String get startTimer => 'Timer starten';
-
-  @override
-  String runningTimer(int minutes, String seconds) {
-    return 'Timer: $minutes:$seconds';
-  }
-
-  @override
   String get planMeal => 'Maaltijd plannen';
-
-  @override
-  String get displayAlwaysOn => 'Scherm altijd aan';
 
   @override
   String get addAllIngredients => 'Alle ingrediënten toevoegen';
 
   @override
   String get addSelectedIngredients => 'Geselecteerde ingrediënten toevoegen';
-
-  @override
-  String get addIngredientsTitle => 'Ingrediënten toegevoegd';
 
   @override
   String get addIngredientsMessage =>
@@ -254,7 +226,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get cookbookFilterSectionTitle => 'Recepten automatisch toevoegen';
 
   @override
-  String get cookbookFieldTools => 'Gereedschap';
+  String get cookbookFieldTools => 'Keukengerei';
 
   @override
   String get cookbookFieldUsers => 'Gebruikers';
@@ -387,16 +359,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get sendToDevice => 'Naar apparaat sturen';
 
   @override
-  String get sendToDevicePickerTitle => 'Naar apparaat sturen';
-
-  @override
-  String get sendToAllDevices => 'Naar alle apparaten sturen';
-
-  @override
   String get timerFinished => 'Timer afgelopen!';
-
-  @override
-  String get timerFinishedBody => 'Uw recepttimer is klaar.';
 
   @override
   String get timer => 'Timer';
@@ -405,21 +368,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get newTimer => 'Nieuwe timer';
 
   @override
-  String get timerDetails => 'Timerdetails';
-
-  @override
   String get timerNamePlaceholder => 'Timernaam';
 
   @override
-  String get timerNameHint => 'Geef de timer een beschrijvende naam.';
-
-  @override
   String get durationLabel => 'Duur';
-
-  @override
-  String minutesCount(int count) {
-    return '$count minuten';
-  }
 
   @override
   String get start => 'Starten';
@@ -448,31 +400,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get cookingMode => 'Kookmodus';
 
   @override
-  String activeRecipesCount(int count) {
-    return '$count actieve recepten';
-  }
-
-  @override
   String get endAll => 'Alles beëindigen';
 
   @override
   String get end => 'Beëindigen';
-
-  @override
-  String get endAllRecipesTitle => 'Alle recepten beëindigen?';
-
-  @override
-  String endAllRecipesMessage(int count) {
-    return 'Wil je alle $count actieve kooksessies beëindigen?';
-  }
-
-  @override
-  String get endRecipeTitle => 'Recept beëindigen?';
-
-  @override
-  String endRecipeMessage(String name) {
-    return 'Wil je de kooksessie voor \"$name\" beëindigen?';
-  }
 
   @override
   String get noActiveTimers => 'Geen actieve timers';
@@ -486,11 +417,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get browseRecipes => 'Recepten bladeren';
-
-  @override
-  String timersPausedCount(int count) {
-    return '$count timer(s) gepauzeerd';
-  }
 
   @override
   String get cookFriends => 'Koken met vrienden';
@@ -530,14 +456,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get joinSession => 'Sessie deelnemen';
 
   @override
-  String get hostEndedSessionTitle => 'Sessie beëindigd';
-
-  @override
   String get hostEndedSessionMessage =>
       'De host heeft de kooksessie beëindigd.';
-
-  @override
-  String get shoppingListEmpty => 'Uw boodschappenlijst is leeg.';
 
   @override
   String get addItem => 'Artikel toevoegen';
@@ -549,19 +469,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get unlabeledCategory => 'Zonder categorie';
 
   @override
-  String get reorderCategories => 'Categorieën herordenen';
-
-  @override
-  String get archiveChecked => 'Aangevinkte archiveren';
-
-  @override
   String get archivedLists => '📦 Gearchiveerde boodschappen';
-
-  @override
-  String get syncChanges => 'Wijzigingen synchroniseren';
-
-  @override
-  String get noSyncChanges => 'Geen wijzigingen om te synchroniseren';
 
   @override
   String get postimportAction => 'Na het importeren';
@@ -644,48 +552,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get selectRecipe => 'Recept selecteren';
 
   @override
-  String get orFreeText => 'of vrije tekst';
-
-  @override
-  String get entryNote => 'Notitie';
-
-  @override
-  String get noMealEntries => 'Geen invoer voor deze week.';
-
-  @override
   String get importRecipe => 'Recept importeren';
-
-  @override
-  String get importFromUrl => 'Importeren van URL';
-
-  @override
-  String get importFromImage => 'Importeren van foto';
-
-  @override
-  String get importFromJson => 'Importeren van JSON';
 
   @override
   String get url => 'URL';
 
   @override
-  String get urlPlaceholder => 'https://...';
-
-  @override
   String get importLanguage => 'Taal voor OCR';
-
-  @override
-  String get importing => 'Importeren...';
-
-  @override
-  String get importSuccess => 'Recept succesvol geïmporteerd!';
-
-  @override
-  String importError(String error) {
-    return 'Importeren mislukt: $error';
-  }
-
-  @override
-  String get pasteJson => 'Plak JSON hier';
 
   @override
   String get setupTitle => 'Welkom bij Mealie Recipes';
@@ -713,9 +586,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get shoppingListId => 'Boodschappenlijst-ID';
-
-  @override
-  String get shoppingListIdPlaceholder => 'Selecteer een lijst';
 
   @override
   String get setupHouseholdListTitle => 'Huishouden & boodschappenlijst';
@@ -752,12 +622,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get connect => 'Verbinden';
 
   @override
-  String get connecting => 'Verbinden...';
-
-  @override
-  String get connectionSuccess => 'Verbinding geslaagd!';
-
-  @override
   String connectionError(String error) {
     return 'Verbinding mislukt: $error';
   }
@@ -772,19 +636,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsSaved => 'Instellingen opgeslagen';
 
   @override
-  String get serverSettings => 'Server';
-
-  @override
-  String get displaySettings => 'Weergave';
-
-  @override
-  String get notificationSettings => 'Meldingen';
-
-  @override
   String get securitySettings => 'Beveiliging';
-
-  @override
-  String get aboutSettings => 'Over';
 
   @override
   String get showRecipeImages => 'Receptafbeeldingen tonen';
@@ -800,12 +652,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get biometricLockDescription => 'App ontgrendelen met biometrie';
-
-  @override
-  String get criticalAlerts => 'Kritieke meldingen';
-
-  @override
-  String get criticalAlertsDescription => 'Timeralarm ook in stille modus';
 
   @override
   String get enableLogging => 'Logboek inschakelen';
@@ -838,28 +684,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get leftoverFinder => 'Recept zoeker';
 
   @override
-  String get leftoverFinderSubtitle =>
-      'Vind recepten met de ingrediënten die je hebt';
-
-  @override
   String get addIngredient => 'Ingrediënt toevoegen';
-
-  @override
-  String get ingredientPlaceholder => 'bijv. eieren';
-
-  @override
-  String get findRecipes => 'Recepten zoeken';
-
-  @override
-  String get matchingRecipes => 'Overeenkomende recepten';
-
-  @override
-  String get noMatchingRecipes => 'Geen recepten gevonden.';
-
-  @override
-  String matchPercent(int percent) {
-    return '$percent% overeenkomst';
-  }
 
   @override
   String get biometricPrompt => 'Authenticatie voor Mealie Recipes';
@@ -868,15 +693,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get biometricFailed => 'Authenticatie mislukt';
 
   @override
-  String get whatsNew => 'Nieuw';
-
-  @override
   String get pendingRecipesTitle => 'Ontvangen recepten';
-
-  @override
-  String pendingRecipesMessage(String sender, String name) {
-    return 'Je hebt een recept ontvangen van $sender: \"$name\"';
-  }
 
   @override
   String pendingRecipesFrom(Object names) {
@@ -887,12 +704,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get pendingRecipesOpenCooking => 'Kookmodus openen';
 
   @override
-  String get pendingRecipesLater => 'Later';
-
-  @override
-  String get openRecipe => 'Recept openen';
-
-  @override
   String get dismiss => 'Sluiten';
 
   @override
@@ -900,9 +711,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get recipeName => 'Receptnaam';
-
-  @override
-  String get recipeDescription => 'Beschrijving';
 
   @override
   String get prepTime => 'Bereidingstijd (min)';
@@ -950,30 +758,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get categories => 'Categorieën';
 
   @override
-  String get selectCategories => 'Categorieën selecteren';
-
-  @override
-  String get selectTags => 'Tags selecteren';
-
-  @override
-  String get uploadImage => 'Afbeelding uploaden';
-
-  @override
-  String get removeImage => 'Afbeelding verwijderen';
-
-  @override
   String get saveChanges => 'Wijzigingen opslaan';
 
   @override
-  String get saving => 'Opslaan...';
-
-  @override
   String get saveSuccess => 'Recept opgeslagen.';
-
-  @override
-  String saveError(String error) {
-    return 'Kon niet opslaan: $error';
-  }
 
   @override
   String get newCategory => 'Nieuwe categorie';
@@ -983,19 +771,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get setRating => 'Beoordeling instellen';
-
-  @override
-  String get removeRating => 'Beoordeling verwijderen';
-
-  @override
-  String get ratingRemoved => 'Beoordeling verwijderd';
-
-  @override
-  String get googleTasksImport => 'Importeren uit Google Tasks';
-
-  @override
-  String get googleTasksImportDescription =>
-      'Importeer items van Google Tasks naar de boodschappenlijst.';
 
   @override
   String get homeWelcome => 'Welkom bij Mealie Recipes! 👋';
@@ -1013,9 +788,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get other => 'Overig';
-
-  @override
-  String get viewRecipes => '📖 Recepten bekijken';
 
   @override
   String get addRecipe => '➕ Recept toevoegen';
@@ -1036,9 +808,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get resteverwertung => '🥗 Recept zoeker';
 
   @override
-  String get newRecipeUpload => 'Nieuw recept uploaden';
-
-  @override
   String get copyCode => 'Code kopiëren';
 
   @override
@@ -1051,23 +820,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get waitingForFriends => 'Wachten op vrienden...';
 
   @override
-  String get endSharing => 'Delen beëindigen';
-
-  @override
-  String get cookFriendsDescription =>
-      'Nodig een vriend uit om dit recept samen te koken';
-
-  @override
   String get sessionCode => 'SESSIECODE';
-
-  @override
-  String get adjustQuantityLabel => 'Hoeveelheid aanpassen voor dit recept:';
-
-  @override
-  String get timerStartForStep => 'Timer voor stap';
-
-  @override
-  String get enterRecipeUrl => 'Voer recept-URL in';
 
   @override
   String get loading => 'Laden...';
@@ -1080,9 +833,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get addItemPlaceholder => 'Artikel toevoegen...';
-
-  @override
-  String get addSuccessToast => 'Toegevoegd!';
 
   @override
   String get completedItems => 'Voltooid';
@@ -1140,18 +890,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get allDeleteConfirm => 'Alles verwijderen';
 
   @override
-  String get portionen => 'Porties';
-
-  @override
-  String get timerForStep => 'Timer starten';
-
-  @override
-  String get weekNavPrev => 'Vorige week';
-
-  @override
-  String get weekNavNext => 'Volgende week';
-
-  @override
   String get noMealsThisWeek => 'Geen maaltijden gepland';
 
   @override
@@ -1161,43 +899,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get availableWeeks => 'Beschikbare weken:';
 
   @override
-  String weekRange(Object end, Object start, Object week) {
-    return 'Week $week ($start – $end)';
-  }
-
-  @override
   String get currentWeek => 'Huidige week';
-
-  @override
-  String get rezepteAktualisieren => 'Recepten bijwerken';
-
-  @override
-  String get leftoverWhatTitle => 'Wat doet dit?';
-
-  @override
-  String get leftoverWhatBody =>
-      'Deze functie herlaadt alle recepten van de server.';
-
-  @override
-  String get leftoverDescription =>
-      'Voer beschikbare ingrediënten in om passende recepten te vinden.';
-
-  @override
-  String get leftoverIngredientsHeader => 'Ingrediënten thuis';
-
-  @override
-  String get leftoverSuggestions => 'Receptsuggesties';
-
-  @override
-  String get leftoverNoMatches => 'Geen passende recepten gevonden.';
-
-  @override
-  String get leftoverEnterIngredient => 'Ingrediënt invoeren';
-
-  @override
-  String matchingPercentText(int percent, int count, int total) {
-    return '$percent% match ($count/$total)';
-  }
 
   @override
   String get weekAbbreviation => 'Wk';
@@ -1207,9 +909,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get selectDate => 'Datum kiezen';
-
-  @override
-  String get selectSlot => 'Maaltijd kiezen';
 
   @override
   String get selectedRecipe => 'Geselecteerd recept';
@@ -1241,11 +940,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get entriesPlural => 'vermeldingen';
-
-  @override
-  String listTitle(int n) {
-    return 'Lijst $n';
-  }
 
   @override
   String get deleteAllConfirmTitle => 'Alles verwijderen?';
@@ -1296,9 +990,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get startCooking => 'Begin met koken';
 
   @override
-  String get hostNoRecipe => 'Open een recept om een sessie te starten';
-
-  @override
   String get uploadToOwnServer => 'Op mijn server opslaan';
 
   @override
@@ -1316,12 +1007,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get appIcon => 'App-pictogram';
-
-  @override
-  String get appIconClassic => 'Klassiek';
-
-  @override
-  String get appIconModern => 'Modern';
 
   @override
   String get name => 'Naam';
@@ -1363,7 +1048,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get offlineRecipeImagesHint =>
-      'Downloadt alle receptafbeeldingen naar dit apparaat, zodat ze ook zonder verbinding worden weergegeven. Bij grote verzamelingen kan dit enkele honderden MB innemen. Uitschakelen verwijdert de opgeslagen afbeeldingen.';
+      'Downloadt alle receptafbeeldingen naar het apparaat – ook de afbeeldingen in de stappen en notities – zodat ze zonder verbinding worden getoond. Grote verzamelingen kunnen enkele honderden MB innemen. Uitschakelen verwijdert de opgeslagen afbeeldingen.';
 
   @override
   String offlineRecipeImagesStatus(int count, int total, String size) {
@@ -1399,7 +1084,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get exactQuantitiesSubtitle =>
-      'Ingrediënten en ingetypte artikelen behouden hoeveelheid en eenheid (bijv. 200 g boter) in plaats van 1x per artikel — ontbrekende ingrediënten maakt de app aan op de server';
+      'Ingrediënten en ingetypte artikelen behouden hoeveelheid en eenheid (bijv. 200 g boter) in plaats van 1x per artikel';
 
   @override
   String get remindToShop => 'Herinner me om te winkelen';
@@ -1521,12 +1206,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get loginInvalidCredentials => 'Gebruikersnaam of wachtwoord onjuist.';
 
   @override
-  String get loginAndGenerateToken => 'Inloggen & token genereren';
-
-  @override
-  String get loggingIn => 'Bezig met inloggen…';
-
-  @override
   String get apiTokenSaveHint =>
       'Token toegepast — tik hieronder op “Wijzigingen opslaan”.';
 
@@ -1587,9 +1266,6 @@ class AppLocalizationsNl extends AppLocalizations {
       'Ingrediënten gesplitst – tik op ‘Wijzigingen opslaan’';
 
   @override
-  String get reparseNone => 'Geen splitsbare ingrediënten gevonden';
-
-  @override
   String get tagsAndCategories => 'Tags, categorieën & keukengerei';
 
   @override
@@ -1620,12 +1296,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String importCount(int count) {
     return '$count importeren';
   }
-
-  @override
-  String get activeRecipeTimer => 'Actieve recepttimer';
-
-  @override
-  String get linkIngredients => 'Ingrediënten koppelen';
 
   @override
   String get noIngredientsToLink => 'Nog geen ingrediënten om te koppelen';
@@ -1691,7 +1361,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String supportNoMailApp(String email) {
-    return 'Geen mail-app gevonden. Adres gekopieerd: $email';
+    return 'Geen mailapp ingesteld – adres gekopieerd: $email. Kies een andere app om ons te schrijven.';
   }
 
   @override
@@ -1727,9 +1397,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get preparingPdf => 'PDF wordt verwerkt...';
 
   @override
-  String get shareRecipeTitle => 'Recept delen';
-
-  @override
   String get recipeOptionsTitle => 'Opties';
 
   @override
@@ -1743,9 +1410,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get recipeTime => 'Tijd';
-
-  @override
-  String get ingredientSectionTitle => 'Sectie';
 
   @override
   String get addIngredientSection => 'Sectie toevoegen';
@@ -1804,9 +1468,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get toolOnHand => 'Aanwezig';
-
-  @override
-  String get mealDiceSettingsTitle => 'Dobbelsteenfilter';
 
   @override
   String get mealDiceSettingsHint =>
@@ -2370,9 +2031,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get userManagementTitle => 'Gebruikersbeheer';
 
   @override
-  String get usersTitle => 'Gebruikers';
-
-  @override
   String get editUserTitle => 'Bewerk gebruiker';
 
   @override
@@ -2419,9 +2077,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get resetLockedUsersAction => 'Vergrendelde gebruikers herstellen';
-
-  @override
-  String get membersTitle => 'Leden';
 
   @override
   String get inviteLinkTitle => 'Uitnodigingslink';
@@ -4148,4 +3803,354 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get updateSourceHint =>
       'Updates komen uit de GitHub-releases van Mealie Recipes en worden alleen geïnstalleerd als ze door de ontwikkelaar zijn ondertekend (macOS).';
+
+  @override
+  String get errorNoConnection =>
+      'Je Mealie-server is niet bereikbaar. Controleer de internetverbinding en het serveradres.';
+
+  @override
+  String get errorTimeout =>
+      'De server reageerde te traag. Probeer het opnieuw.';
+
+  @override
+  String get errorUnauthorized =>
+      'Je aanmelding is verlopen of het API-token is niet meer geldig. Meld je opnieuw aan in de instellingen.';
+
+  @override
+  String get errorServer =>
+      'De Mealie-server meldde een fout. Probeer het later opnieuw.';
+
+  @override
+  String get errorNotFound =>
+      'Niet gevonden op de server – mogelijk is het verwijderd.';
+
+  @override
+  String get errorCertificate =>
+      'Het beveiligingscertificaat van de server wordt niet vertrouwd.';
+
+  @override
+  String get errorGeneric => 'Er ging iets mis. Probeer het opnieuw.';
+
+  @override
+  String get offlineLabel => 'Offline';
+
+  @override
+  String offlineSince(String time) {
+    return 'Offline · bijgewerkt $time';
+  }
+
+  @override
+  String get mealplanEntryActions => 'Maaltijdopties';
+
+  @override
+  String get mealplanMoveAction => 'Verplaatsen';
+
+  @override
+  String get mealplanMoveTitle => 'Maaltijd verplaatsen';
+
+  @override
+  String get mealplanMoveDate => 'Datum';
+
+  @override
+  String mealplanMovedTo(String date) {
+    return 'Verplaatst naar $date';
+  }
+
+  @override
+  String get mealplanShowWeek => 'Tonen';
+
+  @override
+  String get mealplanMoveFailed => 'Maaltijd kon niet worden verplaatst';
+
+  @override
+  String get recentlyViewedTitle => 'Recent bekeken';
+
+  @override
+  String get recentlyViewedEmpty => 'Recepten die je opent, verschijnen hier.';
+
+  @override
+  String get recentlyViewedClear => 'Geschiedenis wissen';
+
+  @override
+  String get recentlyViewedClearMessage =>
+      'De lijst met recent bekeken recepten op dit apparaat wordt gewist. De recepten zelf blijven bestaan.';
+
+  @override
+  String get recentlyViewedClearConfirm => 'Wissen';
+
+  @override
+  String get duplicatesTitle => 'Duplicatenzoeker';
+
+  @override
+  String get duplicatesScanning => 'Zoeken naar dubbele recepten…';
+
+  @override
+  String get duplicatesNone => 'Geen dubbele recepten gevonden.';
+
+  @override
+  String duplicatesFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mogelijke duplicaten gevonden.',
+      one: '1 mogelijk duplicaat gevonden.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesIntro =>
+      'Tik op het recept dat moet blijven en voeg dan samen.';
+
+  @override
+  String get duplicatesReasonSource => 'Zelfde bron';
+
+  @override
+  String get duplicatesReasonName => 'Zelfde naam';
+
+  @override
+  String duplicatesReasonSimilar(int percent) {
+    return 'Vergelijkbaar · $percent% dezelfde ingrediënten';
+  }
+
+  @override
+  String get duplicatesKeeps => 'Blijft';
+
+  @override
+  String get duplicatesWillBeDeleted => 'Wordt verwijderd';
+
+  @override
+  String get duplicatesMerge => 'Samenvoegen';
+
+  @override
+  String get duplicatesNotDuplicate => 'Geen duplicaat';
+
+  @override
+  String get duplicatesMergeTitle => 'Recepten samenvoegen?';
+
+  @override
+  String duplicatesMergeMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count andere recepten worden verwijderd',
+      one: '1 ander recept wordt verwijderd',
+    );
+    return '‘$name’ blijft. $_temp0.\n\nCategorieën, labels, keukengerei, notities, geplande maaltijden van je huishouden en je favoriet worden overgenomen. Opmerkingen, tijdlijn en bijlagen van de verwijderde recepten gaan verloren.';
+  }
+
+  @override
+  String get duplicatesMerged => 'Recepten samengevoegd';
+
+  @override
+  String duplicatesIngredientCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ingrediënten',
+      one: '1 ingrediënt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duplicatesResetIgnored(int count) {
+    return 'Verborgen paren weer tonen ($count)';
+  }
+
+  @override
+  String get duplicatesRescan => 'Opnieuw zoeken';
+
+  @override
+  String get duplicatesOpenRecipe => 'Recept openen';
+
+  @override
+  String get duplicatesMergeNoEditHint =>
+      'Je mag het recept dat blijft niet bewerken (vergrendeld recept van iemand anders of van een ander huishouden). Categorieën, labels, keukengerei en notities worden daarom niet overgenomen – alleen geplande maaltijden en je favoriet.';
+
+  @override
+  String get recipeOtherHouseholdHint =>
+      'Uit een ander huishouden – bewerken is daar vergrendeld';
+
+  @override
+  String foodsSavedAsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nieuwe levensmiddelen staan',
+      one: '1 nieuw levensmiddel staat',
+    );
+    return 'Opgeslagen. $_temp0 als notitie bij het ingrediënt – levensmiddelen aanmaken vereist in Mealie het recht ‘Gebruiker kan ingrediënten, tags en categorieën beheren’.';
+  }
+
+  @override
+  String get a11yRemove => 'Verwijderen';
+
+  @override
+  String get a11yDecrease => 'Minder';
+
+  @override
+  String get a11yIncrease => 'Meer';
+
+  @override
+  String get a11yShowPassword => 'Wachtwoord tonen';
+
+  @override
+  String get a11yHidePassword => 'Wachtwoord verbergen';
+
+  @override
+  String get a11yClearSearch => 'Zoekopdracht wissen';
+
+  @override
+  String get notesQueuedOffline =>
+      'Offline – de notitie wordt verstuurd zodra de server weer bereikbaar is.';
+
+  @override
+  String get timelineQueuedOffline =>
+      'Offline – wordt aan de tijdlijn toegevoegd zodra de server weer bereikbaar is.';
+
+  @override
+  String get syncSectionName => 'Hernoemd';
+
+  @override
+  String get pendingRecipesDiscard => 'Verwerpen';
+
+  @override
+  String get undo => 'Ongedaan maken';
+
+  @override
+  String timerStoppedSnack(String name) {
+    return 'Timer ‘$name’ gestopt';
+  }
+
+  @override
+  String get cookFriendsEndConfirm =>
+      'Sessie voor iedereen beëindigen? Alle gasten worden losgekoppeld.';
+
+  @override
+  String get weekStartSyncHint =>
+      'Wordt in Mealie opgeslagen – geldt voor je hele huishouden, ook in de webapp.';
+
+  @override
+  String get weekStartNoPermission =>
+      'Komt uit Mealie. Alleen wie het huishouden mag beheren, kan dit wijzigen.';
+
+  @override
+  String get assetsUnsupported329 =>
+      'Mealie ondersteunt PDF, afbeeldingen, video\'s (MP4, MOV, WebM), audio (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV en JSON.';
+
+  @override
+  String get assetsRecordVideo => 'Video opnemen';
+
+  @override
+  String get assetsChooseVideo => 'Video kiezen';
+
+  @override
+  String get shoppingSearchHint => 'Zoeken in de lijst';
+
+  @override
+  String get shoppingSearchNoMatches =>
+      'Geen items komen overeen met de zoekopdracht.';
+
+  @override
+  String get mealplanServingsTitle => 'Geplande porties';
+
+  @override
+  String get mealplanServingsHint =>
+      'Alleen voor dit item in het maaltijdplan — het recept zelf blijft ongewijzigd. Het recept openen en toevoegen aan de boodschappenlijst gebruiken deze porties.';
+
+  @override
+  String get calendarFeedTitle => 'Abonneren op agenda';
+
+  @override
+  String get calendarFeedSubtitle =>
+      'Toon het maaltijdplan in Google, Apple of een andere agenda';
+
+  @override
+  String get calendarFeedDescription =>
+      'Abonneer je op het maaltijdplan van je huishouden vanuit Google Agenda, Apple Agenda, Home Assistant of een andere app die iCal-links ondersteunt. Iedereen met de link kan je maaltijdplan zien.';
+
+  @override
+  String get calendarFeedOff => 'De agendalink staat uit voor je huishouden.';
+
+  @override
+  String get calendarFeedAskManager =>
+      'Vraag iemand die je huishouden mag beheren om hem aan te zetten.';
+
+  @override
+  String get calendarFeedTurnOn => 'Aanzetten';
+
+  @override
+  String get calendarFeedTurnOff => 'Uitzetten';
+
+  @override
+  String get calendarFeedReset => 'Link resetten';
+
+  @override
+  String get calendarFeedResetHint =>
+      'Resetten of uitzetten van de link stopt het bijwerken van bestaande abonnementen.';
+
+  @override
+  String get calendarFeedIncludeNotes => 'Notities opnemen';
+
+  @override
+  String get calendarFeedTimesHint =>
+      'Tik op een maaltijd om een tijd in te stellen. Maaltijden zonder tijd verschijnen als afspraken voor de hele dag.';
+
+  @override
+  String get calendarFeedMealTypes => 'Maaltijdtype';
+
+  @override
+  String get calendarFeedSubscribe => 'Abonneren in agenda';
+
+  @override
+  String get calendarFeedNoApp =>
+      'Er kon geen agenda-app worden geopend. Kopieer de link en voeg hem als abonnement toe aan je agenda.';
+
+  @override
+  String get calendarFeedPublicHint =>
+      'De link werkt zonder inloggen — deel hem alleen met mensen die je maaltijdplan mogen zien.';
+
+  @override
+  String get recipeShareLinkMenu => 'Deellink & QR-code';
+
+  @override
+  String get recipeShareShowQr => 'QR-code tonen';
+
+  @override
+  String get recipeShareScanQr =>
+      'Scan met een telefooncamera om dit recept te openen';
+
+  @override
+  String get recipeShareQrShare => 'Afbeelding delen';
+
+  @override
+  String get recipeShareQrFailed => 'Kan de QR-code-afbeelding niet maken';
+
+  @override
+  String get mealplanSettingsTitle => 'Maaltijdplan-instellingen';
+
+  @override
+  String get mealDiceRulesTitle => 'Dobbelsteenregels';
+
+  @override
+  String saveAsNewFood(String name) {
+    return '\"$name\" opslaan als nieuw levensmiddel';
+  }
+
+  @override
+  String get shoppingMoreOptions => 'Meer opties';
+
+  @override
+  String get shoppingFewerOptions => 'Minder opties';
+
+  @override
+  String nameAlreadyExists(String name) {
+    return 'Bestaat al: $name';
+  }
+
+  @override
+  String aliasBelongsTo(String alias, String name) {
+    return '\"$alias\" hoort al bij \"$name\" — voeg ze liever samen.';
+  }
 }

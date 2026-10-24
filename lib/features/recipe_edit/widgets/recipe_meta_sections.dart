@@ -6,6 +6,7 @@ import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../models/recipe_draft.dart';
 import 'edit_common.dart';
+import '../../../core/utils/ingredient_display.dart' show quantityKeyboardType;
 
 // ---------------------------------------------------------------------------
 // Portionen & Zeiten
@@ -29,7 +30,8 @@ class TimesServingsContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final caps = draft.caps;
-    const numKb = TextInputType.numberWithOptions(decimal: true);
+    // Portionen/Ergibt: Brüche tippbar („1/2") — Zahlentastatur hat kein „/".
+    final numKb = quantityKeyboardType;
 
     Widget timeRow(String label, DraftTime t) => Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -162,11 +164,17 @@ class NotesContent extends StatelessWidget {
   final VoidCallback onChanged;
   final void Function(DraftNote) onDelete;
 
+  /// Bild hochladen und in die Notiz einfügen (wie bei Schritten).
+  final void Function(DraftNote)? onInsertImage;
+  final String? uploadingNoteUid;
+
   const NotesContent({
     super.key,
     required this.draft,
     required this.onChanged,
     required this.onDelete,
+    this.onInsertImage,
+    this.uploadingNoteUid,
   });
 
   @override
@@ -206,9 +214,29 @@ class NotesContent extends StatelessWidget {
                             onChanged: (_) => onChanged(),
                             decoration: outlinedEditDecoration(l.noteTextHint),
                           ),
+                          if (onInsertImage != null)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: uploadingNoteUid == n.uid
+                                    ? null
+                                    : () => onInsertImage!(n),
+                                icon: uploadingNoteUid == n.uid
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
+                                    : const Icon(
+                                        Icons.add_photo_alternate_outlined,
+                                        size: 18),
+                                label: Text(l.insertStepImageAction),
+                              ),
+                            ),
                         ]),
                       ),
                       IconButton(
+                        tooltip: AppLocalizations.of(context)!.a11yRemove,
                         icon: const Icon(Icons.remove_circle_outline, size: 20),
                         onPressed: () => onDelete(n),
                       ),
@@ -431,6 +459,7 @@ class RecipeSettingsContent extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: AppLocalizations.of(context)!.a11yRemove,
                     icon: const Icon(Icons.remove_circle_outline, size: 20),
                     onPressed: () {
                       draft.extras.remove(e);

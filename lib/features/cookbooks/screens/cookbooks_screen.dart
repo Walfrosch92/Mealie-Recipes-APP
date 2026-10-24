@@ -10,6 +10,7 @@ import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/animations.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../providers/cookbooks_provider.dart';
+import '../../../shared/widgets/error_view.dart';
 
 // ---------------------------------------------------------------------------
 // Cookbooks — Übersicht der Haushalts-Kochbücher (GET /api/households/
@@ -44,21 +45,9 @@ class CookbooksScreen extends ConsumerWidget {
           top: false,
           child: cookbooksAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(e.toString(),
-                      style: TextStyle(color: context.appFgSub),
-                      textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () =>
-                        ref.read(cookbooksProvider.notifier).reload(),
-                    child: Text(l.retry),
-                  ),
-                ],
-              ),
+            error: (e, _) => ErrorRetryView(
+              error: e,
+              onRetry: () => ref.read(cookbooksProvider.notifier).reload(),
             ),
             data: (books) => books.isEmpty
                 ? _EmptyState(message: l.cookbooksEmpty)

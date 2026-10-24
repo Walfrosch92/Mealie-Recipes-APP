@@ -20,6 +20,11 @@ import '../../shopping_list/providers/shopping_list_provider.dart';
 import '../providers/mealplan_provider.dart';
 import 'add_meal_entry_screen.dart';
 import '../widgets/meal_dice_settings_sheet.dart';
+import '../../../shared/widgets/error_view.dart';
+import '../../../core/utils/meal_types.dart';
+import '../../../core/utils/ingredient_display.dart' show formatQuantity;
+import '../../../core/utils/mealie_version.dart';
+import '../widgets/meal_type_chip_row.dart';
 
 // ---------------------------------------------------------------------------
 // Meal Plan — mirrors iOS MealplanView 1:1
@@ -122,7 +127,8 @@ class _MealplanScreenState extends ConsumerState<MealplanScreen> {
         failed += await notifier.addRecipe(
           shoppingListId: settings.shoppingListId,
           recipe: detail,
-          multiplier: 1,
+          // Mealie ≥ 3.29: geplante Portionen des Eintrags, wie die Webapp.
+          multiplier: entry.recipeScale ?? 1,
           skipIf: skipIf,
         );
       }
@@ -153,7 +159,9 @@ class _MealplanScreenState extends ConsumerState<MealplanScreen> {
     final weekStart = ref.watch(currentWeekStartProvider);
     final planAsync = ref.watch(mealplanProvider);
     final weekEntries = ref.watch(currentWeekEntriesProvider);
-    final isCurrentWeek = startOfWeek(DateTime.now()) == startOfDay(weekStart);
+    final firstWeekday = ref.watch(weekStartWeekdayProvider);
+    final isCurrentWeek =
+        startOfWeek(DateTime.now(), firstWeekday) == startOfDay(weekStart);
     final hasSelectableEntries =
         weekEntries.values.expand((list) => list).any((e) => e.recipe != null);
 
@@ -177,7 +185,7 @@ class _MealplanScreenState extends ConsumerState<MealplanScreen> {
                   TextButton(
                     onPressed: () => ref
                         .read(currentWeekStartProvider.notifier)
-                        .state = startOfWeek(DateTime.now()),
+                        .state = startOfWeek(DateTime.now(), firstWeekday),
                     child: Text(l.today),
                   ),
                 // Mehrfachauswahl an
@@ -189,17 +197,19 @@ class _MealplanScreenState extends ConsumerState<MealplanScreen> {
                   ),
                 // Calendar date picker
                 IconButton(
+                  tooltip: AppLocalizations.of(context)!.selectDate,
                   icon: const Icon(Icons.calendar_today_outlined),
                   onPressed: () => _pickDate(context, ref, weekStart),
                 ),
                 // Würfel-Filter: Kategorien/Schlagworte pro Mahlzeit
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
-                  tooltip: l.mealDiceSettingsTitle,
+                  tooltip: l.mealplanSettingsTitle,
                   onPressed: () => showMealDiceSettingsSheet(context),
                 ),
                 // Add meal
                 IconButton(
+                  tooltip: AppLocalizations.of(context)!.addMealEntry,
                   icon: const Icon(Icons.add_circle, size: 26),
                   onPressed: () => _openAddMeal(context, ref),
                 ),
@@ -220,11 +230,10 @@ class _MealplanScreenState extends ConsumerState<MealplanScreen> {
                     weekEntries: weekEntries,
                     onPrev: () =>
                         ref.read(currentWeekStartProvider.notifier).state =
-                            startOfWeek(
-                                weekStart.subtract(const Duration(days: 7))),
+                            startOfWeek(addDays(weekStart, -7), firstWeekday),
                     onNext: () =>
                         ref.read(currentWeekStartProvider.notifier).state =
-                            startOfWeek(weekStart.add(const Duration(days: 7))),
+                            startOfWeek(addDays(weekStart, 7), firstWeekday),
                   ),
 
                   // ── Body ─────────────────────────────────────────────
@@ -232,9 +241,11 @@ class _MealplanScreenState extends ConsumerState<MealplanScreen> {
                     child: planAsync.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Center(
-                          child: Text(e.toString(),
-                              style: TextStyle(color: context.appFgSub))),
+                      error: (e, _) => ErrorRetryView(
+                        error: e,
+                        onRetry: () =>
+                            ref.read(mealplanProvider.notifier).refresh(),
+                      ),
                       data: (_) {
                         if (weekEntries.isEmpty) {
                           return _EmptyState(
@@ -303,7 +314,8 @@ class _MealplanScreenState extends ConsumerState<MealplanScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      ref.read(currentWeekStartProvider.notifier).state = startOfWeek(picked);
+      ref.read(currentWeekStartProvider.notifier).state =
+          startOfWeek(picked, ref.read(weekStartWeekdayProvider));
     }
   }
 
@@ -344,10 +356,10 @@ class _CalendarHeader extends ConsumerWidget {
     final lang =
         ref.watch(settingsProvider).valueOrNull?.selectedLanguage ?? 'de';
     final accent = Theme.of(context).colorScheme.primary;
-    final weekEnd = weekStart.add(const Duration(days: 6));
+    final weekEnd = addDays(weekStart, 6);
     final df = DateFormat('dd.MM');
     final headerText =
-        '${l.weekAbbreviation} ${isoWeekNumber(weekStart)} (${df.format(weekStart)} – ${df.format(weekEnd)})';
+        '${l.weekAbbreviation} ${isoWeekNumber(addDays(weekStart, 3))} (${df.format(weekStart)} – ${df.format(weekEnd)})';
 
     return Container(
       color: context.appBg,
@@ -441,7 +453,7 @@ class _WeekDayIndicators extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: List.generate(7, (i) {
-          final date = weekStart.add(Duration(days: i));
+          final date = addDays(weekStart, i);
           final hasEntries = weekEntries.containsKey(startOfDay(date));
           final isToday = startOfDay(date) == startOfDay(now);
           return Expanded(
@@ -578,7 +590,7 @@ class _WeekButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final df = DateFormat('dd.MM');
-    final weekEnd = info.weekStart.add(const Duration(days: 6));
+    final weekEnd = addDays(info.weekStart, 6);
     final entriesText = info.count == 1 ? l.entrySingular : l.entriesPlural;
 
     return Padding(
@@ -594,7 +606,8 @@ class _WeekButton extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Text('${l.weekAbbreviation} ${isoWeekNumber(info.weekStart)}',
+              Text(
+                  '${l.weekAbbreviation} ${isoWeekNumber(addDays(info.weekStart, 3))}',
                   style: TextStyle(
                       color: context.appFg, fontWeight: FontWeight.w700)),
               const SizedBox(width: 6),
@@ -703,31 +716,11 @@ class _MealEntryCard extends ConsumerWidget {
     this.onToggleSelect,
   });
 
-  String _slotEmoji(String slot) {
-    switch (slot.toLowerCase()) {
-      case 'breakfast':
-        return '🍳';
-      case 'lunch':
-        return '🥪';
-      case 'dinner':
-        return '🍽';
-      default:
-        return '🍴';
-    }
-  }
+  // Alle Mealie-Mahlzeitentypen (meal_types.dart) — vorher erschienen
+  // Beilage/Zwischenmahlzeit/Getränk/Nachspeise als Rohtext („side").
+  String _slotEmoji(String slot) => mealTypeEmoji(slot);
 
-  String _slotName(String slot, AppLocalizations l) {
-    switch (slot.toLowerCase()) {
-      case 'breakfast':
-        return l.breakfast;
-      case 'lunch':
-        return l.lunch;
-      case 'dinner':
-        return l.dinner;
-      default:
-        return slot;
-    }
-  }
+  String _slotName(String slot, AppLocalizations l) => mealTypeLabel(slot, l);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -760,6 +753,9 @@ class _MealEntryCard extends ConsumerWidget {
                             letterSpacing: 0.3)),
                     const SizedBox(height: 3),
                     _entryTitle(context),
+                    // Mealie ≥ 3.29: geplante Portionen je Eintrag.
+                    if (entry.recipe != null && ref.watch(mealie329Provider))
+                      _ServingsPill(entry: entry, enabled: !selectMode),
                   ],
                 ),
               ),
@@ -770,11 +766,48 @@ class _MealEntryCard extends ConsumerWidget {
               if (selectable)
                 _SelectionMark(selected: selected)
               else if (!selectMode)
-                GestureDetector(
-                  onTap: () =>
-                      ref.read(mealplanProvider.notifier).deleteEntry(entry.id),
-                  child: Icon(Icons.cancel_rounded,
-                      color: context.appFgTertiary, size: 24),
+                // ⋮-Menü: Verschieben (Tag/Mahlzeit) + Löschen. Vorher nur
+                // ein ×, Verschieben ging nur über Löschen + neu anlegen.
+                PopupMenuButton<String>(
+                  tooltip: l.mealplanEntryActions,
+                  icon: Icon(Icons.more_vert_rounded,
+                      color: context.appFgTertiary),
+                  onSelected: (v) async {
+                    if (v == 'move') {
+                      await showMoveMealDialog(context, ref, entry);
+                    } else if (v == 'delete') {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await ref
+                            .read(mealplanProvider.notifier)
+                            .deleteEntry(entry.id);
+                      } catch (e) {
+                        messenger.showSnackBar(SnackBar(
+                            content:
+                                Text(userErrorMessage(e, l.deleteFailed))));
+                      }
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'move',
+                      child: Row(children: [
+                        const Icon(Icons.event_repeat_rounded, size: 20),
+                        const SizedBox(width: 12),
+                        Text(l.mealplanMoveAction),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(children: [
+                        const Icon(Icons.delete_outline_rounded,
+                            size: 20, color: Colors.red),
+                        const SizedBox(width: 12),
+                        Text(l.delete,
+                            style: const TextStyle(color: Colors.red)),
+                      ]),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -821,9 +854,15 @@ class _MealEntryCard extends ConsumerWidget {
     );
     // Wie der Titel: Tippen öffnet das Rezept (nicht im Auswahlmodus).
     return GestureDetector(
-      onTap: selectMode ? null : () => context.push('/recipes/${recipe.id}'),
+      onTap: selectMode ? null : () => context.push(_recipeRoute(recipe.id)),
       child: image,
     );
+  }
+
+  /// Rezept in der geplanten Größe öffnen (wie die Webapp: `?scale=`).
+  String _recipeRoute(String id) {
+    final scale = entry.recipeScale ?? 1;
+    return scale == 1 ? '/recipes/$id' : '/recipes/$id?scale=$scale';
   }
 
   Widget _entryTitle(BuildContext context) {
@@ -831,7 +870,7 @@ class _MealEntryCard extends ConsumerWidget {
       return GestureDetector(
         onTap: selectMode
             ? null
-            : () => context.push('/recipes/${entry.recipe!.id}'),
+            : () => context.push(_recipeRoute(entry.recipe!.id)),
         child: Text(entry.recipe!.name,
             style: TextStyle(
                 color: context.appFg,
@@ -864,6 +903,139 @@ class _MealEntryCard extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Portionen eines Mahlzeitplan-Eintrags (Mealie `recipeScale`, ab 3.29).
+// Angezeigt als Portionen (Rezept-Portionen × Faktor) wie in der Webapp;
+// ohne bekannte Portionenzahl zählt das Rezept wie dort als 1 Portion.
+// ---------------------------------------------------------------------------
+
+class _ServingsPill extends ConsumerWidget {
+  final MealplanEntry entry;
+  final bool enabled;
+  const _ServingsPill({required this.entry, required this.enabled});
+
+  double _baseServings(WidgetRef ref) {
+    final id = entry.recipe!.id;
+    for (final r in ref.watch(recipesProvider).valueOrNull ?? const []) {
+      if (r.id == id) {
+        final s = r.servings ?? 0;
+        return s > 0 ? s : 1;
+      }
+    }
+    return 1;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final base = _baseServings(ref);
+    final scale = entry.recipeScale ?? 1;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: enabled
+            ? () => _edit(context, ref, base, scale)
+            : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppTokens.accentDeep.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.people_alt_rounded,
+                size: 14, color: AppTokens.accentDeep),
+            const SizedBox(width: 5),
+            Text('${formatQuantity(base * scale)} ${l.servings}',
+                style: const TextStyle(
+                    color: AppTokens.accentDeep,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _edit(
+      BuildContext context, WidgetRef ref, double base, double scale) async {
+    final l = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final servings = await showDialog<double>(
+      context: context,
+      builder: (_) => _ServingsDialog(initial: base * scale),
+    );
+    if (servings == null || servings <= 0) return;
+    final newScale = servings / base;
+    if ((newScale - scale).abs() < 1e-9) return;
+    try {
+      await ref.read(mealplanProvider.notifier).setRecipeScale(entry, newScale);
+    } catch (e) {
+      messenger.showSnackBar(
+          SnackBar(content: Text(userErrorMessage(e, l.saveFailed))));
+    }
+  }
+}
+
+class _ServingsDialog extends StatefulWidget {
+  final double initial;
+  const _ServingsDialog({required this.initial});
+
+  @override
+  State<_ServingsDialog> createState() => _ServingsDialogState();
+}
+
+class _ServingsDialogState extends State<_ServingsDialog> {
+  late double _value = widget.initial;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    Widget step(IconData icon, double delta) => IconButton.filledTonal(
+          icon: Icon(icon),
+          onPressed: _value + delta <= 0
+              ? null
+              : () => setState(() => _value = _value + delta),
+        );
+    return AlertDialog(
+      backgroundColor: context.appCard,
+      title: Text(l.mealplanServingsTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l.mealplanServingsHint,
+              style: TextStyle(color: context.appFgSub, fontSize: 13)),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              step(Icons.remove_rounded, -1),
+              SizedBox(
+                width: 72,
+                child: Text(formatQuantity(_value),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: context.appFg,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700)),
+              ),
+              step(Icons.add_rounded, 1),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
+        FilledButton(
+            onPressed: () => Navigator.pop(context, _value),
+            child: Text(l.save)),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Auswahl-Häkchen — mirrors die Checkbox-Optik der Mehrfachauswahl (kein
 // Swift-Original, reine App-eigene Funktion für den Mehrfach-Zutaten-Import).
 // ---------------------------------------------------------------------------
@@ -889,6 +1061,128 @@ class _SelectionMark extends StatelessWidget {
       child: selected
           ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
           : null,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mahlzeit verschieben — Tag und Mahlzeit ändern (Mealie PUT), danach
+// Hinweis mit Sprung in die Zielwoche, falls sie nicht angezeigt wird.
+// ---------------------------------------------------------------------------
+
+Future<void> showMoveMealDialog(
+    BuildContext context, WidgetRef ref, MealplanEntry entry) async {
+  final l = AppLocalizations.of(context)!;
+  final messenger = ScaffoldMessenger.of(context);
+  final result = await showDialog<({DateTime date, String type})>(
+    context: context,
+    builder: (_) => _MoveMealDialog(entry: entry),
+  );
+  if (result == null) return;
+  final date = result.date;
+  final dateStr = '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+  if (dateStr == entry.date && result.type == entry.entryType) return;
+  try {
+    await ref
+        .read(mealplanProvider.notifier)
+        .moveEntry(entry, date: dateStr, entryType: result.type);
+    final targetWeek = startOfWeek(date, ref.read(weekStartWeekdayProvider));
+    final shownWeek = startOfDay(ref.read(currentWeekStartProvider));
+    final lang =
+        ref.read(settingsProvider).valueOrNull?.selectedLanguage ?? 'de';
+    messenger.showSnackBar(SnackBar(
+      // Mit Knopf bleibt eine SnackBar seit Flutter 3.29 sonst STEHEN
+      // (persist = action != null) — erst ein Neustart räumte sie weg.
+      persist: false,
+      content: Text(
+          l.mealplanMovedTo(DateFormat('EEEE, d. MMMM', lang).format(date))),
+      action: targetWeek == shownWeek
+          ? null
+          : SnackBarAction(
+              label: l.mealplanShowWeek,
+              onPressed: () => ref
+                  .read(currentWeekStartProvider.notifier)
+                  .state = targetWeek,
+            ),
+    ));
+  } catch (e) {
+    messenger.showSnackBar(
+        SnackBar(content: Text(userErrorMessage(e, l.mealplanMoveFailed))));
+  }
+}
+
+class _MoveMealDialog extends ConsumerStatefulWidget {
+  final MealplanEntry entry;
+  const _MoveMealDialog({required this.entry});
+
+  @override
+  ConsumerState<_MoveMealDialog> createState() => _MoveMealDialogState();
+}
+
+class _MoveMealDialogState extends ConsumerState<_MoveMealDialog> {
+  late DateTime _date = DateTime.tryParse(widget.entry.date) ?? DateTime.now();
+  late String _type = widget.entry.entryType.toLowerCase();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final lang =
+        ref.watch(settingsProvider).valueOrNull?.selectedLanguage ?? 'de';
+    final name = widget.entry.recipe?.name ??
+        widget.entry.title ??
+        widget.entry.text ??
+        '';
+    return AlertDialog(
+      scrollable: true,
+      backgroundColor: context.appCard,
+      title: Text(l.mealplanMoveTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (name.isNotEmpty)
+            Text(name,
+                style: TextStyle(
+                    color: context.appFg, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.event_rounded),
+            title: Text(l.mealplanMoveDate),
+            subtitle: Text(DateFormat('EEEE, d. MMMM yyyy', lang).format(_date),
+                style: TextStyle(
+                    color: context.appFg, fontWeight: FontWeight.w600)),
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _date,
+                firstDate: DateTime(_date.year - 2),
+                lastDate: DateTime(_date.year + 3),
+              );
+              if (picked != null) setState(() => _date = picked);
+            },
+          ),
+          const SizedBox(height: 4),
+          // Alle Mahlzeitentypen wie in Mealie-Web, seitlich wischbar; ein
+          // unbekannter Typ des Eintrags bleibt wählbar.
+          MealTypeChipRow(
+            selected: _type,
+            onChanged: (v) => setState(() => _type = v),
+            includeUnknownSelected: true,
+            sidePadding: 0,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, (date: _date, type: _type)),
+          child: Text(l.mealplanMoveAction),
+        ),
+      ],
     );
   }
 }

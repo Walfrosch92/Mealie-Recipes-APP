@@ -123,7 +123,9 @@ class _RecipeDataScreenState extends ConsumerState<RecipeDataScreen> {
       'showAssets': false,
       'landscapeView': false,
       'disableComments': false,
-      'locked': false,
+      // Kein „Gesperrt": Mealies Sammelaktion übernimmt die Sperre nie
+      // (RecipeBulkActionsService.set_settings behält recipe.settings.locked)
+      // — der Schalter hätte still nichts bewirkt.
     };
     final labels = {
       'public': l.settingPublicRecipe,
@@ -136,6 +138,8 @@ class _RecipeDataScreenState extends ConsumerState<RecipeDataScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocal) => AlertDialog(
+          // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+          scrollable: true,
           backgroundColor: ctx.appCard,
           title: Text(l.recipeDataSettingsTitle),
           content: SizedBox(

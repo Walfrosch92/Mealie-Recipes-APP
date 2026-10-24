@@ -72,7 +72,9 @@ data class WidgetRecipeSummary(
 class WidgetL10n(private val lang: String) {
     fun s(key: String): String {
         val row = TABLE[key] ?: return key
-        return row[lang] ?: row["en"] ?: key
+        // Regionale Variante (z. B. "fr_CA") → eigene Einträge, sonst die
+        // Grundsprache ("fr"), sonst Englisch.
+        return row[lang] ?: row[lang.substringBefore('_')] ?: row["en"] ?: key
     }
 
     companion object {
@@ -82,6 +84,7 @@ class WidgetL10n(private val lang: String) {
                 "de" to "Frühstück",
                 "en" to "Breakfast",
                 "fr" to "Petit-déjeuner",
+                "fr_CA" to "Déjeuner",
                 "es" to "Desayuno",
                 "nl" to "Ontbijt",
                 "hu" to "Reggeli",
@@ -94,6 +97,7 @@ class WidgetL10n(private val lang: String) {
                 "de" to "Mittagessen",
                 "en" to "Lunch",
                 "fr" to "Déjeuner",
+                "fr_CA" to "Dîner",
                 "es" to "Almuerzo",
                 "nl" to "Lunch",
                 "hu" to "Ebéd",
@@ -106,6 +110,7 @@ class WidgetL10n(private val lang: String) {
                 "de" to "Abendessen",
                 "en" to "Dinner",
                 "fr" to "Dîner",
+                "fr_CA" to "Souper",
                 "es" to "Cena",
                 "nl" to "Diner",
                 "hu" to "Vacsora",
@@ -153,13 +158,13 @@ class WidgetL10n(private val lang: String) {
             "meal_plan" to mapOf(
                 "de" to "Essensplan",
                 "en" to "Meal Plan",
-                "fr" to "Plan de repas",
+                "fr" to "Menus",
                 "es" to "Plan de comidas",
                 "nl" to "Maaltijdplan",
                 "hu" to "Étkezési terv",
                 "nb" to "Måltidsplan",
                 "pl" to "Plan posiłków",
-                "pt" to "Plano alimentar",
+                "pt" to "Plano de refeições",
                 "sl" to "Jedilnik",
             ),
             "no_meals" to mapOf(
@@ -178,6 +183,7 @@ class WidgetL10n(private val lang: String) {
                 "de" to "Einkauf",
                 "en" to "Shopping",
                 "fr" to "Courses",
+                "fr_CA" to "Épicerie",
                 "es" to "Compra",
                 "nl" to "Boodschappen",
                 "hu" to "Bevásárlás",
@@ -190,6 +196,7 @@ class WidgetL10n(private val lang: String) {
                 "de" to "Einkaufsliste",
                 "en" to "Shopping List",
                 "fr" to "Liste de courses",
+                "fr_CA" to "Liste d'épicerie",
                 "es" to "Lista de la compra",
                 "nl" to "Boodschappenlijst",
                 "hu" to "Bevásárlólista",
@@ -319,7 +326,9 @@ object WidgetSharedStore {
         val prefs = context.dataStore.data.first()
         val saved = prefs[KEY_LANGUAGE]
         if (!saved.isNullOrEmpty()) return saved
-        var sys = java.util.Locale.getDefault().language.lowercase()
+        val locale = java.util.Locale.getDefault()
+        if (locale.language == "fr" && locale.country == "CA") return "fr_CA"
+        var sys = locale.language.lowercase()
         if (sys == "no") sys = "nb"
         return if (sys in SUPPORTED_LANGUAGES) sys else "en"
     }

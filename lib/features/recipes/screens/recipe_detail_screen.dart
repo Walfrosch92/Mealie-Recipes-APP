@@ -26,6 +26,7 @@ import '../../../shared/widgets/send_fly_animation.dart';
 import '../providers/detail_sections.dart';
 import '../providers/recipes_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../providers/recently_viewed_provider.dart';
 import '../widgets/recipe_comments_section.dart';
 import '../widgets/recipe_assets_section.dart';
 import '../../../core/providers/permissions_provider.dart';
@@ -39,17 +40,25 @@ import '../../recipe_send/services/recipe_send_service.dart';
 import '../services/recipe_pdf_service.dart';
 import '../../../shared/widgets/recipe_image.dart';
 import '../../../shared/widgets/recipe_image_viewer.dart';
+import '../../../core/utils/server_time.dart';
+import '../../../shared/widgets/error_view.dart';
+import '../../mealplan/widgets/meal_type_chip_row.dart';
+import '../widgets/recipe_share_link_dialog.dart';
 
 class RecipeDetailScreen extends ConsumerStatefulWidget {
   final String slug;
-  const RecipeDetailScreen({super.key, required this.slug});
+
+  /// Start-Multiplikator (z. B. Portionen eines Mahlzeitplan-Eintrags).
+  final double? initialScale;
+  const RecipeDetailScreen({super.key, required this.slug, this.initialScale});
 
   @override
   ConsumerState<RecipeDetailScreen> createState() => _RecipeDetailScreenState();
 }
 
 class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
-  double _multiplier = 1.0;
+  late double _multiplier =
+      (widget.initialScale ?? 0) > 0 ? widget.initialScale! : 1.0;
   int _detailTab = 0; // 0 = Zutaten, 1 = Zubereitung
   final Set<int> _checkedIngredients = {};
 
@@ -83,11 +92,12 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       await ref
           .read(favoritesProvider.notifier)
           .toggle(id: recipe.id, slug: recipe.slug);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       final l = AppLocalizations.of(context)!;
+      // Vorher „Fehler beim Laden des Rezepts" — passte nicht zum Herz.
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.errorLoadingRecipe)),
+        SnackBar(content: Text(userErrorMessage(e, l.saveFailed))),
       );
     }
   }
@@ -102,6 +112,11 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
         ref.read(recipeDetailProvider(widget.slug).notifier).checkForUpdates();
       }
     });
+    // „Zuletzt angesehen": sobald das Rezept da ist (auch aus dem Cache).
+    ref.listenManual(recipeDetailProvider(widget.slug), (_, next) {
+      final id = next.valueOrNull?.id;
+      if (id != null) ref.read(recentlyViewedProvider.notifier).record(id);
+    }, fireImmediately: true);
   }
 
   @override
@@ -127,19 +142,12 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           leading: _BackButton(onTap: () => _goBack(context)),
           title: Text(l.details),
         ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(l.errorLoadingRecipe,
-                  style: TextStyle(color: context.appFgSub)),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: () => ref.refresh(recipeDetailProvider(widget.slug)),
-                child: Text(l.retry),
-              ),
-            ],
-          ),
+        // Mit Grund (offline, Anmeldung abgelaufen, Rezept gelöscht …)
+        // statt nur „Fehler beim Laden".
+        body: ErrorRetryView(
+          error: e,
+          title: l.errorLoadingRecipe,
+          onRetry: () => ref.invalidate(recipeDetailProvider(widget.slug)),
         ),
       ),
       data: (recipe) => _buildDetail(context, recipe, settings),
@@ -151,6 +159,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     final l = AppLocalizations.of(context)!;
 
     final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    final heroHeight = LargeScreen.isWide(context) ? 460.0 : 320.0;
     const ctaBarHeight = 56.0;
     final ctaReserve = ctaBarHeight + bottomSafe + 30;
     final isFavorite =
@@ -167,14 +176,38 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
               // kein Android-Stretch-Overscroll, der das Bild verzerren würde
               behavior:
                   ScrollConfiguration.of(context).copyWith(overscroll: false),
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.only(bottom: ctaReserve),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Full-bleed Hero-Header: Bild + Scrim + Blur-Nav + Titel/Meta
-                    _HeroHeader(
+              child: CustomScrollView(
+                // Stretchy Header (Flutter-eigen, SliverAppBar.stretch): am
+                // oberen Rand weiterziehen vergrößert das Titelbild weich
+                // (oben verankert, Zoom durch BoxFit.cover), statt hart zu
+                // stoppen; beim Loslassen federt es zurück. Bewusst KEIN
+                // Eigenbau über den Scroll-Offset — der wackelte 2026-09
+                // (Rückkopplung Layout↔Scroll).
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+                slivers: [
+                  SliverAppBar(
+                    primary: false,
+                    automaticallyImplyLeading: false,
+                    toolbarHeight: 0,
+                    // min = max → beim normalen Scrollen starr wie bisher,
+                    // nur das Überziehen dehnt.
+                    expandedHeight: heroHeight,
+                    collapsedHeight: heroHeight,
+                    stretch: true,
+                    backgroundColor: Colors.transparent,
+                    surfaceTintColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    elevation: 0,
+                    scrolledUnderElevation: 0,
+                    // Statusleiste wie im Rest der App (theme-abhängig).
+                    systemOverlayStyle:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? SystemUiOverlayStyle.light
+                                .copyWith(statusBarColor: Colors.transparent)
+                            : SystemUiOverlayStyle.dark
+                                .copyWith(statusBarColor: Colors.transparent),
+                    flexibleSpace: _HeroHeader(
                       recipe: recipe,
                       settings: settings,
                       multiplier: _multiplier,
@@ -183,271 +216,274 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                       onBack: () => _goBack(context),
                       onMore: () => _showMoreOptionsSheet(context, recipe),
                     ),
-
-                    // Inhalts-Sheet mit abgerundeter Oberkante, das den Hero überlappt
-                    Transform.translate(
-                      offset: const Offset(0, -22),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: context.appBg,
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(24)),
-                        ),
-                        // Große Anzeige (Windows/macOS): Inhalt als zentrierte
-                        // Lesespalte statt über die ganze Fensterbreite.
-                        padding: EdgeInsets.only(
-                          top: 10,
-                          left: LargeScreen.inset(context),
-                          right: LargeScreen.inset(context),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Grip
-                            Center(
-                              child: Container(
-                                width: 40,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  color: context.appSeparator,
-                                  borderRadius: BorderRadius.circular(3),
+                  ),
+                  SliverPadding(
+                    padding: EdgeInsets.only(bottom: ctaReserve),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Inhalts-Sheet — die abgerundete Oberkante samt Griff
+                          // gehört jetzt zur Kopfzeile (_HeroHeader), weil die
+                          // Sliver-Kopfzeile über dem Inhalt gezeichnet wird.
+                          Container(
+                            decoration: BoxDecoration(
+                              color: context.appBg,
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(24)),
+                            ),
+                            // Große Anzeige (Windows/macOS): Inhalt als zentrierte
+                            // Lesespalte statt über die ganze Fensterbreite.
+                            padding: EdgeInsets.only(
+                              top: 7,
+                              left: LargeScreen.inset(context),
+                              right: LargeScreen.inset(context),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Bewertung (antippbar)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _RatingRow(
+                                    recipe: recipe,
+                                    onRate: (v) => _setRating(recipe, v),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
 
-                            // Bewertung (antippbar)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: _RatingRow(
-                                recipe: recipe,
-                                onRate: (v) => _setRating(recipe, v),
-                              ),
-                            ),
+                                // Description
+                                if (recipe.description != null &&
+                                    recipe.description!.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        16, 12, 16, 0),
+                                    child: Text(
+                                      recipe.description!,
+                                      style: TextStyle(
+                                          color: context.appFgSub,
+                                          fontSize: 14),
+                                    ),
+                                  ),
 
-                            // Description
-                            if (recipe.description != null &&
-                                recipe.description!.isNotEmpty)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                                child: Text(
-                                  recipe.description!,
-                                  style: TextStyle(
-                                      color: context.appFgSub, fontSize: 14),
+                                const SizedBox(height: 16),
+
+                                // Aktionen zwischen Beschreibung und Zutaten/Zubereitung:
+                                // „Zutaten in den Warenkorb" + „Mahlzeit planen".
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _ActionButton(
+                                    icon: Icons.shopping_cart_outlined,
+                                    label: l.addAllIngredients,
+                                    color: const Color(0xFF0A84FF),
+                                    busy: _addingAll,
+                                    onTap: () =>
+                                        _addAllIngredients(context, recipe),
+                                  ),
                                 ),
-                              ),
-
-                            // Ursprüngliche URL (Mealie `orgURL`) — nur wenn
-                            // eine Web-Adresse hinterlegt ist.
-                            if (_originalUri(recipe) != null)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                                child: _OriginalUrlButton(
-                                    uri: _originalUri(recipe)!),
-                              ),
-
-                            const SizedBox(height: 16),
-
-                            // Aktionen zwischen Beschreibung und Zutaten/Zubereitung:
-                            // „Zutaten in den Warenkorb" + „Mahlzeit planen".
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: _ActionButton(
-                                icon: Icons.shopping_cart_outlined,
-                                label: l.addAllIngredients,
-                                color: const Color(0xFF0A84FF),
-                                busy: _addingAll,
-                                onTap: () =>
-                                    _addAllIngredients(context, recipe),
-                              ),
-                            ),
-                            if (_checkedIngredients.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: _ActionButton(
-                                  icon: Icons.playlist_add_check,
-                                  label: l.addSelectedIngredients,
-                                  color: const Color(0xFF30D158),
-                                  busy: _addingSelected,
-                                  onTap: () =>
-                                      _addSelectedIngredients(context, recipe),
+                                if (_checkedIngredients.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: _ActionButton(
+                                      icon: Icons.playlist_add_check,
+                                      label: l.addSelectedIngredients,
+                                      color: const Color(0xFF30D158),
+                                      busy: _addingSelected,
+                                      onTap: () => _addSelectedIngredients(
+                                          context, recipe),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _ActionButton(
+                                    icon: Icons.calendar_month_outlined,
+                                    label: l.planMeal,
+                                    color: const Color(0xFF0A84FF),
+                                    onTap: () =>
+                                        _showPlanSheet(context, recipe),
+                                  ),
                                 ),
-                              ),
-                            ],
-                            const SizedBox(height: 8),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: _ActionButton(
-                                icon: Icons.calendar_month_outlined,
-                                label: l.planMeal,
-                                color: const Color(0xFF0A84FF),
-                                onTap: () => _showPlanSheet(context, recipe),
-                              ),
-                            ),
 
-                            const SizedBox(height: 18),
+                                const SizedBox(height: 18),
 
-                            // Segment-Control: Zutaten | Zubereitung (wie im Mockup)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: _SegmentControl(
-                                labels: [l.ingredients, l.instructions],
-                                selected: _detailTab,
-                                onChanged: (i) =>
-                                    setState(() => _detailTab = i),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            if (_detailTab == 0) ...[
-                              // Portionen-Stepper
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: _PortionStepper(
-                                  recipeYield: recipe.recipeYield,
-                                  multiplier: _multiplier,
-                                  onChanged: (v) =>
-                                      setState(() => _multiplier = v),
+                                // Segment-Control: Zutaten | Zubereitung (wie im Mockup)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _SegmentControl(
+                                    labels: [l.ingredients, l.instructions],
+                                    selected: _detailTab,
+                                    onChanged: (i) =>
+                                        setState(() => _detailTab = i),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              _IngredientsContent(
-                                recipe: recipe,
-                                multiplier: _multiplier,
-                                checked: _checkedIngredients,
-                                onToggleCheck: (i) {
-                                  setState(() {
-                                    if (_checkedIngredients.contains(i)) {
-                                      _checkedIngredients.remove(i);
-                                    } else {
-                                      _checkedIngredients.add(i);
-                                    }
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 4),
-                            ] else ...[
-                              _InstructionsContent(
-                                recipe: recipe,
-                                settings: settings,
-                                completed: _completedSteps,
-                                onToggle: (i) {
-                                  HapticFeedback.selectionClick();
-                                  setState(() {
-                                    if (_completedSteps.contains(i)) {
-                                      _completedSteps.remove(i);
-                                    } else {
-                                      _completedSteps.add(i);
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
+                                const SizedBox(height: 16),
 
-                            const SizedBox(height: 16),
+                                if (_detailTab == 0) ...[
+                                  // Portionen-Stepper
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: _PortionStepper(
+                                      recipeYield: recipe.recipeYield,
+                                      multiplier: _multiplier,
+                                      onChanged: (v) =>
+                                          setState(() => _multiplier = v),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _IngredientsContent(
+                                    recipe: recipe,
+                                    multiplier: _multiplier,
+                                    checked: _checkedIngredients,
+                                    onToggleCheck: (i) {
+                                      setState(() {
+                                        if (_checkedIngredients.contains(i)) {
+                                          _checkedIngredients.remove(i);
+                                        } else {
+                                          _checkedIngredients.add(i);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 4),
+                                ] else ...[
+                                  _InstructionsContent(
+                                    recipe: recipe,
+                                    settings: settings,
+                                    completed: _completedSteps,
+                                    onToggle: (i) {
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        if (_completedSteps.contains(i)) {
+                                          _completedSteps.remove(i);
+                                        } else {
+                                          _completedSteps.add(i);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                ],
 
-                            // Tags
-                            if (recipe.tags.isNotEmpty ||
-                                recipe.recipeCategory.isNotEmpty) ...[
-                              _TagsSection(recipe: recipe),
-                              const SizedBox(height: 16),
-                            ],
+                                const SizedBox(height: 16),
 
-                            // Nährwerte (Mealie `nutrition`) — wie im Web nur, wenn am Rezept
-                            // „Nährwerte anzeigen" aktiv ist und Werte hinterlegt sind.
-                            if (recipe.nutrition.isNotEmpty &&
-                                (recipe.settings?.showNutrition ?? true)) ...[
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: _NutritionSection(
-                                    nutrition: recipe.nutrition),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
+                                // Tags
+                                if (recipe.tags.isNotEmpty ||
+                                    recipe.recipeCategory.isNotEmpty) ...[
+                                  _TagsSection(recipe: recipe),
+                                  const SizedBox(height: 16),
+                                ],
 
-                            // Benötigte Utensilien (Mealie `tools`) — nur wenn hinterlegt,
-                            // sonst bleibt die Ansicht wie bisher.
-                            if (recipe.tools.isNotEmpty) ...[
-                              _ToolsSection(
-                                tools: recipe.tools,
-                                checked: _checkedTools,
-                                onToggle: (i) {
-                                  HapticFeedback.selectionClick();
-                                  setState(() {
-                                    if (!_checkedTools.remove(i)) {
-                                      _checkedTools.add(i);
-                                    }
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                            ],
+                                // Nährwerte (Mealie `nutrition`) — wie im Web nur, wenn am Rezept
+                                // „Nährwerte anzeigen" aktiv ist und Werte hinterlegt sind.
+                                if (recipe.nutrition.isNotEmpty &&
+                                    (recipe.settings?.showNutrition ??
+                                        true)) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: _NutritionSection(
+                                        nutrition: recipe.nutrition),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
 
-                            // Anhänge (Mealie `assets`: PDFs, Bilder, Textdateien).
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: RecipeAssetsSection(
-                                recipe: recipe,
-                                editable: recipeEditAccess(
-                                        ref.watch(userPermissionsProvider),
-                                        recipe) ==
-                                    RecipeEditAccess.allowed,
-                              ),
+                                // Benötigte Utensilien (Mealie `tools`) — nur wenn hinterlegt,
+                                // sonst bleibt die Ansicht wie bisher.
+                                if (recipe.tools.isNotEmpty) ...[
+                                  _ToolsSection(
+                                    tools: recipe.tools,
+                                    checked: _checkedTools,
+                                    onToggle: (i) {
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        if (!_checkedTools.remove(i)) {
+                                          _checkedTools.add(i);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+
+                                // Anhänge (Mealie `assets`: PDFs, Bilder, Textdateien).
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: RecipeAssetsSection(
+                                    recipe: recipe,
+                                    editable: recipeEditAccess(
+                                            ref.watch(userPermissionsProvider),
+                                            recipe) ==
+                                        RecipeEditAccess.allowed,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Notizen (Mealie-Rezeptnotizen: Titel+Text, inline editierbar).
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: RecipeNotesList(
+                                      recipe: recipe,
+                                      // Notizen gehören zum Rezept → gleiche Regel wie Bearbeiten.
+                                      editable: recipeEditAccess(
+                                              ref.watch(
+                                                  userPermissionsProvider),
+                                              recipe) ==
+                                          RecipeEditAccess.allowed,
+                                      collapsible: true),
+                                ),
+
+                                // Kommentare (Mealie) unter den Notizen — wie im Web ausgeblendet,
+                                // wenn sie am Rezept deaktiviert sind.
+                                if (!(recipe.settings?.disableComments ??
+                                    false)) ...[
+                                  const SizedBox(height: 20),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child:
+                                        RecipeCommentsSection(recipe: recipe),
+                                  ),
+                                ],
+
+                                // Zeitleiste („Ich hab's gekocht" mit Foto) — wie die Webapp.
+                                const SizedBox(height: 20),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: RecipeTimelineSection(recipe: recipe),
+                                ),
+
+                                // Ursprüngliche URL (Mealie `orgURL`) ganz am
+                                // Ende, ausklappbar wie die anderen Bereiche —
+                                // nur wenn eine Web-Adresse hinterlegt ist.
+                                if (_originalUri(recipe) != null) ...[
+                                  const SizedBox(height: 20),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: _OriginalUrlSection(
+                                        uri: _originalUri(recipe)!),
+                                  ),
+                                ],
+
+                                const SizedBox(height: 32),
+                              ],
                             ),
-                            const SizedBox(height: 20),
-
-                            // Notizen (Mealie-Rezeptnotizen: Titel+Text, inline editierbar).
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: RecipeNotesList(
-                                  recipe: recipe,
-                                  // Notizen gehören zum Rezept → gleiche Regel wie Bearbeiten.
-                                  editable: recipeEditAccess(
-                                          ref.watch(userPermissionsProvider),
-                                          recipe) ==
-                                      RecipeEditAccess.allowed,
-                                  collapsible: true),
-                            ),
-
-                            // Kommentare (Mealie) unter den Notizen — wie im Web ausgeblendet,
-                            // wenn sie am Rezept deaktiviert sind.
-                            if (!(recipe.settings?.disableComments ??
-                                false)) ...[
-                              const SizedBox(height: 20),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: RecipeCommentsSection(recipe: recipe),
-                              ),
-                            ],
-
-                            // Zeitleiste („Ich hab's gekocht" mit Foto) — wie die Webapp.
-                            const SizedBox(height: 20),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: RecipeTimelineSection(recipe: recipe),
-                            ),
-
-                            const SizedBox(height: 32),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             // Sticky „Kochen starten"-CTA
@@ -609,16 +645,19 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   void _showMoreOptionsSheet(BuildContext context, RecipeDetail recipe) {
     final l = AppLocalizations.of(context)!;
     final perms = ref.read(userPermissionsProvider);
-    final editLocked =
-        recipeEditAccess(perms, recipe) == RecipeEditAccess.locked;
+    final editAccess = recipeEditAccess(perms, recipe);
+    final editLocked = editAccess != RecipeEditAccess.allowed;
     final mayDelete = canDeleteRecipe(perms, recipe);
     showModalBottomSheet(
+      isScrollControlled: true,
       useSafeArea: true,
       context: context,
       backgroundColor: context.appCard,
       useRootNavigator: true,
       builder: (sheetCtx) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SheetHandle(),
@@ -681,6 +720,26 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 },
               ),
             ),
+            // Freigabe-Link (Server-Token, ohne Konto lesbar) + QR-Code.
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppTokens.accent.withValues(alpha: 0.12),
+                ),
+                child: const Icon(Icons.qr_code_2_rounded,
+                    color: AppTokens.accentDeep, size: 20),
+              ),
+              title: Text(l.recipeShareLinkMenu,
+                  style: TextStyle(
+                      color: context.appFg, fontWeight: FontWeight.w600)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                showRecipeShareLinkDialog(context, recipe);
+              },
+            ),
             // Desktop: Webapp-Funktionen (Duplizieren, Freigabe-Link,
             // Export, Rezept-Aktionen) in einem eigenen Sheet.
             if (PlatformFeatures.webAppTools)
@@ -720,7 +779,10 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
               // Gesperrtes Rezept eines anderen: wie in Mealie nur der
               // Ersteller/Admin → ausgegraut mit Begründung.
               subtitle: editLocked
-                  ? Text(l.recipeLockedHint,
+                  ? Text(
+                      editAccess == RecipeEditAccess.otherHousehold
+                          ? l.recipeOtherHouseholdHint
+                          : l.recipeLockedHint,
                       style: TextStyle(color: context.appFgSub, fontSize: 12))
                   : null,
               enabled: !editLocked,
@@ -756,7 +818,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
             ),
             const SizedBox(height: 8),
           ],
-        ),
+        )),
       ),
     );
   }
@@ -804,6 +866,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
 
   void _showSendSheet(BuildContext context, RecipeDetail recipe) {
     showModalBottomSheet(
+      isScrollControlled: true,
       useSafeArea: true,
       context: context,
       backgroundColor: context.appCard,
@@ -1081,7 +1144,7 @@ class _PortionStepper extends StatelessWidget {
     final c = _clean(v);
     return c == c.truncateToDouble()
         ? c.truncate().toString()
-        : c.toStringAsFixed(1);
+        : ingdisp.formatQuantityInput(c);
   }
 
   // Erste Zahl im UNSKALIERTEN Yield-Text — die Basis, auf die sich eine
@@ -1102,20 +1165,25 @@ class _PortionStepper extends StatelessWidget {
     final typed = await showDialog<double>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+        scrollable: true,
         backgroundColor: context.appCard,
         title: Text(l.servings, style: TextStyle(color: context.appFg)),
         content: TextField(
           controller: controller,
           autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          // Brüche/Dezimalen tippbar („1/2", „1.5").
+          keyboardType: ingdisp.quantityKeyboardType,
+          autocorrect: false,
+          enableSuggestions: false,
           style: TextStyle(color: context.appFg),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
           FilledButton(
-            onPressed: () => Navigator.pop(
-                ctx, double.tryParse(controller.text.replaceAll(',', '.'))),
+            onPressed: () =>
+                Navigator.pop(ctx, ingdisp.parseQuantityInput(controller.text)),
             child: Text(l.save),
           ),
         ],
@@ -1744,7 +1812,9 @@ class _SendSheet extends ConsumerWidget {
     final peersAsync = ref.watch(recipeSendProvider);
     final peers = peersAsync.valueOrNull ?? const <RecipePeer>[];
     return SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SheetHandle(),
@@ -1836,7 +1906,7 @@ class _SendSheet extends ConsumerWidget {
                 )),
           const SizedBox(height: 8),
         ],
-      ),
+      )),
     );
   }
 }
@@ -1867,7 +1937,9 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
         right: 16,
         top: 16,
       ),
-      child: Column(
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1916,26 +1988,11 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _MealTypeBtn(
-                label: l.breakfast,
-                selected: _mealType == 'breakfast',
-                onTap: () => setState(() => _mealType = 'breakfast'),
-              ),
-              const SizedBox(width: 8),
-              _MealTypeBtn(
-                label: l.lunch,
-                selected: _mealType == 'lunch',
-                onTap: () => setState(() => _mealType = 'lunch'),
-              ),
-              const SizedBox(width: 8),
-              _MealTypeBtn(
-                label: l.dinner,
-                selected: _mealType == 'dinner',
-                onTap: () => setState(() => _mealType = 'dinner'),
-              ),
-            ],
+          // Alle Mahlzeitentypen wie in Mealie-Web, seitlich wischbar.
+          MealTypeChipRow(
+            selected: _mealType,
+            onChanged: (v) => setState(() => _mealType = v),
+            sidePadding: 0,
           ),
           const SizedBox(height: 16),
           GradientButton(
@@ -1944,59 +2001,27 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
             onTap: () async {
               final dateStr =
                   '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}';
-              await ref.read(mealplanProvider.notifier).addEntry(
-                    date: dateStr,
-                    entryType: _mealType,
-                    recipeId: widget.recipe.id,
-                    title: widget.recipe.name,
-                  );
+              try {
+                await ref.read(mealplanProvider.notifier).addEntry(
+                      date: dateStr,
+                      entryType: _mealType,
+                      recipeId: widget.recipe.id,
+                      title: widget.recipe.name,
+                    );
+              } catch (e) {
+                // Vorher unbehandelt: offline passierte beim Tippen nichts.
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(userErrorMessage(e))));
+                }
+                return;
+              }
               if (context.mounted) Navigator.pop(context);
             },
           ),
           const SizedBox(height: 8),
         ],
-      ),
-    );
-  }
-}
-
-class _MealTypeBtn extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _MealTypeBtn(
-      {required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          decoration: BoxDecoration(
-            gradient: selected ? AppTokens.accentGradient : null,
-            color: selected ? null : context.appSurface2,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: selected
-                ? const [
-                    BoxShadow(
-                        color: Color(0x40FF7800),
-                        blurRadius: 10,
-                        offset: Offset(0, 3))
-                  ]
-                : null,
-          ),
-          child: Text(label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: selected ? Colors.white : context.appFgSub,
-                fontSize: 14,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              )),
-        ),
-      ),
+      )),
     );
   }
 }
@@ -2069,10 +2094,11 @@ class _HeroHeader extends StatelessWidget {
     // „Rezeptbilder anzeigen" gilt nur für Listen (so steht es auch in der
     // Einstellung) — das Titelbild im Rezept selbst ist immer sichtbar.
 
-    // Feste Höhe 320 (große Anzeige unter Windows/macOS: 460), Bild starr. Tippen aufs Bild öffnet die große Ansicht
-    // (Blur-Nav und Titel/Meta liegen darüber und behalten ihre Taps).
-    return SizedBox(
-      height: LargeScreen.isWide(context) ? 460 : 320,
+    // Füllt die Kopfzeile der Detailansicht (320, große Anzeige 460) — beim
+    // Überziehen wird sie höher: das Bild (BoxFit.cover) zoomt dann mit,
+    // die Nav bleibt oben, Titel/Meta wandern mit der Unterkante. Tippen
+    // aufs Bild öffnet die große Ansicht (Nav/Titel behalten ihre Taps).
+    return SizedBox.expand(
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -2185,6 +2211,32 @@ class _HeroHeader extends StatelessWidget {
               ],
             ),
           ),
+
+          // Abgerundete Oberkante des Inhalts + Griff — sitzt unten in der
+          // Kopfzeile und wandert beim Dehnen mit der Unterkante.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 24,
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.appBg,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              alignment: Alignment.topCenter,
+              padding: const EdgeInsets.only(top: 10),
+              child: Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: context.appSeparator,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -2225,11 +2277,10 @@ class _HeroMetaRow extends StatelessWidget {
       items.add(_item(Icons.star_rounded, recipe.rating!.toStringAsFixed(1)));
     }
     // „Zuletzt gekocht" — Mealies lastMade (UTC) als lokales Kurzdatum.
-    final lastMade = DateTime.tryParse(recipe.lastMade ?? '');
+    final lastMade = parseMealieTime(recipe.lastMade);
     if (lastMade != null) {
       final l = AppLocalizations.of(context)!;
-      final date =
-          MaterialLocalizations.of(context).formatShortDate(lastMade.toLocal());
+      final date = MaterialLocalizations.of(context).formatShortDate(lastMade);
       items.add(_item(Icons.history_rounded, '${l.lastCooked}: $date'));
     }
     if (items.isEmpty) return const SizedBox.shrink();
@@ -2445,6 +2496,34 @@ Uri? _originalUri(RecipeDetail recipe) {
   return uri.host.isEmpty ? null : uri;
 }
 
+/// Abschnitt „Ursprüngliche URL" am Ende der Detailansicht. Auf-/Zuklappen
+/// gilt für alle Rezepte und bleibt gespeichert (DetailSection.source).
+class _OriginalUrlSection extends ConsumerWidget {
+  final Uri uri;
+  const _OriginalUrlSection({required this.uri});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    final expanded = isDetailSectionExpanded(ref, DetailSection.source);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          icon: Icons.link_rounded,
+          title: l.originalUrlLabel,
+          expanded: expanded,
+          onToggle: () => toggleDetailSection(ref, DetailSection.source),
+        ),
+        CollapsibleBody(
+          expanded: expanded,
+          child: _OriginalUrlButton(uri: uri),
+        ),
+      ],
+    );
+  }
+}
+
 /// Knopf „Ursprüngliche URL" mit Domain — öffnet die Quelle im Browser.
 class _OriginalUrlButton extends StatelessWidget {
   final Uri uri;
@@ -2452,7 +2531,6 @@ class _OriginalUrlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
     final host = uri.host.startsWith('www.') ? uri.host.substring(4) : uri.host;
     return Align(
       alignment: Alignment.centerLeft,
@@ -2471,20 +2549,15 @@ class _OriginalUrlButton extends StatelessWidget {
                     size: 16, color: AppTokens.accentDeep),
                 const SizedBox(width: 8),
                 Flexible(
-                  child: Text.rich(
-                    TextSpan(children: [
-                      TextSpan(
-                          text: l.originalUrlLabel,
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                      TextSpan(
-                          text: ' · $host',
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
-                    ]),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: AppTokens.accentDeep, fontSize: 13.5),
-                  ),
+                  // Nur die Website — die Überschrift „Ursprüngliche URL"
+                  // steht schon darüber (_OriginalUrlSection).
+                  child: Text(host,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: AppTokens.accentDeep,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700)),
                 ),
               ],
             ),

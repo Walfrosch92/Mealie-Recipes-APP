@@ -3,7 +3,6 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     // Compose-Compiler-Plugin (Kotlin 2.0+ pflicht) — wird für Jetpack Glance
     // benötigt, das Compose-Runtime nutzt um die Home-Screen-Widgets zu rendern.
     id("org.jetbrains.kotlin.plugin.compose")
@@ -31,10 +30,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
         applicationId = "com.walfrosch92.mealie_recipes"
         // Glance-AppWidget braucht mindestens API 23; in
@@ -45,11 +40,11 @@ android {
         // versionCode BEWUSST entkoppelt von der pubspec-Build-Nummer:
         // Google Play verlangt einen über ALLE Releases hinweg streng
         // steigenden Wert, während iOS die Build-Nummer bei jedem neuen
-        // Versionszug wieder bei 1 starten darf (pubspec steht daher auf
-        // 1.27.9+1). Bei jedem Play-Upload hier hochzählen — der Wert darf
+        // Versionszug wieder bei 1 starten darf (pubspec-Build-Nummer
+        // daher klein). Bei jedem Play-Upload hier hochzählen — der Wert darf
         // nie kleiner oder gleich einem bereits hochgeladenen sein.
-        versionCode = 50
-        // versionName bleibt an der pubspec-Version (1.27.9).
+        versionCode = 54
+        // versionName kommt aus der pubspec-Version (aktuell 1.27.12).
         versionName = flutter.versionName
         multiDexEnabled = true
     }
@@ -132,4 +127,12 @@ dependencies {
     // Benachrichtigung über einen eigenständigen BroadcastReceiver, auch wenn
     // die App komplett beendet wurde (siehe shopping_reminder/-Paket).
     implementation("com.google.android.gms:play-services-location:21.3.0")
+}
+
+// Kotlin-Compileroptionen in der neuen Schreibweise (der frühere
+// `kotlinOptions`-Block im android { } ist ab Kotlin 2.x veraltet).
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }

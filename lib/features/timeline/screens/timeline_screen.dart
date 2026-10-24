@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
-import '../../../core/api/api_service.dart' show mealieErrorMessage;
+import '../../../core/api/api_service.dart' show userErrorMessage;
 import '../../../shared/theme/app_colors.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../../recipes/providers/recipes_provider.dart';
@@ -68,7 +68,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(mealieErrorMessage(e) ?? e.toString(),
+                    Text(userErrorMessage(e),
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.appFgSub)),
                     const SizedBox(height: 12),

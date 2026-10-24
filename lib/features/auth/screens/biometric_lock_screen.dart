@@ -69,44 +69,48 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen> {
       backgroundColor: context.appBg,
       body: SafeArea(
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppTokens.accentGradient,
-                    boxShadow: context.appAccentGlow,
+          // Querformat/große Schrift: scrollt statt den Knopf abzuschneiden.
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppTokens.accentGradient,
+                      boxShadow: context.appAccentGlow,
+                    ),
+                    child: const Icon(Icons.lock_rounded,
+                        size: 56, color: Colors.white),
                   ),
-                  child: const Icon(Icons.lock_rounded,
-                      size: 56, color: Colors.white),
-                ),
-                const SizedBox(height: 28),
-                // Marke bewusst NICHT übersetzt — immer „Mealie Recipes".
-                Text('Mealie Recipes',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                Text(l.biometricPrompt,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: context.appFgSub, fontSize: 15)),
-                if (_failed) ...[
-                  const SizedBox(height: 16),
-                  Text(l.biometricFailed,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.error)),
+                  const SizedBox(height: 28),
+                  // Marke bewusst NICHT übersetzt — immer „Mealie Recipes".
+                  Text('Mealie Recipes',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  Text(l.biometricPrompt,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: context.appFgSub, fontSize: 15)),
+                  if (_failed) ...[
+                    const SizedBox(height: 16),
+                    Text(l.biometricFailed,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
+                  ],
+                  const SizedBox(height: 32),
+                  GradientButton(
+                    label: l.retry,
+                    icon: Icons.fingerprint_rounded,
+                    onTap: _authenticate,
+                  ),
                 ],
-                const SizedBox(height: 32),
-                GradientButton(
-                  label: l.retry,
-                  icon: Icons.fingerprint_rounded,
-                  onTap: _authenticate,
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/models/app_settings.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/local_cache.dart';
 import '../../../core/services/log_manager.dart';
+import '../services/network_error.dart';
 import 'shopping_list_provider.dart';
 
 // ---------------------------------------------------------------------------
@@ -179,7 +183,9 @@ class ShoppingListsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   /// (Webapp zeigt sie dann genauso). Liest dafür IMMER den aktuellen
   /// Server-Stand der Liste — vorher wurde nur synchronisiert, wenn die
   /// Listenübersicht zufällig schon geladen war (still kein Sync beim
-  /// direkten Öffnen der Einkaufsliste). Offline: nur lokal, kein Fehler.
+  /// direkten Öffnen der Einkaufsliste). Offline: vorgemerkt und beim
+  /// nächsten erfolgreichen Laden nachgereicht ([flushPendingOrder]) —
+  /// vorher blieb sie nur lokal und ging beim Listenwechsel verloren.
   Future<void> pushOrderByNames(String listId, List<String> names) async {
     if (listId.isEmpty) return;
     final api = ref.read(apiServiceProvider);
@@ -195,10 +201,46 @@ class ShoppingListsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
             [for (final m in _current) m['id'] == listId ? updated : m]);
       }
       LogManager.shared.log('🏷️ Kategorie-Reihenfolge an Mealie übertragen');
+      await _setPendingOrder(listId, null);
     } catch (e) {
+      if (isNetworkError(e)) await _setPendingOrder(listId, names);
       LogManager.shared
           .log('⚠️ Kategorie-Reihenfolge nicht übertragen (offline?): $e');
     }
+  }
+
+  static const _kPendingOrder = 'pending_label_order';
+
+  Future<void> _setPendingOrder(String listId, List<String>? names) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_kPendingOrder);
+      final map = raw == null
+          ? <String, dynamic>{}
+          : Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      if (names == null) {
+        if (map.remove(listId) == null) return;
+      } else {
+        map[listId] = names;
+      }
+      await prefs.setString(_kPendingOrder, jsonEncode(map));
+    } catch (_) {}
+  }
+
+  /// Offline vorgemerkte Reihenfolgen senden (nach erfolgreichem Laden).
+  Future<void> flushPendingOrder() async {
+    try {
+      final raw =
+          (await SharedPreferences.getInstance()).getString(_kPendingOrder);
+      if (raw == null) return;
+      final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      for (final e in map.entries) {
+        final names = [for (final n in (e.value as List)) n.toString()];
+        // Netzfehler lässt den Eintrag stehen (pushOrderByNames merkt neu
+        // vor), Erfolg entfernt ihn.
+        await pushOrderByNames(e.key, names);
+      }
+    } catch (_) {}
   }
 }
 

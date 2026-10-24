@@ -35,7 +35,7 @@ class NotificationService {
         InitializationSettings(android: androidInit, iOS: iosInit);
 
     await _plugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
@@ -120,10 +120,10 @@ class NotificationService {
         NotificationDetails(android: androidDetails, iOS: iosDetails);
 
     await _plugin.show(
-      id,
-      timerName,
-      recipeName,
-      details,
+      id: id,
+      title: timerName,
+      body: recipeName,
+      notificationDetails: details,
       payload: '$_cookingPayloadPrefix${recipeId ?? ''}',
     );
   }
@@ -171,19 +171,13 @@ class NotificationService {
     // explizite Device-Timezone-Auflösung ist hier nicht nötig.
     final fireAt = tz.TZDateTime.now(tz.UTC).add(Duration(seconds: inSeconds));
     await _plugin.zonedSchedule(
-      id,
-      timerName,
-      recipeName,
-      fireAt,
-      details,
+      id: id,
+      title: timerName,
+      body: recipeName,
+      scheduledDate: fireAt,
+      notificationDetails: details,
       payload: '$_cookingPayloadPrefix${recipeId ?? ''}',
       androidScheduleMode: AndroidScheduleMode.inexact,
-      // Pflicht-Parameter in flutter_local_notifications 17.x — bestimmt
-      // wie das DateTime auf iOS-System-Triggern interpretiert wird.
-      // `absoluteTime` = exakte Wall-Clock-Zeit (richtig für unsere
-      // relative „in X Sekunden"-Logik).
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -206,19 +200,23 @@ class NotificationService {
       autoCancel: false,
     );
     const details = NotificationDetails(android: androidDetails);
-    await _plugin.show(9999, 'Mealie Recipes', text, details);
+    await _plugin.show(
+        id: 9999,
+        title: 'Mealie Recipes',
+        body: text,
+        notificationDetails: details);
   }
 
   static Future<void> cancelCookingOngoing() async {
     // Windows/Desktop: keine Benachrichtigungen (siehe PlatformFeatures).
     if (!PlatformFeatures.notifications) return;
-    await _plugin.cancel(9999);
+    await _plugin.cancel(id: 9999);
   }
 
   static Future<void> cancel(int id) async {
     // Windows/Desktop: keine Benachrichtigungen (siehe PlatformFeatures).
     if (!PlatformFeatures.notifications) return;
-    await _plugin.cancel(id);
+    await _plugin.cancel(id: id);
   }
 
   static Future<void> cancelAll() async {

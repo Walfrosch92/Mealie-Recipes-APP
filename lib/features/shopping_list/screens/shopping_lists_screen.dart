@@ -99,11 +99,14 @@ class ShoppingListsScreen extends ConsumerWidget {
       Map<String, dynamic> list, bool active) async {
     final l = AppLocalizations.of(context)!;
     final action = await showModalBottomSheet<String>(
+      isScrollControlled: true,
       context: context,
       useRootNavigator: true,
       backgroundColor: context.appCard,
       builder: (ctx) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
@@ -140,7 +143,7 @@ class ShoppingListsScreen extends ConsumerWidget {
               onTap: () => Navigator.pop(ctx, 'delete'),
             ),
           ],
-        ),
+        )),
       ),
     );
     if (!context.mounted) return;
@@ -187,7 +190,7 @@ class ShoppingListsScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(mealieErrorMessage(e) ?? e.toString(),
+                    Text(userErrorMessage(e),
                         textAlign: TextAlign.center,
                         style: TextStyle(color: context.appFgSub)),
                     const SizedBox(height: 12),
@@ -415,10 +418,9 @@ class _LabelOrderScreenState extends ConsumerState<LabelOrderScreen> {
                         child: ReorderableListView.builder(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                           itemCount: settings.length,
-                          onReorder: (from, to) => setState(() {
-                            if (to > from) to--;
-                            settings.insert(to, settings.removeAt(from));
-                          }),
+                          // `to` ist bei onReorderItem schon korrigiert.
+                          onReorderItem: (from, to) => setState(() =>
+                              settings.insert(to, settings.removeAt(from))),
                           itemBuilder: (_, i) {
                             final s = settings[i];
                             final label = s['label'] is Map

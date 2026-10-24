@@ -86,7 +86,13 @@ class HouseholdManagementScreen extends ConsumerWidget {
         cacheKey: 'household_preferences',
         load: () async => _pickHouseholdPrefs(
             await ref.read(apiServiceProvider).fetchHouseholdPreferences()),
-        save: (p) => ref.read(apiServiceProvider).updateHouseholdPreferences(p),
+        save: (p) async {
+          final saved =
+              await ref.read(apiServiceProvider).updateHouseholdPreferences(p);
+          // Wochenbeginn & Co. sofort in der App (Essensplan) übernehmen.
+          unawaited(ref.read(householdsListProvider.notifier).refresh());
+          return saved;
+        },
         household: true,
       );
 
@@ -256,7 +262,7 @@ class HouseholdManagementScreen extends ConsumerWidget {
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (e, _) => Text(mealieErrorMessage(e) ?? e.toString(),
+          error: (e, _) => Text(userErrorMessage(e),
               style: TextStyle(color: context.appFgSub)),
           data: (list) => Column(children: [for (final m in list) item(m)]),
         );
@@ -591,6 +597,9 @@ class _AdminEntitySheetState extends ConsumerState<_AdminEntitySheet> {
           name: name,
           preferences: _prefs.isEmpty ? null : _prefs,
         );
+        // Betrifft es den eigenen Haushalt, übernimmt der Essensplan den
+        // Wochenbeginn sofort.
+        unawaited(ref.read(householdsListProvider.notifier).refresh());
       } else {
         await api.updateGroupAdmin(
             id: id, name: name, preferences: _prefs.isEmpty ? null : _prefs);

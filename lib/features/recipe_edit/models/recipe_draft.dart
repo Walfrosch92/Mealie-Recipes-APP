@@ -4,6 +4,9 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 import '../../../core/models/recipe_detail.dart';
+import '../../../core/utils/ingredient_display.dart'
+    show formatQuantityInput, parseQuantityInput;
+import '../../../core/utils/mealie_version.dart';
 
 // ---------------------------------------------------------------------------
 // Bearbeitungs-Entwurf eines Rezepts — „nichts vergessen":
@@ -32,18 +35,8 @@ String newUuid() {
   return '${hex(0, 4)}-${hex(4, 6)}-${hex(6, 8)}-${hex(8, 10)}-${hex(10, 16)}';
 }
 
-/// Mealie-Version „v3.28.0" / „3.28.0-beta" → (3, 28); unbekannt → null.
-(int, int)? parseMealieVersion(String? v) {
-  final m = RegExp(r'(\d+)\.(\d+)').firstMatch(v ?? '');
-  if (m == null) return null;
-  return (int.parse(m.group(1)!), int.parse(m.group(2)!));
-}
-
-bool _atLeast(String? version, int major, int minor) {
-  final v = parseMealieVersion(version);
-  if (v == null) return false;
-  return v.$1 > major || (v.$1 == major && v.$2 >= minor);
-}
+bool _atLeast(String? version, int major, int minor) =>
+    mealieVersionAtLeast(version, major, minor);
 
 /// Was Server und Rezept können — abgeleitet aus den Rohdaten (ein Feld,
 /// das der Server kennt, liefert er immer mit, notfalls leer) und der
@@ -121,40 +114,12 @@ String _name(dynamic obj) {
   return '';
 }
 
-/// Menge fürs Eingabefeld: ganze Zahlen ohne „.0", sonst bis 3 Stellen.
-String formatDraftQuantity(num? q) {
-  if (q == null || q == 0) return '';
-  if (q == q.truncate()) return q.truncate().toString();
-  return q
-      .toStringAsFixed(3)
-      .replaceAll(RegExp(r'0+$'), '')
-      .replaceAll(RegExp(r'\.$'), '');
-}
+/// Menge fürs Eingabefeld — Brüche wie „1/8" bleiben als Bruch sichtbar
+/// (gemeinsame Logik mit der Einkaufsliste, ingredient_display.dart).
+String formatDraftQuantity(num? q) => formatQuantityInput(q);
 
-/// „1,5" / „1.5" / „1 1/2" / „½" → Zahl; leer → null; unlesbar → null.
-double? parseDraftQuantity(String text) {
-  var t = text.trim().replaceAll(',', '.');
-  if (t.isEmpty) return null;
-  const glyphs = {'½': .5, '¼': .25, '¾': .75, '⅓': 1 / 3, '⅔': 2 / 3};
-  var sum = 0.0;
-  for (final g in glyphs.entries) {
-    if (t.contains(g.key)) {
-      sum += g.value;
-      t = t.replaceAll(g.key, ' ').trim();
-    }
-  }
-  final mixed =
-      RegExp(r'^(?:(\d+(?:\.\d+)?)\s+)?(\d+)\s*/\s*(\d+)$').firstMatch(t);
-  if (mixed != null) {
-    final whole = double.tryParse(mixed.group(1) ?? '0') ?? 0;
-    final den = double.parse(mixed.group(3)!);
-    if (den == 0) return null;
-    return whole + double.parse(mixed.group(2)!) / den + sum;
-  }
-  if (t.isEmpty) return sum == 0 ? null : sum;
-  final v = double.tryParse(t);
-  return v == null ? null : v + sum;
-}
+/// „1,5" / „1.5" / „1 1/2" / „½" / „1/8" → Zahl; leer → null; unlesbar → null.
+double? parseDraftQuantity(String text) => parseQuantityInput(text);
 
 // ---------------------------------------------------------------------------
 // Zeiten
@@ -280,7 +245,11 @@ class DraftSubstitution {
     final id = foodId(findFood);
     if (id != _origFoodId) m.remove('substituteFood');
     m['substituteFoodId'] = id;
-    final n = note.text.trim();
+    var n = note.text.trim();
+    // Getippter Name, den es als Lebensmittel nicht gibt: ging bisher still
+    // verloren (nur die id wird gespeichert) → in die Notiz übernehmen.
+    final name = food.text.trim();
+    if (id == null && name.isNotEmpty) n = n.isEmpty ? name : '$name, $n';
     m['note'] = n.isEmpty ? null : n;
     return m;
   }

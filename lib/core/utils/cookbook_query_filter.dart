@@ -44,7 +44,8 @@ enum CookbookFilterOp {
   lte,
 }
 
-/// Die bisherigen Felder von Kochbuch und Mahlzeitenplan-Regeln.
+/// Felder von Kochbuch und Mahlzeitenplan-Regeln. Gesamtzeit gibt es dort
+/// erst ab Mealie 3.29 (QueryFilterEditor blendet sie sonst aus).
 const List<CookbookFilterField> kOrganizerFilterFields = [
   CookbookFilterField.category,
   CookbookFilterField.tag,
@@ -52,7 +53,14 @@ const List<CookbookFilterField> kOrganizerFilterFields = [
   CookbookFilterField.tool,
   CookbookFilterField.household,
   CookbookFilterField.user,
+  CookbookFilterField.totalTime,
 ];
+
+/// Felder, die der Server erst ab Mealie 3.29 kennt (`total_time_seconds`
+/// = strukturierte Zeiten) — ältere Server antworten darauf mit 400.
+const Set<CookbookFilterField> kMealie329FilterFields = {
+  CookbookFilterField.totalTime,
+};
 
 /// Felder der Mealie-Rezept-Suche („Andere Filter", finder/index.vue).
 const List<CookbookFilterField> kFinderFilterFields = [
@@ -211,8 +219,8 @@ CookbookFilterRow? _parseScalar(String seg) {
   final op = kOpKeyword.entries
       .where((e) => e.value == m.group(2))
       .map((e) => e.key)
-      .first;
-  if (!opsForField(field).contains(op)) return null;
+      .firstOrNull;
+  if (op == null || !opsForField(field).contains(op)) return null;
   final raw = m.group(3)!;
   int? number;
   switch (field) {

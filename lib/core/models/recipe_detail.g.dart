@@ -74,6 +74,9 @@ IngredientUnit _$IngredientUnitFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String?,
       pluralName: json['pluralName'] as String?,
       abbreviation: json['abbreviation'] as String?,
+      pluralAbbreviation: json['pluralAbbreviation'] as String?,
+      useAbbreviation: json['useAbbreviation'] as bool?,
+      fraction: json['fraction'] as bool?,
     );
 
 Map<String, dynamic> _$IngredientUnitToJson(IngredientUnit instance) =>
@@ -82,6 +85,9 @@ Map<String, dynamic> _$IngredientUnitToJson(IngredientUnit instance) =>
       'name': instance.name,
       'pluralName': instance.pluralName,
       'abbreviation': instance.abbreviation,
+      'pluralAbbreviation': instance.pluralAbbreviation,
+      'useAbbreviation': instance.useAbbreviation,
+      'fraction': instance.fraction,
     };
 
 IngredientFood _$IngredientFoodFromJson(Map<String, dynamic> json) =>

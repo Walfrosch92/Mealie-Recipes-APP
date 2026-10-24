@@ -4,6 +4,7 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 
+import '../../../core/api/api_service.dart' show userErrorMessage;
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/async_action_button.dart';
 import '../../../shared/widgets/gradient_button.dart';
@@ -70,12 +71,13 @@ class _TaskImportScreenState extends ConsumerState<TaskImportScreen> {
     });
     try {
       final lists = await widget.fetcher();
+      if (!mounted) return;
       setState(() {
         _lists = lists;
         if (lists.isNotEmpty) _selectedList = lists.first;
       });
     } catch (e) {
-      setState(() => _error = e.toString());
+      if (mounted) setState(() => _error = userErrorMessage(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

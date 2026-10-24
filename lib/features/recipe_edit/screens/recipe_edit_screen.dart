@@ -33,6 +33,8 @@ import '../widgets/organization_section.dart';
 import '../widgets/recipe_meta_sections.dart';
 import '../widgets/step_edit_row.dart';
 import 'recipe_json_editor_screen.dart';
+import '../../recipes/services/recipe_text_image.dart';
+import '../../../core/utils/search_match.dart' show normalizeForSearch;
 
 // ---------------------------------------------------------------------------
 // Rezept bearbeiten — Funktionsumfang wie der Editor der Mealie-Webapp:
@@ -238,9 +240,15 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
   /// Neue Lebensmittel/Einheiten vor dem Speichern anlegen (mit id) —
   /// sonst lehnt Mealie strukturierte Zutaten mit HTTP 422 ab.
-  Future<void> _ensureFoodsAndUnits(RecipeDraft d) async {
-    if (d.noteOnlyIngredients) return;
+  /// Lebensmittel ANLEGEN verlangt in Mealie „Organisieren" (can_organize,
+  /// POST /api/foods → 403). Ohne das Recht wird das neue Lebensmittel zur
+  /// Notiz der Zutat, statt das ganze Speichern scheitern zu lassen.
+  /// Rückgabe: Anzahl so umgewandelter Zutaten (für den Hinweis).
+  Future<int> _ensureFoodsAndUnits(RecipeDraft d) async {
+    if (d.noteOnlyIngredients) return 0;
     final api = ref.read(apiServiceProvider);
+    final mayCreateFoods = ref.read(userPermissionsProvider).mayOrganize;
+    var asNote = 0;
     for (final i in d.ingredients) {
       final food = i.food.text.trim();
       final resolvedFoodOk = i.resolvedFood != null &&
@@ -249,8 +257,15 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
           food.isNotEmpty &&
           !resolvedFoodOk &&
           _findFood(food) == null) {
-        final created = await api.createFood(food);
-        if (created != null) _foods = [..._foods, created];
+        if (mayCreateFoods) {
+          final created = await api.createFood(food);
+          if (created != null) _foods = [..._foods, created];
+        } else {
+          final note = i.note.text.trim();
+          i.note.text = note.isEmpty ? food : '$food, $note';
+          i.food.text = '';
+          asNote++;
+        }
       }
       final unit = i.unit.text.trim();
       final resolvedUnitOk = i.resolvedUnit != null &&
@@ -263,6 +278,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
         if (created != null) _unitsRaw = [..._unitsRaw, created];
       }
     }
+    return asNote;
   }
 
   Future<void> _save() async {
@@ -286,7 +302,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
       // Aktuellen Server-Stand als Basis (erhält alles Unbearbeitete).
       d.rebase(await api.fetchRecipeRaw(recipeId));
-      await _ensureFoodsAndUnits(d);
+      final foodsAsNote = await _ensureFoodsAndUnits(d);
 
       final payload = d.buildPayload(
         formatDuration: (m) => _formatDuration(l, m),
@@ -338,11 +354,17 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
       if (!mounted) return;
       setState(() => _saving = false);
-      messenger.showSnackBar(SnackBar(
-        content: Text(l.saveSuccess),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ));
+      messenger.showSnackBar(foodsAsNote > 0
+          // Gespeichert, aber neue Lebensmittel stehen als Notiz da.
+          ? SnackBar(
+              content: Text(l.foodsSavedAsNote(foodsAsNote)),
+              duration: const Duration(seconds: 6),
+            )
+          : SnackBar(
+              content: Text(l.saveSuccess),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ));
       _goBack(force: true);
     } catch (e) {
       if (!mounted) return;
@@ -356,6 +378,10 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
   }
 
   String _apiError(Object e) {
+    // Bekannte Fälle (Recht fehlt, offline, Zeitüberschreitung …) verständlich
+    // und übersetzt — Roh-Text nur für unerwartete Server-Antworten.
+    final known = mealieErrorMessage(e);
+    if (known != null) return known;
     if (e is DioException) {
       final status = e.response?.statusCode;
       final data = e.response?.data;
@@ -365,9 +391,9 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       if (status != null) {
         return 'HTTP $status${detail.isNotEmpty ? ' – $detail' : ''}';
       }
-      return e.type.name;
+      return userErrorMessage(e);
     }
-    return e.toString();
+    return userErrorMessage(e);
   }
 
   void _showErrorDialog(String message) {
@@ -418,11 +444,14 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
             _newImageUrl != null ||
             (_draft?.raw['image'] != null));
     final choice = await showModalBottomSheet<_ImageChoice>(
+      isScrollControlled: true,
       context: context,
       useRootNavigator: true,
       backgroundColor: context.appCard,
       builder: (ctx) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (PlatformFeatures.camera)
@@ -450,7 +479,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                 onTap: () => Navigator.pop(ctx, _ImageChoice.remove),
               ),
           ],
-        ),
+        )),
       ),
     );
     if (choice == null || !mounted) return;
@@ -501,8 +530,9 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
   // ── Zutaten ──────────────────────────────────────────────────────────────
 
+  // onReorderItem liefert newIndex bereits um das entfernte Element
+  // korrigiert (Nachfolger von onReorder, Flutter 3.41).
   void _reorder<T>(List<T> list, int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) newIndex -= 1;
     setState(() => list.insert(newIndex, list.removeAt(oldIndex)));
   }
 
@@ -656,31 +686,31 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
   /// Bild in einen Schritt (wie die Webapp): als Anhang hochladen und als
   /// `<img>` in den Schritt-Text einfügen.
   Future<void> _insertStepImage(DraftStep step) async {
-    final l = AppLocalizations.of(context)!;
     final d = _draft!;
-    final file = await pickPhotoWithSource(context);
-    if (file == null || !mounted) return;
     setState(() => _uploadingStepUid = step.uid);
     try {
-      final name = file.path.split('/').last;
-      final asset = await ref.read(apiServiceProvider).uploadRecipeAsset(
-          d.slug.isNotEmpty ? d.slug : widget.slug,
-          file: file,
-          name: name,
-          icon: 'mdi-file-image');
-      if (!mounted) return;
-      final tag = '<img src="${recipeAssetPath(d.id, asset.fileName)}" '
-          'height="100%" width="100%"/>';
-      setState(() {
-        final t = step.text.text.trimRight();
-        step.text.text = t.isEmpty ? tag : '$t\n$tag';
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(mealieErrorMessage(e) ?? l.stepImageFailed)));
+      final tag = await pickAndUploadRecipeTextImage(context, ref,
+          recipeSlug: d.slug.isNotEmpty ? d.slug : widget.slug, recipeId: d.id);
+      if (tag == null || !mounted) return;
+      setState(() => appendToTextField(step.text, tag));
     } finally {
       if (mounted) setState(() => _uploadingStepUid = null);
+    }
+  }
+
+  /// Bild in eine Notiz (wie bei Schritten).
+  String? _uploadingNoteUid;
+  Future<void> _insertNoteImage(DraftNote note) async {
+    final d = _draft!;
+    setState(() => _uploadingNoteUid = note.uid);
+    try {
+      final tag = await pickAndUploadRecipeTextImage(context, ref,
+          recipeSlug: d.slug.isNotEmpty ? d.slug : widget.slug, recipeId: d.id);
+      if (tag == null || !mounted) return;
+      setState(() => appendToTextField(note.text, tag));
+      _changed();
+    } finally {
+      if (mounted) setState(() => _uploadingNoteUid = null);
     }
   }
 
@@ -694,8 +724,9 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
   // ── Kategorien / Schlagworte / Utensilien ────────────────────────────────
 
-  Future<String?> _promptName(String title) =>
-      showTextInputDialog(context, title: title);
+  Future<String?> _promptName(String title,
+          {List<String> suggestions = const []}) =>
+      showTextInputDialog(context, title: title, suggestions: suggestions);
 
   void _toggleIn(List<Map<String, dynamic>> list, Map<String, dynamic> o) {
     setState(() {
@@ -706,7 +737,8 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
   Future<void> _createTag() async {
     final l = AppLocalizations.of(context)!;
-    final name = await _promptName(l.newTag);
+    final name = await _promptName(l.newTag,
+        suggestions: [for (final t in ref.read(allTagsProvider)) t.name]);
     if (name == null) return;
     try {
       final api = ref.read(apiServiceProvider);
@@ -730,7 +762,10 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
   Future<void> _createCategory() async {
     final l = AppLocalizations.of(context)!;
-    final name = await _promptName(l.newCategory);
+    final name = await _promptName(l.newCategory,
+        suggestions: [
+          for (final c in ref.read(allCategoriesProvider)) c.name
+        ]);
     if (name == null) return;
     try {
       final api = ref.read(apiServiceProvider);
@@ -753,12 +788,21 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
 
   Future<void> _createTool() async {
     final l = AppLocalizations.of(context)!;
-    final name = await _promptName(l.newTool);
+    final known = ref.read(organizersProvider(OrganizerKind.tool)).valueOrNull ??
+        const <OrganizerItem>[];
+    final name = await _promptName(l.newTool,
+        suggestions: [for (final t in known) t.name]);
     if (name == null) return;
     try {
-      final item = await ref
-          .read(organizersProvider(OrganizerKind.tool).notifier)
-          .create(name);
+      // Vorhandenes Utensil gleichen Namens wiederverwenden (wie bei
+      // Schlagworten/Kategorien) statt ein Duplikat anzulegen.
+      final q = normalizeForSearch(name);
+      final item = known
+              .where((t) => normalizeForSearch(t.name) == q)
+              .firstOrNull ??
+          await ref
+              .read(organizersProvider(OrganizerKind.tool).notifier)
+              .create(name);
       if (!mounted) return;
       final tools = _draft!.tools;
       if (!tools.any((x) => x['id'] == item.id)) {
@@ -1010,7 +1054,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                     sliver: SliverReorderableList(
                       itemCount: d.ingredients.length,
                       proxyDecorator: _proxyDecorator,
-                      onReorder: (o, n) => _reorder(d.ingredients, o, n),
+                      onReorderItem: (o, n) => _reorder(d.ingredients, o, n),
                       itemBuilder: (_, i) {
                         final item = d.ingredients[i];
                         return IngredientEditRow(
@@ -1084,7 +1128,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                     sliver: SliverReorderableList(
                       itemCount: d.steps.length,
                       proxyDecorator: _proxyDecorator,
-                      onReorder: (o, n) => _reorder(d.steps, o, n),
+                      onReorderItem: (o, n) => _reorder(d.steps, o, n),
                       itemBuilder: (_, i) {
                         final item = d.steps[i];
                         return StepEditRow(
@@ -1141,6 +1185,8 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                     child: NotesContent(
                       draft: d,
                       onChanged: _changed,
+                      onInsertImage: _insertNoteImage,
+                      uploadingNoteUid: _uploadingNoteUid,
                       onDelete: (n) {
                         setState(() => d.notes.remove(n));
                         _disposeLater(n.dispose);

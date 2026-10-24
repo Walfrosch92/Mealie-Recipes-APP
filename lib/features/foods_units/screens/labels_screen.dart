@@ -9,6 +9,7 @@ import '../../../core/models/shopping_item.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/animations.dart';
+import '../../../shared/widgets/autocomplete_field.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../../shopping_list/providers/shopping_list_provider.dart'
     show shoppingLabelsProvider, shoppingListProvider;
@@ -179,6 +180,7 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
         appBar: _selecting
             ? AppBar(
                 leading: IconButton(
+                  tooltip: AppLocalizations.of(context)!.cancel,
                   icon: const Icon(Icons.close_rounded),
                   onPressed: _busy
                       ? null
@@ -367,16 +369,40 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
 }
 
 /// Name + Farbe (Palette oder Hex-Eingabe).
-class _LabelDialog extends StatefulWidget {
+class _LabelDialog extends ConsumerStatefulWidget {
   final ShoppingLabel? label;
   const _LabelDialog({this.label});
 
   @override
-  State<_LabelDialog> createState() => _LabelDialogState();
+  ConsumerState<_LabelDialog> createState() => _LabelDialogState();
 }
 
-class _LabelDialogState extends State<_LabelDialog> {
+class _LabelDialogState extends ConsumerState<_LabelDialog> {
   late final _name = TextEditingController(text: widget.label?.name ?? '');
+
+  @override
+  void initState() {
+    super.initState();
+    _name.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  /// Namen der ANDEREN Bezeichnungen (Vorschläge + Duplikat-Sperre).
+  List<String> get _otherNames => [
+        for (final x in ref.watch(shoppingLabelsProvider).valueOrNull ??
+            const <ShoppingLabel>[])
+          if (x.id != widget.label?.id) x.name,
+      ];
+
+  String? get _duplicate {
+    final q = normalizeForSearch(_name.text);
+    if (q.isEmpty) return null;
+    for (final n in _otherNames) {
+      if (normalizeForSearch(n) == q) return n;
+    }
+    return null;
+  }
   late final _hex = TextEditingController(
       text: _normalize(widget.label?.color) ?? _kPalette[5]);
   bool _nameError = false;
@@ -416,13 +442,17 @@ class _LabelDialogState extends State<_LabelDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            AutocompleteField(
               controller: _name,
-              autofocus: widget.label == null,
-              textCapitalization: TextCapitalization.sentences,
+              options: _otherNames,
               decoration: InputDecoration(
                 labelText: l.name,
-                errorText: _nameError ? l.required : null,
+                errorText: _nameError
+                    ? l.required
+                    : (_duplicate == null
+                        ? null
+                        : l.nameAlreadyExists(_duplicate!)),
+                errorMaxLines: 2,
               ),
             ),
             const SizedBox(height: 16),
@@ -479,6 +509,7 @@ class _LabelDialogState extends State<_LabelDialog> {
               setState(() => _nameError = true);
               return;
             }
+            if (_duplicate != null) return; // gibt es schon
             Navigator.pop(context,
                 (name: name, color: _normalize(_hex.text) ?? _kPalette[5]));
           },

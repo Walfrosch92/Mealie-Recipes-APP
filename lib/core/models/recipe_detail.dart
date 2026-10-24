@@ -1,5 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import '../utils/ingredient_display.dart' show formatQuantity;
+import '../utils/server_time.dart';
+
 part 'recipe_detail.g.dart';
 
 // ---------------------------------------------------------------------------
@@ -21,7 +24,9 @@ part 'recipe_detail.g.dart';
 ///   9 = Anhänge (`RecipeDetail.assets`)
 ///  10 = Ersteller/Haushalt (`userId`, `householdId`) für Rechte-Prüfung
 ///  11 = Ursprüngliche URL (`orgURL`)
-const int kRecipeCacheSchema = 11;
+///  12 = Einheiten-Anzeige (`useAbbreviation`, `fraction`,
+///       `pluralAbbreviation`)
+const int kRecipeCacheSchema = 12;
 
 // Disable factory generation — we write our own robust fromJson below.
 @JsonSerializable(explicitToJson: true, createFactory: false)
@@ -694,12 +699,19 @@ class RecipeAsset {
     return dot < 0 ? '' : fileName.substring(dot + 1).toLowerCase();
   }
 
-  bool get isImage => const {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'avif'}
-      .contains(extension);
+  bool get isImage => const {
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'avif', 'heic', 'heif' //
+      }.contains(extension);
 
   bool get isPdf => extension == 'pdf';
 
   bool get isText => const {'txt', 'md', 'csv', 'json'}.contains(extension);
+
+  /// Video/Audio (Mealie ≥ 3.29) — wird vom Server gestreamt abgespielt.
+  bool get isMedia => const {'mp4', 'mov', 'm4v', 'webm', 'mp3', 'm4a'}
+      .contains(extension);
+
+  bool get isVideo => const {'mp4', 'mov', 'm4v', 'webm'}.contains(extension);
 
   Map<String, dynamic> toJson() =>
       {'name': name, 'icon': icon, 'fileName': fileName};
@@ -741,12 +753,7 @@ class RecipeComment {
     );
   }
 
-  DateTime? get createdAtLocal => DateTime.tryParse(createdAt.isEmpty ||
-              createdAt.endsWith('Z') ||
-              createdAt.contains('+')
-          ? createdAt
-          : '${createdAt}Z')
-      ?.toLocal();
+  DateTime? get createdAtLocal => parseMealieTime(createdAt);
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -783,32 +790,8 @@ ReferencedRecipe? _parseReferencedRecipe(dynamic raw) {
 Map<String, dynamic>? _referencedRecipeToJson(ReferencedRecipe? r) =>
     r?.toJson();
 
-String _formatQuantity(double q) {
-  if (q == q.truncateToDouble()) return q.truncate().toString();
-  // Common fractions
-  final fractions = <double, String>{
-    0.25: '¼',
-    0.5: '½',
-    0.75: '¾',
-    0.33: '⅓',
-    0.67: '⅔',
-    0.125: '⅛',
-    0.375: '⅜',
-    0.625: '⅝',
-    0.875: '⅞',
-  };
-  final whole = q.truncate();
-  final frac = q - whole;
-  for (final entry in fractions.entries) {
-    if ((frac - entry.key).abs() < 0.01) {
-      return whole > 0 ? '$whole${entry.value}' : entry.value;
-    }
-  }
-  return q
-      .toStringAsFixed(2)
-      .replaceAll(RegExp(r'0+$'), '')
-      .replaceAll(RegExp(r'\.$'), '');
-}
+// Gemeinsame Bruch-Anzeige (inkl. 1/16, Sechstel …) wie Detail/Liste.
+String _formatQuantity(double q) => formatQuantity(q);
 
 // unit field can be null, String, or {id, name}
 IngredientUnit? _parseIngredientUnit(dynamic raw) {
@@ -835,9 +818,40 @@ class IngredientUnit {
   final String? name;
   final String? pluralName;
   final String? abbreviation;
+  final String? pluralAbbreviation;
+
+  /// Mealie „Abkürzung verwenden": in Rezepten „TL" statt „Teelöffel".
+  final bool? useAbbreviation;
+
+  /// Mealie „Als Bruch anzeigen" (Server-Default AN). AUS → Dezimalzahl.
+  final bool? fraction;
 
   const IngredientUnit(
-      {this.id, this.name, this.pluralName, this.abbreviation});
+      {this.id,
+      this.name,
+      this.pluralName,
+      this.abbreviation,
+      this.pluralAbbreviation,
+      this.useAbbreviation,
+      this.fraction});
+
+  /// Anzeigename wie Mealie-Web (`useUnitName`): bei „Abkürzung verwenden"
+  /// die (Plural-)Abkürzung, sonst bzw. ohne Abkürzung der (Plural-)Name.
+  String displayName({required bool plural}) {
+    if (useAbbreviation == true) {
+      final pa = pluralAbbreviation?.trim() ?? '';
+      final a = abbreviation?.trim() ?? '';
+      if (plural && pa.isNotEmpty) return pa;
+      if (a.isNotEmpty) return a;
+    }
+    final pn = pluralName?.trim() ?? '';
+    if (plural && pn.isNotEmpty) return pn;
+    return name ?? '';
+  }
+
+  /// Menge als Bruch anzeigen? Fehlt das Feld (alter Cache), gilt Mealies
+  /// Default AN.
+  bool get showsFraction => fraction != false;
 
   factory IngredientUnit.fromJson(Map<String, dynamic> json) =>
       _$IngredientUnitFromJson(json);

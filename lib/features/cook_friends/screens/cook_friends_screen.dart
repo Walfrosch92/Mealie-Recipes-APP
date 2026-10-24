@@ -184,8 +184,29 @@ class _CookFriendsScreenState extends ConsumerState<CookFriendsScreen> {
         actions: [
           if (cfState.role != CookFriendsRole.none)
             TextButton(
-              onPressed: () =>
-                  ref.read(cookFriendsProvider.notifier).endSession(),
+              onPressed: () async {
+                // Gastgeber: beendet die Sitzung für ALLE Gäste → nachfragen.
+                if (cfState.role == CookFriendsRole.host) {
+                  final ok = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      scrollable: true,
+                      content: Text(l.cookFriendsEndConfirm),
+                      actions: [
+                        TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text(l.cancel)),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(l.end),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (ok != true) return;
+                }
+                ref.read(cookFriendsProvider.notifier).endSession();
+              },
               child: Text(l.end),
             ),
         ],

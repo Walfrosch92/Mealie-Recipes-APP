@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
+import '../../../core/api/api_service.dart' show userErrorMessage;
 import '../../../core/models/cookbook_summary.dart';
 import '../../../core/services/log_manager.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -53,6 +54,60 @@ class _CookbookEditScreenState extends ConsumerState<CookbookEditScreen> {
   void initState() {
     super.initState();
     if (!_isNew) _loadExisting();
+    // Ausgangsstand NACH dem ersten Frame: erst dann hat der Filter-Baukasten
+    // den gespeicherten Filter in Zeilen zerlegt (compose() normalisiert).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initialSig = _sig();
+    });
+    _nameCtrl.addListener(_rebuildForPop);
+    _descCtrl.addListener(_rebuildForPop);
+  }
+
+  // ── Ungespeicherte Änderungen ────────────────────────────────────────────
+  // Vorher ging ein versehentliches Zurück (Wischgeste, Zurück-Taste) ohne
+  // Rückfrage und der ganze Filter-Baukasten war weg.
+  String? _initialSig;
+  bool _allowPop = false;
+
+  String _sig() => '${_nameCtrl.text.trim()}\n${_descCtrl.text.trim()}'
+      '\n$_public\n${_filterCtrl.compose()}';
+
+  bool get _dirty => _initialSig != null && _sig() != _initialSig;
+
+  void _rebuildForPop() {
+    if (mounted) setState(() {});
+  }
+
+  void _closeNow() {
+    setState(() => _allowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.pop();
+    });
+  }
+
+  Future<void> _onBlockedPop() async {
+    final l = AppLocalizations.of(context)!;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        backgroundColor: context.appCard,
+        content: Text(l.discardChangesConfirm,
+            style: TextStyle(color: context.appFg)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.cancel)),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(ctx).colorScheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.discardChanges),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) _closeNow();
   }
 
   @override
@@ -103,79 +158,92 @@ class _CookbookEditScreenState extends ConsumerState<CookbookEditScreen> {
         ));
       }
       if (!mounted) return;
-      context.pop();
+      _closeNow();
     } catch (e) {
       LogManager.shared.log('❌ Kochbuch speichern fehlgeschlagen: $e');
       if (!mounted) return;
-      setState(() => _error = l.saveFailed);
+      // Grund nennen (offline, kein Recht …) statt nur „fehlgeschlagen".
+      setState(() => _error = userErrorMessage(e, l.saveFailed));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: context.appBg,
-      appBar: AppBar(
-        title: Text(_isNew ? l.cookbookCreateTitle : l.cookbookEditTitle),
-      ),
-      body: SafeArea(
-        top: false,
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              TextFormField(
-                controller: _nameCtrl,
-                decoration: InputDecoration(
-                  labelText: l.cookbookNameLabel,
-                  border: const OutlineInputBorder(),
+    return PopScope(
+      canPop: _allowPop || !_dirty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBlockedPop();
+      },
+      child: Scaffold(
+        backgroundColor: context.appBg,
+        appBar: AppBar(
+          title: Text(_isNew ? l.cookbookCreateTitle : l.cookbookEditTitle),
+        ),
+        body: SafeArea(
+          top: false,
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              children: [
+                TextFormField(
+                  controller: _nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: l.cookbookNameLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? l.required : null,
                 ),
-                textCapitalization: TextCapitalization.sentences,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? l.required : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descCtrl,
-                decoration: InputDecoration(
-                  labelText: l.descriptionLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                textCapitalization: TextCapitalization.sentences,
-                minLines: 2,
-                maxLines: 4,
-              ),
-              const SizedBox(height: 24),
-              Text(l.cookbookFilterSectionTitle,
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              QueryFilterEditor(
-                controller: _filterCtrl,
-                initialFilter: _existing?.queryFilterString ?? '',
-              ),
-              const SizedBox(height: 24),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l.cookbookPublicLabel),
-                subtitle: Text(l.cookbookPublicSubtitle),
-                value: _public,
-                onChanged: (v) => setState(() => _public = v),
-              ),
-              const SizedBox(height: 16),
-              if (_error != null) ...[
-                Text(_error!,
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error)),
                 const SizedBox(height: 16),
+                TextFormField(
+                  controller: _descCtrl,
+                  decoration: InputDecoration(
+                    labelText: l.descriptionLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                  minLines: 2,
+                  maxLines: 4,
+                ),
+                const SizedBox(height: 24),
+                Text(l.cookbookFilterSectionTitle,
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                // Der Baukasten meldet Änderungen nicht nach außen — nach jeder
+                // Berührung neu prüfen, ob es ungespeicherte Änderungen gibt.
+                Listener(
+                  onPointerUp: (_) => WidgetsBinding.instance
+                      .addPostFrameCallback((_) => _rebuildForPop()),
+                  child: QueryFilterEditor(
+                    controller: _filterCtrl,
+                    initialFilter: _existing?.queryFilterString ?? '',
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l.cookbookPublicLabel),
+                  subtitle: Text(l.cookbookPublicSubtitle),
+                  value: _public,
+                  onChanged: (v) => setState(() => _public = v),
+                ),
+                const SizedBox(height: 16),
+                if (_error != null) ...[
+                  Text(_error!,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.error)),
+                  const SizedBox(height: 16),
+                ],
+                AsyncActionButton(
+                  expand: true,
+                  label: l.save,
+                  onPressed: _save,
+                ),
               ],
-              AsyncActionButton(
-                expand: true,
-                label: l.save,
-                onPressed: _save,
-              ),
-            ],
+            ),
           ),
         ),
       ),

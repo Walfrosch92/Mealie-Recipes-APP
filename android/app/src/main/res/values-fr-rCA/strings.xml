@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Français (Canada): nur Abweichungen zu values-fr (Mealie fr-CA). -->
+<resources>
+    <string name="widget_shopping_label">Liste d\'épicerie</string>
+    <string name="widget_shopping_description">Affiche les articles restants de la liste d\'épicerie.</string>
+</resources>

@@ -112,9 +112,11 @@ class _MadeThisSheetState extends ConsumerState<_MadeThisSheet> {
       if (!mounted) return;
       Navigator.pop(context);
       messenger.showSnackBar(SnackBar(
-          content: Text(result == MadeThisResult.imageFailed
-              ? l.timelineImageFailed
-              : l.timelineSaved)));
+          content: Text(switch (result) {
+        MadeThisResult.imageFailed => l.timelineImageFailed,
+        MadeThisResult.queued => l.timelineQueuedOffline,
+        MadeThisResult.ok => l.timelineSaved,
+      })));
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);

@@ -111,14 +111,9 @@ abstract class AppLocalizations {
     Locale('nb'),
     Locale('pl'),
     Locale('pt'),
-    Locale('sl')
+    Locale('sl'),
+    Locale('fr', 'CA')
   ];
-
-  /// No description provided for @appTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Mealie Recipes'**
-  String get appTitle;
 
   /// No description provided for @endCookingMode.
   ///
@@ -282,23 +277,11 @@ abstract class AppLocalizations {
   /// **'Search recipe...'**
   String get searchRecipe;
 
-  /// No description provided for @loadingRecipes.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading recipes...'**
-  String get loadingRecipes;
-
   /// No description provided for @loadingRecipe.
   ///
   /// In en, this message translates to:
   /// **'Loading recipe...'**
   String get loadingRecipe;
-
-  /// No description provided for @errorLoadingRecipes.
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading recipes: {error}'**
-  String errorLoadingRecipes(String error);
 
   /// No description provided for @errorLoadingRecipe.
   ///
@@ -462,35 +445,11 @@ abstract class AppLocalizations {
   /// **'Servings'**
   String get servings;
 
-  /// No description provided for @adjustQuantity.
-  ///
-  /// In en, this message translates to:
-  /// **'Adjust quantity'**
-  String get adjustQuantity;
-
-  /// No description provided for @startTimer.
-  ///
-  /// In en, this message translates to:
-  /// **'Start Timer'**
-  String get startTimer;
-
-  /// No description provided for @runningTimer.
-  ///
-  /// In en, this message translates to:
-  /// **'Timer: {minutes}:{seconds}'**
-  String runningTimer(int minutes, String seconds);
-
   /// No description provided for @planMeal.
   ///
   /// In en, this message translates to:
   /// **'Plan Meal'**
   String get planMeal;
-
-  /// No description provided for @displayAlwaysOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep screen on'**
-  String get displayAlwaysOn;
 
   /// No description provided for @addAllIngredients.
   ///
@@ -503,12 +462,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add selected ingredients'**
   String get addSelectedIngredients;
-
-  /// No description provided for @addIngredientsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Ingredients added'**
-  String get addIngredientsTitle;
 
   /// No description provided for @addIngredientsMessage.
   ///
@@ -810,29 +763,11 @@ abstract class AppLocalizations {
   /// **'Send to device'**
   String get sendToDevice;
 
-  /// No description provided for @sendToDevicePickerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Send to device'**
-  String get sendToDevicePickerTitle;
-
-  /// No description provided for @sendToAllDevices.
-  ///
-  /// In en, this message translates to:
-  /// **'Send to all devices'**
-  String get sendToAllDevices;
-
   /// No description provided for @timerFinished.
   ///
   /// In en, this message translates to:
   /// **'Timer finished!'**
   String get timerFinished;
-
-  /// No description provided for @timerFinishedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Your recipe timer has finished.'**
-  String get timerFinishedBody;
 
   /// No description provided for @timer.
   ///
@@ -846,35 +781,17 @@ abstract class AppLocalizations {
   /// **'New Timer'**
   String get newTimer;
 
-  /// No description provided for @timerDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Timer Details'**
-  String get timerDetails;
-
   /// No description provided for @timerNamePlaceholder.
   ///
   /// In en, this message translates to:
   /// **'Timer name'**
   String get timerNamePlaceholder;
 
-  /// No description provided for @timerNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Give your timer a descriptive name.'**
-  String get timerNameHint;
-
   /// No description provided for @durationLabel.
   ///
   /// In en, this message translates to:
   /// **'Duration'**
   String get durationLabel;
-
-  /// No description provided for @minutesCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} minutes'**
-  String minutesCount(int count);
 
   /// No description provided for @start.
   ///
@@ -924,12 +841,6 @@ abstract class AppLocalizations {
   /// **'Cooking Mode'**
   String get cookingMode;
 
-  /// No description provided for @activeRecipesCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} active recipes'**
-  String activeRecipesCount(int count);
-
   /// No description provided for @endAll.
   ///
   /// In en, this message translates to:
@@ -941,30 +852,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'End'**
   String get end;
-
-  /// No description provided for @endAllRecipesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'End all recipes?'**
-  String get endAllRecipesTitle;
-
-  /// No description provided for @endAllRecipesMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Do you want to end all {count} active cooking sessions?'**
-  String endAllRecipesMessage(int count);
-
-  /// No description provided for @endRecipeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'End recipe?'**
-  String get endRecipeTitle;
-
-  /// No description provided for @endRecipeMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Do you want to end the cooking session for \"{name}\"?'**
-  String endRecipeMessage(String name);
 
   /// No description provided for @noActiveTimers.
   ///
@@ -989,12 +876,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Browse recipes'**
   String get browseRecipes;
-
-  /// No description provided for @timersPausedCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} timer(s) paused'**
-  String timersPausedCount(int count);
 
   /// No description provided for @cookFriends.
   ///
@@ -1062,23 +943,11 @@ abstract class AppLocalizations {
   /// **'Join session'**
   String get joinSession;
 
-  /// No description provided for @hostEndedSessionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Session ended'**
-  String get hostEndedSessionTitle;
-
   /// No description provided for @hostEndedSessionMessage.
   ///
   /// In en, this message translates to:
   /// **'The host has ended the cooking session.'**
   String get hostEndedSessionMessage;
-
-  /// No description provided for @shoppingListEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'Your shopping list is empty.'**
-  String get shoppingListEmpty;
 
   /// No description provided for @addItem.
   ///
@@ -1098,35 +967,11 @@ abstract class AppLocalizations {
   /// **'Unlabeled'**
   String get unlabeledCategory;
 
-  /// No description provided for @reorderCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'Reorder categories'**
-  String get reorderCategories;
-
-  /// No description provided for @archiveChecked.
-  ///
-  /// In en, this message translates to:
-  /// **'Archive checked items'**
-  String get archiveChecked;
-
   /// No description provided for @archivedLists.
   ///
   /// In en, this message translates to:
   /// **'📦 Archived purchases'**
   String get archivedLists;
-
-  /// No description provided for @syncChanges.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync changes'**
-  String get syncChanges;
-
-  /// No description provided for @noSyncChanges.
-  ///
-  /// In en, this message translates to:
-  /// **'No sync changes'**
-  String get noSyncChanges;
 
   /// No description provided for @postimportAction.
   ///
@@ -1266,47 +1111,11 @@ abstract class AppLocalizations {
   /// **'Select recipe'**
   String get selectRecipe;
 
-  /// No description provided for @orFreeText.
-  ///
-  /// In en, this message translates to:
-  /// **'or free text'**
-  String get orFreeText;
-
-  /// No description provided for @entryNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Note'**
-  String get entryNote;
-
-  /// No description provided for @noMealEntries.
-  ///
-  /// In en, this message translates to:
-  /// **'No entries for this week.'**
-  String get noMealEntries;
-
   /// No description provided for @importRecipe.
   ///
   /// In en, this message translates to:
   /// **'Import Recipe'**
   String get importRecipe;
-
-  /// No description provided for @importFromUrl.
-  ///
-  /// In en, this message translates to:
-  /// **'Import from URL'**
-  String get importFromUrl;
-
-  /// No description provided for @importFromImage.
-  ///
-  /// In en, this message translates to:
-  /// **'Import from photo'**
-  String get importFromImage;
-
-  /// No description provided for @importFromJson.
-  ///
-  /// In en, this message translates to:
-  /// **'Import from JSON'**
-  String get importFromJson;
 
   /// No description provided for @url.
   ///
@@ -1314,41 +1123,11 @@ abstract class AppLocalizations {
   /// **'URL'**
   String get url;
 
-  /// No description provided for @urlPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'https://...'**
-  String get urlPlaceholder;
-
   /// No description provided for @importLanguage.
   ///
   /// In en, this message translates to:
   /// **'Language for OCR'**
   String get importLanguage;
-
-  /// No description provided for @importing.
-  ///
-  /// In en, this message translates to:
-  /// **'Importing...'**
-  String get importing;
-
-  /// No description provided for @importSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Recipe imported successfully!'**
-  String get importSuccess;
-
-  /// No description provided for @importError.
-  ///
-  /// In en, this message translates to:
-  /// **'Import failed: {error}'**
-  String importError(String error);
-
-  /// No description provided for @pasteJson.
-  ///
-  /// In en, this message translates to:
-  /// **'Paste JSON here'**
-  String get pasteJson;
 
   /// No description provided for @setupTitle.
   ///
@@ -1403,12 +1182,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shopping list ID'**
   String get shoppingListId;
-
-  /// No description provided for @shoppingListIdPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a shopping list'**
-  String get shoppingListIdPlaceholder;
 
   /// No description provided for @setupHouseholdListTitle.
   ///
@@ -1470,18 +1243,6 @@ abstract class AppLocalizations {
   /// **'Connect'**
   String get connect;
 
-  /// No description provided for @connecting.
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting...'**
-  String get connecting;
-
-  /// No description provided for @connectionSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Connection successful!'**
-  String get connectionSuccess;
-
   /// No description provided for @connectionError.
   ///
   /// In en, this message translates to:
@@ -1506,35 +1267,11 @@ abstract class AppLocalizations {
   /// **'Settings saved'**
   String get settingsSaved;
 
-  /// No description provided for @serverSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Server'**
-  String get serverSettings;
-
-  /// No description provided for @displaySettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Display'**
-  String get displaySettings;
-
-  /// No description provided for @notificationSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Notifications'**
-  String get notificationSettings;
-
   /// No description provided for @securitySettings.
   ///
   /// In en, this message translates to:
   /// **'Security'**
   String get securitySettings;
-
-  /// No description provided for @aboutSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'About'**
-  String get aboutSettings;
 
   /// No description provided for @showRecipeImages.
   ///
@@ -1565,18 +1302,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock app with biometrics'**
   String get biometricLockDescription;
-
-  /// No description provided for @criticalAlerts.
-  ///
-  /// In en, this message translates to:
-  /// **'Critical alerts'**
-  String get criticalAlerts;
-
-  /// No description provided for @criticalAlertsDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Timer alarm even in silent mode'**
-  String get criticalAlertsDescription;
 
   /// No description provided for @enableLogging.
   ///
@@ -1638,47 +1363,11 @@ abstract class AppLocalizations {
   /// **'Recipe Finder'**
   String get leftoverFinder;
 
-  /// No description provided for @leftoverFinderSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Find recipes with ingredients you have'**
-  String get leftoverFinderSubtitle;
-
   /// No description provided for @addIngredient.
   ///
   /// In en, this message translates to:
   /// **'Add ingredient'**
   String get addIngredient;
-
-  /// No description provided for @ingredientPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. eggs'**
-  String get ingredientPlaceholder;
-
-  /// No description provided for @findRecipes.
-  ///
-  /// In en, this message translates to:
-  /// **'Find recipes'**
-  String get findRecipes;
-
-  /// No description provided for @matchingRecipes.
-  ///
-  /// In en, this message translates to:
-  /// **'Matching recipes'**
-  String get matchingRecipes;
-
-  /// No description provided for @noMatchingRecipes.
-  ///
-  /// In en, this message translates to:
-  /// **'No recipes found for these ingredients.'**
-  String get noMatchingRecipes;
-
-  /// No description provided for @matchPercent.
-  ///
-  /// In en, this message translates to:
-  /// **'{percent}% match'**
-  String matchPercent(int percent);
 
   /// No description provided for @biometricPrompt.
   ///
@@ -1692,23 +1381,11 @@ abstract class AppLocalizations {
   /// **'Authentication failed'**
   String get biometricFailed;
 
-  /// No description provided for @whatsNew.
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s New'**
-  String get whatsNew;
-
   /// No description provided for @pendingRecipesTitle.
   ///
   /// In en, this message translates to:
   /// **'Received recipes'**
   String get pendingRecipesTitle;
-
-  /// No description provided for @pendingRecipesMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'You received a recipe from {sender}: \"{name}\"'**
-  String pendingRecipesMessage(String sender, String name);
 
   /// No description provided for @pendingRecipesFrom.
   ///
@@ -1721,18 +1398,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open cooking mode'**
   String get pendingRecipesOpenCooking;
-
-  /// No description provided for @pendingRecipesLater.
-  ///
-  /// In en, this message translates to:
-  /// **'Later'**
-  String get pendingRecipesLater;
-
-  /// No description provided for @openRecipe.
-  ///
-  /// In en, this message translates to:
-  /// **'Open recipe'**
-  String get openRecipe;
 
   /// No description provided for @dismiss.
   ///
@@ -1751,12 +1416,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recipe name'**
   String get recipeName;
-
-  /// No description provided for @recipeDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Description'**
-  String get recipeDescription;
 
   /// No description provided for @prepTime.
   ///
@@ -1848,53 +1507,17 @@ abstract class AppLocalizations {
   /// **'Categories'**
   String get categories;
 
-  /// No description provided for @selectCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'Select categories'**
-  String get selectCategories;
-
-  /// No description provided for @selectTags.
-  ///
-  /// In en, this message translates to:
-  /// **'Select tags'**
-  String get selectTags;
-
-  /// No description provided for @uploadImage.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload image'**
-  String get uploadImage;
-
-  /// No description provided for @removeImage.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove image'**
-  String get removeImage;
-
   /// No description provided for @saveChanges.
   ///
   /// In en, this message translates to:
   /// **'Save changes'**
   String get saveChanges;
 
-  /// No description provided for @saving.
-  ///
-  /// In en, this message translates to:
-  /// **'Saving...'**
-  String get saving;
-
   /// No description provided for @saveSuccess.
   ///
   /// In en, this message translates to:
   /// **'Recipe saved.'**
   String get saveSuccess;
-
-  /// No description provided for @saveError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not save: {error}'**
-  String saveError(String error);
 
   /// No description provided for @newCategory.
   ///
@@ -1913,30 +1536,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set rating'**
   String get setRating;
-
-  /// No description provided for @removeRating.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove rating'**
-  String get removeRating;
-
-  /// No description provided for @ratingRemoved.
-  ///
-  /// In en, this message translates to:
-  /// **'Rating removed'**
-  String get ratingRemoved;
-
-  /// No description provided for @googleTasksImport.
-  ///
-  /// In en, this message translates to:
-  /// **'Import from Google Tasks'**
-  String get googleTasksImport;
-
-  /// No description provided for @googleTasksImportDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Import items from Google Tasks to your shopping list.'**
-  String get googleTasksImportDescription;
 
   /// No description provided for @homeWelcome.
   ///
@@ -1967,12 +1566,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get other;
-
-  /// No description provided for @viewRecipes.
-  ///
-  /// In en, this message translates to:
-  /// **'📖 View Recipes'**
-  String get viewRecipes;
 
   /// No description provided for @addRecipe.
   ///
@@ -2010,12 +1603,6 @@ abstract class AppLocalizations {
   /// **'🥗 Recipe Finder'**
   String get resteverwertung;
 
-  /// No description provided for @newRecipeUpload.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload New Recipe'**
-  String get newRecipeUpload;
-
   /// No description provided for @copyCode.
   ///
   /// In en, this message translates to:
@@ -2040,41 +1627,11 @@ abstract class AppLocalizations {
   /// **'Waiting for friends...'**
   String get waitingForFriends;
 
-  /// No description provided for @endSharing.
-  ///
-  /// In en, this message translates to:
-  /// **'End Sharing'**
-  String get endSharing;
-
-  /// No description provided for @cookFriendsDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Invite a friend to cook this recipe together'**
-  String get cookFriendsDescription;
-
   /// No description provided for @sessionCode.
   ///
   /// In en, this message translates to:
   /// **'SESSION CODE'**
   String get sessionCode;
-
-  /// No description provided for @adjustQuantityLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Adjust quantity for this recipe:'**
-  String get adjustQuantityLabel;
-
-  /// No description provided for @timerStartForStep.
-  ///
-  /// In en, this message translates to:
-  /// **'Timer for step'**
-  String get timerStartForStep;
-
-  /// No description provided for @enterRecipeUrl.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter recipe URL'**
-  String get enterRecipeUrl;
 
   /// No description provided for @loading.
   ///
@@ -2099,12 +1656,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add item...'**
   String get addItemPlaceholder;
-
-  /// No description provided for @addSuccessToast.
-  ///
-  /// In en, this message translates to:
-  /// **'Added!'**
-  String get addSuccessToast;
 
   /// No description provided for @completedItems.
   ///
@@ -2208,30 +1759,6 @@ abstract class AppLocalizations {
   /// **'Delete all'**
   String get allDeleteConfirm;
 
-  /// No description provided for @portionen.
-  ///
-  /// In en, this message translates to:
-  /// **'Servings'**
-  String get portionen;
-
-  /// No description provided for @timerForStep.
-  ///
-  /// In en, this message translates to:
-  /// **'Start timer for this step'**
-  String get timerForStep;
-
-  /// No description provided for @weekNavPrev.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous week'**
-  String get weekNavPrev;
-
-  /// No description provided for @weekNavNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next week'**
-  String get weekNavNext;
-
   /// No description provided for @noMealsThisWeek.
   ///
   /// In en, this message translates to:
@@ -2250,71 +1777,11 @@ abstract class AppLocalizations {
   /// **'Available weeks:'**
   String get availableWeeks;
 
-  /// No description provided for @weekRange.
-  ///
-  /// In en, this message translates to:
-  /// **'Week {week} ({start} – {end})'**
-  String weekRange(Object end, Object start, Object week);
-
   /// No description provided for @currentWeek.
   ///
   /// In en, this message translates to:
   /// **'Current Week'**
   String get currentWeek;
-
-  /// No description provided for @rezepteAktualisieren.
-  ///
-  /// In en, this message translates to:
-  /// **'Update recipes'**
-  String get rezepteAktualisieren;
-
-  /// No description provided for @leftoverWhatTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'What does this do?'**
-  String get leftoverWhatTitle;
-
-  /// No description provided for @leftoverWhatBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This function reloads all recipes from the server and updates the local cache.'**
-  String get leftoverWhatBody;
-
-  /// No description provided for @leftoverDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter available ingredients to find matching recipes and use up leftovers.'**
-  String get leftoverDescription;
-
-  /// No description provided for @leftoverIngredientsHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Ingredients at home'**
-  String get leftoverIngredientsHeader;
-
-  /// No description provided for @leftoverSuggestions.
-  ///
-  /// In en, this message translates to:
-  /// **'Recipe suggestions'**
-  String get leftoverSuggestions;
-
-  /// No description provided for @leftoverNoMatches.
-  ///
-  /// In en, this message translates to:
-  /// **'No matching recipes found.'**
-  String get leftoverNoMatches;
-
-  /// No description provided for @leftoverEnterIngredient.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter ingredient'**
-  String get leftoverEnterIngredient;
-
-  /// No description provided for @matchingPercentText.
-  ///
-  /// In en, this message translates to:
-  /// **'{percent}% match ({count}/{total})'**
-  String matchingPercentText(int percent, int count, int total);
 
   /// No description provided for @weekAbbreviation.
   ///
@@ -2333,12 +1800,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select date'**
   String get selectDate;
-
-  /// No description provided for @selectSlot.
-  ///
-  /// In en, this message translates to:
-  /// **'Select meal'**
-  String get selectSlot;
 
   /// No description provided for @selectedRecipe.
   ///
@@ -2399,12 +1860,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'entries'**
   String get entriesPlural;
-
-  /// No description provided for @listTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'List {n}'**
-  String listTitle(int n);
 
   /// No description provided for @deleteAllConfirmTitle.
   ///
@@ -2496,12 +1951,6 @@ abstract class AppLocalizations {
   /// **'Start cooking'**
   String get startCooking;
 
-  /// No description provided for @hostNoRecipe.
-  ///
-  /// In en, this message translates to:
-  /// **'Open from a recipe to host a session'**
-  String get hostNoRecipe;
-
   /// No description provided for @uploadToOwnServer.
   ///
   /// In en, this message translates to:
@@ -2537,18 +1986,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App icon'**
   String get appIcon;
-
-  /// No description provided for @appIconClassic.
-  ///
-  /// In en, this message translates to:
-  /// **'Classic'**
-  String get appIconClassic;
-
-  /// No description provided for @appIconModern.
-  ///
-  /// In en, this message translates to:
-  /// **'Modern'**
-  String get appIconModern;
 
   /// No description provided for @name.
   ///
@@ -2625,7 +2062,7 @@ abstract class AppLocalizations {
   /// No description provided for @offlineRecipeImagesHint.
   ///
   /// In en, this message translates to:
-  /// **'Downloads all recipe images to this device so they also show without a connection. With large collections this can take up several hundred MB. Turning it off deletes the saved images.'**
+  /// **'Downloads all recipe images to the device – including the images in the steps and notes – so they show without a connection. Large collections can take up several hundred MB. Turning this off deletes the stored images.'**
   String get offlineRecipeImagesHint;
 
   /// No description provided for @offlineRecipeImagesStatus.
@@ -2679,7 +2116,7 @@ abstract class AppLocalizations {
   /// No description provided for @exactQuantitiesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Ingredients & typed items keep quantity and unit (e.g. 200 g butter) instead of 1x per item — missing foods are created on the server'**
+  /// **'Ingredients & typed items keep quantity and unit (e.g. 200 g butter) instead of 1x per item'**
   String get exactQuantitiesSubtitle;
 
   /// No description provided for @remindToShop.
@@ -2898,18 +2335,6 @@ abstract class AppLocalizations {
   /// **'Username or password is incorrect.'**
   String get loginInvalidCredentials;
 
-  /// No description provided for @loginAndGenerateToken.
-  ///
-  /// In en, this message translates to:
-  /// **'Log in & generate token'**
-  String get loginAndGenerateToken;
-
-  /// No description provided for @loggingIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Signing in…'**
-  String get loggingIn;
-
   /// No description provided for @apiTokenSaveHint.
   ///
   /// In en, this message translates to:
@@ -2994,12 +2419,6 @@ abstract class AppLocalizations {
   /// **'Ingredients split – tap “Save changes” to apply'**
   String get reparseDone;
 
-  /// No description provided for @reparseNone.
-  ///
-  /// In en, this message translates to:
-  /// **'No splittable ingredients found'**
-  String get reparseNone;
-
   /// No description provided for @tagsAndCategories.
   ///
   /// In en, this message translates to:
@@ -3059,18 +2478,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import {count}'**
   String importCount(int count);
-
-  /// No description provided for @activeRecipeTimer.
-  ///
-  /// In en, this message translates to:
-  /// **'Active recipe timer'**
-  String get activeRecipeTimer;
-
-  /// No description provided for @linkIngredients.
-  ///
-  /// In en, this message translates to:
-  /// **'Link ingredients'**
-  String get linkIngredients;
 
   /// No description provided for @noIngredientsToLink.
   ///
@@ -3183,7 +2590,7 @@ abstract class AppLocalizations {
   /// No description provided for @supportNoMailApp.
   ///
   /// In en, this message translates to:
-  /// **'No mail app found. Address copied: {email}'**
+  /// **'No mail app set up – address copied: {email}. Choose another app to write to us.'**
   String supportNoMailApp(String email);
 
   /// No description provided for @createRecipeFromImages.
@@ -3228,12 +2635,6 @@ abstract class AppLocalizations {
   /// **'Processing PDF...'**
   String get preparingPdf;
 
-  /// No description provided for @shareRecipeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Share recipe'**
-  String get shareRecipeTitle;
-
   /// No description provided for @recipeOptionsTitle.
   ///
   /// In en, this message translates to:
@@ -3263,12 +2664,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time'**
   String get recipeTime;
-
-  /// No description provided for @ingredientSectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Section'**
-  String get ingredientSectionTitle;
 
   /// No description provided for @addIngredientSection.
   ///
@@ -3359,12 +2754,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On hand'**
   String get toolOnHand;
-
-  /// No description provided for @mealDiceSettingsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Dice filter'**
-  String get mealDiceSettingsTitle;
 
   /// No description provided for @mealDiceSettingsHint.
   ///
@@ -4350,12 +3739,6 @@ abstract class AppLocalizations {
   /// **'User Management'**
   String get userManagementTitle;
 
-  /// No description provided for @usersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Users'**
-  String get usersTitle;
-
   /// No description provided for @editUserTitle.
   ///
   /// In en, this message translates to:
@@ -4445,12 +3828,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset Locked Users'**
   String get resetLockedUsersAction;
-
-  /// No description provided for @membersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Members'**
-  String get membersTitle;
 
   /// No description provided for @inviteLinkTitle.
   ///
@@ -7427,6 +6804,558 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Updates come from the GitHub releases of Mealie Recipes and are only installed if they are signed by the developer (macOS).'**
   String get updateSourceHint;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach your Mealie server. Check your internet connection and the server address.'**
+  String get errorNoConnection;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'The server took too long to respond. Please try again.'**
+  String get errorTimeout;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in has expired or the API token is no longer valid. Please sign in again in the settings.'**
+  String get errorUnauthorized;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'The Mealie server reported an error. Please try again later.'**
+  String get errorServer;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Not found on the server — it may have been deleted.'**
+  String get errorNotFound;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s security certificate is not trusted.'**
+  String get errorCertificate;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get errorGeneric;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offlineLabel;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · last synced {time}'**
+  String offlineSince(String time);
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Meal options'**
+  String get mealplanEntryActions;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get mealplanMoveAction;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Move meal'**
+  String get mealplanMoveTitle;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get mealplanMoveDate;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {date}'**
+  String mealplanMovedTo(String date);
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get mealplanShowWeek;
+
+  /// UX: Fehlertexte / Offline / Mahlzeit verschieben
+  ///
+  /// In en, this message translates to:
+  /// **'Could not move the meal'**
+  String get mealplanMoveFailed;
+
+  /// No description provided for @recentlyViewedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently viewed'**
+  String get recentlyViewedTitle;
+
+  /// No description provided for @recentlyViewedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes you open will appear here.'**
+  String get recentlyViewedEmpty;
+
+  /// No description provided for @recentlyViewedClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get recentlyViewedClear;
+
+  /// No description provided for @recentlyViewedClearMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The list of recently viewed recipes on this device will be cleared. The recipes themselves stay.'**
+  String get recentlyViewedClearMessage;
+
+  /// No description provided for @recentlyViewedClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get recentlyViewedClearConfirm;
+
+  /// No description provided for @duplicatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate finder'**
+  String get duplicatesTitle;
+
+  /// No description provided for @duplicatesScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for duplicate recipes…'**
+  String get duplicatesScanning;
+
+  /// No description provided for @duplicatesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No duplicate recipes found.'**
+  String get duplicatesNone;
+
+  /// No description provided for @duplicatesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 possible duplicate found.} other{{count} possible duplicates found.}}'**
+  String duplicatesFound(int count);
+
+  /// No description provided for @duplicatesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the recipe that should stay, then merge.'**
+  String get duplicatesIntro;
+
+  /// No description provided for @duplicatesReasonSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Same source'**
+  String get duplicatesReasonSource;
+
+  /// No description provided for @duplicatesReasonName.
+  ///
+  /// In en, this message translates to:
+  /// **'Same name'**
+  String get duplicatesReasonName;
+
+  /// No description provided for @duplicatesReasonSimilar.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar · {percent} % same ingredients'**
+  String duplicatesReasonSimilar(int percent);
+
+  /// No description provided for @duplicatesKeeps.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays'**
+  String get duplicatesKeeps;
+
+  /// No description provided for @duplicatesWillBeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Will be deleted'**
+  String get duplicatesWillBeDeleted;
+
+  /// No description provided for @duplicatesMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get duplicatesMerge;
+
+  /// No description provided for @duplicatesNotDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a duplicate'**
+  String get duplicatesNotDuplicate;
+
+  /// No description provided for @duplicatesMergeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge recipes?'**
+  String get duplicatesMergeTitle;
+
+  /// No description provided for @duplicatesMergeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" stays. {count, plural, =1{1 other recipe will be deleted} other{{count} other recipes will be deleted}}.\n\nCategories, tags, tools, notes, planned meals of your household and your favorite are moved over. Comments, timeline and attachments of the deleted recipes are lost.'**
+  String duplicatesMergeMessage(String name, int count);
+
+  /// No description provided for @duplicatesMerged.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes merged'**
+  String get duplicatesMerged;
+
+  /// No description provided for @duplicatesIngredientCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ingredient} other{{count} ingredients}}'**
+  String duplicatesIngredientCount(int count);
+
+  /// No description provided for @duplicatesResetIgnored.
+  ///
+  /// In en, this message translates to:
+  /// **'Show hidden pairs again ({count})'**
+  String duplicatesResetIgnored(int count);
+
+  /// No description provided for @duplicatesRescan.
+  ///
+  /// In en, this message translates to:
+  /// **'Search again'**
+  String get duplicatesRescan;
+
+  /// No description provided for @duplicatesOpenRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Open recipe'**
+  String get duplicatesOpenRecipe;
+
+  /// No description provided for @duplicatesMergeNoEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You may not edit the recipe that stays (someone else\'s recipe that is locked or from another household). Its categories, tags, tools and notes therefore stay as they are; only planned meals and your favorite are moved over.'**
+  String get duplicatesMergeNoEditHint;
+
+  /// No description provided for @recipeOtherHouseholdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From another household – editing is locked there'**
+  String get recipeOtherHouseholdHint;
+
+  /// No description provided for @foodsSavedAsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. {count, plural, =1{1 new food was} other{{count} new foods were}} kept as an ingredient note – creating foods needs the \"User can manage foods, tags, and categories\" permission in Mealie.'**
+  String foodsSavedAsNote(int count);
+
+  /// No description provided for @a11yRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get a11yRemove;
+
+  /// No description provided for @a11yDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get a11yDecrease;
+
+  /// No description provided for @a11yIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get a11yIncrease;
+
+  /// No description provided for @a11yShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get a11yShowPassword;
+
+  /// No description provided for @a11yHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get a11yHidePassword;
+
+  /// No description provided for @a11yClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get a11yClearSearch;
+
+  /// No description provided for @notesQueuedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline – the note will be sent as soon as the server is reachable again.'**
+  String get notesQueuedOffline;
+
+  /// No description provided for @timelineQueuedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline – it will be added to the timeline as soon as the server is reachable again.'**
+  String get timelineQueuedOffline;
+
+  /// No description provided for @syncSectionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed'**
+  String get syncSectionName;
+
+  /// No description provided for @pendingRecipesDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get pendingRecipesDiscard;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @timerStoppedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer \"{name}\" stopped'**
+  String timerStoppedSnack(String name);
+
+  /// No description provided for @cookFriendsEndConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'End the session for everyone? All guests will be disconnected.'**
+  String get cookFriendsEndConfirm;
+
+  /// No description provided for @weekStartSyncHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved in Mealie – applies to your whole household, also in the web app.'**
+  String get weekStartSyncHint;
+
+  /// No description provided for @weekStartNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Set in Mealie by your household. Only members who may manage the household can change it.'**
+  String get weekStartNoPermission;
+
+  /// No description provided for @assetsUnsupported329.
+  ///
+  /// In en, this message translates to:
+  /// **'Mealie supports PDF, images, videos (MP4, MOV, WebM), audio (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV and JSON.'**
+  String get assetsUnsupported329;
+
+  /// No description provided for @assetsRecordVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Record video'**
+  String get assetsRecordVideo;
+
+  /// No description provided for @assetsChooseVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose video'**
+  String get assetsChooseVideo;
+
+  /// No description provided for @shoppingSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this list'**
+  String get shoppingSearchHint;
+
+  /// No description provided for @shoppingSearchNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No items match your search.'**
+  String get shoppingSearchNoMatches;
+
+  /// No description provided for @mealplanServingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned servings'**
+  String get mealplanServingsTitle;
+
+  /// No description provided for @mealplanServingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only for this meal plan entry — the recipe itself stays unchanged. Opening the recipe and adding it to the shopping list use these servings.'**
+  String get mealplanServingsHint;
+
+  /// No description provided for @calendarFeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to calendar'**
+  String get calendarFeedTitle;
+
+  /// No description provided for @calendarFeedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the meal plan in Google, Apple or any other calendar'**
+  String get calendarFeedSubtitle;
+
+  /// No description provided for @calendarFeedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to your household\'s meal plan from Google Calendar, Apple Calendar, Home Assistant or any other app that supports iCal links. Anyone with the link can see your meal plan.'**
+  String get calendarFeedDescription;
+
+  /// No description provided for @calendarFeedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'The calendar link is turned off for your household.'**
+  String get calendarFeedOff;
+
+  /// No description provided for @calendarFeedAskManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask someone who can manage your household to turn it on.'**
+  String get calendarFeedAskManager;
+
+  /// No description provided for @calendarFeedTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get calendarFeedTurnOn;
+
+  /// No description provided for @calendarFeedTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get calendarFeedTurnOff;
+
+  /// No description provided for @calendarFeedReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset link'**
+  String get calendarFeedReset;
+
+  /// No description provided for @calendarFeedResetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Resetting or turning off the link stops existing subscriptions from updating.'**
+  String get calendarFeedResetHint;
+
+  /// No description provided for @calendarFeedIncludeNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Include notes'**
+  String get calendarFeedIncludeNotes;
+
+  /// No description provided for @calendarFeedTimesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a meal to set its time. Meals without a time are shown as all-day events.'**
+  String get calendarFeedTimesHint;
+
+  /// No description provided for @calendarFeedMealTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal Type'**
+  String get calendarFeedMealTypes;
+
+  /// No description provided for @calendarFeedSubscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe in calendar'**
+  String get calendarFeedSubscribe;
+
+  /// No description provided for @calendarFeedNoApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar app could be opened. Copy the link and add it to your calendar as a subscription.'**
+  String get calendarFeedNoApp;
+
+  /// No description provided for @calendarFeedPublicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The link works without signing in — only share it with people who may see your meal plan.'**
+  String get calendarFeedPublicHint;
+
+  /// No description provided for @recipeShareLinkMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link & QR code'**
+  String get recipeShareLinkMenu;
+
+  /// No description provided for @recipeShareShowQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Show QR Code'**
+  String get recipeShareShowQr;
+
+  /// No description provided for @recipeShareScanQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan with a phone camera to open this recipe'**
+  String get recipeShareScanQr;
+
+  /// No description provided for @recipeShareQrShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share image'**
+  String get recipeShareQrShare;
+
+  /// No description provided for @recipeShareQrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the QR code image'**
+  String get recipeShareQrFailed;
+
+  /// No description provided for @mealplanSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal Plan Settings'**
+  String get mealplanSettingsTitle;
+
+  /// No description provided for @mealDiceRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dice rules'**
+  String get mealDiceRulesTitle;
+
+  /// No description provided for @saveAsNewFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Save \"{name}\" as a new food'**
+  String saveAsNewFood(String name);
+
+  /// No description provided for @shoppingMoreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get shoppingMoreOptions;
+
+  /// No description provided for @shoppingFewerOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer options'**
+  String get shoppingFewerOptions;
+
+  /// No description provided for @nameAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Already exists: {name}'**
+  String nameAlreadyExists(String name);
+
+  /// No description provided for @aliasBelongsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{alias}\" already belongs to \"{name}\" — better merge the two.'**
+  String aliasBelongsTo(String alias, String name);
 }
 
 class _AppLocalizationsDelegate
@@ -7457,6 +7386,18 @@ class _AppLocalizationsDelegate
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'fr':
+      {
+        switch (locale.countryCode) {
+          case 'CA':
+            return AppLocalizationsFrCa();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'de':

@@ -33,6 +33,7 @@ class PendingShoppingChangesNotifier
       LocalCache.loadPendingDeleteChanges(),
       LocalCache.loadPendingAddChanges(),
       LocalCache.loadPendingCategoryChanges(),
+      LocalCache.loadPendingNoteChanges(),
     ]);
     state = PendingShoppingChangesState(
       checks: results[0] as List<PendingCheckChange>,
@@ -40,6 +41,7 @@ class PendingShoppingChangesNotifier
       deletes: results[2] as List<PendingDeleteChange>,
       adds: results[3] as List<PendingAddChange>,
       categories: results[4] as List<PendingCategoryChange>,
+      notes: results[5] as List<PendingNoteChange>,
     );
   }
 
@@ -126,5 +128,32 @@ class PendingShoppingChangesNotifier
   Future<void> clearCategories() async {
     state = state.copyWith(categories: const []);
     await LocalCache.savePendingCategoryChanges(const []);
+  }
+
+  // ── Umbenennung ──────────────────────────────────────────────────────────
+
+  Future<void> addNote(PendingNoteChange change) async {
+    final prev = state.notes.where((c) => c.itemId == change.itemId);
+    // Mehrfach umbenannt: letzter Name, aber eine einmal gelöste
+    // Lebensmittel-Verknüpfung bleibt gelöst.
+    final merged = prev.isEmpty
+        ? change
+        : PendingNoteChange(
+            itemId: change.itemId,
+            note: change.note,
+            clearFood: change.clearFood || prev.first.clearFood,
+            clearUnit: change.clearUnit || prev.first.clearUnit,
+          );
+    final filtered = state.notes
+        .where((c) => c.itemId != change.itemId)
+        .toList()
+      ..add(merged);
+    state = state.copyWith(notes: filtered);
+    await LocalCache.savePendingNoteChanges(filtered);
+  }
+
+  Future<void> clearNotes() async {
+    state = state.copyWith(notes: const []);
+    await LocalCache.savePendingNoteChanges(const []);
   }
 }

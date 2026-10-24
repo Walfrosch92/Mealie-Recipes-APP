@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/autocomplete_field.dart';
 
 // ---------------------------------------------------------------------------
 // Gemeinsame Bausteine des Rezept-Editors — gleiche Optik wie bisher:
@@ -293,6 +294,9 @@ Future<String?> showTextInputDialog(
   String? confirmLabel,
   TextInputType? keyboardType,
   TextCapitalization capitalization = TextCapitalization.sentences,
+  // Vorschläge beim Tippen (z. B. vorhandene Schlagworte — ein gewählter
+  // Name wird vom Aufrufer wiederverwendet statt neu angelegt).
+  List<String> suggestions = const [],
 }) async {
   final result = await showDialog<String>(
     context: context,
@@ -303,6 +307,7 @@ Future<String?> showTextInputDialog(
       confirmLabel: confirmLabel,
       keyboardType: keyboardType,
       capitalization: capitalization,
+      suggestions: suggestions,
     ),
   );
   final t = result?.trim();
@@ -316,6 +321,7 @@ class _TextInputDialog extends StatefulWidget {
   final String? confirmLabel;
   final TextInputType? keyboardType;
   final TextCapitalization capitalization;
+  final List<String> suggestions;
   const _TextInputDialog({
     required this.title,
     this.hint,
@@ -323,6 +329,7 @@ class _TextInputDialog extends StatefulWidget {
     this.confirmLabel,
     this.keyboardType,
     required this.capitalization,
+    this.suggestions = const [],
   });
 
   @override
@@ -342,17 +349,26 @@ class _TextInputDialogState extends State<_TextInputDialog> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return AlertDialog(
+      // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+      scrollable: true,
       backgroundColor: context.appCard,
       title: Text(widget.title),
-      content: TextField(
-        controller: _ctrl,
-        autofocus: true,
-        keyboardType: widget.keyboardType,
-        textCapitalization: widget.capitalization,
-        autocorrect: widget.keyboardType != TextInputType.url,
-        decoration: InputDecoration(hintText: widget.hint ?? l.name),
-        onSubmitted: (v) => Navigator.pop(context, v),
-      ),
+      content: widget.suggestions.isEmpty
+          ? TextField(
+              controller: _ctrl,
+              autofocus: true,
+              keyboardType: widget.keyboardType,
+              textCapitalization: widget.capitalization,
+              autocorrect: widget.keyboardType != TextInputType.url,
+              decoration: InputDecoration(hintText: widget.hint ?? l.name),
+              onSubmitted: (v) => Navigator.pop(context, v),
+            )
+          : AutocompleteField(
+              controller: _ctrl,
+              options: widget.suggestions,
+              decoration: InputDecoration(hintText: widget.hint ?? l.name),
+              onSubmitted: (v) => Navigator.pop(context, v),
+            ),
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
@@ -432,44 +448,47 @@ class _BulkAddSheetState extends State<_BulkAddSheet> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final n = _lines.length;
+    // Querformat/kleine Displays: kleineres Feld und scrollbarer Inhalt,
+    // damit der Hinzufügen-Knopf über der Tastatur erreichbar bleibt.
+    final short = MediaQuery.sizeOf(context).height < 500;
     return Padding(
       padding: EdgeInsets.fromLTRB(
           20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(widget.title,
-              style: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  color: context.appFg,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800)),
-          const SizedBox(height: 6),
-          Text(l.bulkAddHint,
-              style: TextStyle(color: context.appFgSub, fontSize: 13)),
-          const SizedBox(height: 12),
-          Flexible(
-            child: TextField(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(widget.title,
+                style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    color: context.appFg,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text(l.bulkAddHint,
+                style: TextStyle(color: context.appFgSub, fontSize: 13)),
+            const SizedBox(height: 12),
+            TextField(
               controller: _ctrl,
               autofocus: true,
-              minLines: 6,
-              maxLines: 14,
+              minLines: short ? 3 : 6,
+              maxLines: short ? 5 : 14,
               keyboardType: TextInputType.multiline,
               textCapitalization: TextCapitalization.sentences,
               onChanged: (_) => setState(() {}),
               decoration: filledEditDecoration(context),
             ),
-          ),
-          const SizedBox(height: 12),
-          FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: AppTokens.accent,
-                padding: const EdgeInsets.symmetric(vertical: 14)),
-            onPressed: n == 0 ? null : () => Navigator.pop(context, _lines),
-            child: Text(n == 0 ? l.add : l.bulkAddCount(n)),
-          ),
-        ],
+            const SizedBox(height: 12),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                  backgroundColor: AppTokens.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 14)),
+              onPressed: n == 0 ? null : () => Navigator.pop(context, _lines),
+              child: Text(n == 0 ? l.add : l.bulkAddCount(n)),
+            ),
+          ],
+        ),
       ),
     );
   }

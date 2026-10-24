@@ -687,6 +687,7 @@ class _SettingsSheet extends ConsumerWidget {
             Expanded(
                 child: Text(label, style: TextStyle(color: context.appFg))),
             IconButton(
+              tooltip: AppLocalizations.of(context)!.a11yDecrease,
               onPressed: value > 0 ? () => set(value - 1) : null,
               icon: const Icon(Icons.remove_circle_outline_rounded),
             ),
@@ -700,6 +701,7 @@ class _SettingsSheet extends ConsumerWidget {
                       fontWeight: FontWeight.w700)),
             ),
             IconButton(
+              tooltip: AppLocalizations.of(context)!.a11yIncrease,
               onPressed: () => set(value + 1),
               icon: const Icon(Icons.add_circle_outline_rounded),
             ),
@@ -715,7 +717,9 @@ class _SettingsSheet extends ConsumerWidget {
         );
 
     return SafeArea(
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
         const SheetHandle(),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -743,7 +747,7 @@ class _SettingsSheet extends ConsumerWidget {
             (v) =>
                 n.updateSettings((x) => x.copyWith(includeSubstitutions: v))),
         const SizedBox(height: 8),
-      ]),
+      ])),
     );
   }
 }

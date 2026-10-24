@@ -126,6 +126,8 @@ class _NotifiersScreenState extends ConsumerState<NotifiersScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+        scrollable: true,
         backgroundColor: ctx.appCard,
         title: Text(l.notifierNew),
         content: SizedBox(

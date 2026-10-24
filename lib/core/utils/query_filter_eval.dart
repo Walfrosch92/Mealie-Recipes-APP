@@ -1,5 +1,6 @@
 import '../models/recipe_detail.dart';
 import 'cookbook_query_filter.dart';
+import 'server_time.dart';
 
 // ---------------------------------------------------------------------------
 // Lokale Auswertung eines (einfachen, AND-verknüpften) Mealie-Query-Filters
@@ -30,7 +31,7 @@ bool _matchesRow(RecipeDetail r, CookbookFilterRow row,
     if (n == null) return true; // leere Zeile wird auch nicht gesendet
     switch (row.field) {
       case CookbookFilterField.lastMade:
-        final lm = DateTime.tryParse(r.lastMade ?? '');
+        final lm = parseMealieTime(r.lastMade);
         if (lm == null) return false;
         final threshold = now.subtract(Duration(days: n));
         return _compare(lm.compareTo(threshold), row.op);

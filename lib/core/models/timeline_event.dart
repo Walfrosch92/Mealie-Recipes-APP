@@ -1,3 +1,5 @@
+import '../utils/server_time.dart';
+
 // ---------------------------------------------------------------------------
 // Mealie-Zeitleiste eines Rezepts (RecipeTimelineEventOut).
 //
@@ -53,10 +55,7 @@ class TimelineEvent {
   bool get isSystem => eventType == 'system';
 
   DateTime? get timestampLocal {
-    if (timestamp.isEmpty) return null;
-    final hasZone = timestamp.endsWith('Z') ||
-        RegExp(r'[+-]\d\d:?\d\d$').hasMatch(timestamp);
-    return DateTime.tryParse(hasZone ? timestamp : '${timestamp}Z')?.toLocal();
+    return parseMealieTime(timestamp);
   }
 
   TimelineEvent copyWith({String? message, bool? hasImage}) => TimelineEvent(

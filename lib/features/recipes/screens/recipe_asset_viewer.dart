@@ -7,6 +7,7 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
@@ -16,6 +17,7 @@ import '../../../core/utils/media_urls.dart';
 import '../../../core/utils/safe_path.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/recipe_image_viewer.dart';
+import '../../../core/utils/platform_features.dart';
 
 // ---------------------------------------------------------------------------
 // Anhang öffnen: Bilder im Vollbild-Viewer, PDFs und Textdateien direkt in
@@ -49,6 +51,25 @@ Future<void> openRecipeAsset(BuildContext context, WidgetRef ref,
 
   final messenger = ScaffoldMessenger.of(context);
   final navigator = Navigator.of(context, rootNavigator: true);
+
+  // Video/Audio: direkt vom Server streamen (System-Player im In-App-
+  // Browser) statt erst die ganze Datei zu laden. Klappt das nicht (z. B.
+  // Proxy verlangt eigene Header), unten wie bisher laden + teilen.
+  if (asset.isMedia && server.isNotEmpty) {
+    try {
+      final ok = await launchUrl(
+          Uri.parse(recipeAssetUrl(server, recipe.id, asset.fileName)),
+          // Desktop (Windows/macOS): Standardbrowser — einen In-App-
+          // Browser gibt es dort nicht.
+          mode: PlatformFeatures.isMobile
+              ? LaunchMode.inAppBrowserView
+              : LaunchMode.externalApplication);
+      if (ok) return;
+    } catch (e) {
+      LogManager.shared.log('⚠️ Anhang streamen fehlgeschlagen: $e');
+    }
+  }
+
   File file;
   try {
     file = await _localAssetFile(recipe, asset);
@@ -68,7 +89,7 @@ Future<void> openRecipeAsset(BuildContext context, WidgetRef ref,
       builder: (_) => _AssetFileScreen(asset: asset, file: file),
     ));
   } else {
-    await Share.shareXFiles([XFile(file.path)]);
+    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
   }
 }
 
@@ -155,7 +176,8 @@ class _AssetFileScreenState extends State<_AssetFileScreen> {
           IconButton(
             tooltip: l.assetsShare,
             icon: const Icon(Icons.ios_share_rounded),
-            onPressed: () => Share.shareXFiles([XFile(widget.file.path)]),
+            onPressed: () => SharePlus.instance
+                .share(ShareParams(files: [XFile(widget.file.path)])),
           ),
         ],
       ),

@@ -15,6 +15,7 @@ import '../../../core/models/shopping_item.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/keyboard_aware_sheet.dart';
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/apple_icon.dart';
 import '../../../shared/widgets/read_only_banner.dart';
@@ -58,6 +59,7 @@ const _kSeedLocales = {
   'en': 'en-US',
   'es': 'es-ES',
   'fr': 'fr-FR',
+  'fr_CA': 'fr-CA',
   'hu': 'hu-HU',
   'nb': 'no-NO',
   'nl': 'nl-NL',
@@ -72,6 +74,7 @@ const _kSeedLanguageNames = {
   'en': 'English',
   'es': 'Español',
   'fr': 'Français',
+  'fr_CA': 'Français (Canada)',
   'hu': 'Magyar',
   'nb': 'Norsk (bokmål)',
   'nl': 'Nederlands',
@@ -307,6 +310,8 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
           context: context,
           builder: (ctx) => StatefulBuilder(
             builder: (ctx, setD) => AlertDialog(
+              // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+              scrollable: true,
               backgroundColor: ctx.appCard,
               title: Text(l.seedDataAction),
               content: Column(
@@ -382,7 +387,7 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
     final file = File('${dir.path}/mealie_${kind.path}.json');
     await file
         .writeAsString(const JsonEncoder.withIndent('  ').convert(_items));
-    await Share.shareXFiles([XFile(file.path)]);
+    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
   }
 
   PopupMenuItem<String> _menuItem(String v, IconData icon, String label) =>
@@ -490,7 +495,7 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(mealieErrorMessage(e) ?? e.toString(),
+                            Text(userErrorMessage(e),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: context.appFgSub)),
                             const SizedBox(height: 12),
@@ -756,14 +761,12 @@ class _MergeTargetSheetState extends State<_MergeTargetSheet> {
     final l = AppLocalizations.of(context)!;
     final terms = searchTerms(_query);
     final shown = widget.items.where((m) => _matches(m, terms)).toList();
+    // KeyboardAwareSheet: bleibt mit Tastatur auf dem Bildschirm (vorher
+    // feste 75 % + Tastatur-Polster → oben abgeschnitten).
     return Padding(
-      padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.75,
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+      child: KeyboardAwareSheet(
+        heightFactor: 0.75,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

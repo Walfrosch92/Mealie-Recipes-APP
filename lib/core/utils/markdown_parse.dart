@@ -363,6 +363,24 @@ String? firstEmbeddedImageUrl(String text, String baseUrl) {
   return resolveMarkdownUrl(url, baseUrl);
 }
 
+/// ALLE eingebetteten Bild-URLs in Dokument-Reihenfolge (Markdown, HTML-
+/// `<img>`, nackte Bild-URL-Zeilen), aufgelöst gegen [baseUrl] — z. B. für
+/// die Schrittbilder im PDF-Export.
+List<String> embeddedImageUrls(String text, String baseUrl) {
+  final found = <(int, String)>[
+    for (final m in _imageRe.allMatches(text))
+      if ((m.group(2) ?? m.group(3)) != null)
+        (m.start, (m.group(2) ?? m.group(3))!),
+    for (final m in _bareImageLineRe.allMatches(text)) (m.start, m.group(1)!),
+  ]..sort((a, b) => a.$1.compareTo(b.$1));
+  final out = <String>[];
+  for (final (_, url) in found) {
+    final r = resolveMarkdownUrl(url, baseUrl);
+    if (r != null && !out.contains(r)) out.add(r);
+  }
+  return out;
+}
+
 /// Entfernt alle eingebetteten Bilder (Markdown, HTML-`<img>`, nackte
 /// Bild-URL-Zeilen) aus dem Anzeigetext.
 String stripEmbeddedImages(String text) {

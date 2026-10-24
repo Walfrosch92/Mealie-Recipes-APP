@@ -1,3 +1,50 @@
 {
-  "sections": []
+  "sections": [
+    {
+      "title": "Units",
+      "icon": "recipe",
+      "items": [
+        "The unit settings \"Use abbreviation\" and \"Display as fraction\" now work: recipes, cooking mode and the PDF show e.g. \"tsp\" instead of \"teaspoon\" and decimals instead of fractions, just like the Mealie web app.",
+        "After merging two units or foods, recipe counts update right away and all recipes show the merged unit — before, the old one seemed to just disappear."
+      ]
+    },
+    {
+      "title": "Meal plan",
+      "icon": "mealplan",
+      "items": [
+        "Planned servings (Mealie 3.29+): each recipe in the meal plan shows its servings — tap to change them for this entry only, the recipe itself stays unchanged.",
+        "Adding meals to the shopping list uses the planned servings, and opening a recipe from the meal plan shows it at that size.",
+        "Subscribe to your meal plan as a calendar (Mealie 3.29+): gear icon -> \"Subscribe to calendar\". One tap opens your default calendar app. Change or remove the preset time per meal, meals without a time show as all-day events. Turning the link on, off or resetting it requires permission to manage the household.",
+        "Moving a meal no longer resets its planned servings to 1.",
+        "The gear icon is now called \"Meal Plan Settings\" like in Mealie: the week start stays right there, while the dice rules and the calendar subscription each open in their own submenu."
+      ]
+    },
+    {
+      "title": "Shopping list",
+      "icon": "cart",
+      "items": [
+        "One input line like in Mealie 3.29: just type an item. The arrow in the field opens quantity, unit and note for a structured item.",
+        "Shortcut: type \"200 g butter\" (or \"200, Gramm, Butter\", \"3 eggs\", \"1 1/2 tbsp sugar\") and it's added as a structured item right away — suggestions show units after the quantity and foods after that.",
+        "Unknown items are no longer created as new foods automatically — they're added as notes, like in Mealie. Tap \"Save … as a new food\" above the input if you want it in your food list (requires permission to manage foods).",
+        "Search long lists: the magnifier at the top appears once a list has more than 20 items and finds items by name, note, unit or category without changing the order."
+      ]
+    },
+    {
+      "title": "Recipes",
+      "icon": "recipe",
+      "items": [
+        "Share link & QR code: create a share link from the ⋮ menu of a recipe and show it as a QR code to scan with a phone camera, or share it as an image. Anyone with the link can view the recipe without an account until it expires.",
+        "Video attachments (Mealie 3.29+): record or choose a video as a recipe attachment; videos and audio play directly from your server. Word, ODT, RTF and HEIC files are accepted too.",
+        "Filter by total time (Mealie 3.29+) in cookbooks and meal plan rules, e.g. \"ready in 30 minutes or less\"."
+      ]
+    },
+    {
+      "title": "Fixes",
+      "icon": "fix",
+      "items": [
+        "\"Last cooked\" is shown again with Mealie 3.29, which no longer sends this date with the recipe.",
+        "Adding an item whose food has aliases in Mealie no longer shows \"could not be created\" (it was saved anyway), and such items no longer make the shopping list fall back to offline."
+      ]
+    }
+  ]
 }

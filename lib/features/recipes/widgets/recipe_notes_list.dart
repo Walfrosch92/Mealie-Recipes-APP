@@ -7,6 +7,8 @@ import '../../../shared/widgets/recipe_note_editor.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../providers/detail_sections.dart';
 import '../services/recipe_notes_sync.dart';
+import '../../../core/providers/settings_provider.dart';
+import '../services/recipe_text_image.dart';
 
 /// Notizen-Liste eines Rezepts inkl. Anlegen/Bearbeiten/Löschen — genutzt
 /// sowohl inline in der Detailansicht als auch im Kochmodus-Bottom-Sheet.
@@ -50,10 +52,20 @@ class _RecipeNotesListState extends ConsumerState<RecipeNotesList> {
     }
   }
 
+  /// Bild hochladen und als `<img>` in die Notiz einfügen (wie Schritte).
+  Future<String?> _pickImage() => pickAndUploadRecipeTextImage(context, ref,
+      recipeSlug: widget.recipe.slug, recipeId: widget.recipe.id);
+
   Future<void> _persist() async {
     final before = List.of(widget.recipe.notes);
     try {
       await persistRecipeNotes(ref, widget.recipe, _notes);
+    } on RecipeNotesQueued {
+      // Offline: bleibt sichtbar und wird später gesendet.
+      if (!mounted) return;
+      final l = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.notesQueuedOffline)));
     } on RecipeNotesRejected {
       // Kein Recht: Anzeige auf den Server-Stand zurücksetzen.
       if (!mounted) return;
@@ -70,14 +82,15 @@ class _RecipeNotesListState extends ConsumerState<RecipeNotesList> {
   }
 
   Future<void> _add() async {
-    final note = await showNoteEditorDialog(context);
+    final note = await showNoteEditorDialog(context, onPickImage: _pickImage);
     if (note == null || !mounted) return;
     setState(() => _notes = [..._notes, note]);
     _persist();
   }
 
   Future<void> _edit(int i) async {
-    final note = await showNoteEditorDialog(context, initial: _notes[i]);
+    final note = await showNoteEditorDialog(context,
+        initial: _notes[i], onPickImage: _pickImage);
     if (note == null || !mounted) return;
     setState(() => _notes = List.of(_notes)..[i] = note);
     _persist();
@@ -102,6 +115,8 @@ class _RecipeNotesListState extends ConsumerState<RecipeNotesList> {
         for (var i = 0; i < _notes.length; i++)
           RecipeNoteCard(
             note: _notes[i],
+            serverUrl: ref.watch(settingsProvider).valueOrNull?.serverUrl,
+            apiToken: ref.watch(settingsProvider).valueOrNull?.apiToken,
             editable: widget.editable,
             onEdit: () => _edit(i),
             onDelete: () => _delete(i),

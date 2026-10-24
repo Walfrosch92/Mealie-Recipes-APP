@@ -17,11 +17,14 @@ Future<File?> pickPhotoWithSource(BuildContext context) async {
   }
   final l = AppLocalizations.of(context)!;
   final source = await showModalBottomSheet<ImageSource>(
+    isScrollControlled: true,
     context: context,
     useRootNavigator: true,
     backgroundColor: context.appCard,
     builder: (ctx) => SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
@@ -35,7 +38,7 @@ Future<File?> pickPhotoWithSource(BuildContext context) async {
             onTap: () => Navigator.pop(ctx, ImageSource.gallery),
           ),
         ],
-      ),
+      )),
     ),
   );
   if (source == null || !context.mounted) return null;

@@ -9,17 +9,15 @@ class AppLocalizationsNb extends AppLocalizations {
   AppLocalizationsNb([String locale = 'nb']) : super(locale);
 
   @override
-  String get appTitle => 'Mealie Recipes';
+  String get endCookingMode => 'Avslutt tilberedelsesmodus';
 
   @override
-  String get endCookingMode => 'Avslutt kokemodus';
-
-  @override
-  String get endCookingModeConfirm => 'Vil du virkelig avslutte kokemodus?';
+  String get endCookingModeConfirm =>
+      'Vil du virkelig avslutte tilberedelsesmodus?';
 
   @override
   String endCookingModeConfirmAll(int count) {
-    return 'Dette avslutter alle $count oppskrifter i kokemodus. Fortsette?';
+    return 'Dette avslutter alle $count oppskrifter i tilberedelsesmodus. Fortsette?';
   }
 
   @override
@@ -99,15 +97,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get searchRecipe => 'Søk etter oppskrift...';
 
   @override
-  String get loadingRecipes => 'Laster oppskrifter...';
-
-  @override
   String get loadingRecipe => 'Laster oppskrift...';
-
-  @override
-  String errorLoadingRecipes(String error) {
-    return 'Feil ved lasting av oppskrifter: $error';
-  }
 
   @override
   String get errorLoadingRecipe => 'Kunne ikke laste oppskriften.';
@@ -149,10 +139,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get sortPrepTimeLong => 'Lengst forberedelsestid';
 
   @override
-  String get sortRatingHighest => 'Høyest vurdering';
+  String get sortRatingHighest => 'Høyest rangering';
 
   @override
-  String get sortRatingLowest => 'Lavest vurdering';
+  String get sortRatingLowest => 'Lavest rangering';
 
   @override
   String get details => 'Detaljer';
@@ -161,7 +151,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get ingredients => 'Ingredienser';
 
   @override
-  String get instructions => 'Fremgangsmåte';
+  String get instructions => 'Instruksjoner';
 
   @override
   String get tags => 'Emneord';
@@ -191,30 +181,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get servings => 'Porsjoner';
 
   @override
-  String get adjustQuantity => 'Juster mengde';
-
-  @override
-  String get startTimer => 'Start timer';
-
-  @override
-  String runningTimer(int minutes, String seconds) {
-    return 'Timer: $minutes:$seconds';
-  }
-
-  @override
   String get planMeal => 'Planlegg måltid';
-
-  @override
-  String get displayAlwaysOn => 'Hold skjermen på';
 
   @override
   String get addAllIngredients => 'Legg til alle ingredienser';
 
   @override
   String get addSelectedIngredients => 'Legg til valgte ingredienser';
-
-  @override
-  String get addIngredientsTitle => 'Ingredienser lagt til';
 
   @override
   String get addIngredientsMessage =>
@@ -334,7 +307,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get setupTip2 =>
-      'Kokemodus holder skjermen våken, guider deg steg for steg og oppdager tidtakere i teksten automatisk.';
+      'Tilberedelsesmodus holder skjermen våken, guider deg steg for steg og oppdager tidtakere i teksten automatisk.';
 
   @override
   String get setupTip3 =>
@@ -388,16 +361,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get sendToDevice => 'Send til enhet';
 
   @override
-  String get sendToDevicePickerTitle => 'Send til enhet';
-
-  @override
-  String get sendToAllDevices => 'Send til alle enheter';
-
-  @override
   String get timerFinished => 'Timeren er ferdig!';
-
-  @override
-  String get timerFinishedBody => 'Oppskriftstimeren din er ferdig.';
 
   @override
   String get timer => 'Timer';
@@ -406,21 +370,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get newTimer => 'Ny timer';
 
   @override
-  String get timerDetails => 'Timerdetaljer';
-
-  @override
   String get timerNamePlaceholder => 'Navn på timer';
 
   @override
-  String get timerNameHint => 'Gi timeren et beskrivende navn.';
-
-  @override
   String get durationLabel => 'Varighet';
-
-  @override
-  String minutesCount(int count) {
-    return '$count minutter';
-  }
 
   @override
   String get start => 'Start';
@@ -446,34 +399,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get minAbbreviation => 'min';
 
   @override
-  String get cookingMode => 'Kokemodus';
-
-  @override
-  String activeRecipesCount(int count) {
-    return '$count aktive oppskrifter';
-  }
+  String get cookingMode => 'Tilberedelsesmodus';
 
   @override
   String get endAll => 'Avslutt alle';
 
   @override
   String get end => 'Avslutt';
-
-  @override
-  String get endAllRecipesTitle => 'Avslutte alle oppskrifter?';
-
-  @override
-  String endAllRecipesMessage(int count) {
-    return 'Vil du avslutte alle $count aktive kokeøkter?';
-  }
-
-  @override
-  String get endRecipeTitle => 'Avslutte oppskriften?';
-
-  @override
-  String endRecipeMessage(String name) {
-    return 'Vil du avslutte kokeøkten for «$name»?';
-  }
 
   @override
   String get noActiveTimers => 'Ingen aktive timere';
@@ -483,15 +415,10 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get startRecipeToCook =>
-      'Åpne en oppskrift og trykk på kokemodus-knappen for å starte.';
+      'Åpne en oppskrift og trykk på tilberedelsesmodus-knappen for å starte.';
 
   @override
   String get browseRecipes => 'Bla i oppskrifter';
-
-  @override
-  String timersPausedCount(int count) {
-    return '$count timer(e) satt på pause';
-  }
 
   @override
   String get cookFriends => 'Lag mat med venner';
@@ -531,13 +458,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get joinSession => 'Bli med i økt';
 
   @override
-  String get hostEndedSessionTitle => 'Økten er avsluttet';
-
-  @override
   String get hostEndedSessionMessage => 'Verten har avsluttet kokeøkten.';
-
-  @override
-  String get shoppingListEmpty => 'Handlelisten din er tom.';
 
   @override
   String get addItem => 'Legg til vare';
@@ -549,19 +470,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get unlabeledCategory => 'Uten etikett';
 
   @override
-  String get reorderCategories => 'Endre rekkefølge på kategorier';
-
-  @override
-  String get archiveChecked => 'Arkiver avkryssede varer';
-
-  @override
   String get archivedLists => '📦 Arkiverte innkjøp';
-
-  @override
-  String get syncChanges => 'Synkroniser endringer';
-
-  @override
-  String get noSyncChanges => 'Ingen endringer å synkronisere';
 
   @override
   String get postimportAction => 'Etter import';
@@ -644,48 +553,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get selectRecipe => 'Velg oppskrift';
 
   @override
-  String get orFreeText => 'eller fritekst';
-
-  @override
-  String get entryNote => 'Notat';
-
-  @override
-  String get noMealEntries => 'Ingen oppføringer denne uken.';
-
-  @override
   String get importRecipe => 'Importer oppskrift';
-
-  @override
-  String get importFromUrl => 'Importer fra URL';
-
-  @override
-  String get importFromImage => 'Importer fra bilde';
-
-  @override
-  String get importFromJson => 'Importer fra JSON';
 
   @override
   String get url => 'URL';
 
   @override
-  String get urlPlaceholder => 'https://...';
-
-  @override
   String get importLanguage => 'Språk for OCR';
-
-  @override
-  String get importing => 'Importerer...';
-
-  @override
-  String get importSuccess => 'Oppskriften ble importert!';
-
-  @override
-  String importError(String error) {
-    return 'Importen mislyktes: $error';
-  }
-
-  @override
-  String get pasteJson => 'Lim inn JSON her';
 
   @override
   String get setupTitle => 'Velkommen til Mealie Recipes';
@@ -713,9 +587,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get shoppingListId => 'Handleliste-ID';
-
-  @override
-  String get shoppingListIdPlaceholder => 'Velg en handleliste';
 
   @override
   String get setupHouseholdListTitle => 'Husholdning og handleliste';
@@ -752,12 +623,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get connect => 'Koble til';
 
   @override
-  String get connecting => 'Kobler til...';
-
-  @override
-  String get connectionSuccess => 'Tilkoblingen var vellykket!';
-
-  @override
   String connectionError(String error) {
     return 'Tilkoblingen mislyktes: $error';
   }
@@ -772,19 +637,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsSaved => 'Innstillingene er lagret';
 
   @override
-  String get serverSettings => 'Server';
-
-  @override
-  String get displaySettings => 'Visning';
-
-  @override
-  String get notificationSettings => 'Varsler';
-
-  @override
   String get securitySettings => 'Sikkerhet';
-
-  @override
-  String get aboutSettings => 'Om';
 
   @override
   String get showRecipeImages => 'Vis oppskriftsbilder';
@@ -800,12 +653,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get biometricLockDescription => 'Lås opp appen med biometri';
-
-  @override
-  String get criticalAlerts => 'Kritiske varsler';
-
-  @override
-  String get criticalAlertsDescription => 'Timeralarm også i lydløs modus';
 
   @override
   String get enableLogging => 'Aktiver logging';
@@ -839,29 +686,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get leftoverFinder => 'Oppskriftsfinner';
 
   @override
-  String get leftoverFinderSubtitle =>
-      'Finn oppskrifter med ingrediensene du har';
-
-  @override
   String get addIngredient => 'Legg til ingrediens';
-
-  @override
-  String get ingredientPlaceholder => 'f.eks. egg';
-
-  @override
-  String get findRecipes => 'Finn oppskrifter';
-
-  @override
-  String get matchingRecipes => 'Passende oppskrifter';
-
-  @override
-  String get noMatchingRecipes =>
-      'Fant ingen oppskrifter med disse ingrediensene.';
-
-  @override
-  String matchPercent(int percent) {
-    return '$percent % treff';
-  }
 
   @override
   String get biometricPrompt => 'Autentiser deg for å åpne Mealie Recipes';
@@ -870,15 +695,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get biometricFailed => 'Autentiseringen mislyktes';
 
   @override
-  String get whatsNew => 'Hva er nytt';
-
-  @override
   String get pendingRecipesTitle => 'Mottatte oppskrifter';
-
-  @override
-  String pendingRecipesMessage(String sender, String name) {
-    return 'Du har mottatt en oppskrift fra $sender: «$name»';
-  }
 
   @override
   String pendingRecipesFrom(Object names) {
@@ -886,13 +703,7 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
-  String get pendingRecipesOpenCooking => 'Åpne kokemodus';
-
-  @override
-  String get pendingRecipesLater => 'Senere';
-
-  @override
-  String get openRecipe => 'Åpne oppskrift';
+  String get pendingRecipesOpenCooking => 'Åpne tilberedelsesmodus';
 
   @override
   String get dismiss => 'Lukk';
@@ -902,9 +713,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get recipeName => 'Navn på oppskrift';
-
-  @override
-  String get recipeDescription => 'Beskrivelse';
 
   @override
   String get prepTime => 'Forberedelsestid (min)';
@@ -919,7 +727,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get recipeServings => 'Porsjoner';
 
   @override
-  String get rating => 'Vurdering';
+  String get rating => 'Rangering';
 
   @override
   String get addIngredientLine => 'Legg til ingrediens';
@@ -952,30 +760,10 @@ class AppLocalizationsNb extends AppLocalizations {
   String get categories => 'Kategorier';
 
   @override
-  String get selectCategories => 'Velg kategorier';
-
-  @override
-  String get selectTags => 'Velg emneord';
-
-  @override
-  String get uploadImage => 'Last opp bilde';
-
-  @override
-  String get removeImage => 'Fjern bilde';
-
-  @override
   String get saveChanges => 'Lagre endringer';
 
   @override
-  String get saving => 'Lagrer...';
-
-  @override
   String get saveSuccess => 'Oppskriften er lagret.';
-
-  @override
-  String saveError(String error) {
-    return 'Kunne ikke lagre: $error';
-  }
 
   @override
   String get newCategory => 'Ny kategori';
@@ -984,20 +772,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get newTag => 'Nytt emneord';
 
   @override
-  String get setRating => 'Gi vurdering';
-
-  @override
-  String get removeRating => 'Fjern vurdering';
-
-  @override
-  String get ratingRemoved => 'Vurderingen er fjernet';
-
-  @override
-  String get googleTasksImport => 'Importer fra Google Tasks';
-
-  @override
-  String get googleTasksImportDescription =>
-      'Importer varer fra Google Tasks til handlelisten din.';
+  String get setRating => 'Gi rangering';
 
   @override
   String get homeWelcome => 'Velkommen til Mealie Recipes! 👋';
@@ -1015,9 +790,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get other => 'Annet';
-
-  @override
-  String get viewRecipes => '📖 Se oppskrifter';
 
   @override
   String get addRecipe => '➕ Legg til oppskrift';
@@ -1038,9 +810,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get resteverwertung => '🥗 Oppskriftsfinner';
 
   @override
-  String get newRecipeUpload => 'Last opp ny oppskrift';
-
-  @override
   String get copyCode => 'Kopier kode';
 
   @override
@@ -1053,23 +822,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get waitingForFriends => 'Venter på venner...';
 
   @override
-  String get endSharing => 'Avslutt deling';
-
-  @override
-  String get cookFriendsDescription =>
-      'Inviter en venn til å lage denne oppskriften sammen';
-
-  @override
   String get sessionCode => 'ØKTKODE';
-
-  @override
-  String get adjustQuantityLabel => 'Juster mengden for denne oppskriften:';
-
-  @override
-  String get timerStartForStep => 'Timer for steg';
-
-  @override
-  String get enterRecipeUrl => 'Skriv inn oppskrifts-URL';
 
   @override
   String get loading => 'Laster...';
@@ -1082,9 +835,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get addItemPlaceholder => 'Legg til vare...';
-
-  @override
-  String get addSuccessToast => 'Lagt til!';
 
   @override
   String get completedItems => 'Fullført';
@@ -1142,18 +892,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get allDeleteConfirm => 'Slett alle';
 
   @override
-  String get portionen => 'Porsjoner';
-
-  @override
-  String get timerForStep => 'Start timer for dette steget';
-
-  @override
-  String get weekNavPrev => 'Forrige uke';
-
-  @override
-  String get weekNavNext => 'Neste uke';
-
-  @override
   String get noMealsThisWeek => 'Ingen måltider planlagt';
 
   @override
@@ -1163,43 +901,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get availableWeeks => 'Tilgjengelige uker:';
 
   @override
-  String weekRange(Object end, Object start, Object week) {
-    return 'Uke $week ($start – $end)';
-  }
-
-  @override
   String get currentWeek => 'Denne uken';
-
-  @override
-  String get rezepteAktualisieren => 'Oppdater oppskrifter';
-
-  @override
-  String get leftoverWhatTitle => 'Hva gjør dette?';
-
-  @override
-  String get leftoverWhatBody =>
-      'Denne funksjonen laster alle oppskrifter på nytt fra serveren og oppdaterer den lokale hurtigbufferen.';
-
-  @override
-  String get leftoverDescription =>
-      'Skriv inn ingredienser du har, for å finne passende oppskrifter og bruke opp rester.';
-
-  @override
-  String get leftoverIngredientsHeader => 'Ingredienser hjemme';
-
-  @override
-  String get leftoverSuggestions => 'Oppskriftsforslag';
-
-  @override
-  String get leftoverNoMatches => 'Fant ingen passende oppskrifter.';
-
-  @override
-  String get leftoverEnterIngredient => 'Skriv inn ingrediens';
-
-  @override
-  String matchingPercentText(int percent, int count, int total) {
-    return '$percent % treff ($count/$total)';
-  }
 
   @override
   String get weekAbbreviation => 'Uke';
@@ -1209,9 +911,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get selectDate => 'Velg dato';
-
-  @override
-  String get selectSlot => 'Velg måltid';
 
   @override
   String get selectedRecipe => 'Valgt oppskrift';
@@ -1243,11 +942,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get entriesPlural => 'oppføringer';
-
-  @override
-  String listTitle(int n) {
-    return 'Liste $n';
-  }
 
   @override
   String get deleteAllConfirmTitle => 'Slette alle?';
@@ -1297,9 +991,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get startCooking => 'Begynn å lage mat';
 
   @override
-  String get hostNoRecipe => 'Åpne fra en oppskrift for å starte en økt';
-
-  @override
   String get uploadToOwnServer => 'Lagre på serveren min';
 
   @override
@@ -1318,12 +1009,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get appIcon => 'Appikon';
-
-  @override
-  String get appIconClassic => 'Classic';
-
-  @override
-  String get appIconModern => 'Modern';
 
   @override
   String get name => 'Navn';
@@ -1365,7 +1050,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get offlineRecipeImagesHint =>
-      'Laster ned alle oppskriftsbilder til denne enheten, slik at de også vises uten tilkobling. Ved store samlinger kan dette ta opp flere hundre MB. Slår du det av, slettes de lagrede bildene.';
+      'Laster ned alle oppskriftsbilder til enheten – også bildene i trinnene og notatene – slik at de vises uten tilkobling. Store samlinger kan bruke flere hundre MB. Når du slår av, slettes de lagrede bildene.';
 
   @override
   String offlineRecipeImagesStatus(int count, int total, String size) {
@@ -1400,7 +1085,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get exactQuantitiesSubtitle =>
-      'Ingredienser og innskrevne varer beholder mengde og enhet (f.eks. 200 g smør) i stedet for 1x per vare — manglende matvarer opprettes på serveren';
+      'Ingredienser og innskrevne varer beholder mengde og enhet (f.eks. 200 g smør) i stedet for 1x per vare';
 
   @override
   String get remindToShop => 'Minn meg på å handle';
@@ -1455,7 +1140,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get shoppingReminderAddressNotFound => 'Fant ikke adressen';
 
   @override
-  String get ratingFailed => 'Vurderingen kunne ikke lagres — prøv igjen.';
+  String get ratingFailed => 'Rangeringen kunne ikke lagres — prøv igjen.';
 
   @override
   String get lastCooked => 'Sist laget';
@@ -1521,12 +1206,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get loginInvalidCredentials => 'Brukernavnet eller passordet er feil.';
 
   @override
-  String get loginAndGenerateToken => 'Logg inn og generer token';
-
-  @override
-  String get loggingIn => 'Logger inn…';
-
-  @override
   String get apiTokenSaveHint =>
       'Token er brukt — trykk på «Lagre endringer» nedenfor.';
 
@@ -1561,7 +1240,7 @@ class AppLocalizationsNb extends AppLocalizations {
   }
 
   @override
-  String get openCookingMode => 'Åpne kokemodus';
+  String get openCookingMode => 'Åpne tilberedelsesmodus';
 
   @override
   String activeRecipes(int count) {
@@ -1584,9 +1263,6 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get reparseDone =>
       'Ingrediensene er delt opp – trykk på «Lagre endringer» for å bruke dem';
-
-  @override
-  String get reparseNone => 'Fant ingen ingredienser som kan deles opp';
 
   @override
   String get tagsAndCategories => 'Emneord, kategorier og kjøkkenredskap';
@@ -1619,12 +1295,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String importCount(int count) {
     return 'Importer $count';
   }
-
-  @override
-  String get activeRecipeTimer => 'Aktiv oppskriftstimer';
-
-  @override
-  String get linkIngredients => 'Koble ingredienser';
 
   @override
   String get noIngredientsToLink => 'Ingen ingredienser å koble ennå';
@@ -1690,7 +1360,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String supportNoMailApp(String email) {
-    return 'Fant ingen e-postapp. Adressen er kopiert: $email';
+    return 'Ingen e-postapp er satt opp – adressen er kopiert: $email. Velg en annen app for å skrive til oss.';
   }
 
   @override
@@ -1726,9 +1396,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get preparingPdf => 'Behandler PDF...';
 
   @override
-  String get shareRecipeTitle => 'Del oppskrift';
-
-  @override
   String get recipeOptionsTitle => 'Alternativer';
 
   @override
@@ -1742,9 +1409,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get recipeTime => 'Tid';
-
-  @override
-  String get ingredientSectionTitle => 'Seksjon';
 
   @override
   String get addIngredientSection => 'Legg til seksjon';
@@ -1805,9 +1469,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get toolOnHand => 'Tilgjengelig';
 
   @override
-  String get mealDiceSettingsTitle => 'Terningfilter';
-
-  @override
   String get mealDiceSettingsHint =>
       'Velg kategorier og emneord for hvert måltid. Terningen foreslår da bare oppskrifter som har minst ett av dem. Det samme valget kan brukes for flere måltider.';
 
@@ -1859,7 +1520,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get cookingDoneCommentHint => 'Hvordan ble det? Tips til neste gang…';
 
   @override
-  String get nutritionTitle => 'Næringsinnhold';
+  String get nutritionTitle => 'Ernæring';
 
   @override
   String get nutritionPerServing => 'per porsjon';
@@ -2370,9 +2031,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get userManagementTitle => 'Brukeradministrasjon';
 
   @override
-  String get usersTitle => 'Brukere';
-
-  @override
   String get editUserTitle => 'Rediger bruker';
 
   @override
@@ -2418,9 +2076,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get resetLockedUsersAction => 'Tilbakestill låste brukere';
-
-  @override
-  String get membersTitle => 'Medlemmer';
 
   @override
   String get inviteLinkTitle => 'Invitasjonslenke';
@@ -4147,4 +3802,354 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get updateSourceHint =>
       'Oppdateringer kommer fra GitHub-utgivelsene til Mealie Recipes og installeres bare hvis de er signert av utvikleren (macOS).';
+
+  @override
+  String get errorNoConnection =>
+      'Får ikke kontakt med Mealie-serveren. Sjekk internettforbindelsen og serveradressen.';
+
+  @override
+  String get errorTimeout =>
+      'Serveren brukte for lang tid på å svare. Prøv igjen.';
+
+  @override
+  String get errorUnauthorized =>
+      'Innloggingen har utløpt, eller API-tokenet er ikke lenger gyldig. Logg inn på nytt i innstillingene.';
+
+  @override
+  String get errorServer =>
+      'Mealie-serveren rapporterte en feil. Prøv igjen senere.';
+
+  @override
+  String get errorNotFound =>
+      'Ikke funnet på serveren – det kan ha blitt slettet.';
+
+  @override
+  String get errorCertificate =>
+      'Serverens sikkerhetssertifikat er ikke klarert.';
+
+  @override
+  String get errorGeneric => 'Noe gikk galt. Prøv igjen.';
+
+  @override
+  String get offlineLabel => 'Frakoblet';
+
+  @override
+  String offlineSince(String time) {
+    return 'Frakoblet · sist synkronisert $time';
+  }
+
+  @override
+  String get mealplanEntryActions => 'Måltidsvalg';
+
+  @override
+  String get mealplanMoveAction => 'Flytt';
+
+  @override
+  String get mealplanMoveTitle => 'Flytt måltid';
+
+  @override
+  String get mealplanMoveDate => 'Dato';
+
+  @override
+  String mealplanMovedTo(String date) {
+    return 'Flyttet til $date';
+  }
+
+  @override
+  String get mealplanShowWeek => 'Vis';
+
+  @override
+  String get mealplanMoveFailed => 'Kunne ikke flytte måltidet';
+
+  @override
+  String get recentlyViewedTitle => 'Nylig sett';
+
+  @override
+  String get recentlyViewedEmpty => 'Oppskrifter du åpner, vises her.';
+
+  @override
+  String get recentlyViewedClear => 'Tøm historikk';
+
+  @override
+  String get recentlyViewedClearMessage =>
+      'Listen over nylig viste oppskrifter på denne enheten tømmes. Selve oppskriftene beholdes.';
+
+  @override
+  String get recentlyViewedClearConfirm => 'Tøm';
+
+  @override
+  String get duplicatesTitle => 'Duplikatfinner';
+
+  @override
+  String get duplicatesScanning => 'Søker etter dupliserte oppskrifter …';
+
+  @override
+  String get duplicatesNone => 'Fant ingen dupliserte oppskrifter.';
+
+  @override
+  String duplicatesFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mulige duplikater funnet.',
+      one: '1 mulig duplikat funnet.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesIntro =>
+      'Trykk på oppskriften som skal beholdes, og slå deretter sammen.';
+
+  @override
+  String get duplicatesReasonSource => 'Samme kilde';
+
+  @override
+  String get duplicatesReasonName => 'Samme navn';
+
+  @override
+  String duplicatesReasonSimilar(int percent) {
+    return 'Lignende · $percent % like ingredienser';
+  }
+
+  @override
+  String get duplicatesKeeps => 'Beholdes';
+
+  @override
+  String get duplicatesWillBeDeleted => 'Slettes';
+
+  @override
+  String get duplicatesMerge => 'Slå sammen';
+
+  @override
+  String get duplicatesNotDuplicate => 'Ikke duplikat';
+
+  @override
+  String get duplicatesMergeTitle => 'Slå sammen oppskrifter?';
+
+  @override
+  String duplicatesMergeMessage(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count andre oppskrifter slettes',
+      one: '1 annen oppskrift slettes',
+    );
+    return '«$name» beholdes. $_temp0.\n\nKategorier, stikkord, redskaper, notater, planlagte måltider i husholdningen din og favoritten din flyttes over. Kommentarer, tidslinje og vedlegg til de slettede oppskriftene går tapt.';
+  }
+
+  @override
+  String get duplicatesMerged => 'Oppskrifter slått sammen';
+
+  @override
+  String duplicatesIngredientCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ingredienser',
+      one: '1 ingrediens',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String duplicatesResetIgnored(int count) {
+    return 'Vis skjulte par igjen ($count)';
+  }
+
+  @override
+  String get duplicatesRescan => 'Søk på nytt';
+
+  @override
+  String get duplicatesOpenRecipe => 'Åpne oppskrift';
+
+  @override
+  String get duplicatesMergeNoEditHint =>
+      'Du kan ikke redigere oppskriften som beholdes (en annens låste oppskrift eller fra en annen husholdning). Kategorier, stikkord, redskaper og notater flyttes derfor ikke over – bare planlagte måltider og favoritten din.';
+
+  @override
+  String get recipeOtherHouseholdHint =>
+      'Fra en annen husholdning – redigering er låst der';
+
+  @override
+  String foodsSavedAsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nye matvarer',
+      one: '1 ny matvare',
+    );
+    return 'Lagret. $_temp0 ble lagret som ingrediensnotat – å opprette matvarer krever tillatelsen «Bruker kan administrere matvarer, emneord og kategorier» i Mealie.';
+  }
+
+  @override
+  String get a11yRemove => 'Fjern';
+
+  @override
+  String get a11yDecrease => 'Mindre';
+
+  @override
+  String get a11yIncrease => 'Mer';
+
+  @override
+  String get a11yShowPassword => 'Vis passord';
+
+  @override
+  String get a11yHidePassword => 'Skjul passord';
+
+  @override
+  String get a11yClearSearch => 'Tøm søk';
+
+  @override
+  String get notesQueuedOffline =>
+      'Frakoblet – notatet sendes så snart serveren er tilgjengelig igjen.';
+
+  @override
+  String get timelineQueuedOffline =>
+      'Frakoblet – føres inn i tidslinjen så snart serveren er tilgjengelig igjen.';
+
+  @override
+  String get syncSectionName => 'Omdøpt';
+
+  @override
+  String get pendingRecipesDiscard => 'Forkast';
+
+  @override
+  String get undo => 'Angre';
+
+  @override
+  String timerStoppedSnack(String name) {
+    return 'Tidtaker «$name» stoppet';
+  }
+
+  @override
+  String get cookFriendsEndConfirm =>
+      'Avslutte økten for alle? Alle gjester kobles fra.';
+
+  @override
+  String get weekStartSyncHint =>
+      'Lagres i Mealie – gjelder hele husholdningen, også i nettappen.';
+
+  @override
+  String get weekStartNoPermission =>
+      'Kommer fra Mealie. Bare de som kan administrere husholdningen, kan endre det.';
+
+  @override
+  String get assetsUnsupported329 =>
+      'Mealie støtter PDF, bilder, videoer (MP4, MOV, WebM), lyd (MP3, M4A), Word/ODT/RTF, TXT, MD, CSV og JSON.';
+
+  @override
+  String get assetsRecordVideo => 'Ta opp video';
+
+  @override
+  String get assetsChooseVideo => 'Velg video';
+
+  @override
+  String get shoppingSearchHint => 'Søk i listen';
+
+  @override
+  String get shoppingSearchNoMatches => 'Ingen varer samsvarer med søket.';
+
+  @override
+  String get mealplanServingsTitle => 'Planlagte porsjoner';
+
+  @override
+  String get mealplanServingsHint =>
+      'Bare for denne oppføringen i måltidsplanen – selve oppskriften endres ikke. Når du åpner oppskriften og legger den i handlelisten, brukes disse porsjonene.';
+
+  @override
+  String get calendarFeedTitle => 'Abonner på kalender';
+
+  @override
+  String get calendarFeedSubtitle =>
+      'Vis måltidsplanen i Google-, Apple- eller en annen kalender';
+
+  @override
+  String get calendarFeedDescription =>
+      'Abonner på husholdningens måltidsplan fra Google Kalender, Apple Kalender, Home Assistant eller en annen app som støtter iCal-lenker. Alle med lenken kan se måltidsplanen din.';
+
+  @override
+  String get calendarFeedOff =>
+      'Kalenderlenken er slått av for husholdningen din.';
+
+  @override
+  String get calendarFeedAskManager =>
+      'Be noen som kan administrere husholdningen om å slå den på.';
+
+  @override
+  String get calendarFeedTurnOn => 'Slå på';
+
+  @override
+  String get calendarFeedTurnOff => 'Slå av';
+
+  @override
+  String get calendarFeedReset => 'Tilbakestill lenke';
+
+  @override
+  String get calendarFeedResetHint =>
+      'Tilbakestilling eller avslåing av lenken stopper oppdatering av eksisterende abonnementer.';
+
+  @override
+  String get calendarFeedIncludeNotes => 'Ta med notater';
+
+  @override
+  String get calendarFeedTimesHint =>
+      'Trykk på et måltid for å angi klokkeslett. Måltider uten klokkeslett vises som heldagshendelser.';
+
+  @override
+  String get calendarFeedMealTypes => 'Type måltid';
+
+  @override
+  String get calendarFeedSubscribe => 'Abonner i kalenderen';
+
+  @override
+  String get calendarFeedNoApp =>
+      'Ingen kalenderapp kunne åpnes. Kopier lenken og legg den til som abonnement i kalenderen din.';
+
+  @override
+  String get calendarFeedPublicHint =>
+      'Lenken fungerer uten innlogging – del den bare med personer som får se måltidsplanen din.';
+
+  @override
+  String get recipeShareLinkMenu => 'Delingslenke og QR-kode';
+
+  @override
+  String get recipeShareShowQr => 'Vis QR-kode';
+
+  @override
+  String get recipeShareScanQr =>
+      'Skann med mobilkameraet for å åpne denne oppskriften';
+
+  @override
+  String get recipeShareQrShare => 'Del bilde';
+
+  @override
+  String get recipeShareQrFailed => 'Kunne ikke lage QR-kodebildet';
+
+  @override
+  String get mealplanSettingsTitle => 'Innstillinger for måltidsplan';
+
+  @override
+  String get mealDiceRulesTitle => 'Terningregler';
+
+  @override
+  String saveAsNewFood(String name) {
+    return 'Lagre «$name» som ny matvare';
+  }
+
+  @override
+  String get shoppingMoreOptions => 'Flere alternativer';
+
+  @override
+  String get shoppingFewerOptions => 'Færre alternativer';
+
+  @override
+  String nameAlreadyExists(String name) {
+    return 'Finnes allerede: $name';
+  }
+
+  @override
+  String aliasBelongsTo(String alias, String name) {
+    return '«$alias» hører allerede til «$name» – slå heller sammen de to.';
+  }
 }

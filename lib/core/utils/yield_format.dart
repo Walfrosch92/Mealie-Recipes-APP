@@ -14,8 +14,12 @@ String scaleYield(String yield, double m) {
   // ergibt in double-Arithmetik 3.9999999999999996 statt 4.0, die
   // Ganzzahl-Prüfung würde sonst fälschlich "4.0" statt "4" anzeigen.
   final scaled = double.parse((val * m).toStringAsFixed(2));
+  // Bis zu 2 Nachkommastellen wie bei den Zutatenmengen (0.33 statt „0.3").
   final str = scaled == scaled.truncateToDouble()
       ? scaled.truncate().toString()
-      : scaled.toStringAsFixed(1);
+      : scaled
+          .toStringAsFixed(2)
+          .replaceAll(RegExp(r'0+$'), '')
+          .replaceAll(RegExp(r'\.$'), '');
   return yield.replaceRange(match.start, match.end, str);
 }

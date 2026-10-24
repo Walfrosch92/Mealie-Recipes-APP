@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
-import '../../../core/api/api_service.dart' show mealieErrorMessage;
+import '../../../core/api/api_service.dart'
+    show mealieErrorMessage, userErrorMessage;
 import '../../../core/models/organizer_item.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/animations.dart';
+import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../shared/widgets/read_only_banner.dart';
 import '../../../core/providers/permissions_provider.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
@@ -53,33 +55,108 @@ extension OrganizerKindUi on OrganizerKind {
 }
 
 /// Namensdialog für Anlegen und Umbenennen. Liefert den getrimmten Namen oder
-/// `null` (abgebrochen/leer).
+/// `null` (abgebrochen/leer). [existing]: vorhandene Namen — werden beim
+/// Tippen vorgeschlagen, und ein exakter Treffer (außer [initial] selbst)
+/// wird gesperrt („Gibt es schon"), damit nichts doppelt entsteht.
 Future<String?> showOrganizerNameDialog(BuildContext context,
-    {required String title, String initial = '', String? confirmLabel}) async {
-  final l = AppLocalizations.of(context)!;
-  final ctrl = TextEditingController(text: initial);
+    {required String title,
+    String initial = '',
+    String? confirmLabel,
+    List<String> existing = const []}) async {
   final result = await showDialog<String>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: ctx.appCard,
-      title: Text(title),
-      content: TextField(
-        controller: ctrl,
-        autofocus: true,
-        textCapitalization: TextCapitalization.sentences,
-        decoration: InputDecoration(hintText: l.name),
-        onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
-        FilledButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            child: Text(confirmLabel ?? l.add)),
-      ],
-    ),
+    builder: (_) => _NameDialog(
+        title: title,
+        initial: initial,
+        confirmLabel: confirmLabel,
+        existing: existing),
   );
-  ctrl.dispose();
   return (result == null || result.isEmpty) ? null : result;
+}
+
+class _NameDialog extends StatefulWidget {
+  final String title;
+  final String initial;
+  final String? confirmLabel;
+  final List<String> existing;
+  const _NameDialog(
+      {required this.title,
+      required this.initial,
+      required this.confirmLabel,
+      required this.existing});
+
+  @override
+  State<_NameDialog> createState() => _NameDialogState();
+}
+
+class _NameDialogState extends State<_NameDialog> {
+  late final _ctrl = TextEditingController(text: widget.initial);
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  /// Vorhandener Name, der dem Eingegebenen entspricht (Groß/Klein und
+  /// Akzente egal) — der eigene bisherige Name zählt nicht.
+  String? get _duplicate {
+    final q = normalizeForSearch(_ctrl.text);
+    if (q.isEmpty || q == normalizeForSearch(widget.initial)) return null;
+    for (final e in widget.existing) {
+      if (normalizeForSearch(e) == q) return e;
+    }
+    return null;
+  }
+
+  void _submit() {
+    if (_duplicate != null) return;
+    Navigator.pop(context, _ctrl.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final dup = _duplicate;
+    final decoration = InputDecoration(
+      hintText: l.name,
+      errorText: dup == null ? null : l.nameAlreadyExists(dup),
+      errorMaxLines: 2,
+    );
+    return AlertDialog(
+      // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
+      scrollable: true,
+      backgroundColor: context.appCard,
+      title: Text(widget.title),
+      content: widget.existing.isEmpty
+          ? TextField(
+              controller: _ctrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: decoration,
+              onSubmitted: (_) => _submit(),
+            )
+          : AutocompleteField(
+              controller: _ctrl,
+              options: widget.existing,
+              decoration: decoration,
+              onSubmitted: (_) => _submit(),
+            ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
+        FilledButton(
+            onPressed: dup == null ? _submit : null,
+            child: Text(widget.confirmLabel ?? l.add)),
+      ],
+    );
+  }
 }
 
 class OrganizersScreen extends ConsumerStatefulWidget {
@@ -102,10 +179,17 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
         content: Text(detail == null ? fallback : '$fallback: $detail')));
   }
 
+  /// Namen aller vorhandenen Einträge dieser Art (Vorschläge + Duplikate).
+  List<String> _existingNames() => [
+        for (final o in ref.read(organizersProvider(kind)).valueOrNull ??
+            const <OrganizerItem>[])
+          o.name,
+      ];
+
   Future<void> _create() async {
     final l = AppLocalizations.of(context)!;
-    final name =
-        await showOrganizerNameDialog(context, title: kind.newTitle(l));
+    final name = await showOrganizerNameDialog(context,
+        title: kind.newTitle(l), existing: _existingNames());
     if (name == null) return;
     try {
       await ref.read(organizersProvider(kind).notifier).create(name);
@@ -118,7 +202,10 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
   Future<void> _rename(OrganizerItem item) async {
     final l = AppLocalizations.of(context)!;
     final name = await showOrganizerNameDialog(context,
-        title: l.renameAction, initial: item.name, confirmLabel: l.save);
+        title: l.renameAction,
+        initial: item.name,
+        confirmLabel: l.save,
+        existing: _existingNames());
     if (name == null || name == item.name) return;
     try {
       await ref.read(organizersProvider(kind).notifier).rename(item, name);
@@ -208,7 +295,7 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(mealieErrorMessage(e) ?? e.toString(),
+                    Text(userErrorMessage(e),
                         style: TextStyle(color: context.appFgSub),
                         textAlign: TextAlign.center),
                     const SizedBox(height: 12),

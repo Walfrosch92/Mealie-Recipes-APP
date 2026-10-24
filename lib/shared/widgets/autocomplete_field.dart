@@ -10,6 +10,31 @@ import 'package:flutter/material.dart';
 // Tastatur → Overlay öffnet nach OBEN).
 // ---------------------------------------------------------------------------
 
+/// Teil-Vervollständigung (z. B. Einkaufsliste „200 Gramm But…"): nur
+/// [query] wird gegen [options] gesucht und beim Übernehmen ersetzt,
+/// [prefix] bleibt stehen, [suffixFor] liefert je Vorschlag, was danach
+/// angehängt wird (z. B. Leerzeichen nach einer Einheit, damit gleich der
+/// Artikel folgen kann).
+class AutocompleteSlot {
+  final String prefix;
+  final String query;
+  final List<String> options;
+  final String Function(String option)? suffixFor;
+  const AutocompleteSlot(
+      {required this.prefix,
+      required this.query,
+      required this.options,
+      this.suffixFor});
+}
+
+class _Suggestion {
+  final String label;
+  final String full;
+  const _Suggestion(this.label, this.full);
+  @override
+  String toString() => full;
+}
+
 class AutocompleteField extends StatefulWidget {
   final TextEditingController controller;
 
@@ -31,6 +56,10 @@ class AutocompleteField extends StatefulWidget {
   /// Vorschlagsliste zählt nicht als „außerhalb".
   final TapRegionCallback? onTapOutside;
 
+  /// Optional: Vorschläge nur für einen Teil des Texts (siehe
+  /// [AutocompleteSlot]). Ohne = ganzer Text gegen [options].
+  final AutocompleteSlot Function(String text)? slotBuilder;
+
   const AutocompleteField({
     super.key,
     required this.controller,
@@ -41,6 +70,7 @@ class AutocompleteField extends StatefulWidget {
     this.textInputAction,
     this.onSubmitted,
     this.onTapOutside,
+    this.slotBuilder,
     this.openDirection = OptionsViewOpenDirection.down,
   });
 
@@ -60,25 +90,34 @@ class _AutocompleteFieldState extends State<AutocompleteField> {
 
   @override
   Widget build(BuildContext context) {
-    return RawAutocomplete<String>(
+    return RawAutocomplete<_Suggestion>(
       textEditingController: widget.controller,
       focusNode: _focus,
       optionsViewOpenDirection: widget.openDirection,
+      displayStringForOption: (o) => o.full,
       optionsBuilder: (TextEditingValue value) {
-        final q = value.text.trim().toLowerCase();
-        if (q.isEmpty) return const Iterable<String>.empty();
+        final slot = widget.slotBuilder?.call(value.text) ??
+            AutocompleteSlot(
+                prefix: '', query: value.text, options: widget.options);
+        final q = slot.query.trim().toLowerCase();
+        if (q.isEmpty) return const Iterable<_Suggestion>.empty();
         final starts = <String>[];
         final contains = <String>[];
-        for (final o in widget.options) {
+        final seen = <String>{};
+        for (final o in slot.options) {
           final lo = o.toLowerCase();
           if (lo == q) continue; // exakter Treffer → kein Vorschlag nötig
+          if (!seen.add(lo)) continue;
           if (lo.startsWith(q)) {
             starts.add(o);
           } else if (lo.contains(q)) {
             contains.add(o);
           }
         }
-        return [...starts, ...contains].take(8);
+        return [...starts, ...contains]
+            .take(8)
+            .map((o) => _Suggestion(
+                o, '${slot.prefix}$o${slot.suffixFor?.call(o) ?? ''}'));
       },
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
         return TextField(
@@ -120,7 +159,7 @@ class _AutocompleteFieldState extends State<AutocompleteField> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
-                      child: Text(opt),
+                      child: Text(opt.label),
                     ),
                   );
                 },

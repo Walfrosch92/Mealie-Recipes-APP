@@ -4,6 +4,7 @@ import '../../../core/api/api_service.dart';
 import '../../../core/models/shopping_item.dart';
 import '../../../core/services/local_cache.dart';
 import '../../../core/utils/ingredient_parse.dart';
+import '../../../core/utils/search_match.dart' show normalizeForSearch;
 
 // ---------------------------------------------------------------------------
 // Foods- & Einheiten-Katalog für die Einkaufsliste.
@@ -56,6 +57,11 @@ class FoodsCatalogNotifier extends AsyncNotifier<List<ShoppingFood>> {
                       .toList(),
               onHand: f['onHand'] as bool?,
               labelId: f['labelId'] as String?,
+              aliases: [
+                for (final a in (f['aliases'] as List?) ?? const [])
+                  if (a is Map && (a['name'] as String?)?.trim().isNotEmpty == true)
+                    (a['name'] as String).trim(),
+              ],
             ))
         .where((f) => (f.name ?? '').isNotEmpty)
         .toList();
@@ -108,19 +114,20 @@ class UnitsCatalogNotifier extends AsyncNotifier<List<ShoppingUnit>> {
 // Auflösen von getipptem Text auf Server-Objekte (mit id).
 // ---------------------------------------------------------------------------
 
-/// Exakter (case-insensitiver) Namenstreffer im Foods-Katalog → der Add geht
-/// als echtes Food-Item (foodId + isFood) raus. Ohne Treffer legt
-/// `ShoppingListNotifier.addItem` das Food im Exakt-Modus serverseitig an.
+/// Getippter Text → Lebensmittel, genau wie Mealie 3.29 (`resolveFood`):
+/// nur bei EXAKTER Übereinstimmung mit Name, Pluralform oder einem Alias —
+/// Groß/Klein, Akzente und Leerraum egal. Bewusst keine unscharfen Treffer,
+/// damit Freitext nie still zu einem anderen Lebensmittel wird. Ohne Treffer
+/// wird der Artikel eine Notiz (neues Lebensmittel nur auf ausdrücklichen
+/// Wunsch, siehe Einkaufsliste „Als neues Lebensmittel speichern").
 ShoppingFood? resolveFoodByName(List<ShoppingFood> foods, String input) {
-  final q = input.trim().toLowerCase();
+  final q = normalizeForSearch(input);
   if (q.isEmpty) return null;
   for (final f in foods) {
     if ((f.id ?? '').isEmpty) continue;
-    // Auch die Pluralform — sonst legt „Eier" neben „Ei (Eier)" ein zweites
-    // Lebensmittel an.
-    if ((f.name ?? '').trim().toLowerCase() == q ||
-        (f.pluralName ?? '').trim().toLowerCase() == q) {
-      return f;
+    final candidates = [f.name, f.pluralName, ...?f.aliases];
+    for (final c in candidates) {
+      if (c != null && normalizeForSearch(c) == q) return f;
     }
   }
   return null;
@@ -137,6 +144,9 @@ ShoppingUnit? resolveUnitByName(List<ShoppingUnit> units, String input) {
   for (final u in units) {
     if ((u.id ?? '').isEmpty) continue;
     if ((u.name ?? '').toLowerCase() == q ||
+        // Mehrzahl („2 Packungen Milch") wie Mealie.
+        ((u.pluralName ?? '').isNotEmpty &&
+            u.pluralName!.toLowerCase() == q) ||
         ((u.abbreviation ?? '').isNotEmpty &&
             u.abbreviation!.toLowerCase() == q)) {
       return u;

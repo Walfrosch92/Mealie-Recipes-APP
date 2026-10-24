@@ -75,6 +75,7 @@ class TimelineFilterButton extends ConsumerWidget {
       icon: Icon(active ? Icons.filter_alt_rounded : Icons.filter_alt_outlined,
           color: active ? AppTokens.accentDeep : context.appFgSub),
       onPressed: () => showModalBottomSheet<void>(
+        isScrollControlled: true,
         context: context,
         useRootNavigator: true,
         backgroundColor: context.appCard,
@@ -92,7 +93,9 @@ class _FilterSheet extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final types = ref.watch(timelineTypeFilterProvider);
     return SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+// Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -118,7 +121,7 @@ class _FilterSheet extends ConsumerWidget {
             ),
           const SizedBox(height: 8),
         ],
-      ),
+      )),
     );
   }
 }

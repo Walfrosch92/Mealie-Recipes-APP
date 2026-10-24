@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -313,27 +312,22 @@ void showToolMessage(BuildContext context, String message) =>
 /// „Speichern unter"-Dialog und Datei schreiben. `true` = gespeichert,
 /// `false` = abgebrochen.
 Future<bool> saveBytesWithDialog(List<int> bytes, String fileName) async {
-  final path = await FilePicker.platform.saveFile(fileName: fileName);
-  if (path == null) return false;
-  await File(path).writeAsBytes(Uint8List.fromList(bytes), flush: true);
-  return true;
+  // Schreibt die Datei selbst an den gewählten Ort; null = abgebrochen.
+  final saved = await FilePicker.saveFile(
+      fileName: fileName, bytes: Uint8List.fromList(bytes));
+  return saved != null;
 }
 
 /// Eine Datei wählen (mit erlaubten Endungen ohne Punkt). `null` =
 /// abgebrochen.
 Future<({List<int> bytes, String name})?> pickToolFile(
     List<String> extensions) async {
-  final res = await FilePicker.platform.pickFiles(
+  final f = await FilePicker.pickFile(
     type: FileType.custom,
     allowedExtensions: extensions,
-    withData: true,
   );
-  final f = res?.files.singleOrNull;
   if (f == null) return null;
-  final bytes =
-      f.bytes ?? (f.path == null ? null : await File(f.path!).readAsBytes());
-  if (bytes == null) return null;
-  return (bytes: bytes, name: f.name);
+  return (bytes: await f.readAsBytes(), name: f.name);
 }
 
 /// Mealie-Datum (ISO, oft ohne Zeitzone = UTC) lokal formatiert.
