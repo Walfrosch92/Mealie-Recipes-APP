@@ -95,7 +95,8 @@ class _RecipeShareLinkDialogState extends ConsumerState<RecipeShareLinkDialog> {
   /// QR-Code als PNG teilen (Fotos sichern, Messenger, Drucken …).
   Future<void> _shareQrImage(String link, BuildContext buttonContext) async {
     final box = buttonContext.findRenderObject() as RenderBox?;
-    final origin = box == null ? null : box.localToGlobal(Offset.zero) & box.size;
+    final origin =
+        box == null ? null : box.localToGlobal(Offset.zero) & box.size;
     try {
       final bytes = await renderQrPng(link);
       final dir = await getTemporaryDirectory();
@@ -143,7 +144,7 @@ class _RecipeShareLinkDialogState extends ConsumerState<RecipeShareLinkDialog> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTokens.rMd),
             ),
             child: SizedBox(
               width: 220,
@@ -203,7 +204,8 @@ class _RecipeShareLinkDialogState extends ConsumerState<RecipeShareLinkDialog> {
                 leading: const Icon(Icons.event_rounded),
                 title: Text(l.recipeShareExpiration),
                 subtitle: Text(
-                    MaterialLocalizations.of(context).formatMediumDate(_expires),
+                    MaterialLocalizations.of(context)
+                        .formatMediumDate(_expires),
                     style: TextStyle(color: context.appFg)),
                 onTap: () async {
                   final now = DateTime.now();
@@ -213,7 +215,7 @@ class _RecipeShareLinkDialogState extends ConsumerState<RecipeShareLinkDialog> {
                     firstDate: now,
                     lastDate: DateTime(now.year + 10),
                   );
-                  if (d != null) setState(() => _expires = d);
+                  if (d != null && mounted) setState(() => _expires = d);
                 },
               ),
             ),

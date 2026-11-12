@@ -53,7 +53,7 @@ class SectionHeader extends StatelessWidget {
             height: 30,
             decoration: BoxDecoration(
               gradient: AppTokens.accentGradient,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(AppTokens.rXs),
             ),
             child: Icon(icon, color: Colors.white, size: 17),
           ),

@@ -13,6 +13,7 @@ import '../../features/shopping_list/providers/shopping_list_provider.dart'
 import '../theme/app_colors.dart';
 import 'keyboard_aware_sheet.dart';
 import '../../core/utils/mealie_version.dart';
+import 'tap_surface.dart';
 
 // ---------------------------------------------------------------------------
 // Filter-Baukasten für Mealie-`queryFilterString`s — geteilt zwischen
@@ -77,6 +78,7 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
           f,
     ];
   }
+
   bool _optionsLoading = true;
 
   @override
@@ -106,8 +108,7 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
     }
   }
 
-  CookbookFilterRow _newRow() =>
-      CookbookFilterRow()..setField(_fields.first);
+  CookbookFilterRow _newRow() => CookbookFilterRow()..setField(_fields.first);
 
   @override
   void didUpdateWidget(covariant QueryFilterEditor old) {
@@ -250,7 +251,7 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
         emptyHint: l.cookbookFilterOptionsUnavailable,
       ),
     );
-    if (result == null) return;
+    if (result == null || !mounted) return;
     setState(() => row.valueIds = result);
   }
 
@@ -463,36 +464,30 @@ class _FilterRowCard extends StatelessWidget {
           if (row.isScalar)
             _NumberValue(row: row, l: l, onChanged: onNumberChanged)
           else
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
+            TapSurface(
               onTap: onValueTap,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                decoration: BoxDecoration(
-                  color: context.appSurface2,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        row.valueIds.isEmpty
-                            ? (optionsAvailable
-                                ? l.cookbookSelectValues
-                                : l.cookbookFilterOptionsUnavailable)
-                            : valueSummary,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            color: row.valueIds.isEmpty
-                                ? context.appFgSub
-                                : context.appFg),
-                      ),
+              color: context.appSurface2,
+              borderRadius: BorderRadius.circular(AppTokens.rXs),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      row.valueIds.isEmpty
+                          ? (optionsAvailable
+                              ? l.cookbookSelectValues
+                              : l.cookbookFilterOptionsUnavailable)
+                          : valueSummary,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: row.valueIds.isEmpty
+                              ? context.appFgSub
+                              : context.appFg),
                     ),
-                    Icon(Icons.unfold_more, size: 18, color: context.appFgSub),
-                  ],
-                ),
+                  ),
+                  Icon(Icons.unfold_more, size: 18, color: context.appFgSub),
+                ],
               ),
             ),
         ],

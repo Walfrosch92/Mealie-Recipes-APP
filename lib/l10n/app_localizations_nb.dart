@@ -41,7 +41,7 @@ class AppLocalizationsNb extends AppLocalizations {
   String get next => 'Neste';
 
   @override
-  String get navHome => 'Hjem';
+  String get navHome => 'Home';
 
   @override
   String get homeCookToday => 'Lag i dag';
@@ -523,21 +523,6 @@ class AppLocalizationsNb extends AppLocalizations {
   String get mealplanTitle => '📅 Måltidsplan';
 
   @override
-  String get mealplanSelectMode => 'Velg flere oppskrifter';
-
-  @override
-  String mealplanSelectedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count valgt',
-      one: '1 valgt',
-      zero: 'Velg',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get breakfast => 'Frokost';
 
   @override
@@ -804,6 +789,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get shoppingCompletedSubtitle => 'Alt er i kurven! 🎉';
 
   @override
+  String get shoppingOfflineNoCache => 'Frakoblet – listen er ikke lagret';
+
+  @override
+  String get shoppingOfflineNoCacheSubtitle =>
+      'Ingen varer fra denne listen er lagret på denne enheten ennå. Den lastes inn så snart du er på nett igjen.';
+
+  @override
   String get essensplan => '📅 Måltidsplan';
 
   @override
@@ -890,9 +882,6 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get allDeleteConfirm => 'Slett alle';
-
-  @override
-  String get noMealsThisWeek => 'Ingen måltider planlagt';
 
   @override
   String get entriesInOtherWeeks => 'Det finnes oppføringer i andre uker';
@@ -2653,19 +2642,6 @@ class AppLocalizationsNb extends AppLocalizations {
       'Ingen forbindelse til serveren – resultatene kommer fra oppskriftene som er lagret på denne enheten.';
 
   @override
-  String addIngredientsSkippedOnHand(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          'Lagt til i handlelisten – $count ingredienser du har på lager ble hoppet over.',
-      one:
-          'Lagt til i handlelisten – 1 ingrediens du har på lager ble hoppet over.',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get sendPeerOfflineHint =>
       'Ikke tilgjengelig nå – kommer frem når appen åpnes der';
 
@@ -4152,4 +4128,940 @@ class AppLocalizationsNb extends AppLocalizations {
   String aliasBelongsTo(String alias, String name) {
     return '«$alias» hører allerede til «$name» – slå heller sammen de to.';
   }
+
+  @override
+  String get recipeMatchTitle => 'Oppskrift-match';
+
+  @override
+  String get recipeMatchShuffle => 'Stokk om';
+
+  @override
+  String recipeMatchCardsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count oppskrifter i bunken',
+      one: '1 oppskrift i bunken',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchNext => 'Neste';
+
+  @override
+  String get recipeMatchKeep => 'På brettet';
+
+  @override
+  String get recipeMatchKept => 'Lagt på brettet';
+
+  @override
+  String get recipeMatchAnyTime => 'Alle varigheter';
+
+  @override
+  String recipeMatchMaxTime(int minutes) {
+    return '≤ $minutes min';
+  }
+
+  @override
+  String get recipeMatchEmpty => 'Ingen passende oppskrifter';
+
+  @override
+  String get recipeMatchEmptyHint => 'Endre filtrene eller tøm brettet.';
+
+  @override
+  String get recipeMatchResetFilters => 'Tilbakestill filtre';
+
+  @override
+  String get recipeMatchFlipHint => 'Trykk: ingredienser · fremgangsmåte';
+
+  @override
+  String get recipeMatchFlipBack => 'Snu';
+
+  @override
+  String get recipeMatchOpenRecipe => 'Hele oppskriften';
+
+  @override
+  String get recipeMatchOnHand => 'på lager';
+
+  @override
+  String get recipeMatchTray => 'Brett';
+
+  @override
+  String get recipeMatchTrayEmpty => 'Fortsatt tomt – dra et kort nedover';
+
+  @override
+  String recipeMatchTrayCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count oppskrifter',
+      one: '1 oppskrift',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchClear => 'Tøm';
+
+  @override
+  String get recipeMatchTrayHint =>
+      'Blir liggende til du tømmer det – også når du lukker bunken.';
+
+  @override
+  String get recipeMatchRemove => 'Fjern fra brettet';
+
+  @override
+  String get recipeMatchToMealplan => 'Til måltidsplanen';
+
+  @override
+  String get recipeMatchToShopping => 'Ingredienser til handlelisten';
+
+  @override
+  String get recipeMatchSelectIngredients => 'Velg ingredienser';
+
+  @override
+  String get recipeMatchNoList => 'Velg en handleliste først.';
+
+  @override
+  String get recipeMatchList => 'Liste';
+
+  @override
+  String get recipeMatchOnHandHint =>
+      'Ingredienser på lager er allerede valgt bort.';
+
+  @override
+  String recipeMatchAddCount(int selected, int total) {
+    return 'Legg til $selected av $total ingredienser';
+  }
+
+  @override
+  String get recipeMatchNoDay => 'Ingen dag ennå – blir på brettet';
+
+  @override
+  String recipeMatchAddMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Legg inn $count måltider',
+      one: 'Legg inn 1 måltid',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recipeMatchMealsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count måltider lagt inn',
+      one: '1 måltid lagt inn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchSwipeUp => 'Sveip opp for å åpne brettet';
+
+  @override
+  String get weekPlannerTitle => 'Planlegg uken';
+
+  @override
+  String get weekPlannerStepDays => 'Dager';
+
+  @override
+  String get weekPlannerStepPrefs => 'Preferanser';
+
+  @override
+  String get weekPlannerStepPreview => 'Forhåndsvisning';
+
+  @override
+  String get weekPlannerDaysTitle => 'Hvilke måltider skal appen fylle?';
+
+  @override
+  String get weekPlannerDaysHint =>
+      'Trykk på rutene. Det som allerede er planlagt, blir værende.';
+
+  @override
+  String get weekPlannerPresetWeekdays => 'Hverdager';
+
+  @override
+  String get weekPlannerPlanned => 'planlagt';
+
+  @override
+  String get weekPlannerMoreMeals => 'Vis flere måltider';
+
+  @override
+  String get weekPlannerFewerMeals => 'Færre måltider';
+
+  @override
+  String weekPlannerMealCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count måltider',
+      one: '1 måltid',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerPrefsTitle => 'Hva skal appen ta hensyn til?';
+
+  @override
+  String get weekPlannerPrefsHint =>
+      'Alt er valgfritt – uten valg blander den oppskriftene dine.';
+
+  @override
+  String get weekPlannerQuick => 'Raskt i ukedagene';
+
+  @override
+  String weekPlannerQuickSub(int minutes) {
+    return 'man–fre maks $minutes min';
+  }
+
+  @override
+  String get weekPlannerStale => 'Lenge siden laget først';
+
+  @override
+  String get weekPlannerStaleSub => 'etter «Sist laget» og måltidsplanen';
+
+  @override
+  String get weekPlannerFavorites => 'Planlegg favoritter oftere';
+
+  @override
+  String get weekPlannerFavoritesSub =>
+      'hjertemerkede og godt vurderte oppskrifter';
+
+  @override
+  String get weekPlannerVariety => 'Variasjon';
+
+  @override
+  String get weekPlannerVarietySub => 'ingen kategori to ganger på rad';
+
+  @override
+  String get weekPlannerOnlyFrom => 'Bare fra';
+
+  @override
+  String get weekPlannerDiceRules => 'Bruk terningregler';
+
+  @override
+  String get weekPlannerDiceRulesSub =>
+      'ditt valg per måltid fra innstillingene for måltidsplanen';
+
+  @override
+  String weekPlannerMatching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count passende oppskrifter',
+      one: '1 passende oppskrift',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weekPlannerForMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'for $count måltider',
+      one: 'for 1 måltid',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerSuggest => 'Foreslå';
+
+  @override
+  String get weekPlannerPreviewHint =>
+      'Terningen bytter, låsen beholder. Hold inne en rett og dra den til en annen dag for å bytte.';
+
+  @override
+  String get weekPlannerRerollAll => 'Alle på nytt';
+
+  @override
+  String get weekPlannerReroll => 'Kast på nytt';
+
+  @override
+  String get weekPlannerLock => 'Lås';
+
+  @override
+  String get weekPlannerUnlock => 'Lås opp';
+
+  @override
+  String get weekPlannerReasonNever => 'aldri laget';
+
+  @override
+  String get weekPlannerReasonStale => 'lenge siden laget';
+
+  @override
+  String get weekPlannerReasonFavorite => 'Favoritt';
+
+  @override
+  String get weekPlannerNoMatch => 'Ingen passende oppskrift';
+
+  @override
+  String get weekPlannerThenShopping =>
+      'Velg deretter ingredienser til handlelisten';
+
+  @override
+  String get weekPlannerMostlyEmpty => 'Uken nesten tom';
+
+  @override
+  String weekPlannerMostlyEmptySub(int free, int total) {
+    return '$free av $total dager er ledige – fyll dem i tre steg.';
+  }
+
+  @override
+  String get previousWeek => 'Forrige uke';
+
+  @override
+  String get nextWeek => 'Neste uke';
+
+  @override
+  String get weekPlannerAllDays => 'Alle dager';
+
+  @override
+  String get weekPlannerWeekend => 'Helg';
+
+  @override
+  String get weekPlannerDinners => 'Middager';
+
+  @override
+  String get weekPlannerLunches => 'Lunsjer';
+
+  @override
+  String get weekPlannerAllMeals => 'Alle måltider';
+
+  @override
+  String get mealplanDayEmpty => 'Ingenting planlagt';
+
+  @override
+  String get mealplanDropHere => 'Slipp her';
+
+  @override
+  String mealplanDayKcal(String kcal) {
+    return '$kcal kcal per porsjon';
+  }
+
+  @override
+  String mealplanDayKcalPartial(String kcal) {
+    return 'minst $kcal kcal per porsjon';
+  }
+
+  @override
+  String get globalSearchHint => 'Søk etter oppskrifter, varer, funksjoner …';
+
+  @override
+  String get globalSearchIntro =>
+      'Søk etter oppskrifter, varer på handlelisten, matvarer og kokebøker – og etter funksjoner og innstillinger i appen, f.eks. «liste».';
+
+  @override
+  String get globalSearchFunctions => 'Funksjoner';
+
+  @override
+  String globalSearchNoResults(String query) {
+    return 'Ingen treff for «$query»';
+  }
+
+  @override
+  String get searchClear => 'Tøm søk';
+
+  @override
+  String get recipeMatchPlanWeek => 'Planlegg uken med disse oppskriftene';
+
+  @override
+  String get weekPlannerReasonTray => 'fra brettet';
+
+  @override
+  String get emptyBrowseRecipes => 'Se oppskrifter';
+
+  @override
+  String get mealplanWeekShopping => 'Ingredienser for denne uken';
+
+  @override
+  String get globalSearchActions => 'Handlinger';
+
+  @override
+  String globalSearchAddToList(String text) {
+    return 'Legg «$text» på handlelisten';
+  }
+
+  @override
+  String globalSearchAdded(String text) {
+    return '«$text» lagt til';
+  }
+
+  @override
+  String get globalSearchImportUrl => 'Importer oppskrift fra denne adressen';
+
+  @override
+  String get homeContinueCooking => 'Fortsett å lage mat';
+
+  @override
+  String homeCookingStep(int step, int total) {
+    return 'Trinn $step av $total';
+  }
+
+  @override
+  String get homeCookingPrep => 'Forberedelse';
+
+  @override
+  String get homeCookingAlmostDone => 'Nesten ferdig';
+
+  @override
+  String get homeCookingContinue => 'fortsett';
+
+  @override
+  String get paneSelectRecipe => 'Velg en oppskrift til venstre.';
+
+  @override
+  String get mealplanDragRecipeHint =>
+      'Dra en oppskrift til en dag for å planlegge den.';
+
+  @override
+  String get desktopDropUnsupported =>
+      'Disse filene kan ikke legges til som vedlegg.';
+
+  @override
+  String desktopDropUploaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vedlegg lagt til',
+      one: '1 vedlegg lagt til',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get desktopDropAsAttachment => 'Slipp for å legge til som vedlegg';
+
+  @override
+  String get printAction => 'Skriv ut';
+
+  @override
+  String get mealplanPrintWeek => 'Skriv ut uken';
+
+  @override
+  String get mealplanEntryCooked => 'Laget';
+
+  @override
+  String get recipeSearchClear => 'Tøm søket';
+
+  @override
+  String get organizerShowRecipes => 'Vis oppskrifter';
+
+  @override
+  String globalSearchShowAllRecipes(int count) {
+    return 'Vis alle $count oppskrifter';
+  }
+
+  @override
+  String get unnamedEntry => '(uten navn)';
+
+  @override
+  String get mealplanWholeWeek => 'For hele uken';
+
+  @override
+  String get mealplanWholeWeekDropHint =>
+      'Slipp et måltid her for å planlegge det for hele uken.';
+
+  @override
+  String get mealplanMovedToWholeWeek => 'Planlagt for hele uken';
+
+  @override
+  String get mealplanCookToday => 'Lag det i dag';
+
+  @override
+  String get mealplanPlanWholeWeek => 'Planlegg for hele uken';
+
+  @override
+  String mealplanPlanWholeWeekRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get calendarFeedDuration => 'Varighet (minutter)';
+
+  @override
+  String get calendarFeedEventDetails => 'Hendelsesdetaljer';
+
+  @override
+  String calendarFeedEventDetailsHint(String fields) {
+    return 'Tilpass hvordan måltider vises i kalenderen. Felter: $fields';
+  }
+
+  @override
+  String get calendarFeedEventTitle => 'Hendelsestittel';
+
+  @override
+  String get calendarFeedEventDescription => 'Hendelsesbeskrivelse';
+
+  @override
+  String get calendarFeedEventDetailsWarning =>
+      'Endringer endrer kalenderlenken – har du allerede abonnert, må du abonnere på nytt med den nye lenken.';
+
+  @override
+  String get stepDurationMinutes => 'Varighet (minutter)';
+
+  @override
+  String stepDurationSaved(String duration) {
+    return 'Lagret varighet: $duration. Endrer du den, brukes hele minutter.';
+  }
+
+  @override
+  String get sortTotalTimeShort => 'Kortest total tid';
+
+  @override
+  String get sortTotalTimeLong => 'Lengst total tid';
+
+  @override
+  String recipeCreatedBy(String name) {
+    return 'Opprettet av $name';
+  }
+
+  @override
+  String get timelineReplacePhoto => 'Erstatt bilde';
+
+  @override
+  String get pasteRecipeTitle => 'Lim inn oppskrift';
+
+  @override
+  String get pasteRecipeDescription =>
+      'Lim inn en oppskrift som JSON (schema.org) eller HTML-kilden til en nettside.';
+
+  @override
+  String get pasteRecipeDescription330 =>
+      'Lim inn en oppskrift eksportert fra Mealie (JSON) – den importeres med full struktur: matvarer, enheter og trinnkoblinger. JSON (schema.org) og HTML-kilden til en nettside fungerer også.';
+
+  @override
+  String get pasteRecipeHint => 'Lim inn JSON eller HTML her';
+
+  @override
+  String get pasteRecipeButton => 'Lim inn oppskrift';
+
+  @override
+  String get pasteRecipeImport => 'Importer';
+
+  @override
+  String get aiPromptsTitle => 'KI-instruksjoner';
+
+  @override
+  String get aiPromptsTeaser =>
+      'Tilpass instruksjonene Mealie gir KI-leverandøren din – for alle oppgaver eller hver enkelt.';
+
+  @override
+  String get aiPromptsDescription =>
+      'Tilpass instruksjonene Mealie gir KI-leverandøren din for hver oppgave. Mealies standardinstruksjoner er skrevet på engelsk, men dette påvirker ikke språket i oppskriftene dine. De beholder originalspråket med mindre du velger å oversette dem. Du kan skrive dine egne instruksjoner på hvilket som helst språk.';
+
+  @override
+  String get aiPromptsGlobal => 'Instruksjoner for alle prompter';
+
+  @override
+  String get aiPromptsGlobalDescription =>
+      'Legges til i alle instruksjoner som genererer oppskriftsdata, for eksempel opprettelse av oppskrifter, tolkning av ingredienser og oversettelse. Systeminstruksjoner påvirkes ikke.';
+
+  @override
+  String get aiPromptsGlobalPlaceholder =>
+      'f.eks. Bruk alltid metriske måleenheter.';
+
+  @override
+  String get aiPromptsList => 'Instruksjoner';
+
+  @override
+  String get aiPromptSystem => 'System';
+
+  @override
+  String get aiPromptSystemDescription =>
+      'Dette er en systeminstruksjon. Den gjengir kildematerialet så nøyaktig som mulig før det omgjøres til en oppskrift. Derfor legges ikke de generelle instruksjonene til her. Det er vanligvis ikke nødvendig å endre denne instruksjonen, og endringer kan gjøre import av oppskrifter mindre pålitelig.';
+
+  @override
+  String get aiPromptAppended => 'Lagt til';
+
+  @override
+  String get aiPromptOverridden => 'Overstyrt';
+
+  @override
+  String get aiPromptModeDefault => 'Standard';
+
+  @override
+  String get aiPromptModeAppend => 'Legg til';
+
+  @override
+  String get aiPromptModeOverride => 'Overstyring';
+
+  @override
+  String get aiPromptAppendDescription =>
+      'Disse instruksjonene legges til Mealies standardinstruksjoner og har forrang dersom de er i konflikt med hverandre.';
+
+  @override
+  String get aiPromptOverrideDescription =>
+      'Din instruksjon erstatter Mealies standardinstruksjon fullstendig. Fremtidige oppdateringer av Mealies standardinstruksjon vil derfor ikke gjelde. Eventuelle data oppgaven trenger, for eksempel listen over måleenheter, legges fortsatt til etter din instruksjon.';
+
+  @override
+  String get aiPromptDefaultChanged =>
+      'Mealies standardinstruksjon er endret siden du erstattet den. Sammenlign den nye versjonen med din egen, eller gå tilbake til standardinstruksjonen for å ta i bruk den oppdaterte versjonen.';
+
+  @override
+  String get aiPromptViewDefault => 'Vis standardinstruksjon';
+
+  @override
+  String get aiPromptHideDefault => 'Skjul standardinstruksjon';
+
+  @override
+  String get aiPromptSaved => 'Instruksjonen er lagret';
+
+  @override
+  String get aiPromptSaveFailed => 'Kunne ikke lagre instruksjonen';
+
+  @override
+  String get aiPromptTitleBuildRecipe => 'Opprett oppskrift';
+
+  @override
+  String get aiPromptTitleParseIngredients => 'Analyser ingredienser';
+
+  @override
+  String get aiPromptTitleRecipeVideo => 'Oppskrift fra video';
+
+  @override
+  String get aiPromptTitleOrganizers =>
+      'Tildel emneord, kategorier og kjøkkenredskaper';
+
+  @override
+  String get aiPromptTitleTranslate => 'Oversett oppskrift';
+
+  @override
+  String get aiPromptTitleCompileSource => 'Les kildemateriale';
+
+  @override
+  String get aiPromptTitleTranscribe => 'Transkriber lyd';
+
+  @override
+  String get aiPromptDescBuildRecipe =>
+      'Gjør kildematerialet fra en nettside, et bilde eller en tekst om til en strukturert oppskrift.';
+
+  @override
+  String get aiPromptDescParseIngredients =>
+      'Brukes av KI-ingredienstolkeren til å dele hver ingrediens i mengde, enhet, matvare og notat.';
+
+  @override
+  String get aiPromptDescRecipeVideo =>
+      'Gjør transkripsjon og beskrivelse av en video om til en oppskrift.';
+
+  @override
+  String get aiPromptDescOrganizers =>
+      'Velger emneord, kategorier og kjøkkenredskaper for en importert oppskrift.';
+
+  @override
+  String get aiPromptDescTranslate =>
+      'Oversetter en importert oppskrift til språket du velger.';
+
+  @override
+  String get aiPromptDescCompileSource =>
+      'Leser nettsider, bilder og tekst inn i en ren tekstversjon av oppskriften.';
+
+  @override
+  String get aiPromptDescTranscribe =>
+      'Transkriberer lyd når lydleverandøren din ikke kan gjøre det direkte.';
+
+  @override
+  String get mealplanNoteHint => 'Notat (valgfritt)';
+
+  @override
+  String get mealplanEditTitle => 'Rediger oppføring';
+
+  @override
+  String get mealplanEntryTitleLabel => 'Tittel';
+
+  @override
+  String get mealplanEntryNoteLabel => 'Notat';
+
+  @override
+  String mealplanCreateRecipe(String name) {
+    return 'Ny oppskrift «$name»';
+  }
+
+  @override
+  String get mealplanCreateRecipeSubtitle =>
+      'Oppretter en tom oppskrift, planlegger den og åpner redigeringen';
+
+  @override
+  String get importOptionsTitle => 'Importvalg';
+
+  @override
+  String get importOptionsHint =>
+      'Hvor mye Mealies KI gjør på serveren din ved import. Hvert ekstra steg er en egen KI-forespørsel – jo færre, jo raskere.';
+
+  @override
+  String get importTranslateTitle => 'Oversett oppskriften';
+
+  @override
+  String get importOrganizersTitle => 'Kategorier og tagger';
+
+  @override
+  String get importOrganizersCreate => 'Lag nye';
+
+  @override
+  String get importOrganizersExisting => 'Bare eksisterende';
+
+  @override
+  String get importOrganizersNone => 'Ingen';
+
+  @override
+  String get importOrganizersCreateHint =>
+      'KI tildeler tagger, kategorier og redskaper og lager de som mangler.';
+
+  @override
+  String get importOrganizersExistingHint =>
+      'KI bruker bare tagger, kategorier og redskaper som finnes fra før.';
+
+  @override
+  String get importOrganizersNoneHint =>
+      'Oppskriften kommer uten tagger, kategorier og redskaper. Mealie kjører steget likevel, så importen blir ikke raskere.';
+
+  @override
+  String get importStarting => 'Sender til serveren …';
+
+  @override
+  String get importRunning => 'Importerer oppskriften …';
+
+  @override
+  String get aiImagesRunning => 'KI-en leser sidene …';
+
+  @override
+  String get importStreamPhotosTitle => 'Bildeimport med fremdrift i sanntid';
+
+  @override
+  String get importStreamPhotosHint =>
+      'Viser hvert steg og holder forbindelsen åpen ved lange importer. Av = last opp i én forespørsel som før – f.eks. hvis proxyen din blokkerer strømming.';
+
+  @override
+  String get weekPlannerDiceRulesMealieSub =>
+      'husholdningens Mealie-regler (innstillinger for måltidsplan)';
+
+  @override
+  String get syncStarted =>
+      'Laster oppskrifter, bilder og lister på nytt fra serveren …';
+
+  @override
+  String get syncDone => 'Alt er oppdatert';
+
+  @override
+  String get recipeReloaded => 'Oppskriften er lastet på nytt';
+
+  @override
+  String get logoutTitle => 'Logg ut / bytt bruker';
+
+  @override
+  String get logoutConfirm =>
+      'Oppskrifter, lister og endringer som ikke er synkronisert, fjernes fra denne enheten. Appinnstillingene og serveradressen beholdes – du trenger bare å logge inn igjen.';
+
+  @override
+  String get reloadRecipe => 'Last inn på nytt fra serveren';
+
+  @override
+  String get wifiServerTitle => 'Annen adresse på Wi-Fi';
+
+  @override
+  String get wifiServerHint =>
+      'For samme server under en annen adresse, f.eks. lokal IP hjemme og ZeroTier, Tailscale eller et domene på farten. På Wi-Fi-nettet nedenfor bruker appen denne adressen automatisk, ellers server-URL-en over.';
+
+  @override
+  String get wifiSsidLabel => 'Wi-Fi-navn';
+
+  @override
+  String get wifiServerUrl => 'Adresse på dette Wi-Fi-nettet';
+
+  @override
+  String get wifiUseCurrent => 'Bruk nåværende Wi-Fi';
+
+  @override
+  String get wifiNameUnavailable =>
+      'Kunne ikke lese Wi-Fi-navnet. Koble til Wi-Fi og tillat posisjonstilgang – Android og iOS oppgir bare Wi-Fi-navnet da.';
+
+  @override
+  String wifiServerActive(String ssid) {
+    return 'Aktiv: adresse på Wi-Fi «$ssid»';
+  }
+
+  @override
+  String wifiServerStandardActive(String ssid) {
+    return 'Aktiv: server-URL (ikke på «$ssid»)';
+  }
+
+  @override
+  String get wifiServerRemove => 'Fjern';
+
+  @override
+  String get switchUserTitle => 'Bytt bruker';
+
+  @override
+  String switchUserBody(String name) {
+    return '$name forblir lagret på denne enheten – med alle oppskrifter, lister og endringer som ikke er synkronisert ennå. Du bytter tilbake via profilbildet ditt eller innloggingssiden.';
+  }
+
+  @override
+  String get allowBiometricTitle => 'Bytt tilbake med opplåsing av enheten';
+
+  @override
+  String get allowBiometricHint =>
+      'Face ID, fingeravtrykk eller enhetens PIN i stedet for passord. Alle som kan låse opp denne enheten, kommer da inn på denne kontoen.';
+
+  @override
+  String get allow => 'Tillat';
+
+  @override
+  String unlockAccountReason(String name) {
+    return 'Bytt til $name';
+  }
+
+  @override
+  String signInAs(String name) {
+    return 'Logg inn som $name';
+  }
+
+  @override
+  String wrongAccountError(String name) {
+    return 'Det er kontoen «$name». Logg inn med den lagrede kontoen.';
+  }
+
+  @override
+  String get accountSaveOffline =>
+      'Kontoen kan ikke lagres akkurat nå – serveren er ikke tilgjengelig.';
+
+  @override
+  String get signOutRemoveTitle => 'Logg ut og fjern';
+
+  @override
+  String get signOutRemoveConfirm =>
+      'Denne kontoen og alle dens data på denne enheten (oppskrifter, lister, endringer som ikke er synkronisert) fjernes. Appinnstillingene beholdes.';
+
+  @override
+  String get removeSavedAccount => 'Fjern fra denne enheten';
+
+  @override
+  String removeSavedAccountConfirm(String name) {
+    return 'Fjerne «$name» og alle lagrede data fra denne enheten? Endringer som ikke er synkronisert, går tapt.';
+  }
+
+  @override
+  String get savedAccountsTitle => 'Lagrede kontoer';
+
+  @override
+  String get addAccount => 'Legg til en annen konto';
+
+  @override
+  String get biometricOff => 'Slutt å bruke opplåsing av enheten';
+
+  @override
+  String get orNewAccount => 'Eller logg inn med en annen konto:';
+
+  @override
+  String get importVideoTitle => 'Videolenker';
+
+  @override
+  String get importVideoFast => 'Rask';
+
+  @override
+  String get importVideoThorough => 'Grundig (KI)';
+
+  @override
+  String get importVideoFastHint =>
+      'Mealie transkriberer videoen og lager oppskriften med én KI-forespørsel – vanligvis mye raskere. Uten oversettelse og uten kategorier/tagger. KI-bryteren kan fortsatt slås på per import.';
+
+  @override
+  String get importVideoThoroughHint =>
+      'KI-bryteren slås på automatisk for videolenker: flere KI-steg, med oversettelse og kategorier/tagger som innstilt over. Tar lengre tid.';
+
+  @override
+  String get importPresetFast => 'Rask';
+
+  @override
+  String get importPresetThorough => 'Grundig';
+
+  @override
+  String get importPresetCustom => 'Egendefinert';
+
+  @override
+  String get importPresetFastTitle =>
+      'Så få KI-steg som mulig – kortest ventetid';
+
+  @override
+  String get importPresetFastVideo =>
+      'Videolenker: Mealie transkriberer videoen og lager oppskriften med én KI-forespørsel (KI-bryteren forblir av).';
+
+  @override
+  String get importPresetFastTranslate =>
+      'Ingen oversettelse – oppskriften beholder originalspråket.';
+
+  @override
+  String get importPresetFastOrganizers =>
+      'Bare eksisterende kategorier og tagger tildeles, ingen nye opprettes.';
+
+  @override
+  String get importPresetThoroughTitle =>
+      'Mealies fulle KI-import – tar lengre tid, får mest ut';
+
+  @override
+  String get importPresetThoroughVideo =>
+      'Videolenker importeres automatisk med KI – i flere steg (klargjøre kilden, lage oppskriften …).';
+
+  @override
+  String get importPresetThoroughTranslate =>
+      'Oppskriften oversettes til importspråket nedenfor hvis den er på et annet språk.';
+
+  @override
+  String get importPresetThoroughOrganizers =>
+      'Passende kategorier og tagger tildeles; manglende opprettes.';
+
+  @override
+  String get importPresetCustomTitle => 'Still inn hvert alternativ selv';
+
+  @override
+  String get importPresetCustomBody =>
+      'Du starter med det forrige valg gjorde, og endrer bare det du trenger – f.eks. raske videoimporter, men med oversettelse.';
+
+  @override
+  String get sidebarPinHint =>
+      'Tips: Hold inne en flis og dra den til sidepanelet for å feste den der.';
+
+  @override
+  String get sidebarDropHere => 'Slipp her';
+
+  @override
+  String sidebarShortcutTitle(String name) {
+    return 'Hurtigtast for «$name»';
+  }
+
+  @override
+  String sidebarShortcutPrompt(String modifier) {
+    return 'Trykk nå ønsket tastekombinasjon med $modifier.';
+  }
+
+  @override
+  String get sidebarShortcutTaken => 'Denne kombinasjonen er allerede i bruk.';
+
+  @override
+  String get sidebarShortcutNone => 'Ingen hurtigtast';
+
+  @override
+  String get sidebarShortcutChange => 'Endre hurtigtast';
+
+  @override
+  String get sidebarUnpin => 'Fjern fra sidepanelet';
+
+  @override
+  String sidebarFull(int count) {
+    return 'Sidepanelet er fullt – maks $count egne oppføringer.';
+  }
+
+  @override
+  String get tabletSidebar => 'Sidepanel i liggende format';
+
+  @override
+  String get tabletSidebarSubtitle =>
+      'Viser navigasjonen til venstre i stedet for nederst når nettbrettet holdes liggende';
 }

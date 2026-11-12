@@ -40,7 +40,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get next => 'Tovább';
 
   @override
-  String get navHome => 'Kezdőlap';
+  String get navHome => 'Home';
 
   @override
   String get homeCookToday => 'Főzés mára';
@@ -520,21 +520,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get mealplanTitle => '📅 Étkezési terv';
 
   @override
-  String get mealplanSelectMode => 'Több recept kiválasztása';
-
-  @override
-  String mealplanSelectedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count kiválasztva',
-      one: '1 kiválasztva',
-      zero: 'Kiválasztás',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get breakfast => 'Reggeli';
 
   @override
@@ -802,6 +787,13 @@ class AppLocalizationsHu extends AppLocalizations {
   String get shoppingCompletedSubtitle => 'Minden a kosárban! 🎉';
 
   @override
+  String get shoppingOfflineNoCache => 'Offline – a lista nincs mentve';
+
+  @override
+  String get shoppingOfflineNoCacheSubtitle =>
+      'Ennek a listának még nincsenek tételei mentve ezen az eszközön. Amint újra online leszel, betöltődik.';
+
+  @override
   String get essensplan => '📅 Étkezési terv';
 
   @override
@@ -889,9 +881,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get allDeleteConfirm => 'Összes törlése';
-
-  @override
-  String get noMealsThisWeek => 'Nincs betervezett étkezés';
 
   @override
   String get entriesInOtherWeeks => 'Más hetekben vannak bejegyzések';
@@ -2648,19 +2637,6 @@ class AppLocalizationsHu extends AppLocalizations {
       'Nincs kapcsolat a szerverrel – a találatok az eszközön tárolt receptekből származnak.';
 
   @override
-  String addIngredientsSkippedOnHand(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          'Felkerült a bevásárlólistára – $count készleten lévő hozzávaló kimaradt.',
-      one:
-          'Felkerült a bevásárlólistára – 1 készleten lévő hozzávaló kimaradt.',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get sendPeerOfflineHint =>
       'Most nem érhető el – megérkezik, amint ott megnyitják az appot';
 
@@ -4148,4 +4124,941 @@ class AppLocalizationsHu extends AppLocalizations {
   String aliasBelongsTo(String alias, String name) {
     return '„$alias” már ehhez tartozik: „$name” – inkább vond össze a kettőt.';
   }
+
+  @override
+  String get recipeMatchTitle => 'Recept-Match';
+
+  @override
+  String get recipeMatchShuffle => 'Újrakeverés';
+
+  @override
+  String recipeMatchCardsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recept a pakliban',
+      one: '1 recept a pakliban',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchNext => 'Következő';
+
+  @override
+  String get recipeMatchKeep => 'A tálcára';
+
+  @override
+  String get recipeMatchKept => 'A tálcára téve';
+
+  @override
+  String get recipeMatchAnyTime => 'Bármilyen időtartam';
+
+  @override
+  String recipeMatchMaxTime(int minutes) {
+    return '≤ $minutes perc';
+  }
+
+  @override
+  String get recipeMatchEmpty => 'Nincs megfelelő recept';
+
+  @override
+  String get recipeMatchEmptyHint =>
+      'Módosítsd a szűrőket, vagy ürítsd a tálcát.';
+
+  @override
+  String get recipeMatchResetFilters => 'Szűrők visszaállítása';
+
+  @override
+  String get recipeMatchFlipHint => 'Koppints: hozzávalók · elkészítés';
+
+  @override
+  String get recipeMatchFlipBack => 'Megfordítás';
+
+  @override
+  String get recipeMatchOpenRecipe => 'Teljes recept';
+
+  @override
+  String get recipeMatchOnHand => 'van otthon';
+
+  @override
+  String get recipeMatchTray => 'Tálca';
+
+  @override
+  String get recipeMatchTrayEmpty => 'Még üres – húzz le egy kártyát';
+
+  @override
+  String recipeMatchTrayCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recept',
+      one: '1 recept',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchClear => 'Ürítés';
+
+  @override
+  String get recipeMatchTrayHint =>
+      'Megmarad, amíg ki nem üríted – akkor is, ha bezárod a paklit.';
+
+  @override
+  String get recipeMatchRemove => 'Levétel a tálcáról';
+
+  @override
+  String get recipeMatchToMealplan => 'Az étkezési tervbe';
+
+  @override
+  String get recipeMatchToShopping => 'Hozzávalók a bevásárlólistára';
+
+  @override
+  String get recipeMatchSelectIngredients => 'Hozzávalók kiválasztása';
+
+  @override
+  String get recipeMatchNoList => 'Először válassz bevásárlólistát.';
+
+  @override
+  String get recipeMatchList => 'Lista';
+
+  @override
+  String get recipeMatchOnHandHint =>
+      'Az otthon lévő hozzávalók már nincsenek kijelölve.';
+
+  @override
+  String recipeMatchAddCount(int selected, int total) {
+    return '$total hozzávalóból $selected hozzáadása';
+  }
+
+  @override
+  String get recipeMatchNoDay => 'Még nincs nap – a tálcán marad';
+
+  @override
+  String recipeMatchAddMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count étkezés felvétele',
+      one: '1 étkezés felvétele',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recipeMatchMealsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count étkezés felvéve',
+      one: '1 étkezés felvéve',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchSwipeUp => 'Húzd felfelé a tálca megnyitásához';
+
+  @override
+  String get weekPlannerTitle => 'Hét megtervezése';
+
+  @override
+  String get weekPlannerStepDays => 'Napok';
+
+  @override
+  String get weekPlannerStepPrefs => 'Preferenciák';
+
+  @override
+  String get weekPlannerStepPreview => 'Előnézet';
+
+  @override
+  String get weekPlannerDaysTitle => 'Mely étkezéseket töltse ki az app?';
+
+  @override
+  String get weekPlannerDaysHint =>
+      'Koppints a mezőkre. A már betervezett marad.';
+
+  @override
+  String get weekPlannerPresetWeekdays => 'Hétköznapok';
+
+  @override
+  String get weekPlannerPlanned => 'betervezve';
+
+  @override
+  String get weekPlannerMoreMeals => 'Több étkezés mutatása';
+
+  @override
+  String get weekPlannerFewerMeals => 'Kevesebb étkezés';
+
+  @override
+  String weekPlannerMealCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count étkezés',
+      one: '1 étkezés',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerPrefsTitle => 'Mire figyeljen az app?';
+
+  @override
+  String get weekPlannerPrefsHint =>
+      'Minden opcionális – választás nélkül vegyesen ajánl a receptjeidből.';
+
+  @override
+  String get weekPlannerQuick => 'Hétköznap gyorsan';
+
+  @override
+  String weekPlannerQuickSub(int minutes) {
+    return 'H–P legfeljebb $minutes perc';
+  }
+
+  @override
+  String get weekPlannerStale => 'Rég nem főzöttek előre';
+
+  @override
+  String get weekPlannerStaleSub =>
+      'a „Legutóbb főzve” és az étkezési terv alapján';
+
+  @override
+  String get weekPlannerFavorites => 'Kedvencek gyakrabban';
+
+  @override
+  String get weekPlannerFavoritesSub => 'szívecskés és jól értékelt receptek';
+
+  @override
+  String get weekPlannerVariety => 'Változatosság';
+
+  @override
+  String get weekPlannerVarietySub =>
+      'ugyanaz a kategória ne kétszer egymás után';
+
+  @override
+  String get weekPlannerOnlyFrom => 'Csak ebből';
+
+  @override
+  String get weekPlannerDiceRules => 'Kocka-szabályok figyelembe vétele';
+
+  @override
+  String get weekPlannerDiceRulesSub =>
+      'étkezésenkénti választásod az étkezési terv beállításaiból';
+
+  @override
+  String weekPlannerMatching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count megfelelő recept',
+      one: '1 megfelelő recept',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weekPlannerForMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count étkezéshez',
+      one: '1 étkezéshez',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerSuggest => 'Javaslat';
+
+  @override
+  String get weekPlannerPreviewHint =>
+      'A kocka cserél, a lakat megtart. Tarts nyomva egy ételt, és húzd egy másik napra a cseréhez.';
+
+  @override
+  String get weekPlannerRerollAll => 'Mind újra';
+
+  @override
+  String get weekPlannerReroll => 'Újradobás';
+
+  @override
+  String get weekPlannerLock => 'Rögzítés';
+
+  @override
+  String get weekPlannerUnlock => 'Feloldás';
+
+  @override
+  String get weekPlannerReasonNever => 'még sosem főzve';
+
+  @override
+  String get weekPlannerReasonStale => 'rég nem főzve';
+
+  @override
+  String get weekPlannerReasonFavorite => 'Kedvenc';
+
+  @override
+  String get weekPlannerNoMatch => 'Nincs megfelelő recept';
+
+  @override
+  String get weekPlannerThenShopping =>
+      'Utána hozzávalók kiválasztása a bevásárlólistához';
+
+  @override
+  String get weekPlannerMostlyEmpty => 'Szinte üres hét';
+
+  @override
+  String weekPlannerMostlyEmptySub(int free, int total) {
+    return '$total napból $free még szabad – töltsd ki három lépésben.';
+  }
+
+  @override
+  String get previousWeek => 'Előző hét';
+
+  @override
+  String get nextWeek => 'Következő hét';
+
+  @override
+  String get weekPlannerAllDays => 'Minden nap';
+
+  @override
+  String get weekPlannerWeekend => 'Hétvége';
+
+  @override
+  String get weekPlannerDinners => 'Vacsorák';
+
+  @override
+  String get weekPlannerLunches => 'Ebédek';
+
+  @override
+  String get weekPlannerAllMeals => 'Minden étkezés';
+
+  @override
+  String get mealplanDayEmpty => 'Nincs terv';
+
+  @override
+  String get mealplanDropHere => 'Ide engedd';
+
+  @override
+  String mealplanDayKcal(String kcal) {
+    return '$kcal kcal adagonként';
+  }
+
+  @override
+  String mealplanDayKcalPartial(String kcal) {
+    return 'legalább $kcal kcal adagonként';
+  }
+
+  @override
+  String get globalSearchHint => 'Receptek, tételek, funkciók keresése …';
+
+  @override
+  String get globalSearchIntro =>
+      'Keress recepteket, bevásárlólista-tételeket, alapanyagokat és szakácskönyveket – valamint az app funkcióit és beállításait, pl. „lista”.';
+
+  @override
+  String get globalSearchFunctions => 'Funkciók';
+
+  @override
+  String globalSearchNoResults(String query) {
+    return 'Nincs találat erre: „$query”';
+  }
+
+  @override
+  String get searchClear => 'Keresés törlése';
+
+  @override
+  String get recipeMatchPlanWeek => 'Hét tervezése ezekkel a receptekkel';
+
+  @override
+  String get weekPlannerReasonTray => 'a tálcáról';
+
+  @override
+  String get emptyBrowseRecipes => 'Receptek megtekintése';
+
+  @override
+  String get mealplanWeekShopping => 'A heti hozzávalók';
+
+  @override
+  String get globalSearchActions => 'Műveletek';
+
+  @override
+  String globalSearchAddToList(String text) {
+    return '„$text” hozzáadása a bevásárlólistához';
+  }
+
+  @override
+  String globalSearchAdded(String text) {
+    return '„$text” hozzáadva';
+  }
+
+  @override
+  String get globalSearchImportUrl => 'Recept importálása erről a címről';
+
+  @override
+  String get homeContinueCooking => 'Főzés folytatása';
+
+  @override
+  String homeCookingStep(int step, int total) {
+    return '$step. lépés / $total';
+  }
+
+  @override
+  String get homeCookingPrep => 'Előkészítés';
+
+  @override
+  String get homeCookingAlmostDone => 'Majdnem kész';
+
+  @override
+  String get homeCookingContinue => 'tovább';
+
+  @override
+  String get paneSelectRecipe => 'Válassz egy receptet a bal oldalon.';
+
+  @override
+  String get mealplanDragRecipeHint =>
+      'Húzz egy receptet egy napra a betervezéshez.';
+
+  @override
+  String get desktopDropUnsupported =>
+      'Ezek a fájlok nem adhatók hozzá mellékletként.';
+
+  @override
+  String desktopDropUploaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count melléklet hozzáadva',
+      one: '1 melléklet hozzáadva',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get desktopDropAsAttachment => 'Engedd el a melléklet hozzáadásához';
+
+  @override
+  String get printAction => 'Nyomtatás';
+
+  @override
+  String get mealplanPrintWeek => 'Hét nyomtatása';
+
+  @override
+  String get mealplanEntryCooked => 'Elkészítve';
+
+  @override
+  String get recipeSearchClear => 'Keresés törlése';
+
+  @override
+  String get organizerShowRecipes => 'Receptek megjelenítése';
+
+  @override
+  String globalSearchShowAllRecipes(int count) {
+    return 'Mind a(z) $count recept megjelenítése';
+  }
+
+  @override
+  String get unnamedEntry => '(név nélkül)';
+
+  @override
+  String get mealplanWholeWeek => 'Az egész hétre';
+
+  @override
+  String get mealplanWholeWeekDropHint =>
+      'Húzz ide egy étkezést, hogy az egész hétre tervezd.';
+
+  @override
+  String get mealplanMovedToWholeWeek => 'Az egész hétre tervezve';
+
+  @override
+  String get mealplanCookToday => 'Ma főzöm';
+
+  @override
+  String get mealplanPlanWholeWeek => 'Tervezés az egész hétre';
+
+  @override
+  String mealplanPlanWholeWeekRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get calendarFeedDuration => 'Időtartam (perc)';
+
+  @override
+  String get calendarFeedEventDetails => 'Esemény részletei';
+
+  @override
+  String calendarFeedEventDetailsHint(String fields) {
+    return 'Állítsd be, hogyan jelenjenek meg az étkezések a naptárban. Mezők: $fields';
+  }
+
+  @override
+  String get calendarFeedEventTitle => 'Esemény címe';
+
+  @override
+  String get calendarFeedEventDescription => 'Esemény leírása';
+
+  @override
+  String get calendarFeedEventDetailsWarning =>
+      'A módosítás megváltoztatja a naptár linkjét – ha már feliratkoztál, iratkozz fel újra az új linkkel.';
+
+  @override
+  String get stepDurationMinutes => 'Időtartam (perc)';
+
+  @override
+  String stepDurationSaved(String duration) {
+    return 'Mentett időtartam: $duration. Módosításkor egész percek számítanak.';
+  }
+
+  @override
+  String get sortTotalTimeShort => 'Legrövidebb teljes idő';
+
+  @override
+  String get sortTotalTimeLong => 'Leghosszabb teljes idő';
+
+  @override
+  String recipeCreatedBy(String name) {
+    return 'Létrehozta: $name';
+  }
+
+  @override
+  String get timelineReplacePhoto => 'Fotó cseréje';
+
+  @override
+  String get pasteRecipeTitle => 'Recept beillesztése';
+
+  @override
+  String get pasteRecipeDescription =>
+      'Illessz be egy receptet JSON-ként (schema.org) vagy egy weboldal HTML-forrását.';
+
+  @override
+  String get pasteRecipeDescription330 =>
+      'Illessz be egy Mealie-ből exportált receptet (JSON) – teljes szerkezetével kerül be: alapanyagok, mértékegységek és lépéskapcsolatok. JSON (schema.org) és weboldal HTML-forrása is működik.';
+
+  @override
+  String get pasteRecipeHint => 'Illeszd be ide a JSON-t vagy HTML-t';
+
+  @override
+  String get pasteRecipeButton => 'Recept beillesztése';
+
+  @override
+  String get pasteRecipeImport => 'Importálás';
+
+  @override
+  String get aiPromptsTitle => 'AI promptok';
+
+  @override
+  String get aiPromptsTeaser =>
+      'Szabd testre, milyen utasításokat ad a Mealie az AI szolgáltatónak – minden feladathoz vagy feladatonként.';
+
+  @override
+  String get aiPromptsDescription =>
+      'Testreszabhatod, hogy a Mealie milyen utasításokat ad az AI szolgáltatónak a különböző feladatoknál. A Mealie promptjai angolul vannak, de ez nem változtatja meg a receptjeid nyelvét: megtartják a forrás nyelvét, hacsak nem fordítod le őket. A saját utasításaidat bármilyen nyelven írhatod.';
+
+  @override
+  String get aiPromptsGlobal => 'Utasítások az összes prompthoz';
+
+  @override
+  String get aiPromptsGlobalDescription =>
+      'Minden receptadatot előállító prompthoz hozzáadódik, pl. recept készítése, hozzávalók elemzése, fordítás. A rendszerpromptokat nem érinti.';
+
+  @override
+  String get aiPromptsGlobalPlaceholder =>
+      'pl. Mindig metrikus mértékegységeket használj.';
+
+  @override
+  String get aiPromptsList => 'Promptok';
+
+  @override
+  String get aiPromptSystem => 'Rendszer';
+
+  @override
+  String get aiPromptSystemDescription =>
+      'Ez egy rendszerprompt. A forrásanyagot a lehető leghűbben átírja, mielőtt recept lesz belőle, ezért az összes prompthoz tartozó utasítások nem kerülnek hozzá. Módosítása általában nem szükséges, és megbízhatatlanabbá teheti az importálást.';
+
+  @override
+  String get aiPromptAppended => 'Hozzáadva';
+
+  @override
+  String get aiPromptOverridden => 'Felülírva';
+
+  @override
+  String get aiPromptModeDefault => 'Alapértelmezett';
+
+  @override
+  String get aiPromptModeAppend => 'Hozzáadás';
+
+  @override
+  String get aiPromptModeOverride => 'Felülírás';
+
+  @override
+  String get aiPromptAppendDescription =>
+      'Ezek az utasítások a Mealie promptjához adódnak, és ütközés esetén elsőbbséget élveznek.';
+
+  @override
+  String get aiPromptOverrideDescription =>
+      'A promptod teljesen lecseréli a Mealie promptját, így a Mealie későbbi frissítései nem érvényesülnek rá. A feladathoz szükséges adatok (pl. mértékegységeid) továbbra is a promptod után kerülnek.';
+
+  @override
+  String get aiPromptDefaultChanged =>
+      'A Mealie promptja megváltozott, mióta felülírtad. Hasonlítsd össze a sajátoddal, vagy válts vissza az alapértelmezettre az új verzióhoz.';
+
+  @override
+  String get aiPromptViewDefault => 'Alapértelmezett prompt megjelenítése';
+
+  @override
+  String get aiPromptHideDefault => 'Alapértelmezett prompt elrejtése';
+
+  @override
+  String get aiPromptSaved => 'Prompt mentve';
+
+  @override
+  String get aiPromptSaveFailed => 'A prompt mentése sikertelen';
+
+  @override
+  String get aiPromptTitleBuildRecipe => 'Recept készítése';
+
+  @override
+  String get aiPromptTitleParseIngredients => 'Hozzávalók elemzése';
+
+  @override
+  String get aiPromptTitleRecipeVideo => 'Recept videóból';
+
+  @override
+  String get aiPromptTitleOrganizers => 'Rendszerezők hozzárendelése';
+
+  @override
+  String get aiPromptTitleTranslate => 'Recept fordítása';
+
+  @override
+  String get aiPromptTitleCompileSource => 'Forrásanyag beolvasása';
+
+  @override
+  String get aiPromptTitleTranscribe => 'Hang átírása';
+
+  @override
+  String get aiPromptDescBuildRecipe =>
+      'A weboldalról, fotóról vagy szövegből beolvasott anyagot strukturált receptté alakítja.';
+
+  @override
+  String get aiPromptDescParseIngredients =>
+      'Az AI hozzávaló-elemző ezzel bontja fel a hozzávalókat mennyiségre, mértékegységre, alapanyagra és megjegyzésre.';
+
+  @override
+  String get aiPromptDescRecipeVideo =>
+      'Egy videó átiratából és leírásából receptet készít.';
+
+  @override
+  String get aiPromptDescOrganizers =>
+      'Kiválasztja egy importált recept címkéit, kategóriáit és eszközeit.';
+
+  @override
+  String get aiPromptDescTranslate =>
+      'Lefordít egy importált receptet a választott nyelvre.';
+
+  @override
+  String get aiPromptDescCompileSource =>
+      'Weboldalakat, fotókat és szövegeket olvas be a recept egyszerű szöveges változatává.';
+
+  @override
+  String get aiPromptDescTranscribe =>
+      'Átírja a hangot, ha a hangszolgáltatód közvetlenül nem tudja.';
+
+  @override
+  String get mealplanNoteHint => 'Megjegyzés (nem kötelező)';
+
+  @override
+  String get mealplanEditTitle => 'Bejegyzés szerkesztése';
+
+  @override
+  String get mealplanEntryTitleLabel => 'Cím';
+
+  @override
+  String get mealplanEntryNoteLabel => 'Megjegyzés';
+
+  @override
+  String mealplanCreateRecipe(String name) {
+    return 'Új recept: „$name”';
+  }
+
+  @override
+  String get mealplanCreateRecipeSubtitle =>
+      'Üres receptet hoz létre, betervezi és megnyitja a szerkesztőt';
+
+  @override
+  String get importOptionsTitle => 'Importálási beállítások';
+
+  @override
+  String get importOptionsHint =>
+      'Mennyit végez a Mealie MI-je importáláskor a szervereden. Minden extra lépés külön MI-kérés – minél kevesebb, annál gyorsabb.';
+
+  @override
+  String get importTranslateTitle => 'Recept fordítása';
+
+  @override
+  String get importOrganizersTitle => 'Kategóriák és címkék';
+
+  @override
+  String get importOrganizersCreate => 'Újak is';
+
+  @override
+  String get importOrganizersExisting => 'Csak meglévők';
+
+  @override
+  String get importOrganizersNone => 'Nincs';
+
+  @override
+  String get importOrganizersCreateHint =>
+      'Az MI címkéket, kategóriákat és eszközöket rendel hozzá, a hiányzókat létrehozza.';
+
+  @override
+  String get importOrganizersExistingHint =>
+      'Az MI csak a már meglévő címkéket, kategóriákat és eszközöket használja.';
+
+  @override
+  String get importOrganizersNoneHint =>
+      'A recept címkék, kategóriák és eszközök nélkül érkezik. A Mealie ettől még lefuttatja a lépést, így az importálás nem gyorsul.';
+
+  @override
+  String get importStarting => 'Küldés a szerverre…';
+
+  @override
+  String get importRunning => 'Recept importálása…';
+
+  @override
+  String get aiImagesRunning => 'Az MI olvassa az oldalakat…';
+
+  @override
+  String get importStreamPhotosTitle => 'Fotóimport élő folyamatjelzéssel';
+
+  @override
+  String get importStreamPhotosHint =>
+      'Megmutat minden lépést, és hosszú importnál nyitva tartja a kapcsolatot. Kikapcsolva a korábbiak szerint egyetlen kéréssel tölt fel – pl. ha a proxyd blokkolja a streamelést.';
+
+  @override
+  String get weekPlannerDiceRulesMealieSub =>
+      'a háztartásod Mealie-szabályai (étkezési terv beállításai)';
+
+  @override
+  String get syncStarted =>
+      'Receptek, képek és listák újratöltése a szerverről…';
+
+  @override
+  String get syncDone => 'Minden naprakész';
+
+  @override
+  String get recipeReloaded => 'Recept újratöltve';
+
+  @override
+  String get logoutTitle => 'Kijelentkezés / felhasználóváltás';
+
+  @override
+  String get logoutConfirm =>
+      'A receptek, listák és a még nem szinkronizált változások törlődnek erről az eszközről. Az alkalmazás beállításai és a szerver címe megmaradnak – csak újra be kell jelentkezned.';
+
+  @override
+  String get reloadRecipe => 'Újratöltés a szerverről';
+
+  @override
+  String get wifiServerTitle => 'Más cím Wi-Fi-n';
+
+  @override
+  String get wifiServerHint =>
+      'Ugyanahhoz a szerverhez egy második címen, pl. otthon a helyi IP, úton ZeroTier, Tailscale vagy domain. A megadott Wi-Fi-n az alkalmazás automatikusan ezt a címet használja, máshol a fenti szerver URL-t.';
+
+  @override
+  String get wifiSsidLabel => 'Wi-Fi neve';
+
+  @override
+  String get wifiServerUrl => 'Cím ezen a Wi-Fi-n';
+
+  @override
+  String get wifiUseCurrent => 'Jelenlegi Wi-Fi használata';
+
+  @override
+  String get wifiNameUnavailable =>
+      'A Wi-Fi neve nem olvasható. Csatlakozz a Wi-Fi-hez, és engedélyezd a helyhozzáférést – az Android és az iOS csak ezzel adja ki a Wi-Fi nevét.';
+
+  @override
+  String wifiServerActive(String ssid) {
+    return 'Aktív: a(z) „$ssid” Wi-Fi címe';
+  }
+
+  @override
+  String wifiServerStandardActive(String ssid) {
+    return 'Aktív: szerver URL (nem a(z) „$ssid” hálózaton)';
+  }
+
+  @override
+  String get wifiServerRemove => 'Eltávolítás';
+
+  @override
+  String get switchUserTitle => 'Felhasználóváltás';
+
+  @override
+  String switchUserBody(String name) {
+    return '$name mentve marad ezen az eszközön – az összes recepttel, listával és még nem szinkronizált változással együtt. Visszaváltani a profilképeddel vagy a bejelentkezési oldalon lehet.';
+  }
+
+  @override
+  String get allowBiometricTitle => 'Visszaváltás az eszköz feloldásával';
+
+  @override
+  String get allowBiometricHint =>
+      'Face ID, ujjlenyomat vagy az eszköz PIN-kódja a jelszó helyett. Bárki, aki fel tudja oldani ezt az eszközt, hozzáfér ehhez a fiókhoz.';
+
+  @override
+  String get allow => 'Engedélyezés';
+
+  @override
+  String unlockAccountReason(String name) {
+    return 'Váltás erre: $name';
+  }
+
+  @override
+  String signInAs(String name) {
+    return 'Bejelentkezés mint $name';
+  }
+
+  @override
+  String wrongAccountError(String name) {
+    return 'Ez a(z) „$name” fiók. Jelentkezz be a mentett fiókkal.';
+  }
+
+  @override
+  String get accountSaveOffline =>
+      'A fiók most nem menthető – a szerver nem érhető el.';
+
+  @override
+  String get signOutRemoveTitle => 'Kijelentkezés és eltávolítás';
+
+  @override
+  String get signOutRemoveConfirm =>
+      'Ez a fiók és minden adata ezen az eszközön (receptek, listák, még nem szinkronizált változások) törlődik. Az alkalmazás beállításai megmaradnak.';
+
+  @override
+  String get removeSavedAccount => 'Eltávolítás erről az eszközről';
+
+  @override
+  String removeSavedAccountConfirm(String name) {
+    return 'Eltávolítod a(z) „$name” fiókot és minden mentett adatát erről az eszközről? A még nem szinkronizált változások elvesznek.';
+  }
+
+  @override
+  String get savedAccountsTitle => 'Mentett fiókok';
+
+  @override
+  String get addAccount => 'Másik fiók hozzáadása';
+
+  @override
+  String get biometricOff => 'Az eszközfeloldás kikapcsolása';
+
+  @override
+  String get orNewAccount => 'Vagy jelentkezz be másik fiókkal:';
+
+  @override
+  String get importVideoTitle => 'Videólinkek';
+
+  @override
+  String get importVideoFast => 'Gyors';
+
+  @override
+  String get importVideoThorough => 'Alapos (MI)';
+
+  @override
+  String get importVideoFastHint =>
+      'A Mealie átírja a videót, és egyetlen MI-kéréssel készíti el a receptet – általában jóval gyorsabb. Fordítás és kategóriák/címkék nélkül. Az MI kapcsoló importonként továbbra is állítható.';
+
+  @override
+  String get importVideoThoroughHint =>
+      'Videólinkeknél az MI kapcsoló automatikusan bekapcsol: több MI-lépés, fordítással és kategóriákkal/címkékkel a fenti beállítás szerint. Tovább tart.';
+
+  @override
+  String get importPresetFast => 'Gyors';
+
+  @override
+  String get importPresetThorough => 'Alapos';
+
+  @override
+  String get importPresetCustom => 'Egyéni';
+
+  @override
+  String get importPresetFastTitle =>
+      'A lehető legkevesebb MI-lépés – a legrövidebb várakozás';
+
+  @override
+  String get importPresetFastVideo =>
+      'Videólinkek: a Mealie átírja a videót, és egyetlen MI-kéréssel készíti el a receptet (az MI kapcsoló kikapcsolva marad).';
+
+  @override
+  String get importPresetFastTranslate =>
+      'Nincs fordítás – a recept az eredeti nyelven marad.';
+
+  @override
+  String get importPresetFastOrganizers =>
+      'Csak meglévő kategóriák és címkék kerülnek hozzárendelésre, újak nem jönnek létre.';
+
+  @override
+  String get importPresetThoroughTitle =>
+      'A Mealie teljes MI-importja – tovább tart, a legtöbbet hozza ki';
+
+  @override
+  String get importPresetThoroughVideo =>
+      'A videólinkeket automatikusan MI-vel importálja – több lépésben (forrás előkészítése, recept elkészítése…).';
+
+  @override
+  String get importPresetThoroughTranslate =>
+      'Ha a recept más nyelvű, lefordítja a lenti importálási nyelvre.';
+
+  @override
+  String get importPresetThoroughOrganizers =>
+      'Hozzárendeli a megfelelő kategóriákat és címkéket, a hiányzókat létrehozza.';
+
+  @override
+  String get importPresetCustomTitle => 'Minden opció egyéni beállítása';
+
+  @override
+  String get importPresetCustomBody =>
+      'Az eddigi választásod beállításaiból indulsz, és csak azt módosítod, amire szükséged van – pl. gyors videóimport, de fordítással.';
+
+  @override
+  String get sidebarPinHint =>
+      'Tipp: tartsd lenyomva a csempét, és húzd az oldalsávra a rögzítéshez.';
+
+  @override
+  String get sidebarDropHere => 'Húzd ide';
+
+  @override
+  String sidebarShortcutTitle(String name) {
+    return 'Billentyűparancs: „$name”';
+  }
+
+  @override
+  String sidebarShortcutPrompt(String modifier) {
+    return 'Nyomd meg a kívánt billentyűkombinációt a(z) $modifier billentyűvel.';
+  }
+
+  @override
+  String get sidebarShortcutTaken => 'Ez a kombináció már foglalt.';
+
+  @override
+  String get sidebarShortcutNone => 'Parancs nélkül';
+
+  @override
+  String get sidebarShortcutChange => 'Billentyűparancs módosítása';
+
+  @override
+  String get sidebarUnpin => 'Eltávolítás az oldalsávról';
+
+  @override
+  String sidebarFull(int count) {
+    return 'Az oldalsáv megtelt – legfeljebb $count saját elem.';
+  }
+
+  @override
+  String get tabletSidebar => 'Oldalsáv fekvő módban';
+
+  @override
+  String get tabletSidebarSubtitle =>
+      'A navigációt bal oldalon mutatja alul helyett, ha a táblagép fekvő helyzetben van';
 }

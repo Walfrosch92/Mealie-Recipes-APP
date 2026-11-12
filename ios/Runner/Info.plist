@@ -77,7 +77,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Used to import recipe photos</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Used to lock the app with Face ID</string>
+	<string>Used to lock the app and to switch back to saved accounts with Face ID</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Used to discover other devices for Cook Friends and Recipe Send on your local network</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

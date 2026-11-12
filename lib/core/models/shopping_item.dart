@@ -199,7 +199,8 @@ List<String>? _parseFoodAliases(dynamic raw) {
     for (final a in raw)
       if (a is String && a.trim().isNotEmpty)
         a.trim()
-      else if (a is Map && a['name'] is String &&
+      else if (a is Map &&
+          a['name'] is String &&
           (a['name'] as String).trim().isNotEmpty)
         (a['name'] as String).trim(),
   ];

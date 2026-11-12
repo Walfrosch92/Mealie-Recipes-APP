@@ -78,7 +78,6 @@ class TimelineFilterButton extends ConsumerWidget {
         isScrollControlled: true,
         context: context,
         useRootNavigator: true,
-        backgroundColor: context.appCard,
         builder: (_) => const _FilterSheet(),
       ),
     );

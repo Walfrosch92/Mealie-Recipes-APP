@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -10,6 +12,7 @@ import '../../../shared/widgets/async_action_button.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../providers/shopping_list_provider.dart';
 import '../services/task_import_models.dart';
+import '../../../shared/widgets/tap_surface.dart';
 
 // ---------------------------------------------------------------------------
 // Generic task import screen — used by both Google Tasks (Android) and
@@ -144,7 +147,10 @@ class _TaskImportScreenState extends ConsumerState<TaskImportScreen> {
               : _error != null
                   ? _ErrorView(message: _error!, onRetry: _fetch, l: l)
                   : _lists.isEmpty
-                      ? _EmptyView(hint: widget.emptyHint, l: l)
+                      ? EmptyStateView(
+                          icon: Icons.inbox_rounded,
+                          message: widget.emptyHint,
+                          scrollable: false)
                       : _buildContent(l),
         ),
       ),
@@ -277,38 +283,33 @@ class _ImportItemRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
+        child: TapSurface(
           onTap: onTap,
+          color: context.appCard,
           borderRadius: BorderRadius.circular(AppTokens.rMd),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-            decoration: BoxDecoration(
-              color: context.appCard,
-              borderRadius: BorderRadius.circular(AppTokens.rMd),
-              border: Border.all(
-                color: selected ? AppTokens.accent : context.appSeparator,
-                width: selected ? 1.5 : 1,
-              ),
-              boxShadow: context.appShadowSm,
-            ),
-            child: Row(
-              children: [
-                _CheckCircle(selected: selected, onTap: onTap),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    style: TextStyle(
-                      color: item.completed ? context.appFgSub : context.appFg,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      decoration:
-                          item.completed ? TextDecoration.lineThrough : null,
-                    ),
+          border: Border.all(
+            color: selected ? AppTokens.accent : context.appSeparator,
+            width: selected ? 1.5 : 1,
+          ),
+          boxShadow: context.appShadowSm,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          child: Row(
+            children: [
+              _CheckCircle(selected: selected, onTap: onTap),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  item.title,
+                  style: TextStyle(
+                    color: item.completed ? context.appFgSub : context.appFg,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    decoration:
+                        item.completed ? TextDecoration.lineThrough : null,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -325,7 +326,7 @@ class _CheckCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
@@ -480,40 +481,6 @@ class _PostActionCard extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Leerer-/Fehler-Zustand in Premium-Optik.
 // ---------------------------------------------------------------------------
-
-class _EmptyView extends StatelessWidget {
-  final String hint;
-  final AppLocalizations l;
-  const _EmptyView({required this.hint, required this.l});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: context.appSurface2,
-              ),
-              child: Icon(Icons.inbox_rounded,
-                  color: context.appFgTertiary, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(hint,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: context.appFgSub, fontSize: 14)),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _ErrorView extends StatelessWidget {
   final String message;

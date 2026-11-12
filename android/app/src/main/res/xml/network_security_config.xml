@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Selfhosting mit eigener CA: native Netzwerkzugriffe (Widgets, Geofence-
+  Erinnerung) vertrauen zusätzlich den vom Nutzer installierten CA-
+  Zertifikaten. Ab targetSdk 24 tun sie das ohne diese Datei nicht.
+
+  cleartextTrafficPermitted="true": sobald eine networkSecurityConfig
+  existiert, wird android:usesCleartextTraffic ignoriert — http:// zum
+  eigenen Mealie-Server im Heimnetz muss aber weiter funktionieren.
+
+  Die Flutter-Seite (dart:io) nutzt diesen Speicher NICHT; dafür reicht
+  MainActivity die Nutzer-CAs an lib/core/services/user_ca_trust.dart.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

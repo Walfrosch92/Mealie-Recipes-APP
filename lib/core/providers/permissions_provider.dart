@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_service.dart';
 import '../models/recipe_detail.dart';
 import 'cached_json_list.dart';
+import '../utils/mealie_version.dart';
 
 // ---------------------------------------------------------------------------
 // Rechte des angemeldeten Nutzers — gespiegelt aus Mealies Server-Regeln
@@ -137,3 +138,9 @@ bool canSurelyEditRecipe(UserPermissions p, RecipeDetail r) {
   }
   return true;
 }
+
+/// Einheiten, Utensilien, Bezeichnungen und Rezept-Aktionen anlegen/ändern:
+/// bis Mealie 3.29 für alle, ab 3.30 nur mit „Organisieren“.
+final mayEditOrganizerExtrasProvider = Provider<bool>((ref) =>
+    !ref.watch(mealie330Provider) ||
+    ref.watch(userPermissionsProvider).mayOrganize);

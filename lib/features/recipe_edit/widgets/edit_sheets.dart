@@ -9,6 +9,7 @@ import '../../../core/providers/cached_json_list.dart';
 import '../../../core/utils/ingredient_parse.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../recipes/providers/recipes_provider.dart';
 import '../models/recipe_draft.dart';
@@ -55,7 +56,13 @@ class _RecipePickerSheetState extends ConsumerState<_RecipePickerSheet> {
         .where((r) =>
             terms.isEmpty || terms.every(normalizeForSearch(r.name).contains))
         .toList()
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      ..sort((a, b) {
+        final c =
+            searchRank(a.name, terms).compareTo(searchRank(b.name, terms));
+        return c != 0
+            ? c
+            : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
     // Trefferliste bleibt beim Tippen über der Tastatur sichtbar.
     return KeyboardAwareSheet(
       heightFactor: 0.8,
@@ -104,7 +111,6 @@ Future<String?> showOwnerPickerSheet(BuildContext context,
     useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: context.appCard,
     builder: (_) => _OwnerPickerSheet(selectedId: selectedId),
   );
 }
@@ -256,7 +262,6 @@ Future<bool?> showIngredientParseSheet(
     useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: context.appCard,
     builder: (_) => _ParseSheet(
       ingredients: ingredients,
       unitsRaw: unitsRaw,
@@ -460,12 +465,12 @@ class _ParseSheetState extends ConsumerState<_ParseSheet> {
               runSpacing: 6,
               children: [
                 for (final p in parsers)
-                  ChoiceChip(
-                    label: Text(label(p)),
+                  AppChip(
+                    label: label(p),
                     selected: _parser == p,
-                    onSelected: _busy
+                    onTap: _busy
                         ? null
-                        : (_) => setState(() {
+                        : () => setState(() {
                               _parser = p;
                               _results = null;
                             }),
@@ -545,7 +550,7 @@ class _ParsedTile extends StatelessWidget {
           color: isNew
               ? AppTokens.accent.withValues(alpha: 0.15)
               : context.appSurface2,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTokens.rXs),
         ),
         child: Text.rich(TextSpan(children: [
           TextSpan(
@@ -584,7 +589,7 @@ class _ParsedTile extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: conf >= 0.75
-                      ? Colors.green
+                      ? AppTokens.success
                       : conf >= 0.5
                           ? Colors.orange
                           : Colors.red)),

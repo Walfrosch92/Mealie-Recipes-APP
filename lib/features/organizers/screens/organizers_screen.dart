@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/swipe_context_menu.dart';
+import '../../../shared/widgets/app_search_field.dart';
+import '../../../shared/widgets/app_snack.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/mealie_version.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
-import '../../../core/api/api_service.dart'
-    show mealieErrorMessage, userErrorMessage;
 import '../../../core/models/organizer_item.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../shared/widgets/read_only_banner.dart';
@@ -17,6 +21,8 @@ import '../../../core/providers/permissions_provider.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../../recipes/providers/recipes_provider.dart';
 import '../providers/organizers_provider.dart';
+import '../../../shared/widgets/search_jump.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 
 // ---------------------------------------------------------------------------
 // Verwaltung von Kategorien / Schlagworten / Utensilien (Home-Kacheln).
@@ -167,16 +173,15 @@ class OrganizersScreen extends ConsumerStatefulWidget {
   ConsumerState<OrganizersScreen> createState() => _OrganizersScreenState();
 }
 
-class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
+class _OrganizersScreenState extends ConsumerState<OrganizersScreen>
+    with SearchJumpMixin {
   String _query = '';
 
   OrganizerKind get kind => widget.kind;
 
   void _error(String fallback, Object e) {
     if (!mounted) return;
-    final detail = mealieErrorMessage(e);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(detail == null ? fallback : '$fallback: $detail')));
+    showErrorSnack(context, fallback, e);
   }
 
   /// Namen aller vorhandenen Einträge dieser Art (Vorschläge + Duplikate).
@@ -227,7 +232,7 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -256,9 +261,9 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
   }
 
   /// Kategorien/Schlagworte ändern braucht in Mealie `can_organize`;
-  /// Utensilien prüft der Server nicht.
+  /// Utensilien erst ab 3.30 (vorher prüfte der Server sie nicht).
   bool get _mayEdit =>
-      kind == OrganizerKind.tool ||
+      (kind == OrganizerKind.tool && !ref.watch(mealie330Provider)) ||
       ref.watch(userPermissionsProvider).mayOrganize;
 
   @override
@@ -289,52 +294,28 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
           top: false,
           child: async.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(userErrorMessage(e),
-                        style: TextStyle(color: context.appFgSub),
-                        textAlign: TextAlign.center),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(organizersProvider(kind)),
-                      child: Text(l.retry),
-                    ),
-                  ],
-                ),
-              ),
+            error: (e, _) => ErrorRetryView(
+              error: e,
+              onRetry: () => ref.invalidate(organizersProvider(kind)),
             ),
             data: (items) {
               final terms = searchTerms(_query);
               final shown = terms.isEmpty
                   ? items
-                  : items
-                      .where((i) =>
-                          terms.every(normalizeForSearch(i.name).contains))
-                      .toList();
+                  : rankBySearch(
+                      items.where((i) =>
+                          terms.every(normalizeForSearch(i.name).contains)),
+                      terms,
+                      (i) => i.name);
+              // Sprung aus der globalen Suche (?highlight=<id>).
+              handleSearchJump(context, [for (final o in shown) o.id]);
               return Column(
                 children: [
                   if (!mayEdit) ReadOnlyBanner(text: l.organizeReadOnlyHint),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                    child: TextField(
+                    child: AppSearchField(
                       onChanged: (v) => setState(() => _query = v),
-                      style: TextStyle(color: context.appFg),
-                      decoration: InputDecoration(
-                        hintText: l.search,
-                        prefixIcon:
-                            Icon(Icons.search_rounded, color: context.appFgSub),
-                        filled: true,
-                        fillColor: context.appCard,
-                        isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppTokens.rSm),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
                     ),
                   ),
                   Expanded(
@@ -342,16 +323,16 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                       onRefresh: () =>
                           ref.read(organizersProvider(kind).notifier).refresh(),
                       child: items.isEmpty
-                          ? ListView(children: [
-                              Padding(
-                                padding: const EdgeInsets.all(32),
-                                child: Text(l.organizerEmpty,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: context.appFgSub, fontSize: 15)),
-                              ),
-                            ])
+                          ? EmptyStateView(
+                              icon: switch (kind) {
+                                OrganizerKind.tool => Icons.kitchen_rounded,
+                                OrganizerKind.category =>
+                                  Icons.category_rounded,
+                                OrganizerKind.tag => Icons.sell_rounded,
+                              },
+                              message: l.organizerEmpty)
                           : ListView.builder(
+                              controller: searchScroll,
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                               itemCount: shown.length,
                               itemBuilder: (_, i) {
@@ -361,20 +342,24 @@ class _OrganizersScreenState extends ConsumerState<OrganizersScreen> {
                                   index: i,
                                   child: Padding(
                                     padding: const EdgeInsets.only(bottom: 10),
-                                    child: _OrganizerCard(
-                                      kind: kind,
-                                      item: item,
-                                      usage: kind.usage(recipes, item.id),
-                                      householdSlug: householdSlug,
-                                      onRename:
-                                          mayEdit ? () => _rename(item) : null,
-                                      onDelete:
-                                          mayEdit ? () => _delete(item) : null,
-                                      onOnHand: householdSlug == null
-                                          ? null
-                                          : (v) => _setOnHand(
-                                              item, householdSlug, v),
-                                    ),
+                                    child: searchHighlight(
+                                        item.id,
+                                        _OrganizerCard(
+                                          kind: kind,
+                                          item: item,
+                                          usage: kind.usage(recipes, item.id),
+                                          householdSlug: householdSlug,
+                                          onRename: mayEdit
+                                              ? () => _rename(item)
+                                              : null,
+                                          onDelete: mayEdit
+                                              ? () => _delete(item)
+                                              : null,
+                                          onOnHand: householdSlug == null
+                                              ? null
+                                              : (v) => _setOnHand(
+                                                  item, householdSlug, v),
+                                        )),
                                   ),
                                 );
                               },
@@ -415,25 +400,26 @@ class _OrganizerCard extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final onHand = householdSlug != null &&
         item.householdsWithTool.contains(householdSlug);
-    return Slidable(
+    return SwipeContextMenu(
+        child: Slidable(
       key: ValueKey(item.id),
       enabled: onRename != null,
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.5,
+        extentRatio: AppTokens.swipeExtent(2),
         children: [
           SlidableAction(
             onPressed: (_) => onRename?.call(),
-            backgroundColor: const Color(0xFF0A84FF),
+            backgroundColor: AppTokens.swipeEdit,
             foregroundColor: Colors.white,
-            icon: Icons.edit,
+            icon: Icons.edit_rounded,
             label: l.renameAction,
           ),
           SlidableAction(
             onPressed: (_) => onDelete?.call(),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTokens.swipeDelete,
             foregroundColor: Colors.white,
-            icon: Icons.delete,
+            icon: Icons.delete_outline_rounded,
             label: l.delete,
           ),
         ],
@@ -456,7 +442,7 @@ class _OrganizerCard extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   gradient: AppTokens.accentGradient,
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: BorderRadius.circular(AppTokens.rXs),
                 ),
                 child: Icon(kind.icon, color: Colors.white, size: 20),
               ),
@@ -477,6 +463,20 @@ class _OrganizerCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // Alle Rezepte mit diesem Eintrag in der Rezeptliste zeigen
+              // (Tippen auf die Karte bearbeitet weiterhin).
+              if (usage > 0)
+                IconButton(
+                  tooltip: l.organizerShowRecipes,
+                  icon: const Icon(Icons.manage_search_rounded,
+                      color: AppTokens.accentDeep),
+                  onPressed: () => context.go('/recipes?${switch (kind) {
+                    OrganizerKind.category => 'category',
+                    OrganizerKind.tag => 'tag',
+                    OrganizerKind.tool => 'tool',
+                  }}=${Uri.encodeQueryComponent(item.id)}'
+                      '&t=${DateTime.now().millisecondsSinceEpoch}'),
+                ),
               if (onOnHand != null) ...[
                 const SizedBox(width: 8),
                 Column(
@@ -497,6 +497,6 @@ class _OrganizerCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

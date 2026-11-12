@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/models/recipe_detail.dart';
@@ -136,14 +137,14 @@ class TimesServingsContent extends StatelessWidget {
               const Spacer(),
               ...List.generate(5, (i) {
                 final star = i + 1;
-                return GestureDetector(
+                return TapArea(
                   onTap: () => onRatingChanged(
                       rating == star.toDouble() ? null : star.toDouble()),
                   child: Icon(
                       (rating ?? 0) >= star
                           ? Icons.star_rounded
                           : Icons.star_border_rounded,
-                      color: Colors.amber,
+                      color: AppTokens.star,
                       size: 28),
                 );
               }),
@@ -247,7 +248,7 @@ class NotesContent extends StatelessWidget {
           ),
         ),
         EditActionTile(
-          icon: Icons.add_circle_outline,
+          icon: Icons.add_circle_outline_rounded,
           title: l.addNote,
           onTap: () {
             draft.notes.add(DraftNote.empty());
@@ -392,9 +393,9 @@ class RecipeSettingsContent extends StatelessWidget {
           EditSubheading(l.ownerLabel),
           Material(
             color: context.appSurface2,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTokens.rXs),
             child: InkWell(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTokens.rXs),
               onTap: canEditOwner ? onPickOwner : null,
               child: Padding(
                 padding:

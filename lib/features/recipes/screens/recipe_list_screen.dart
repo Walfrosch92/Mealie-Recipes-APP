@@ -1,6 +1,8 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +25,9 @@ import '../providers/recipes_provider.dart';
 import '../widgets/recipe_filter_sheet.dart';
 import '../../../shared/widgets/recipe_image.dart';
 import '../../../shared/widgets/error_view.dart';
+import 'recipe_detail_screen.dart';
+import '../../../shared/widgets/empty_state_view.dart';
+import '../../../core/desktop/two_pane.dart';
 
 // Akzent für Tag-Tints (Orange, Premium-Redesign).
 const _accent = Color(0xFFFF8A00);
@@ -57,8 +62,41 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
     super.dispose();
   }
 
+  /// Sprung von außen in eine vorgefilterte Liste (globale Suche,
+  /// Lebensmittel/Schlagworte/… „Rezepte anzeigen“):
+  /// `/recipes?q=<Text>&tag=&category=&tool=&food=<id>&t=<ms>`. Ersetzt die
+  /// bisherigen Filter (Sortierung bleibt) — einmal pro `t`.
+  String? _handledJump;
+  void _handleJump() {
+    final Map<String, String> qp;
+    try {
+      qp = GoRouterState.of(context).uri.queryParameters;
+    } catch (_) {
+      return;
+    }
+    final t = qp['t'];
+    if (t == null || t == _handledJump) return;
+    _handledJump = t;
+    Set<String> ids(String k) =>
+        (qp[k] ?? '').isEmpty ? const <String>{} : {qp[k]!};
+    final q = qp['q'] ?? '';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _searchCtrl.text = q;
+      ref.read(recipeFilterProvider.notifier).apply((f) => RecipeFilter(
+            sort: f.sort,
+            query: q,
+            tagIds: ids('tag'),
+            categoryIds: ids('category'),
+            toolIds: ids('tool'),
+            foodIds: ids('food'),
+          ));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _handleJump();
     final l = AppLocalizations.of(context)!;
     final recipesAsync = ref.watch(recipesProvider);
     final filter = ref.watch(recipeFilterProvider);
@@ -83,7 +121,7 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
         // Tab-Wechsel via go), wäre der Button noch da, aber pop() würfe
         // „There is nothing to pop". Darum im onTap nochmal prüfen.
         leading: context.canPop()
-            ? _BackButton(onTap: () {
+            ? AppBackButton(onTap: () {
                 if (context.canPop()) context.pop();
               })
             : null,
@@ -108,7 +146,8 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
                 case 'friends':
                   context.push('/cook-friends');
                 case 'refresh':
-                  ref.read(recipesProvider.notifier).refresh();
+                  // Alles neu inkl. Bilder (auch ohne neues `dateUpdated`).
+                  ref.read(recipesProvider.notifier).forceFullSync();
               }
             },
             itemBuilder: (_) => [
@@ -124,7 +163,7 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
                   context, 'sort', Icons.swap_vert_rounded, l.sortRecipes),
               _menuItem(
                   context, 'friends', Icons.group_add_rounded, l.cookFriends),
-              _menuItem(context, 'refresh', Icons.refresh, l.refreshRecipes),
+              _menuItem(context, 'refresh', Icons.sync_rounded, l.syncNow),
             ],
           ),
         ],
@@ -140,142 +179,200 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
             : null,
       ),
       body: WithCookingModeFAB(
-        bottomInset: GlassTabBar.height + 24,
+        fullWidth: true,
+        bottomInset: GlassTabBar.heightOf(context) + 24,
         child: SafeArea(
           top: false,
-          child: Column(
-            children: [
-              // Suchleiste (oben, wie im Premium-Mockup)
-              _TopSearchBar(
-                controller: _searchCtrl,
-                hint: l.searchRecipe,
-                onChanged: (v) =>
-                    ref.read(recipeFilterProvider.notifier).setQuery(v),
-                onClear: () {
-                  _searchCtrl.clear();
-                  ref.read(recipeFilterProvider.notifier).setQuery('');
-                },
-                // Würfel: 3 zufällige Rezepte aus der AKTUELL gezeigten Liste
-                // (Suche + Filter gelten) — ohne die Frühstück/Mittag/Abend-
-                // Gewichtung des Mahlzeitenplans.
-                trailing: DiceButton(
-                  tooltip: l.diceModeButton,
-                  onTap: () => _rollDice(context, filtered, settings),
-                ),
-              ),
-
-              // Category filter chips (multi-select) — mirrors iOS usedCategories
-              if (categories.isNotEmpty)
-                _FilterRow(
-                  children: [
-                    _FilterChip(
-                      title: l.allCategories,
-                      icon: Icons.grid_view_rounded,
-                      selected: filter.categoryIds.isEmpty,
-                      onTap: () => ref
-                          .read(recipeFilterProvider.notifier)
-                          .clearCategories(),
+          child: _withDetailPane(
+              context,
+              Column(
+                children: [
+                  // Suchleiste (oben, wie im Premium-Mockup)
+                  _TopSearchBar(
+                    controller: _searchCtrl,
+                    hint: l.searchRecipe,
+                    onChanged: (v) =>
+                        ref.read(recipeFilterProvider.notifier).setQuery(v),
+                    onClear: () {
+                      _searchCtrl.clear();
+                      ref.read(recipeFilterProvider.notifier).setQuery('');
+                    },
+                    // Würfel: 3 zufällige Rezepte aus der AKTUELL gezeigten Liste
+                    // (Suche + Filter gelten) — ohne die Frühstück/Mittag/Abend-
+                    // Gewichtung des Mahlzeitenplans.
+                    trailing: DiceButton(
+                      tooltip: l.diceModeButton,
+                      onTap: () => _rollDice(context, filtered, settings),
                     ),
-                    ...categories.map((c) => _FilterChip(
-                          title: c.name,
-                          icon: Icons.sell_rounded,
-                          selected: filter.categoryIds.contains(c.id),
-                          onTap: () => ref
-                              .read(recipeFilterProvider.notifier)
-                              .toggleCategory(c.id),
-                        )),
-                  ],
-                ),
-
-              // Tag filter chips (multi-select) — mirrors iOS allTags
-              if (tags.isNotEmpty)
-                _FilterRow(
-                  children: [
-                    _FilterChip(
-                      title: l.all,
-                      icon: Icons.label_outline_rounded,
-                      selected: filter.tagIds.isEmpty,
-                      onTap: () =>
-                          ref.read(recipeFilterProvider.notifier).clearTags(),
-                    ),
-                    ...tags.map((t) => _FilterChip(
-                          title: t.name,
-                          icon: Icons.label_rounded,
-                          selected: filter.tagIds.contains(t.id),
-                          onTap: () => ref
-                              .read(recipeFilterProvider.notifier)
-                              .toggleTag(t.id),
-                        )),
-                  ],
-                ),
-
-              // Recipe list
-              Expanded(
-                child: recipesAsync.when(
-                  loading: () => const _RecipeListSkeleton(),
-                  error: (e, _) => ErrorRetryView(
-                    error: e,
-                    onRetry: () => ref.read(recipesProvider.notifier).refresh(),
                   ),
-                  data: (_) {
-                    // Empty + active filters → tray empty state with reset button
-                    if (filtered.isEmpty && hasFilters) {
-                      return _FilterEmptyState(
-                        onReset: () =>
-                            ref.read(recipeFilterProvider.notifier).reset(),
-                      );
-                    }
-                    Widget card(int i) => RecipeCard(
-                          recipe: filtered[i],
-                          showImage: settings?.showRecipeImages ?? true,
-                          baseUrl: settings?.serverUrl ?? '',
-                          token: settings?.apiToken ?? '',
-                        );
-                    const listPadding = EdgeInsets.fromLTRB(
-                        16, 10, 16, GlassTabBar.height + 24);
-                    return RefreshIndicator(
-                      onRefresh: () =>
-                          ref.read(recipesProvider.notifier).refresh(),
-                      // Große Anzeige (Windows/macOS): Karten mehrspaltig statt
-                      // einer endlos breiten Zeile.
-                      child: LargeScreen.isWide(context)
-                          ? GridView.builder(
-                              padding: listPadding,
-                              gridDelegate:
-                                  const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 560,
-                                mainAxisExtent: 150,
-                                crossAxisSpacing: 14,
-                                mainAxisSpacing: 14,
-                              ),
-                              itemCount: filtered.length,
-                              itemBuilder: (ctx, i) => EntranceOnce(
-                                id: 'recipe-${filtered[i].id}',
-                                index: i,
-                                child: card(i),
-                              ),
-                            )
-                          : ListView.builder(
-                              padding: listPadding,
-                              itemCount: filtered.length,
-                              itemBuilder: (ctx, i) => EntranceOnce(
-                                id: 'recipe-${filtered[i].id}',
-                                index: i,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(bottom: 14),
+
+                  // Category filter chips (multi-select) — mirrors iOS usedCategories
+                  if (categories.isNotEmpty)
+                    _FilterRow(
+                      children: [
+                        _FilterChip(
+                          title: l.allCategories,
+                          icon: Icons.grid_view_rounded,
+                          selected: filter.categoryIds.isEmpty,
+                          onTap: () => ref
+                              .read(recipeFilterProvider.notifier)
+                              .clearCategories(),
+                        ),
+                        ...categories.map((c) => _FilterChip(
+                              title: c.name,
+                              icon: Icons.sell_rounded,
+                              selected: filter.categoryIds.contains(c.id),
+                              onTap: () => ref
+                                  .read(recipeFilterProvider.notifier)
+                                  .toggleCategory(c.id),
+                            )),
+                      ],
+                    ),
+
+                  // Tag filter chips (multi-select) — mirrors iOS allTags
+                  if (tags.isNotEmpty)
+                    _FilterRow(
+                      children: [
+                        _FilterChip(
+                          title: l.all,
+                          icon: Icons.label_outline_rounded,
+                          selected: filter.tagIds.isEmpty,
+                          onTap: () => ref
+                              .read(recipeFilterProvider.notifier)
+                              .clearTags(),
+                        ),
+                        ...tags.map((t) => _FilterChip(
+                              title: t.name,
+                              icon: Icons.label_rounded,
+                              selected: filter.tagIds.contains(t.id),
+                              onTap: () => ref
+                                  .read(recipeFilterProvider.notifier)
+                                  .toggleTag(t.id),
+                            )),
+                      ],
+                    ),
+
+                  // Recipe list
+                  Expanded(
+                    child: recipesAsync.when(
+                      loading: () => const _RecipeListSkeleton(),
+                      error: (e, _) => ErrorRetryView(
+                        error: e,
+                        onRetry: () =>
+                            ref.read(recipesProvider.notifier).refresh(),
+                      ),
+                      data: (_) {
+                        // Empty + active filters → tray empty state with reset button
+                        if (filtered.isEmpty && hasFilters) {
+                          return _FilterEmptyState(
+                            onReset: () =>
+                                ref.read(recipeFilterProvider.notifier).reset(),
+                          );
+                        }
+                        // Suche ohne Treffer: Hinweis statt leerer Fläche.
+                        if (filtered.isEmpty &&
+                            filter.query.trim().isNotEmpty) {
+                          return EmptyStateView(
+                            icon: Icons.search_off_rounded,
+                            message:
+                                l.globalSearchNoResults(filter.query.trim()),
+                            actionLabel: l.recipeSearchClear,
+                            actionIcon: Icons.close_rounded,
+                            onAction: () {
+                              _searchCtrl.clear();
+                              ref
+                                  .read(recipeFilterProvider.notifier)
+                                  .setQuery('');
+                            },
+                          );
+                        }
+                        Widget card(int i) => RecipeCard(
+                              recipe: filtered[i],
+                              showImage: settings?.showRecipeImages ?? true,
+                              baseUrl: settings?.serverUrl ?? '',
+                              token: settings?.apiToken ?? '',
+                            );
+                        final listPadding = EdgeInsets.fromLTRB(
+                            16, 10, 16, GlassTabBar.heightOf(context) + 24);
+                        // Kein Pull-to-Refresh: das passierte oft
+                        // unabsichtlich und lud jedes Mal ALLE Rezepte neu.
+                        // Bewusst über ⋮ → „Jetzt synchronisieren".
+                        // Große Anzeige (Windows/macOS): Karten mehrspaltig statt
+                        // einer endlos breiten Zeile.
+                        return LargeScreen.isWide(context)
+                            ? GridView.builder(
+                                padding: listPadding,
+                                gridDelegate:
+                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 560,
+                                  mainAxisExtent: 150,
+                                  crossAxisSpacing: 14,
+                                  mainAxisSpacing: 14,
+                                ),
+                                itemCount: filtered.length,
+                                itemBuilder: (ctx, i) => EntranceOnce(
+                                  id: 'recipe-${filtered[i].id}',
+                                  index: i,
                                   child: card(i),
                                 ),
-                              ),
-                            ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+                              )
+                            : ListView.builder(
+                                padding: listPadding,
+                                itemCount: filtered.length,
+                                itemBuilder: (ctx, i) => EntranceOnce(
+                                  id: 'recipe-${filtered[i].id}',
+                                  index: i,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 14),
+                                    child: card(i),
+                                  ),
+                                ),
+                              );
+                      },
+                    ),
+                  ),
+                ],
+              )),
         ),
       ),
     );
+  }
+
+  /// Desktop (Fenster ≥ 1100 px): Liste links, gewähltes Rezept rechts.
+  /// Sonst unverändert nur die Liste.
+  Widget _withDetailPane(BuildContext context, Widget list) {
+    if (!twoPaneAvailable(context)) return list;
+    final l = AppLocalizations.of(context)!;
+    final selected = ref.watch(paneRecipeProvider);
+    void close() => ref.read(paneRecipeProvider.notifier).state = null;
+    return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      SizedBox(
+        width: 460,
+        child: RecipePaneScope(
+          selectedId: selected,
+          onOpen: (id) => ref.read(paneRecipeProvider.notifier).state = id,
+          child: list,
+        ),
+      ),
+      VerticalDivider(width: 1, color: context.appSeparator),
+      Expanded(
+        child: selected == null
+            ? EmptyStateView(
+                icon: Icons.restaurant_menu_rounded,
+                message: l.paneSelectRecipe,
+                scrollable: false)
+            // Heroes aus: die Rezeptkarte links trägt denselben Hero-Tag.
+            : HeroMode(
+                enabled: false,
+                child: RecipeDetailScreen(
+                  key: ValueKey('pane-$selected'),
+                  slug: selected,
+                  embedded: true,
+                  onClose: close,
+                ),
+              ),
+      ),
+    ]);
   }
 
   PopupMenuItem<String> _menuItem(
@@ -312,7 +409,6 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
     showModalBottomSheet(
       useSafeArea: true,
       context: context,
-      backgroundColor: context.appCard,
       isScrollControlled: true,
       // Root-Navigator: die Rezeptliste liegt als Tab in einem Branch-
       // Navigator — ohne das Flag lag das Sheet HINTER der fixen GlassTabBar
@@ -403,6 +499,7 @@ class _FilterChip extends StatelessWidget {
             Text(
               title,
               maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               strutStyle: const StrutStyle(
                   fontSize: 13, height: 1.1, forceStrutHeight: true),
               style: TextStyle(
@@ -430,30 +527,12 @@ class _FilterEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inbox_outlined, size: 48, color: context.appFgTertiary),
-          const SizedBox(height: 16),
-          Text(l.noRecipesForCategory,
-              style: TextStyle(
-                  color: context.appFgSub,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: onReset,
-            icon: const Icon(Icons.refresh, size: 18),
-            label: Text(l.resetFilter),
-            style: FilledButton.styleFrom(
-              backgroundColor: _accent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-          ),
-        ],
-      ),
+    return EmptyStateView(
+      icon: Icons.filter_alt_off_rounded,
+      message: l.noRecipesForCategory,
+      actionLabel: l.resetFilter,
+      actionIcon: Icons.refresh_rounded,
+      onAction: onReset,
     );
   }
 }
@@ -554,10 +633,17 @@ class RecipeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isFav = ref.watch(favoritesProvider
         .select((s) => s.valueOrNull?.contains(recipe.id) ?? false));
+    // Desktop-Zweispalten-Ansicht: rechts anzeigen statt neue Seite öffnen.
+    final pane = RecipePaneScope.maybeOf(context);
+    final selected = pane?.selectedId == recipe.id;
     return BounceTap(
       onTap: () {
         HapticFeedback.selectionClick();
-        context.push('/recipes/${recipe.id}');
+        if (pane != null) {
+          pane.onOpen(recipe.id);
+        } else {
+          context.push('/recipes/${recipe.id}');
+        }
       },
       child: Container(
         // Feste, EINHEITLICHE Höhe für alle Karten.
@@ -565,7 +651,9 @@ class RecipeCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: context.appCard,
           borderRadius: BorderRadius.circular(AppTokens.rLg),
-          border: Border.all(color: context.appSeparator, width: 1),
+          border: Border.all(
+              color: selected ? AppTokens.accent : context.appSeparator,
+              width: selected ? 2 : 1),
           boxShadow: context.appShadowSm,
         ),
         child: ClipRRect(
@@ -585,7 +673,6 @@ class RecipeCard extends ConsumerWidget {
                         RecipeImage(
                           recipeId: recipe.id,
                           imageUrl: _imageUrl,
-                          httpHeaders: {'Authorization': 'Bearer $token'},
                           placeholder: _imgPlaceholder,
                         ),
                         Positioned(
@@ -678,7 +765,7 @@ class _FavoriteHeart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       behavior: HitTestBehavior.opaque,
       onTap: () {
         HapticFeedback.lightImpact();
@@ -777,10 +864,10 @@ class _RatingMeta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.star, size: 13, color: Colors.orange),
+        const Icon(Icons.star_rounded, size: 13, color: AppTokens.star),
         const SizedBox(width: 4),
         Text(rating.toStringAsFixed(1),
-            style: const TextStyle(color: Colors.orange, fontSize: 12)),
+            style: const TextStyle(color: AppTokens.star, fontSize: 12)),
       ],
     );
   }
@@ -818,7 +905,7 @@ class _TagsRow extends StatelessWidget {
                 Text('+$extra',
                     style: TextStyle(
                         color: context.appFgSub,
-                        fontSize: 11.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600)),
               ],
             ],
@@ -833,45 +920,18 @@ class _TagsRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: _accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTokens.rLg),
       ),
       child: Text(name,
           maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           strutStyle: const StrutStyle(
-              fontSize: 11.5, height: 1.0, forceStrutHeight: true),
+              fontSize: 12, height: 1.0, forceStrutHeight: true),
           style: const TextStyle(
               color: _accent,
-              fontSize: 11.5,
+              fontSize: 12,
               height: 1.0,
               fontWeight: FontWeight.w600)),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Shared back button widget
-// ---------------------------------------------------------------------------
-
-class _BackButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _BackButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: context.appSurface2,
-            borderRadius: BorderRadius.circular(17),
-          ),
-          child: Icon(Icons.chevron_left, color: context.appFg, size: 22),
-        ),
-      ),
     );
   }
 }
@@ -887,7 +947,8 @@ class _RecipeListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Shimmer(
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, GlassTabBar.height + 24),
+        padding:
+            EdgeInsets.fromLTRB(16, 10, 16, GlassTabBar.heightOf(context) + 24),
         itemCount: 6,
         itemBuilder: (_, __) => const Padding(
           padding: EdgeInsets.only(bottom: 14),

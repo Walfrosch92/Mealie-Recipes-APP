@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../core/desktop/desktop_sidebar.dart';
+import 'tap_area.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -90,10 +92,26 @@ enum GlassTab { home, recipes, shopping, plan, settings }
 
 class GlassTabBar extends StatelessWidget {
   final GlassTab current;
-  const GlassTabBar({super.key, required this.current});
+
+  /// Eigenes Symbol für den Start-Tab (Profilbild, siehe AccountTabIcon) —
+  /// bekommt `active`. Wird NICHT orange eingefärbt (sonst wäre das Foto
+  /// eine einfarbige Fläche).
+  final Widget Function(bool active)? homeIcon;
+
+  /// Tipp auf den schon aktiven Start-Tab (Konto-Menü); Kontext = der Tab.
+  /// Auch bei „gedrückt halten" auf dem Start-Tab (von jedem Tab aus).
+  final void Function(BuildContext tabContext)? onHomeReselect;
+
+  const GlassTabBar(
+      {super.key, required this.current, this.homeIcon, this.onHomeReselect});
 
   /// Höhe des sichtbaren Balkens (ohne untere SafeArea) — für Body-Padding.
   static const double height = 50;
+
+  /// Platz, den die Seiten unten für die Leiste frei lassen: [height], oder 0,
+  /// wenn am Rechner die Seitenleiste die Navigation übernimmt.
+  static double heightOf(BuildContext context) =>
+      DesktopSidebarScope.isActive(context) ? 0 : height;
 
   static String _routeFor(GlassTab t) {
     switch (t) {
@@ -163,15 +181,32 @@ class GlassTabBar extends StatelessWidget {
                     children: [
                       for (final (tab, icon, label) in items)
                         Expanded(
-                          child: _GlassTabItem(
-                            icon: icon,
-                            label: label,
-                            active: tab == current,
-                            onTap: () {
-                              if (tab == current) return;
-                              HapticFeedback.selectionClick();
-                              context.go(_routeFor(tab));
-                            },
+                          child: Builder(
+                            builder: (tabCtx) => _GlassTabItem(
+                              icon: icon,
+                              iconWidget:
+                                  tab == GlassTab.home && homeIcon != null
+                                      ? homeIcon!(tab == current)
+                                      : null,
+                              label: label,
+                              active: tab == current,
+                              onTap: () {
+                                if (tab == current) {
+                                  if (tab == GlassTab.home) {
+                                    onHomeReselect?.call(tabCtx);
+                                  }
+                                  return;
+                                }
+                                HapticFeedback.selectionClick();
+                                context.go(_routeFor(tab));
+                              },
+                              // Profilbild gedrückt halten → Konto-Menü,
+                              // egal welcher Tab gerade offen ist.
+                              onLongPress:
+                                  tab == GlassTab.home && onHomeReselect != null
+                                      ? () => onHomeReselect!(tabCtx)
+                                      : null,
+                            ),
                           ),
                         ),
                     ],
@@ -188,57 +223,86 @@ class GlassTabBar extends StatelessWidget {
 
 class _GlassTabItem extends StatelessWidget {
   final IconData icon;
+
+  /// Ersetzt [icon] und wird nicht eingefärbt (Profilbild).
+  final Widget? iconWidget;
   final String label;
   final bool active;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _GlassTabItem({
     required this.icon,
+    this.iconWidget,
     required this.label,
     required this.active,
     required this.onTap,
+    this.onLongPress,
   });
+
+  // Aktiver Tab: Icon+Label mit Orange-Verlauf eingefärbt.
+  Widget _tint(Widget child) => active
+      ? ShaderMask(
+          shaderCallback: (r) => AppTokens.accentGradient.createShader(r),
+          blendMode: BlendMode.srcIn,
+          child: child,
+        )
+      : child;
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon,
-              size: 21, color: active ? Colors.white : context.appFgTertiary),
-          const SizedBox(height: 1),
-          // FittedBox(scaleDown): lange Labels (z. B. „Einstellungen") werden
-          // verkleinert statt abgeschnitten — bekommt die Tab-Breite als
-          // Constraint (crossAxis ist hier zentriert, Breite = Expanded).
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              label,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w600,
-                color: active ? Colors.white : context.appFgTertiary,
-              ),
-            ),
-          ),
-        ],
+    // FittedBox(scaleDown): lange Labels (z. B. „Einstellungen") werden
+    // verkleinert statt abgeschnitten — bekommt die Tab-Breite als
+    // Constraint (crossAxis ist hier zentriert, Breite = Expanded).
+    final text = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+          color: active ? Colors.white : context.appFgTertiary,
+        ),
       ),
     );
+    final custom = iconWidget;
+    final Widget content;
+    if (custom != null) {
+      // Bild ungefärbt, nur das Label im Verlauf. Höhe wie Icon (21) +
+      // Abstand, damit die Labels aller Tabs auf einer Linie bleiben.
+      content = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+                height: 22, child: OverflowBox(maxHeight: 30, child: custom)),
+            _tint(text),
+          ],
+        ),
+      );
+    } else {
+      content = _tint(Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 21, color: active ? Colors.white : context.appFgTertiary),
+            const SizedBox(height: 1),
+            text,
+          ],
+        ),
+      ));
+    }
 
-    return GestureDetector(
+    return TapArea(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: active
-          // Aktiver Tab: Icon+Label mit Orange-Verlauf eingefärbt.
-          ? ShaderMask(
-              shaderCallback: (r) => AppTokens.accentGradient.createShader(r),
-              blendMode: BlendMode.srcIn,
-              child: content,
-            )
-          : content,
+      onLongPress: onLongPress,
+      child: content,
     );
   }
 }

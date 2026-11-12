@@ -38,7 +38,7 @@ Future<void> showRecipeWebToolsSheet(BuildContext context, WidgetRef ref,
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.rSm),
             color: AppTokens.accent.withValues(alpha: 0.12),
           ),
           child: Icon(icon, color: AppTokens.accentDeep, size: 20),
@@ -54,7 +54,6 @@ Future<void> showRecipeWebToolsSheet(BuildContext context, WidgetRef ref,
     useRootNavigator: true,
     useSafeArea: true,
     isScrollControlled: true,
-    backgroundColor: context.appCard,
     builder: (sheetCtx) => SafeArea(
       child: SingleChildScrollView(
         child: Column(
@@ -89,7 +88,7 @@ Future<void> showRecipeWebToolsSheet(BuildContext context, WidgetRef ref,
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
                       child: Text(l.recipeActionsTitle,
                           style: TextStyle(
-                              color: context.appFgSub,
+                              color: sheetCtx.appFgSub,
                               fontWeight: FontWeight.w700)),
                     ),
                     for (final a in list)
@@ -99,12 +98,72 @@ Future<void> showRecipeWebToolsSheet(BuildContext context, WidgetRef ref,
                               : Icons.open_in_new_rounded,
                           a['title']?.toString() ?? '', () {
                         Navigator.pop(sheetCtx);
-                        _runAction(context, ref, recipe, a, multiplier);
+                        runRecipeAction(context, ref, recipe, a, multiplier);
                       }),
                   ],
                 );
               },
             ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// iOS/Android (#42): Auswahl der Rezept-Aktionen des Haushalts aus dem
+/// Rezept-Optionen-Sheet — gleiche Kacheln wie der Aktionen-Abschnitt des
+/// Desktop-Webapp-Sheets, gleiche Ausführung ([runRecipeAction]).
+Future<void> showRecipeActionsPickerSheet(BuildContext context, WidgetRef ref,
+    RecipeDetail recipe, double multiplier, List<Map<String, dynamic>> list) {
+  final l = AppLocalizations.of(context)!;
+  return showModalBottomSheet(
+    context: context,
+    useRootNavigator: true,
+    useSafeArea: true,
+    isScrollControlled: true,
+    builder: (sheetCtx) => SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SheetHandle(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+              child: Text(l.recipeActionsTitle,
+                  style: TextStyle(
+                      fontFamily: 'PlusJakartaSans',
+                      color: sheetCtx.appFg,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3)),
+            ),
+            for (final a in list)
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
+                    color: AppTokens.accent.withValues(alpha: 0.12),
+                  ),
+                  child: Icon(
+                      a['actionType'] == 'post'
+                          ? Icons.send_rounded
+                          : Icons.open_in_new_rounded,
+                      color: AppTokens.accentDeep,
+                      size: 20),
+                ),
+                title: Text(a['title']?.toString() ?? '',
+                    style: TextStyle(
+                        color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  runRecipeAction(context, ref, recipe, a, multiplier);
+                },
+              ),
             const SizedBox(height: 8),
           ],
         ),
@@ -173,7 +232,7 @@ Future<void> _export(BuildContext context, WidgetRef ref, RecipeDetail recipe,
 
 /// Wie `execute` der Webapp: Link → URL mit Platzhaltern öffnen,
 /// Post → Server sendet das Rezept.
-Future<void> _runAction(BuildContext context, WidgetRef ref,
+Future<void> runRecipeAction(BuildContext context, WidgetRef ref,
     RecipeDetail recipe, Map<String, dynamic> action, double scale) async {
   final l = AppLocalizations.of(context)!;
   final api = ref.read(apiServiceProvider);

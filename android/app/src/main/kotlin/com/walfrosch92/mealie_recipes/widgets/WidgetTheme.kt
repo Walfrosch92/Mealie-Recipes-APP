@@ -41,6 +41,12 @@ object WidgetTheme {
     val SecondaryText = Color(0xFF8E8E93)
     val PrimaryText = Color(0xFF1C1C1E)
     val PrimaryTextDark = Color(0xFFF2F2F7)
+
+    // Primärtext hell/dunkel — der Hintergrund (GlanceTheme.widgetBackground)
+    // folgt dem System-Dunkelmodus bzw. Material You. Vorher war der Text
+    // fest #1C1C1E → im Dunkelmodus fast schwarz auf dunkel, unlesbar.
+    val PrimaryTextProvider: GlanceColorProvider =
+        androidx.glance.color.ColorProvider(day = PrimaryText, night = PrimaryTextDark)
     val GreenBadgeBg = Color(0xCC34C759)
     val OrangeBadgeBg = Color(0x26FF9500) // 15% opacity
 
@@ -72,12 +78,12 @@ object WidgetTheme {
     // mappen die Swift-`.caption2`/`.caption`/`.headline` auf passende sp-Werte.
     val Caption2 = TextStyle(fontSize = 11.sp, color = cp(SecondaryText))
     val Caption2Bold = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = cp(SecondaryText))
-    val Caption = TextStyle(fontSize = 12.sp, color = cp(PrimaryText))
+    val Caption = TextStyle(fontSize = 12.sp, color = PrimaryTextProvider)
     val CaptionSecondary = TextStyle(fontSize = 12.sp, color = cp(SecondaryText))
-    val Subheadline = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = cp(PrimaryText))
-    val SubheadlineBold = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = cp(PrimaryText))
-    val Headline = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = cp(PrimaryText))
-    val Title3 = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = cp(PrimaryText))
-    val Body = TextStyle(fontSize = 14.sp, color = cp(PrimaryText))
+    val Subheadline = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = PrimaryTextProvider)
+    val SubheadlineBold = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = PrimaryTextProvider)
+    val Headline = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = PrimaryTextProvider)
+    val Title3 = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = PrimaryTextProvider)
+    val Body = TextStyle(fontSize = 14.sp, color = PrimaryTextProvider)
     val BodySecondary = TextStyle(fontSize = 14.sp, color = cp(SecondaryText))
 }

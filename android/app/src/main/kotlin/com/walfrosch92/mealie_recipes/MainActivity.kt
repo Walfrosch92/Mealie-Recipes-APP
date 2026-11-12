@@ -3,6 +3,7 @@ package com.walfrosch92.mealie_recipes
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.util.Base64
 import android.view.WindowManager
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
@@ -24,6 +25,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import java.security.KeyStore
+import java.security.cert.X509Certificate
 
 // FlutterFragmentActivity (statt FlutterActivity): local_auth/BiometricPrompt
 // braucht eine FragmentActivity, sonst wirft authenticate() „no_fragment_activity"
@@ -33,9 +36,43 @@ class MainActivity : FlutterFragmentActivity() {
     private val widgetChannel = "mealie/widget"
     private val wearChannel = "mealie/wear"
     private val shoppingReminderChannel = "mealie/shopping_reminder"
+    private val userCaChannel = "mealie/user_ca"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // ---- Eigene CA (Selfhosting) ----
+        // Dart (BoringSSL) kennt auf Android nur die System-CAs, NICHT die
+        // vom Nutzer unter „Verschlüsselung & Anmeldedaten" installierten.
+        // Wir reichen genau diese Nutzer-CAs ("user:"-Aliase im
+        // AndroidCAStore) als PEM an Dart weiter (lib/core/services/
+        // user_ca_trust.dart). Native Requests (Widgets) decken das über
+        // res/xml/network_security_config.xml ab.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, userCaChannel)
+            .setMethodCallHandler { call, result ->
+                if (call.method != "userCaCertificates") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+                Thread {
+                    val pems = try {
+                        val ks = KeyStore.getInstance("AndroidCAStore")
+                        ks.load(null)
+                        ks.aliases().toList()
+                            .filter { it.startsWith("user:") }
+                            .mapNotNull { ks.getCertificate(it) as? X509Certificate }
+                            .map { cert ->
+                                val b64 = Base64.encodeToString(cert.encoded, Base64.NO_WRAP)
+                                "-----BEGIN CERTIFICATE-----\n" +
+                                    b64.chunked(64).joinToString("\n") +
+                                    "\n-----END CERTIFICATE-----\n"
+                            }
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
+                    runOnUiThread { result.success(pems) }
+                }.start()
+            }
 
         // ---- WakeLock-Channel (unverändert) ----
         // In-house wakelock replacement (mirrors the iOS WakeLockPlugin) — we

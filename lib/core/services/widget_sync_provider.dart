@@ -16,6 +16,7 @@ import 'log_manager.dart';
 import 'shopping_reminder_bridge.dart';
 import 'watch_bridge.dart';
 import 'widget_bridge.dart';
+import '../utils/hex_color.dart';
 
 // ---------------------------------------------------------------------------
 // widgetSyncProvider — zentraler Riverpod-Knoten, der alle iOS-Home-Screen-
@@ -75,7 +76,9 @@ final widgetSyncProvider = Provider<void>((ref) {
     final access = (s == null || !s.isConfigured || s.apiToken.isEmpty)
         ? null
         : <String, dynamic>{
-            'url': s.serverUrl,
+            // Standardadresse, nicht die evtl. aktive WLAN-Adresse: die
+            // Widgets laden auch, wenn das Handy längst unterwegs ist.
+            'url': s.primaryServerUrl,
             'token': s.apiToken,
             if (s.optionalHeaders.isNotEmpty) 'headers': s.optionalHeaders,
             if (s.shoppingListId.isNotEmpty) 'listId': s.shoppingListId,
@@ -364,13 +367,8 @@ List<Map<String, dynamic>> _mapShoppingForWatch(
 /// an die Uhr gesendet, weil Swift/Kotlin einen anderen String-hashCode haben
 /// und die Fallback-Farbe sonst nicht matchen würde.
 String _categoryColorHex(String? hex, String name) {
-  if (hex != null && hex.trim().isNotEmpty) {
-    var h = hex.replaceAll('#', '').trim();
-    if (h.length == 8) h = h.substring(2); // ARGB → RGB (Alpha strippen)
-    if (h.length == 6 && int.tryParse(h, radix: 16) != null) {
-      return h.toUpperCase();
-    }
-  }
+  final fromServer = normalizeHexRgb(hex);
+  if (fromServer != null) return fromServer;
   // Spiegelt die Material-Palette aus shoppingCategoryColor (gleiche Reihenfolge).
   const palette = [
     '009688',

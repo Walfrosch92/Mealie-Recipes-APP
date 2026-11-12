@@ -799,30 +799,26 @@ class CookFriendsNotifier extends Notifier<CookFriendsState> {
         break;
 
       case PeerMessageType.toggleIngredient:
-        if (current == null) break;
-        final i = msg.payload['index'] as int;
-        final recipeId = _resolveRecipeId(msg, current);
-        if (recipeId == null) break;
-        final next = _applyToggleIngredient(current, recipeId, i);
-        state = state.copyWith(sharedState: next);
-        _propagateToggleToLocal(recipeId, i, ingredient: true);
-        if (isHost) sendMessage(PeerMessage.fullStateSync(next));
-        break;
-
       case PeerMessageType.toggleInstruction:
         if (current == null) break;
-        final i = msg.payload['index'] as int;
+        final ingredient = msg.type == PeerMessageType.toggleIngredient;
+        final i = msg.payload['index'];
+        // Index kommt von einem fremden Gerät im WLAN → begrenzen, sonst
+        // ließe sich die Haken-Liste auf Millionen Einträge aufblähen.
+        if (i is! int || i < 0 || i >= _maxToggleIndex) break;
         final recipeId = _resolveRecipeId(msg, current);
         if (recipeId == null) break;
-        final next = _applyToggleInstruction(current, recipeId, i);
+        final next = _applyToggle(current, recipeId, i, ingredient: ingredient);
         state = state.copyWith(sharedState: next);
-        _propagateToggleToLocal(recipeId, i, ingredient: false);
+        _propagateToggleToLocal(recipeId, i, ingredient: ingredient);
         if (isHost) sendMessage(PeerMessage.fullStateSync(next));
         break;
 
       case PeerMessageType.setMultiplier:
         if (current == null) break;
-        final m = (msg.payload['multiplier'] as num).toDouble();
+        final raw = msg.payload['multiplier'];
+        if (raw is! num || raw <= 0 || raw > 100) break;
+        final m = raw.toDouble();
         final recipeId = _resolveRecipeId(msg, current);
         if (recipeId == null) break;
         final updated = current.recipes
@@ -944,30 +940,23 @@ class CookFriendsNotifier extends Notifier<CookFriendsState> {
     _guestMaterializedIds.clear();
   }
 
-  SharedSessionState _applyToggleIngredient(
-      SharedSessionState s, String recipeId, int index) {
-    final updated = s.recipes.map((r) {
-      if (r.recipeId != recipeId) return r;
-      final list = List<bool>.from(r.completedIngredients);
-      while (list.length <= index) {
-        list.add(false);
-      }
-      list[index] = !list[index];
-      return r.copyWith(completedIngredients: list);
-    }).toList();
-    return s.copyWith(recipes: updated);
-  }
+  /// Obergrenze für Zutaten-/Schritt-Indizes aus Peer-Nachrichten.
+  static const _maxToggleIndex = 1000;
 
-  SharedSessionState _applyToggleInstruction(
-      SharedSessionState s, String recipeId, int index) {
+  SharedSessionState _applyToggle(
+      SharedSessionState s, String recipeId, int index,
+      {required bool ingredient}) {
     final updated = s.recipes.map((r) {
       if (r.recipeId != recipeId) return r;
-      final list = List<bool>.from(r.completedInstructions);
+      final list = List<bool>.from(
+          ingredient ? r.completedIngredients : r.completedInstructions);
       while (list.length <= index) {
         list.add(false);
       }
       list[index] = !list[index];
-      return r.copyWith(completedInstructions: list);
+      return ingredient
+          ? r.copyWith(completedIngredients: list)
+          : r.copyWith(completedInstructions: list);
     }).toList();
     return s.copyWith(recipes: updated);
   }

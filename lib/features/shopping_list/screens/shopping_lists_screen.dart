@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/swipe_context_menu.dart';
+import '../../../shared/widgets/app_snack.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/permissions_provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/animations.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../../organizers/screens/organizers_screen.dart'
@@ -27,10 +31,7 @@ class ShoppingListsScreen extends ConsumerWidget {
   const ShoppingListsScreen({super.key});
 
   void _error(BuildContext context, String fallback, Object e) {
-    if (!context.mounted) return;
-    final detail = mealieErrorMessage(e);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(detail == null ? fallback : '$fallback: $detail')));
+    showErrorSnack(context, fallback, e);
   }
 
   Future<void> _create(BuildContext context, WidgetRef ref) async {
@@ -77,7 +78,7 @@ class ShoppingListsScreen extends ConsumerWidget {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -102,7 +103,6 @@ class ShoppingListsScreen extends ConsumerWidget {
       isScrollControlled: true,
       context: context,
       useRootNavigator: true,
-      backgroundColor: context.appCard,
       builder: (ctx) => SafeArea(
         child: SingleChildScrollView(
 // Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
@@ -184,23 +184,9 @@ class ShoppingListsScreen extends ConsumerWidget {
           top: false,
           child: async.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(userErrorMessage(e),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: context.appFgSub)),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(shoppingListsProvider),
-                      child: Text(l.retry),
-                    ),
-                  ],
-                ),
-              ),
+            error: (e, _) => ErrorRetryView(
+              error: e,
+              onRetry: () => ref.invalidate(shoppingListsProvider),
             ),
             data: (lists) => RefreshIndicator(
               onRefresh: ref.read(shoppingListsProvider.notifier).refresh,
@@ -216,24 +202,25 @@ class ShoppingListsScreen extends ConsumerWidget {
                     index: i,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: Slidable(
+                      child: SwipeContextMenu(
+                          child: Slidable(
                         key: ValueKey(m['id']),
                         endActionPane: ActionPane(
                           motion: const DrawerMotion(),
-                          extentRatio: 0.5,
+                          extentRatio: AppTokens.swipeExtent(2),
                           children: [
                             SlidableAction(
                               onPressed: (_) => _rename(context, ref, m),
-                              backgroundColor: const Color(0xFF0A84FF),
+                              backgroundColor: AppTokens.swipeEdit,
                               foregroundColor: Colors.white,
-                              icon: Icons.edit,
+                              icon: Icons.edit_rounded,
                               label: l.renameAction,
                             ),
                             SlidableAction(
                               onPressed: (_) => _delete(context, ref, m),
-                              backgroundColor: Colors.red,
+                              backgroundColor: AppTokens.swipeDelete,
                               foregroundColor: Colors.white,
-                              icon: Icons.delete,
+                              icon: Icons.delete_outline_rounded,
                               label: l.delete,
                             ),
                           ],
@@ -262,7 +249,8 @@ class ShoppingListsScreen extends ConsumerWidget {
                                   height: 38,
                                   decoration: BoxDecoration(
                                     gradient: AppTokens.accentGradient,
-                                    borderRadius: BorderRadius.circular(11),
+                                    borderRadius:
+                                        BorderRadius.circular(AppTokens.rXs),
                                   ),
                                   child: const Icon(Icons.shopping_cart_rounded,
                                       color: Colors.white, size: 20),
@@ -297,7 +285,7 @@ class ShoppingListsScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      ),
+                      )),
                     ),
                   );
                 },
@@ -371,19 +359,21 @@ class _LabelOrderScreenState extends ConsumerState<LabelOrderScreen> {
         actions: [
           // Neue Bezeichnung — Mealie hängt sie automatisch ans Ende jeder
           // Liste an; danach die Reihenfolge frisch laden.
-          IconButton(
-            tooltip: l.newLabel,
-            icon: const Icon(Icons.add_rounded),
-            onPressed: _saving
-                ? null
-                : () async {
-                    final created = await createLabelInteractive(context, ref);
-                    if (created != null && mounted) {
-                      setState(() => _settings = null);
-                      await _load();
-                    }
-                  },
-          ),
+          if (ref.watch(mayEditOrganizerExtrasProvider))
+            IconButton(
+              tooltip: l.newLabel,
+              icon: const Icon(Icons.add_rounded),
+              onPressed: _saving
+                  ? null
+                  : () async {
+                      final created =
+                          await createLabelInteractive(context, ref);
+                      if (created != null && mounted) {
+                        setState(() => _settings = null);
+                        await _load();
+                      }
+                    },
+            ),
           TextButton(
             onPressed: (settings == null || settings.isEmpty || _saving)
                 ? null

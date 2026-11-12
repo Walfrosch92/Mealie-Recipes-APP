@@ -123,14 +123,14 @@ class _BackupsScreenState extends ConsumerState<BackupsScreen> {
                 const SizedBox(height: 8),
                 ToolNotice(l.backupCannotBeUndone, danger: true),
                 Text(l.backupPostgresNote,
-                    style: TextStyle(color: ctx.appFgSub, fontSize: 12.5)),
+                    style: TextStyle(color: ctx.appFgSub, fontSize: 13)),
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                   value: acknowledged,
                   onChanged: (v) => setLocal(() => acknowledged = v ?? false),
                   title: Text(l.backupAcknowledge,
-                      style: TextStyle(color: ctx.appFg, fontSize: 13.5)),
+                      style: TextStyle(color: ctx.appFg, fontSize: 14)),
                 ),
               ],
             ),
@@ -140,7 +140,7 @@ class _BackupsScreenState extends ConsumerState<BackupsScreen> {
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(l.cancel)),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: AppTokens.dangerButton,
               onPressed: acknowledged ? () => Navigator.pop(ctx, true) : null,
               child: Text(l.backupRestore),
             ),
@@ -205,8 +205,7 @@ class _BackupsScreenState extends ConsumerState<BackupsScreen> {
                           color: context.appFg, fontWeight: FontWeight.w600)),
                   subtitle: Text(
                       '${formatToolDate(context, b['date'])} · ${b['size'] ?? ''}',
-                      style:
-                          TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                      style: TextStyle(color: context.appFgSub, fontSize: 13)),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

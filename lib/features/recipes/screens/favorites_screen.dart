@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/providers/settings_provider.dart';
@@ -9,6 +10,7 @@ import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/recipes_provider.dart';
 import 'recipe_list_screen.dart' show RecipeCard;
+import '../../../shared/widgets/empty_state_view.dart';
 
 // ---------------------------------------------------------------------------
 // Favoriten (Kachel) — nur die „geherzten" Rezepte des angemeldeten Nutzers
@@ -44,19 +46,13 @@ class FavoritesScreen extends ConsumerWidget {
                     Center(child: CircularProgressIndicator()),
                   ])
                 : recipes.isEmpty
-                    ? ListView(children: [
-                        const SizedBox(height: 80),
-                        Icon(Icons.favorite_border_rounded,
-                            size: 56, color: context.appFgTertiary),
-                        const SizedBox(height: 14),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Text(l.favoritesEmpty,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: context.appFgSub, fontSize: 15)),
-                        ),
-                      ])
+                    ? EmptyStateView(
+                        icon: Icons.favorite_rounded,
+                        message: l.favoritesEmpty,
+                        actionLabel: l.emptyBrowseRecipes,
+                        actionIcon: Icons.restaurant_menu_rounded,
+                        onAction: () => context.go('/recipes'),
+                      )
                     : ListView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
                         itemCount: recipes.length,

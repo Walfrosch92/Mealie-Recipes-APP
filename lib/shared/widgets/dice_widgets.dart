@@ -46,7 +46,7 @@ class DiceButton extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               gradient: AppTokens.accentGradient,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTokens.rXs),
               boxShadow: enabled ? context.appAccentGlow : null,
             ),
             child: Icon(Icons.casino_rounded,
@@ -73,7 +73,7 @@ class DiceRecipeCard extends StatelessWidget {
     required this.baseUrl,
     required this.token,
     required this.onTap,
-    this.trailingIcon = Icons.add_circle,
+    this.trailingIcon = Icons.add_circle_rounded,
   });
 
   String get _imageUrl =>
@@ -103,7 +103,6 @@ class DiceRecipeCard extends StatelessWidget {
                 child: RecipeImage(
                   recipeId: recipe.id,
                   imageUrl: _imageUrl,
-                  httpHeaders: {'Authorization': 'Bearer $token'},
                   placeholder: _placeholder,
                 ),
               ),
@@ -162,7 +161,6 @@ Future<void> showRandomRecipesSheet(
     useRootNavigator: true,
     useSafeArea: true,
     isScrollControlled: true,
-    backgroundColor: context.appCard,
     builder: (_) =>
         _RandomRecipesSheet(pool: pool, baseUrl: baseUrl, token: token),
   );

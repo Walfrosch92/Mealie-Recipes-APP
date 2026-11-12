@@ -100,8 +100,7 @@ class _BiometricLockScreenState extends ConsumerState<BiometricLockScreen> {
                   if (_failed) ...[
                     const SizedBox(height: 16),
                     Text(l.biometricFailed,
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.error)),
+                        style: TextStyle(color: AppTokens.danger)),
                   ],
                   const SizedBox(height: 32),
                   GradientButton(

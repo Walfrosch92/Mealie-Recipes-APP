@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/gradient_button.dart' show SheetHandle;
+import '../../../shared/widgets/sheet_title.dart';
+import '../../../shared/widgets/app_search_field.dart';
+import '../../../shared/widgets/app_snack.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -10,12 +14,14 @@ import '../../../core/providers/permissions_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/read_only_banner.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../providers/users_provider.dart';
 import '../../../shared/widgets/user_avatar.dart';
 import '../../../shared/widgets/photo_source_sheet.dart';
+import '../../../shared/widgets/search_jump.dart';
 
 // ---------------------------------------------------------------------------
 // Benutzerverwaltung — wie in der Mealie-Webapp, abgestuft nach Rechten:
@@ -33,24 +39,57 @@ import '../../../shared/widgets/photo_source_sheet.dart';
 // ---------------------------------------------------------------------------
 
 class UserManagementScreen extends ConsumerStatefulWidget {
-  const UserManagementScreen({super.key});
+  /// Eigenes Konto sofort öffnen (Konto-Menü der Tab-Leiste, `?self=1`);
+  /// nach dem Schließen geht es zurück, wo man herkam.
+  final bool openSelf;
+  const UserManagementScreen({super.key, this.openSelf = false});
 
   @override
   ConsumerState<UserManagementScreen> createState() =>
       _UserManagementScreenState();
 }
 
-class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
+class _UserManagementScreenState extends ConsumerState<UserManagementScreen>
+    with SearchJumpMixin {
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openSelf) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final me = ref.read(currentUserProvider);
+        if (me == null || !mounted) return;
+        await _openSelf(me);
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
+
+  /// Eigenes Konto — für Nicht-Admins das Konto-Sheet (Name, E-Mail,
+  /// Passwort, Bild), für Admins dasselbe Bearbeiten-Sheet wie in der Liste.
+  Future<void> _openSelf(Map<String, dynamic> me) {
+    final perms = ref.read(userPermissionsProvider);
+    return showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) =>
+          perms.admin ? _AdminUserSheet(user: me) : _SelfSheet(user: me),
+    );
+  }
 
   void _snack(String text) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    showAppSnack(context, text);
   }
 
   void _error(String fallback, Object e) {
-    final detail = mealieErrorMessage(e);
-    _snack(detail ?? fallback);
+    if (!mounted) return;
+    showErrorSnack(context, fallback, e);
   }
 
   Future<void> _openUser(Map<String, dynamic>? user) async {
@@ -61,7 +100,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         useRootNavigator: true,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: context.appCard,
         builder: (_) => _SelfSheet(user: user),
       );
     } else if (perms.admin) {
@@ -70,7 +108,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         useRootNavigator: true,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: context.appCard,
         builder: (_) => _AdminUserSheet(user: user),
       );
     } else if (perms.canManage && user != null && user['id'] != perms.id) {
@@ -79,7 +116,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         useRootNavigator: true,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: context.appCard,
         builder: (_) => _PermissionsSheet(user: user),
       );
     }
@@ -90,7 +126,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         useRootNavigator: true,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: context.appCard,
         builder: (_) => const _InviteSheet(),
       );
 
@@ -155,23 +190,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           top: false,
           child: async.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(userErrorMessage(e),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: context.appFgSub)),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => ref.invalidate(usersProvider),
-                      child: Text(l.retry),
-                    ),
-                  ],
-                ),
-              ),
+            error: (e, _) => ErrorRetryView(
+              error: e,
+              onRetry: () => ref.invalidate(usersProvider),
             ),
             data: (users) {
               final terms = searchTerms(_query);
@@ -183,6 +204,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       ].whereType<String>().join(' '))
                           .contains))
                   .toList();
+              // Sprung aus der globalen Suche (?highlight=<id>).
+              handleSearchJump(
+                  context, [for (final u in shown) u['id']?.toString() ?? '']);
               return Column(
                 children: [
                   if (!perms.admin && perms.canManage)
@@ -192,27 +216,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   if (perms.mayManageUsers)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                      child: TextField(
+                      child: AppSearchField(
                         onChanged: (v) => setState(() => _query = v),
-                        onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                        decoration: InputDecoration(
-                          hintText: l.search,
-                          prefixIcon: Icon(Icons.search_rounded,
-                              color: context.appFgSub),
-                          filled: true,
-                          fillColor: context.appCard,
-                          isDense: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppTokens.rSm),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
                       ),
                     ),
                   Expanded(
                     child: RefreshIndicator(
                       onRefresh: ref.read(usersProvider.notifier).refresh,
                       child: ListView.builder(
+                        controller: searchScroll,
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: shown.length,
@@ -226,12 +238,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             index: i,
                             child: Padding(
                               padding: const EdgeInsets.only(bottom: 10),
-                              child: _UserCard(
-                                user: u,
-                                isMe: isMe,
-                                showHousehold: perms.admin,
-                                onTap: tappable ? () => _openUser(u) : null,
-                              ),
+                              child: searchHighlight(
+                                  u['id']?.toString() ?? '',
+                                  _UserCard(
+                                    user: u,
+                                    isMe: isMe,
+                                    showHousehold: perms.admin,
+                                    onTap: tappable ? () => _openUser(u) : null,
+                                  )),
                             ),
                           );
                         },
@@ -336,8 +350,8 @@ class _UserCard extends StatelessWidget {
                       child: Text(sub,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              color: context.appFgSub, fontSize: 12.5)),
+                          style:
+                              TextStyle(color: context.appFgSub, fontSize: 13)),
                     ),
                   if (permIcons.isNotEmpty)
                     Padding(
@@ -395,14 +409,16 @@ class _PermissionSwitches extends StatelessWidget {
   }
 }
 
-Widget _sheetTitle(BuildContext context, String text) => Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Text(text,
-          style: TextStyle(
-              fontFamily: 'PlusJakartaSans',
-              color: context.appFg,
-              fontSize: 20,
-              fontWeight: FontWeight.w800)),
+Widget _sheetTitle(BuildContext context, String text) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Center(child: SheetHandle()),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: SheetTitle(text),
+        ),
+      ],
     );
 
 Widget _section(BuildContext context, String text) => Padding(
@@ -560,6 +576,7 @@ class _AdminUserSheetState extends ConsumerState<_AdminUserSheet> {
         // Mit Knopf bleibt eine SnackBar seit Flutter 3.29 sonst STEHEN
         // (persist = action != null) — erst ein Neustart räumte sie weg.
         persist: false,
+        duration: const Duration(seconds: 5),
         content: Text(l.passwordResetLinkCopied),
         action: SnackBarAction(
             label: l.assetsShare,
@@ -586,7 +603,7 @@ class _AdminUserSheetState extends ConsumerState<_AdminUserSheet> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -633,7 +650,7 @@ class _AdminUserSheetState extends ConsumerState<_AdminUserSheet> {
     final knownHousehold = _households.any((h) => h['id'] == _householdId);
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+          20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -889,7 +906,7 @@ class _SelfSheetState extends ConsumerState<_SelfSheet> {
     final canChangePassword = usesMealiePassword(_u);
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+          20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -976,7 +993,6 @@ Future<void> showChangePasswordSheet(BuildContext context) =>
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: context.appCard,
       builder: (_) => const _ChangePasswordSheet(),
     );
 
@@ -1054,7 +1070,7 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+          20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
 // Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
           child: Column(
@@ -1134,7 +1150,7 @@ class _PermissionsSheetState extends ConsumerState<_PermissionsSheet> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: SingleChildScrollView(
 // Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
           child: Column(
@@ -1231,7 +1247,7 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+          20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/accounts/account_scope.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/services/watch_bridge.dart';
 
@@ -123,6 +124,32 @@ class CookingSession {
   }
 }
 
+/// Eine laufende Session auf einen neueren Rezeptstand heben (z. B. am PC
+/// geänderter Schritttext). Die Session hält eine KOPIE des Rezepts vom
+/// Kochstart und wird persistiert — ohne Abgleich zeigte der Kochmodus den
+/// alten Stand, bis man die Session beendete. Abhaken bleibt erhalten,
+/// solange die Anzahl der Zutaten/Schritte/Utensilien gleich ist; sonst
+/// passen die Indizes nicht mehr und die jeweilige Liste beginnt neu.
+/// Die Seite wird auf den neuen Seitenumfang begrenzt.
+/// Liefert `null`, wenn sich am Rezept nichts geändert hat.
+CookingSession? sessionWithFreshRecipe(CookingSession s, RecipeDetail fresh) {
+  if (jsonEncode(s.recipe.toJson()) == jsonEncode(fresh.toJson())) return null;
+  List<bool>? keep(List<bool> old, int len) => old.length == len ? old : null;
+  final next = CookingSession(
+    slug: s.slug,
+    recipe: fresh,
+    completedIngredients:
+        keep(s.completedIngredients, fresh.recipeIngredient.length),
+    completedInstructions:
+        keep(s.completedInstructions, fresh.recipeInstructions.length),
+    completedTools: keep(s.completedTools, fresh.tools.length),
+    quantityMultiplier: s.quantityMultiplier,
+  );
+  return next.copyWith(
+      currentInstructionIndex:
+          s.currentInstructionIndex.clamp(0, next.pageCount - 1));
+}
+
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
@@ -175,7 +202,13 @@ class CookingSessionsNotifier extends Notifier<List<CookingSession>> {
   /// Schreibt den aktuellen Stand fire-and-forget zurück. Wird nach JEDER
   /// Mutation gerufen — so überlebt der genaue Fortschritt (aktueller Schritt,
   /// abgehakte Zutaten/Schritte, Skalierung) einen Prozess-Kill.
+  /// Kontowechsel-Epoche beim Erzeugen. Ein Notifier des vorigen Kontos
+  /// (Uhr-/Kochen-mit-Freunden-Ereignis kurz nach dem Wechsel) darf seine
+  /// Sessions nicht über die des neuen Kontos schreiben.
+  final int _epoch = AccountScope.epoch;
+
   void _persist() {
+    if (!AccountScope.isCurrent(_epoch)) return;
     final snapshot = jsonEncode(state.map((s) => s.toJson()).toList());
     SharedPreferences.getInstance()
         .then((p) => p.setString(_kKey, snapshot))
@@ -231,8 +264,33 @@ class CookingSessionsNotifier extends Notifier<List<CookingSession>> {
   void startSession(RecipeDetail recipe) {
     // Key sessions by recipe.id (the canonical identifier used by routes/detail)
     final existing = state.indexWhere((s) => s.slug == recipe.id);
-    if (existing != -1) return; // already active
+    if (existing != -1) {
+      // Läuft schon → Fortschritt behalten, aber auf den aktuellen Stand.
+      refreshRecipes([recipe]);
+      return;
+    }
     state = [...state, CookingSession(slug: recipe.id, recipe: recipe)];
+    _persist();
+  }
+
+  /// Laufende Sessions mit neueren Rezeptständen abgleichen (aufgerufen von
+  /// [startSession] und vom Rezept-Provider nach jedem Server-Abgleich).
+  void refreshRecipes(Iterable<RecipeDetail> recipes) {
+    if (state.isEmpty) return;
+    final byId = {for (final r in recipes) r.id: r};
+    var changed = false;
+    final next = [
+      for (final s in state)
+        if (byId[s.slug] case final fresh?)
+          sessionWithFreshRecipe(s, fresh) ?? s
+        else
+          s
+    ];
+    for (var i = 0; i < next.length; i++) {
+      if (!identical(next[i], state[i])) changed = true;
+    }
+    if (!changed) return;
+    state = next;
     _persist();
   }
 

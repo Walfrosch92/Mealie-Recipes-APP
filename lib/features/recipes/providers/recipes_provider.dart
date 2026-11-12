@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/painting.dart' show PaintingBinding;
+import 'package:flutter_cache_manager/flutter_cache_manager.dart'
+    show DefaultCacheManager;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +17,7 @@ import '../../../core/services/log_manager.dart';
 import '../../../core/services/recipe_detail_cache.dart';
 import '../../../core/services/recipe_image_store.dart';
 import '../../../core/utils/search_match.dart';
+import '../../cooking_mode/providers/cooking_session_provider.dart';
 
 // ---------------------------------------------------------------------------
 // All recipes list — 1:1 zu Swift RecipeListViewModel.allRecipes ([RecipeDetail]).
@@ -141,6 +146,43 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
     await _startSync(() => _loadIncrementally(gen));
   }
 
+  /// „Jetzt synchronisieren" (Einstellungen, ⋮-Menü der Rezeptliste): ALLE
+  /// Rezepte neu laden — auch die, deren `dateUpdated` gleich geblieben ist
+  /// (Mealie erhöht ihn nicht bei jeder Änderung) — und den Bild-Cache
+  /// leeren. Ersetzt das bisherige „Token löschen + neu anmelden", mit dem
+  /// Nutzer veraltete Rezepte/Bilder loswurden (Support-Mails 2026-11-10).
+  /// Offline gespeicherte Bilder bleiben, sie werden über ihren Bild-Key
+  /// ohnehin bei Änderung neu geladen.
+  Future<void> forceFullSync() async {
+    LogManager.shared.log('🔄 Jetzt synchronisieren: Voll-Load + Bild-Cache');
+    try {
+      await DefaultCacheManager().emptyCache();
+    } catch (e) {
+      LogManager.shared.log('🔄 Bild-Cache leeren fehlgeschlagen: $e');
+    }
+    PaintingBinding.instance.imageCache
+      ..clear()
+      ..clearLiveImages();
+    await refresh();
+  }
+
+  /// Hat Mealie einem Rezept ein neues Bild gegeben (neuer `image`-Key), den
+  /// Bild-Cache für dieses Rezept leeren. Die Bild-URL ist stabil
+  /// (`…/images/original.webp`), ohne Evict zeigte die App das alte Foto
+  /// bis zu 30 Tage weiter — bei Änderungen in der Weboberfläche bzw. auf
+  /// einem anderen Gerät (der Editor der App räumt selbst auf).
+  void _evictChangedImages(
+      List<RecipeDetail> before, Iterable<RecipeDetail> after) {
+    if (before.isEmpty) return;
+    final serverUrl = ref.read(settingsProvider).valueOrNull?.serverUrl ?? '';
+    if (serverUrl.isEmpty) return;
+    final old = {for (final r in before) r.id: r.image};
+    for (final r in after) {
+      if (!old.containsKey(r.id) || old[r.id] == r.image) continue;
+      evictRecipeImages(serverUrl, r.id);
+    }
+  }
+
   /// Nach serverseitigen Massenänderungen (Massenimport, Migration,
   /// Massenaktionen der Rezeptdaten): nur die Differenz zum Server abgleichen
   /// — kein Voll-Reload. Läuft schon ein Abgleich, danach erneut.
@@ -254,13 +296,23 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
     final idx = current.indexWhere((r) => r.id == recipe.id);
     final updated = List<RecipeDetail>.of(current);
     if (idx >= 0) {
+      _evictChangedImages([current[idx]], [recipe]);
       updated[idx] = recipe;
     } else {
       updated.add(recipe);
     }
     state = AsyncData(updated);
+    _refreshCookingSessions([recipe]);
     _ensureImage(recipe);
     await RecipeDetailCacheManager.shared.replaceOne(recipe);
+  }
+
+  /// Ein laufender Kochmodus hält eine Kopie des Rezepts → nach jedem
+  /// Server-Stand mitziehen, sonst bleiben z. B. am PC geänderte Schritte
+  /// im Kochmodus alt (Support-Mail „Crash Override").
+  void _refreshCookingSessions(List<RecipeDetail> recipes) {
+    if (ref.read(cookingSessionsProvider).isEmpty) return;
+    ref.read(cookingSessionsProvider.notifier).refreshRecipes(recipes);
   }
 
   void removeById(String id) {
@@ -621,6 +673,7 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
 
   Future<void> _commit(List<RecipeDetail> list) async {
     state = AsyncData(list);
+    _refreshCookingSessions(list);
     await RecipeDetailCacheManager.shared.save(list);
   }
 
@@ -791,6 +844,10 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
   Future<RecipeDetail?> _fetchDetailOrNull(ApiService api, String id) async {
     try {
       final d = await api.fetchRecipeDetail(id, householdLastMade: false);
+      // Hier, nicht in _commit: Voll-Load/Abgleich setzen den State schon
+      // zwischendurch, am Ende gäbe es keinen alten Stand mehr zum Vergleich.
+      final before = state.valueOrNull?.where((r) => r.id == id).firstOrNull;
+      if (before != null) _evictChangedImages([before], [d]);
       // Mealie ≥ 3.29 schickt kein `lastMade` mehr mit (nur noch pro
       // Haushalt, siehe fetchRecipeDetail) — gecachten Wert behalten. Er
       // kann nur wachsen, ein älterer Stand wird also nie fälschlich
@@ -803,6 +860,19 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
     } catch (_) {
       return null;
     }
+  }
+}
+
+/// Rezeptbild (alle Größen) aus dem Bild-Cache werfen — die URL ist stabil,
+/// ein neues Bild auf dem Server bekäme die App sonst nicht zu sehen.
+void evictRecipeImages(String serverUrl, String recipeId) {
+  for (final size in const ['original', 'min-original', 'tiny-original']) {
+    final path = '/api/media/recipes/$recipeId/images/$size.webp';
+    unawaited(CachedNetworkImage.evictFromCache('$serverUrl$path'));
+    // Bei WLAN-Umschaltung liegt das Bild unter dem Pfad ohne Host
+    // (mediaCacheKey) — beide Varianten werfen, kostet nichts.
+    unawaited(
+        CachedNetworkImage.evictFromCache('$serverUrl$path', cacheKey: path));
   }
 }
 
@@ -873,6 +943,18 @@ class RecipeDetailNotifier extends FamilyAsyncNotifier<RecipeDetail, String> {
     }
   }
 
+  /// Detailansicht nach unten ziehen: dieses Rezept JETZT vom Server holen,
+  /// Bild-Cache inklusive, ohne Ladebildschirm. Wirft offline (der Aufrufer
+  /// zeigt die Meldung, der angezeigte Stand bleibt).
+  Future<void> reloadNow() async {
+    final api = ref.read(apiServiceProvider);
+    final fetched = await api.fetchRecipeDetail(arg);
+    final serverUrl = ref.read(settingsProvider).valueOrNull?.serverUrl ?? '';
+    if (serverUrl.isNotEmpty) evictRecipeImages(serverUrl, fetched.id);
+    state = AsyncData(fetched);
+    await ref.read(recipesProvider.notifier).upsertOne(fetched);
+  }
+
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
@@ -890,10 +972,6 @@ class RecipeDetailNotifier extends FamilyAsyncNotifier<RecipeDetail, String> {
       }
     });
   }
-
-  void setRecipe(RecipeDetail recipe) {
-    state = AsyncData(recipe);
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -907,6 +985,10 @@ enum RecipeSort {
   dateOldest,
   prepTimeShort,
   prepTimeLong,
+  // Gesamtzeit (wie Mealie 3.30 „Gesamtzeit“) — lokal sortiert, geht daher
+  // mit jedem Server.
+  totalTimeShort,
+  totalTimeLong,
   ratingHighest,
   ratingLowest,
 }
@@ -1074,18 +1156,18 @@ final filteredRecipesProvider = Provider<List<RecipeDetail>>((ref) {
     data: (recipes) {
       var list = recipes.toList();
 
-      // Text search
-      final terms = searchTerms(filter.query);
-      if (terms.isNotEmpty) {
-        list = list.where((r) => recipeMatchesSearch(r, terms)).toList();
-      }
-
       // Kategorien/Schlagworte/Utensilien/Lebensmittel/Haushalt
       if (filter.hasFilters) {
         list = list.where((r) => recipeMatchesFilter(r, filter)).toList();
       }
 
       applyRecipeSort(list, filter.sort);
+
+      // Textsuche: Name, Beschreibung, Schlagworte, Kategorien UND Zutaten
+      // („Olivenöl“ findet Rezepte mit Olivenöl). Namenstreffer stehen vorn,
+      // innerhalb jeder Stufe gilt die gewählte Sortierung.
+      final terms = searchTerms(filter.query);
+      if (terms.isNotEmpty) list = searchRecipesTiered(list, terms);
       return list;
     },
     loading: () => [],
@@ -1111,6 +1193,11 @@ void applyRecipeSort(List<RecipeDetail> list, RecipeSort sort) {
       list.sort((a, b) => (a.prepTime ?? 9999).compareTo(b.prepTime ?? 9999));
     case RecipeSort.prepTimeLong:
       list.sort((a, b) => (b.prepTime ?? 0).compareTo(a.prepTime ?? 0));
+    case RecipeSort.totalTimeShort:
+      list.sort(
+          (a, b) => (a.totalTime ?? 1 << 30).compareTo(b.totalTime ?? 1 << 30));
+    case RecipeSort.totalTimeLong:
+      list.sort((a, b) => (b.totalTime ?? -1).compareTo(a.totalTime ?? -1));
     case RecipeSort.ratingHighest:
       list.sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
     case RecipeSort.ratingLowest:

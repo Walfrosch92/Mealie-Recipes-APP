@@ -4,8 +4,10 @@ import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show PlatformException;
+import '../../../shared/widgets/tap_area.dart';
+import 'package:flutter/services.dart' show Clipboard, PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/mealie_version.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -16,11 +18,14 @@ import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/video_url.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/async_action_button.dart';
 import '../../recipes/providers/recipes_provider.dart';
 import '../../webapp_tools/widgets/tool_widgets.dart' show pickToolFile;
+import '../widgets/import_options_sheet.dart';
+import '../widgets/import_progress_panel.dart';
 
 // ---------------------------------------------------------------------------
 // Add Recipe / Upload — mirrors iOS RecipeUploadView 1:1
@@ -45,6 +50,11 @@ class ImportRecipeScreen extends ConsumerStatefulWidget {
 }
 
 enum _UploadState { idle, preparing, uploading }
+
+/// Welcher Import gerade läuft — jede Box zeigt Fortschritt nur für ihren
+/// eigenen (vorher zeigte die Foto-Box auch bei Link/Einfügen/ZIP „Wird
+/// hochgeladen …", #45).
+enum _ImportKind { url, pages, paste, zip }
 
 class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
   // Manuell anlegen (wie „Rezept erstellen" in der Webapp): nur der Name,
@@ -85,8 +95,51 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
   /// Video-Erkennung ihn nicht mehr automatisch um.
   bool _aiToggledByUser = false;
 
-  /// Letzte Fortschrittsmeldung des Servers („Video wird heruntergeladen …").
-  String? _aiProgress;
+  /// Fortschrittsmeldungen des Servers in Eingangsreihenfolge („Video wird
+  /// heruntergeladen …", „Audio wird transkribiert …").
+  final List<String> _aiSteps = [];
+
+  /// Laufender Import (null = keiner), steuert, WO der Fortschritt steht.
+  _ImportKind? _active;
+
+  /// Am Fortschritt des laufenden Imports — wird beim Start ins Bild
+  /// gescrollt, falls die Box gerade außerhalb liegt.
+  final _progressKey = GlobalKey();
+
+  void _begin(_ImportKind kind, {_UploadState state = _UploadState.uploading}) {
+    setState(() {
+      _state = state;
+      _active = kind;
+      _aiSteps.clear();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _progressKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+      Scrollable.ensureVisible(ctx,
+          alignment: 0.5,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic);
+    });
+  }
+
+  /// Fortschrittsmeldung von /create/ai/stream als neuer Schritt.
+  void _onAiProgress(String msg) {
+    final m = msg.trim();
+    if (!mounted || m.isEmpty) return;
+    // Gleiche Meldung zweimal hintereinander = derselbe Schritt.
+    if (_aiSteps.isNotEmpty && _aiSteps.last == m) return;
+    setState(() => _aiSteps.add(m));
+  }
+
+  void _end() {
+    if (!mounted) return;
+    setState(() {
+      _state = _UploadState.idle;
+      _active = null;
+      _aiSteps.clear();
+    });
+  }
 
   static const int _maxFileSize = 10 * 1024 * 1024; // 10 MB (iOS maxFileSize)
 
@@ -107,7 +160,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       _urlCtrl.text = shared;
       // Geteiltes Rezeptvideo (z. B. aus der Instagram-App): KI-Schalter
       // vorbelegen — wie beim Eintippen, bleibt frei umschaltbar.
-      _useAi = looksLikeVideoUrl(shared);
+      _useAi = _aiForVideo(shared);
     }
   }
 
@@ -126,9 +179,16 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
     if (mounted) setState(() {});
   }
 
+  /// KI-Schalter vorbelegen: bei Video-Links nur, wenn im Zahnrad
+  /// „Gründlich" gewählt ist (Standard). „Schnell" = /create/url, eine
+  /// einzige KI-Anfrage auf dem Server (Issue #45).
+  bool _aiForVideo(String url) =>
+      looksLikeVideoUrl(url) &&
+      (ref.read(settingsProvider).valueOrNull?.useImportVideoAi ?? true);
+
   void _onUrlChanged(String text) {
     setState(() {
-      if (!_aiToggledByUser) _useAi = looksLikeVideoUrl(text);
+      if (!_aiToggledByUser) _useAi = _aiForVideo(text);
     });
   }
 
@@ -159,18 +219,14 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       return;
     }
 
-    setState(() {
-      _state = _UploadState.uploading;
-      _aiProgress = null;
-    });
+    _begin(_ImportKind.url);
     final api = ref.read(apiServiceProvider);
     final aiFailedText = AppLocalizations.of(context)!.aiImportFailed;
     try {
       final RecipeDetail detail;
       if (_useAi) {
-        final slug = await api.importRecipeWithAi(url, onProgress: (msg) {
-          if (mounted) setState(() => _aiProgress = msg);
-        });
+        final slug =
+            await api.importRecipeWithAi(url, onProgress: _onAiProgress);
         detail = await api.fetchRecipeDetail(slug);
       } else {
         detail = await api.importRecipeFromUrl(url);
@@ -184,12 +240,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       // DioException, sofern vorhanden.
       _showError(userErrorMessage(e, _useAi ? aiFailedText : null));
     } finally {
-      if (mounted) {
-        setState(() {
-          _state = _UploadState.idle;
-          _aiProgress = null;
-        });
-      }
+      _end();
     }
   }
 
@@ -292,7 +343,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       return;
     }
 
-    setState(() => _state = _UploadState.preparing);
+    _begin(_ImportKind.pages, state: _UploadState.preparing);
     try {
       final imageFile = await _renderPdfToSingleImage(path);
       if (imageFile == null) {
@@ -302,7 +353,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
     } catch (e) {
       _showError(userErrorMessage(e));
     } finally {
-      if (mounted) setState(() => _state = _UploadState.idle);
+      _end();
     }
   }
 
@@ -310,11 +361,12 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
 
   Future<void> _createRecipeFromPages() async {
     if (_pages.isEmpty || _isBusy) return;
-    setState(() => _state = _UploadState.uploading);
+    _begin(_ImportKind.pages);
     try {
       final recipeId = await ref
           .read(apiServiceProvider)
-          .importRecipeFromImages(List<File>.of(_pages));
+          .importRecipeFromImages(List<File>.of(_pages),
+              onProgress: _onAiProgress);
       if (recipeId.isEmpty) throw Exception('No recipe returned');
       await _registerNewRecipe(recipeId);
       if (mounted) setState(() => _pages.clear());
@@ -325,7 +377,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       // Seiten noch einmal auszuwählen.
       _showError(userErrorMessage(e));
     } finally {
-      if (mounted) setState(() => _state = _UploadState.idle);
+      _end();
     }
   }
 
@@ -388,11 +440,65 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
 
   // ── ZIP-Import (Desktop, Mealie „Import from Zip") ─────────────────────
 
+  // ── Einfügen: Mealie-Export (JSON), schema.org-JSON oder HTML ────────────
+  //
+  // Mealie ≥ 3.30 erkennt ein eingefügtes Rezept aus einem Mealie-Export und
+  // übernimmt es mit voller Struktur (Lebensmittel, Einheiten, Schritt-
+  // Verknüpfungen); ältere Server lesen schema.org-Rezepte bzw. HTML.
+  Future<void> _importPasted() async {
+    final l = AppLocalizations.of(context)!;
+    final clip = (await Clipboard.getData(Clipboard.kTextPlain))?.text ?? '';
+    final looksLikeRecipe =
+        clip.trimLeft().startsWith('{') || clip.contains('<');
+    if (!mounted) return;
+    final ctrl = TextEditingController(text: looksLikeRecipe ? clip : '');
+    final data = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        backgroundColor: ctx.appCard,
+        title: Text(l.pasteRecipeTitle),
+        content: TextField(
+          controller: ctrl,
+          autofocus: ctrl.text.isEmpty,
+          minLines: 6,
+          maxLines: 12,
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+          decoration: InputDecoration(
+            hintText: l.pasteRecipeHint,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: Text(l.pasteRecipeImport)),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (data == null || data.trim().isEmpty || !mounted) return;
+    _begin(_ImportKind.paste);
+    try {
+      final api = ref.read(apiServiceProvider);
+      final slug = await api.importRecipeFromHtmlOrJson(data.trim());
+      final detail = await api.fetchRecipeDetail(slug);
+      await ref.read(recipesProvider.notifier).upsertOne(detail);
+      _showSuccess(detail.id);
+    } catch (e) {
+      _showError(userErrorMessage(e));
+    } finally {
+      _end();
+    }
+  }
+
   Future<void> _importZip() async {
     final l = AppLocalizations.of(context)!;
     final f = await pickToolFile(const ['zip']);
     if (f == null || !mounted) return;
-    setState(() => _state = _UploadState.uploading);
+    _begin(_ImportKind.zip);
     try {
       final slug =
           await ref.read(apiServiceProvider).importRecipeZip(f.bytes, f.name);
@@ -403,7 +509,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
     } catch (e) {
       _showError(userErrorMessage(e));
     } finally {
-      if (mounted) setState(() => _state = _UploadState.idle);
+      _end();
     }
   }
 
@@ -420,12 +526,12 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
       builder: (dialogContext) => AlertDialog(
         // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
         scrollable: true,
-        backgroundColor: context.appCard,
-        title:
-            Text(l.uploadSuccessTitle, style: TextStyle(color: context.appFg)),
+        backgroundColor: dialogContext.appCard,
+        title: Text(l.uploadSuccessTitle,
+            style: TextStyle(color: dialogContext.appFg)),
         content: hasRecipe
             ? Text(l.editImportedRecipeQuestion,
-                style: TextStyle(color: context.appFgSub))
+                style: TextStyle(color: dialogContext.appFgSub))
             : null,
         actions: hasRecipe
             ? [
@@ -463,13 +569,13 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
     final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.appCard,
-        title: Text(l.uploadErrorTitle, style: TextStyle(color: context.appFg)),
-        content: Text(message, style: TextStyle(color: context.appFgSub)),
+      builder: (dctx) => AlertDialog(
+        backgroundColor: dctx.appCard,
+        title: Text(l.uploadErrorTitle, style: TextStyle(color: dctx.appFg)),
+        content: Text(message, style: TextStyle(color: dctx.appFgSub)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dctx),
             child: Text(l.ok),
           ),
         ],
@@ -521,6 +627,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
           expand: true,
           icon: Icons.auto_awesome_rounded,
           label: l.createRecipeFromImages,
+          showBusySpinner: false,
           onPressed: _isBusy ? null : _createRecipeFromPages,
         ),
       ],
@@ -561,7 +668,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                 decoration: BoxDecoration(
                   color: isMain ? null : Colors.black.withValues(alpha: 0.6),
                   gradient: isMain ? AppTokens.accentGradient : null,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppTokens.rXs),
                 ),
                 child: Text(
                   isMain ? l.mainImageBadge : '${index + 1}',
@@ -579,7 +686,8 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
               child: Semantics(
                 button: true,
                 label: l.removePage,
-                child: GestureDetector(
+                child: TapArea(
+                  semanticLabel: AppLocalizations.of(context)!.removePage,
                   onTap: () => _removePage(index),
                   child: Container(
                     width: 24,
@@ -603,11 +711,21 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final streamPhotos =
+        ref.watch(settingsProvider).valueOrNull?.useImportStreamPhotos ?? true;
     return Scaffold(
       backgroundColor: context.appBg,
       appBar: AppBar(
         backgroundColor: context.appBg,
         elevation: 0,
+        actions: [
+          // Optionen des KI-Imports (Übersetzen, Kategorien & Tags) — #45.
+          IconButton(
+            tooltip: l.importOptionsTitle,
+            icon: const Icon(Icons.settings_rounded),
+            onPressed: () => showImportOptionsSheet(context),
+          ),
+        ],
       ),
       body: WithCookingModeFAB(
         child: SafeArea(
@@ -643,7 +761,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                           style: TextStyle(
                               fontFamily: 'PlusJakartaSans',
                               color: context.appFg,
-                              fontSize: 19,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.3)),
                       const SizedBox(height: 8),
@@ -693,6 +811,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                       const SizedBox(height: 12),
                       AsyncActionButton(
                         expand: true,
+                        showBusySpinner: false,
                         icon: _useAi ? Icons.auto_awesome_rounded : Icons.link,
                         label:
                             _useAi ? l.aiImportButton : l.uploadFromUrlButton,
@@ -701,26 +820,12 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                                 ? null
                                 : _uploadFromURL,
                       ),
-                      if (_isUploading && _useAi)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Row(
-                            children: [
-                              const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2)),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(_aiProgress ?? l.aiImportRunning,
-                                    style: TextStyle(
-                                        color: context.appFgSub,
-                                        fontSize: 13,
-                                        height: 1.35)),
-                              ),
-                            ],
-                          ),
+                      if (_active == _ImportKind.url)
+                        ImportProgressPanel(
+                          key: _progressKey,
+                          steps: _useAi ? _aiSteps : const [],
+                          label: _useAi ? l.importStarting : l.importRunning,
+                          hint: _useAi ? l.aiImportRunning : null,
                         ),
                     ],
                   ),
@@ -741,7 +846,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                           style: TextStyle(
                               fontFamily: 'PlusJakartaSans',
                               color: context.appFg,
-                              fontSize: 19,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.3)),
                       const SizedBox(height: 8),
@@ -789,27 +894,17 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                       // Spinner — mirrors iOS ProgressView("uploading_image"),
                       // beim PDF-Rendern mit eigenem Text (da wird noch nichts
                       // hochgeladen).
-                      if (_isBusy)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Center(
-                            child: Column(
-                              children: [
-                                const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2)),
-                                const SizedBox(height: 8),
-                                Text(
-                                    _isUploading
-                                        ? l.uploadingImage
-                                        : l.preparingPdf,
-                                    style: TextStyle(
-                                        color: context.appFgSub, fontSize: 13)),
-                              ],
-                            ),
-                          ),
+                      if (_active == _ImportKind.pages)
+                        ImportProgressPanel(
+                          key: _progressKey,
+                          // Stream: Mealies Schritte live; bis zur ersten
+                          // Meldung läuft noch der Upload der Fotos.
+                          steps: _aiSteps,
+                          label: !_isUploading
+                              ? l.preparingPdf
+                              : (streamPhotos
+                                  ? l.importStarting
+                                  : l.aiImagesRunning),
                         ),
 
                       const SizedBox(height: 16),
@@ -850,6 +945,45 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                   child: Divider(height: 1),
                 ),
 
+                // ── Rezept einfügen (Mealie-Export, JSON, HTML) ───────────
+                _GroupBox(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l.pasteRecipeTitle,
+                          style: TextStyle(
+                              fontFamily: 'PlusJakartaSans',
+                              color: context.appFg,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3)),
+                      const SizedBox(height: 8),
+                      Text(
+                          ref.watch(mealie330Provider)
+                              ? l.pasteRecipeDescription330
+                              : l.pasteRecipeDescription,
+                          style:
+                              TextStyle(color: context.appFgSub, fontSize: 14)),
+                      const SizedBox(height: 12),
+                      AsyncActionButton(
+                        expand: true,
+                        icon: Icons.content_paste_rounded,
+                        label: l.pasteRecipeButton,
+                        showBusySpinner: false,
+                        onPressed: _isBusy ? null : _importPasted,
+                      ),
+                      if (_active == _ImportKind.paste)
+                        ImportProgressPanel(
+                            key: _progressKey, label: l.importRunning),
+                    ],
+                  ),
+                ),
+
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(height: 1),
+                ),
+
                 // ── Manuell anlegen ───────────────────────────────────
                 _GroupBox(
                   child: Column(
@@ -859,7 +993,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                           style: TextStyle(
                               fontFamily: 'PlusJakartaSans',
                               color: context.appFg,
-                              fontSize: 19,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.3)),
                       const SizedBox(height: 8),
@@ -922,7 +1056,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                             style: TextStyle(
                                 fontFamily: 'PlusJakartaSans',
                                 color: context.appFg,
-                                fontSize: 19,
+                                fontSize: 20,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.3)),
                         const SizedBox(height: 8),
@@ -937,6 +1071,7 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                             AsyncActionButton(
                               icon: Icons.folder_zip_rounded,
                               label: l.zipImportButton,
+                              showBusySpinner: false,
                               onPressed: _isBusy ? null : _importZip,
                             ),
                             OutlinedButton.icon(
@@ -951,6 +1086,9 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                             ),
                           ],
                         ),
+                        if (_active == _ImportKind.zip)
+                          ImportProgressPanel(
+                              key: _progressKey, label: l.importRunning),
                       ],
                     ),
                   ),
@@ -1067,7 +1205,7 @@ class _UploadButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    return GestureDetector(
+    return TapArea(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
@@ -1095,6 +1233,7 @@ class _UploadButton extends StatelessWidget {
               child: Text(label,
                   textAlign: TextAlign.center,
                   maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                       color: enabled ? Colors.white : context.appFgTertiary,
                       fontWeight: FontWeight.w700,

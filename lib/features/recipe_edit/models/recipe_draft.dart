@@ -58,12 +58,16 @@ class DraftCaps {
   /// an jeder Zutat.
   final bool legacyAmountFlags;
 
+  /// Dauer pro Schritt (`durationSeconds`, Mealie 3.30).
+  final bool stepDuration;
+
   const DraftCaps({
     this.timeSeconds = false,
     this.yieldQuantity = false,
     this.substitutions = false,
     this.noteReferences = false,
     this.legacyAmountFlags = false,
+    this.stepDuration = false,
   });
 
   factory DraftCaps.fromRaw(Map<String, dynamic> raw, {String? version}) {
@@ -81,6 +85,8 @@ class DraftCaps {
           new328,
       legacyAmountFlags:
           settings is Map && settings.containsKey('disableAmount'),
+      stepDuration: steps.any((s) => s.containsKey('durationSeconds')) ||
+          _atLeast(version, 3, 30),
     );
   }
 
@@ -503,6 +509,12 @@ class DraftStep {
   final TextEditingController text;
   final TextEditingController title;
   final TextEditingController summary;
+
+  /// Dauer in ganzen Minuten (Mealie ≥ 3.30, `durationSeconds`). Unverändert
+  /// bleibt der Server-Wert sekundengenau stehen; geändert zählen — wie in der
+  /// Webapp — ganze Minuten.
+  final TextEditingController duration;
+  final String _origDuration;
   bool showTitle;
   bool preview = false;
 
@@ -515,10 +527,20 @@ class DraftStep {
     required this.text,
     required this.title,
     required this.summary,
+    required this.duration,
     required this.showTitle,
     required this.ingredientRefs,
     required this.noteRefs,
-  });
+  }) : _origDuration = duration.text;
+
+  static String _minutesText(dynamic secs) =>
+      secs is num && secs > 0 ? '${(secs / 60).round()}' : '';
+
+  /// Hinterlegte Dauer in Sekunden (Server-Wert), für den Hinweis.
+  int? get savedDurationSeconds => switch (raw['durationSeconds']) {
+        final num n when n > 0 => n.toInt(),
+        _ => null,
+      };
 
   factory DraftStep.fromRaw(Map<String, dynamic> raw) {
     final t = _str(raw['title'])?.trim() ?? '';
@@ -527,6 +549,8 @@ class DraftStep {
       text: TextEditingController(text: _str(raw['text']) ?? ''),
       title: TextEditingController(text: t),
       summary: TextEditingController(text: _str(raw['summary']) ?? ''),
+      duration:
+          TextEditingController(text: _minutesText(raw['durationSeconds'])),
       showTitle: t.isNotEmpty,
       ingredientRefs: _refIds(raw['ingredientReferences']),
       noteRefs: _refIds(raw['noteReferences']),
@@ -539,6 +563,7 @@ class DraftStep {
         text: TextEditingController(text: text),
         title: TextEditingController(),
         summary: TextEditingController(),
+        duration: TextEditingController(),
         showTitle: section,
         ingredientRefs: [],
         noteRefs: [],
@@ -558,6 +583,7 @@ class DraftStep {
         showTitle ? title.text : '',
         ingredientRefs.join(','),
         noteRefs.join(','),
+        duration.text.trim(),
       ].join('¦');
 
   Map<String, dynamic> payload({
@@ -576,6 +602,10 @@ class DraftStep {
       m['noteReferences'] =
           _refPayload(raw['noteReferences'], noteRefs, noteIds);
     }
+    if (caps.stepDuration && duration.text.trim() != _origDuration) {
+      final minutes = int.tryParse(duration.text.trim()) ?? 0;
+      m['durationSeconds'] = minutes > 0 ? minutes * 60 : null;
+    }
     return m;
   }
 
@@ -583,6 +613,7 @@ class DraftStep {
     text.dispose();
     title.dispose();
     summary.dispose();
+    duration.dispose();
   }
 }
 
@@ -871,6 +902,9 @@ class RecipeDraft {
             'ingredientReferences': [
               for (final id in st.ingredientRefs) {'referenceId': id}
             ],
+            // Mealie ≥ 3.30 — fehlte es, löschte das Speichern die Dauer.
+            if (st.durationSeconds != null)
+              'durationSeconds': st.durationSeconds,
           }
       ],
       'notes': [

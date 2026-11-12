@@ -93,6 +93,12 @@ object WidgetServerSync {
         }
     }
 
+    /** Gilt der Zugang des Abrufs noch? (Benutzer wechseln ersetzt ihn.) */
+    private fun stillCurrent(context: Context, a: Access): Boolean {
+        val now = access(context) ?: return false
+        return now.url == a.url && now.token == a.token
+    }
+
     /** [force]: Drossel ignorieren (Einkaufserinnerung braucht den aktuellen Stand). */
     suspend fun refreshShopping(context: Context, force: Boolean = false) {
         if (!force && !due(context, "shopping")) return
@@ -110,6 +116,9 @@ object WidgetServerSync {
                 category = (i["label"] as? JsonObject)?.str("name")?.ifEmpty { null },
             )
         }
+        // Während des Abrufs das Konto gewechselt? Dann gehört das Ergebnis
+        // zum alten Konto und darf das Widget nicht mehr überschreiben.
+        if (!stillCurrent(context, a)) return
         WidgetSharedStore.saveShoppingRaw(context, JSON.encodeToString(items))
         markFetched(context, "shopping")
     }
@@ -141,6 +150,7 @@ object WidgetServerSync {
                 recipeId = recipe?.str("id")?.ifEmpty { null },
             )
         }
+        if (!stillCurrent(context, a)) return
         WidgetSharedStore.saveMealplanRaw(context, JSON.encodeToString(entries))
         markFetched(context, "mealplan")
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/app_bar_text_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -120,12 +121,12 @@ class _PendingRecipesSheetState extends ConsumerState<PendingRecipesSheet> {
       backgroundColor: context.appBg,
       appBar: AppBar(
         title: Text(l.pendingRecipesTitle),
-        leading: TextButton(
+        centerTitle: true,
+        leading: AppBarTextButton(
+          label: l.pendingRecipesDiscard,
           onPressed: _discard,
-          child: Text(l.pendingRecipesDiscard,
-              style: TextStyle(color: context.appFgSub)),
         ),
-        leadingWidth: 100,
+        leadingWidth: AppBarTextButton.leadingWidth,
       ),
       body: SafeArea(
         top: false,
@@ -170,7 +171,7 @@ class _PendingRecipesSheetState extends ConsumerState<PendingRecipesSheet> {
                               children: [
                                 Icon(
                                   selected
-                                      ? Icons.check_circle
+                                      ? Icons.check_circle_rounded
                                       : Icons.circle_outlined,
                                   size: 26,
                                   color: selected ? accent : context.appFgSub,
@@ -222,7 +223,7 @@ class _PendingRecipesSheetState extends ConsumerState<PendingRecipesSheet> {
                     disabledForegroundColor: context.appFgSub,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(AppTokens.rSm)),
                     textStyle: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w600),
                   ),

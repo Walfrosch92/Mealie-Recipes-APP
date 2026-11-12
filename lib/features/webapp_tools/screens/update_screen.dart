@@ -108,7 +108,7 @@ class UpdateScreen extends ConsumerWidget {
               title: Text(l.updateAutoTitle,
                   style: TextStyle(color: context.appFg)),
               subtitle: Text(l.updateAutoDescription,
-                  style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                  style: TextStyle(color: context.appFgSub, fontSize: 13)),
             ),
           ],
         ),
@@ -129,7 +129,7 @@ class UpdateScreen extends ConsumerWidget {
             children: [
               if (rel.publishedAt != null)
                 Text(formatToolDate(context, rel.publishedAt, time: false),
-                    style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                    style: TextStyle(color: context.appFgSub, fontSize: 13)),
               const SizedBox(height: 8),
               if (rel.notes.trim().isEmpty)
                 Text(l.updateNoNotes, style: TextStyle(color: context.appFgSub))

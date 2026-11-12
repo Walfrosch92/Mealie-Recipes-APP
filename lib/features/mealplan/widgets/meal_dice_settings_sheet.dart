@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/sheet_title.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +11,7 @@ import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/meal_types.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/gradient_button.dart' show SheetHandle;
 import '../../organizers/providers/organizers_provider.dart';
 import '../../../core/models/mealplan_rule.dart';
@@ -20,6 +22,7 @@ import '../providers/mealplan_rules_provider.dart';
 import '../screens/meal_rule_edit_screen.dart';
 import '../../../core/utils/mealie_version.dart';
 import 'calendar_feed_sheet.dart';
+import '../../../shared/widgets/collapsible_hint.dart';
 
 // ---------------------------------------------------------------------------
 // Zahnrad im Mahlzeitenplan = „Essensplan Einstellungen" (Mealie-Begriff):
@@ -42,7 +45,6 @@ Future<void> showMealDiceSettingsSheet(BuildContext context) =>
       useRootNavigator: true,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: context.appCard,
       builder: (_) => const _MealplanSettingsSheet(),
     );
 
@@ -52,7 +54,6 @@ Future<void> _showDiceRulesSheet(BuildContext context) =>
       useRootNavigator: true,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: context.appCard,
       builder: (_) => const _MealDiceSettingsSheet(),
     );
 
@@ -65,14 +66,14 @@ class _MealplanSettingsSheet extends ConsumerWidget {
     final useMealie =
         ref.watch(settingsProvider).valueOrNull?.mealDiceUseMealieRules ??
             false;
-    Widget entry(IconData icon, String title, String subtitle,
-            VoidCallback onTap) =>
+    Widget entry(
+            IconData icon, String title, String subtitle, VoidCallback onTap) =>
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: Icon(icon, color: AppTokens.accentDeep),
           title: Text(title),
           subtitle: Text(subtitle,
-              style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+              style: TextStyle(color: context.appFgSub, fontSize: 13)),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: onTap,
         );
@@ -84,13 +85,7 @@ class _MealplanSettingsSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Center(child: SheetHandle()),
-            Text(l.mealplanSettingsTitle,
-                style: TextStyle(
-                    fontFamily: 'PlusJakartaSans',
-                    color: context.appFg,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3)),
+            SheetTitle(l.mealplanSettingsTitle),
             const SizedBox(height: 12),
             // Wochenbeginn — direkt die Mealie-Haushalts-Einstellung.
             const _WeekStartSection(),
@@ -100,7 +95,7 @@ class _MealplanSettingsSheet extends ConsumerWidget {
               l.mealDiceRulesTitle,
               // Zeigt, welches System der Würfel gerade nutzt.
               '${l.mealDiceModeTitle}: '
-                  '${useMealie ? l.mealRulesTitle : l.mealDiceModeApp}',
+              '${useMealie ? l.mealRulesTitle : l.mealDiceModeApp}',
               () => _showDiceRulesSheet(context),
             ),
             // Mealie ≥ 3.29: Mahlzeitplan als Kalender abonnieren (iCal).
@@ -194,9 +189,11 @@ class _MealDiceSettingsSheetState
     final terms = searchTerms(_query);
     List<OrganizerItem> filtered(List<OrganizerItem> items) => terms.isEmpty
         ? items
-        : items
-            .where((i) => terms.every(normalizeForSearch(i.name).contains))
-            .toList();
+        : rankBySearch(
+            items
+                .where((i) => terms.every(normalizeForSearch(i.name).contains)),
+            terms,
+            (i) => i.name);
 
     Widget chips(List<OrganizerItem> all, String prefix) {
       final items = filtered(all);
@@ -214,12 +211,14 @@ class _MealDiceSettingsSheetState
         runSpacing: 6,
         children: [
           for (final i in items)
-            FilterChip(
-              label: Text(i.name),
+            // Mehrfachauswahl: Haken bei gewählten Einträgen.
+            AppChip(
+              label: i.name,
+              icon: selected.contains('$prefix${i.id}')
+                  ? Icons.check_rounded
+                  : null,
               selected: selected.contains('$prefix${i.id}'),
-              onSelected: (_) => _toggle(settings, '$prefix${i.id}'),
-              selectedColor: AppTokens.accent.withValues(alpha: 0.25),
-              checkmarkColor: AppTokens.accentDeep,
+              onTap: () => _toggle(settings, '$prefix${i.id}'),
             ),
         ],
       );
@@ -238,17 +237,11 @@ class _MealDiceSettingsSheetState
             16, 0, 16, 24 + MediaQuery.viewInsetsOf(context).bottom),
         children: [
           const SheetHandle(),
-          Text(l.mealDiceRulesTitle,
-              style: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  color: context.appFg,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3)),
+          SheetTitle(l.mealDiceRulesTitle),
           const SizedBox(height: 12),
           // System wählen: App-eigene Auswahl oder Mealie-Regeln.
           Text(l.mealDiceModeTitle,
-              style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+              style: TextStyle(color: context.appFgSub, fontSize: 13)),
           const SizedBox(height: 6),
           SizedBox(
             width: double.infinity,
@@ -277,9 +270,11 @@ class _MealDiceSettingsSheetState
           if (useMealie)
             const _MealieRulesSection()
           else ...[
-            Text(l.mealDiceSettingsHint,
-                style: TextStyle(
-                    color: context.appFgSub, fontSize: 13, height: 1.4)),
+            CollapsibleHint(
+                text: l.mealDiceSettingsHint,
+                prefsKey: 'hint_meal_dice_collapsed',
+                icon: Icons.casino_rounded,
+                dense: true),
             const SizedBox(height: 14),
             // Mahlzeit wählen — Zähler zeigt, wie viele Einträge gesetzt sind.
             // Eine Zeile, seitlich wischbar (alle 7 Mealie-Typen).
@@ -290,16 +285,15 @@ class _MealDiceSettingsSheetState
                   for (final s in _slots)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(() {
+                      child: AppChip(
+                        label: () {
                           final n = settings.mealDiceFilters[s]?.length ?? 0;
                           return n == 0
                               ? _slotLabel(l, s)
                               : '${_slotLabel(l, s)} ($n)';
-                        }()),
+                        }(),
                         selected: _slot == s,
-                        onSelected: (_) => setState(() => _slot = s),
-                        selectedColor: AppTokens.accent.withValues(alpha: 0.25),
+                        onTap: () => setState(() => _slot = s),
                       ),
                     ),
                 ],
@@ -383,9 +377,11 @@ class _MealieRulesSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l.mealRulesHint,
-            style: TextStyle(
-                color: context.appFgSub, fontSize: 12.5, height: 1.4)),
+        CollapsibleHint(
+            text: l.mealRulesHint,
+            prefsKey: 'hint_meal_rules_collapsed',
+            icon: Icons.rule_rounded,
+            dense: true),
         const SizedBox(height: 10),
         for (final r in rules)
           Card(
@@ -406,7 +402,7 @@ class _MealieRulesSection extends ConsumerWidget {
               subtitle: Text(ruleFilterSummary(l, r.queryFilterString, names),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                  style: TextStyle(color: context.appFgSub, fontSize: 13)),
               trailing: Icon(Icons.chevron_right_rounded,
                   color: context.appFgTertiary),
             ),
@@ -498,7 +494,7 @@ class _WeekStartSectionState extends ConsumerState<_WeekStartSection> {
         ),
         const SizedBox(height: 6),
         Text(mayChange ? l.weekStartSyncHint : l.weekStartNoPermission,
-            style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+            style: TextStyle(color: context.appFgSub, fontSize: 13)),
       ],
     );
   }

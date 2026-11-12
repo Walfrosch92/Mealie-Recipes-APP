@@ -21,6 +21,11 @@
 	</array>
 	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
 	<string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
+	<!-- WLAN-Umschaltung der Server-Adresse: Name des verbundenen WLANs
+	     lesen (CNCopyCurrentNetworkInfo / NEHotspotNetwork). Zusätzlich
+	     ist die Standortberechtigung „Bei Nutzung" nötig. -->
+	<key>com.apple.developer.networking.wifi-info</key>
+	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.Walfrosch92.MealieRecipes</string>

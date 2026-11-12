@@ -64,8 +64,19 @@ class LargeScreen {
 
   static bool get _desktop => Platform.isWindows || Platform.isMacOS;
 
+  /// Windows/macOS (Maus + Tastatur: Rechtsklick, Tastenkürzel, Anheften).
+  static bool get isDesktop => _desktop;
+
+  /// Tablet (iPad, Android-Tablet): kurze Seite ab 600 dp. Handys — auch im
+  /// Querformat — bleiben darunter.
+  static bool isTablet(BuildContext context) =>
+      !_desktop && MediaQuery.sizeOf(context).shortestSide >= 600;
+
+  /// Breites Layout: am Rechner und auf Tablets (dort praktisch nur im
+  /// Querformat) ab [minWidth].
   static bool isWide(BuildContext context) =>
-      _desktop && MediaQuery.sizeOf(context).width >= minWidth;
+      (_desktop || isTablet(context)) &&
+      MediaQuery.sizeOf(context).width >= minWidth;
 
   /// Seitlicher Einzug, der Inhalte auf großer Anzeige auf [maxWidth]
   /// zentriert — nie kleiner als [base] (der mobile Rand). Mobil: [base].

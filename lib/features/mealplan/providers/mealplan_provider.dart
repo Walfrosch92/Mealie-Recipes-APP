@@ -107,11 +107,43 @@ final mealplanProvider =
     AsyncNotifierProvider<MealplanNotifier, Map<DateTime, List<MealplanEntry>>>(
         MealplanNotifier.new);
 
+/// Mealie ≥ 3.30: Einträge für eine ganze Woche (`endDate`). Sie stehen
+/// bewusst NICHT in [mealplanProvider] (nach Tagen gruppiert) — sonst
+/// erschienen sie überall als Mahlzeit ihres ersten Tages (Start, Widget,
+/// Woche planen, Uhr). Wird mit jedem State des Essensplans neu gelesen.
+final mealplanWeekEntriesProvider = Provider<List<MealplanEntry>>((ref) {
+  ref.watch(mealplanProvider);
+  return ref.read(mealplanProvider.notifier).weekEntries;
+});
+
+/// Wochen-Einträge, deren Zeitraum die Woche ab [weekStart] berührt.
+List<MealplanEntry> weekEntriesFor(
+    List<MealplanEntry> all, DateTime weekStart) {
+  final first = startOfDay(weekStart);
+  final last = addDays(first, 6);
+  return [
+    for (final e in all)
+      if (() {
+        final s = DateTime.tryParse(e.date);
+        final end = DateTime.tryParse(e.endDate ?? '');
+        if (s == null) return false;
+        return !startOfDay(s).isAfter(last) &&
+            !startOfDay(end ?? s).isBefore(first);
+      }())
+        e,
+  ]..sort((a, b) =>
+      mealTypeOrder(a.entryType).compareTo(mealTypeOrder(b.entryType)));
+}
+
 class MealplanNotifier
     extends AsyncNotifier<Map<DateTime, List<MealplanEntry>>> {
   // Signatur der zuletzt übernommenen Server-Liste — der Hintergrund-Abgleich
   // schreibt den state nur bei tatsächlicher Änderung (kein Flackern).
   String? _lastSig;
+
+  /// Wochen-Einträge (Mealie ≥ 3.30), getrennt von den Tagen gehalten —
+  /// siehe [mealplanWeekEntriesProvider]. Wird in [_groupByDay] gesetzt.
+  List<MealplanEntry> weekEntries = const [];
 
   // OFFLINE-FIRST (App-weites Muster): gecachte Einträge sofort anzeigen,
   // im Hintergrund mit dem Server abgleichen; schlägt der Abgleich fehl,
@@ -157,7 +189,12 @@ class MealplanNotifier
 
   Map<DateTime, List<MealplanEntry>> _groupByDay(List<MealplanEntry> entries) {
     final map = <DateTime, List<MealplanEntry>>{};
+    weekEntries = [
+      for (final e in entries)
+        if (e.isWeekEntry) e
+    ];
     for (final e in entries) {
+      if (e.isWeekEntry) continue;
       final parsed = DateTime.tryParse(e.date);
       if (parsed == null) continue;
       final key = startOfDay(parsed);
@@ -174,8 +211,8 @@ class MealplanNotifier
   }
 
   List<MealplanEntry> _flatten(Map<DateTime, List<MealplanEntry>>? grouped) {
-    if (grouped == null) return [];
-    return [for (final list in grouped.values) ...list];
+    if (grouped == null) return [...weekEntries];
+    return [for (final list in grouped.values) ...list, ...weekEntries];
   }
 
   /// Aktuellen State in den Cache spiegeln (nach lokalen Mutationen).
@@ -188,12 +225,15 @@ class MealplanNotifier
   // mirrors iOS addMeal / addMealEntry — Payload-Struktur 1:1 zu Swifts
   //   Payload(date, entryType, recipeId, title)
   // mit der Mutex-Regel `title: recipeId == nil ? note : nil`.
-  // Kein `text`-Feld im Payload (siehe MealplanEntryCreate-Kommentar).
-  Future<void> addEntry({
+  /// [text]: optionale Notiz zum Eintrag — auch bei Rezepten (Issue #41).
+  /// Liefert den angelegten Eintrag (Server-Echo) — z. B. für „Rückgängig".
+  Future<MealplanEntry> addEntry({
     required String date,
     required String entryType,
     String? recipeId,
     String? title,
+    String? text,
+    bool week = false,
   }) async {
     final api = ref.read(apiServiceProvider);
     final hasRecipe = recipeId != null && recipeId.isNotEmpty;
@@ -202,6 +242,9 @@ class MealplanNotifier
       entryType: entryType,
       recipeId: hasRecipe ? recipeId : null,
       title: hasRecipe ? null : title,
+      text: (text?.trim().isEmpty ?? true) ? null : text!.trim(),
+      // Mealie ≥ 3.30: für die ganze Woche (date = Wochenbeginn).
+      endDate: week ? weekEntryEndDate(date) : null,
     ));
     // Server-Echo direkt lokal einfügen statt invalidateSelf: der Provider
     // ist jetzt Cache-first — ein invalidate zeigte erst wieder den ALTEN
@@ -210,28 +253,40 @@ class MealplanNotifier
     final flat = _flatten(state.valueOrNull)..add(created);
     state = AsyncData(_groupByDay(flat));
     await _persistState();
+    return created;
   }
 
   /// Eintrag verschieben (Tag und/oder Mahlzeit). Optimistisch lokal,
   /// danach mit dem Server-Echo ersetzen; bei Fehler alter Stand zurück und
   /// Fehler weiterreichen (UI zeigt ihn).
+  /// [week]: siehe [ApiService.updateMealplanEntry] — `true` macht daraus
+  /// einen Wochen-Eintrag, `false` einen Tageseintrag, `null` lässt es.
   Future<void> moveEntry(MealplanEntry entry,
-      {required String date, required String entryType}) async {
+      {required String date, required String entryType, bool? week}) async {
     final before = state.valueOrNull;
-    final moved = MealplanEntry.fromJson(
-        {...entry.toJson(), 'date': date, 'entryType': entryType});
+    final beforeWeek = weekEntries;
+    final asWeek = week ?? entry.isWeekEntry;
+    final moved = MealplanEntry.fromJson({
+      ...entry.toJson(),
+      'date': date,
+      'entryType': entryType,
+      'endDate': asWeek ? weekEntryEndDate(date) : null,
+    });
     List<MealplanEntry> replaced(MealplanEntry with_) => [
           for (final e in _flatten(state.valueOrNull))
             if (e.id == entry.id) with_ else e
         ];
     state = AsyncData(_groupByDay(replaced(moved)));
     try {
-      final saved = await ref
-          .read(apiServiceProvider)
-          .updateMealplanEntry(entry, date: date, entryType: entryType);
+      final saved = await ref.read(apiServiceProvider).updateMealplanEntry(
+          entry,
+          date: date,
+          entryType: entryType,
+          week: week);
       state = AsyncData(_groupByDay(replaced(saved)));
       await _persistState();
     } catch (e) {
+      weekEntries = beforeWeek;
       if (before != null) state = AsyncData(before);
       rethrow;
     }
@@ -241,6 +296,7 @@ class MealplanNotifier
   /// wie [moveEntry], das Rezept selbst bleibt unverändert.
   Future<void> setRecipeScale(MealplanEntry entry, double scale) async {
     final before = state.valueOrNull;
+    final beforeWeek = weekEntries;
     List<MealplanEntry> replaced(MealplanEntry with_) => [
           for (final e in _flatten(state.valueOrNull))
             if (e.id == entry.id) with_ else e
@@ -256,6 +312,35 @@ class MealplanNotifier
       state = AsyncData(_groupByDay(replaced(saved)));
       await _persistState();
     } catch (e) {
+      weekEntries = beforeWeek;
+      if (before != null) state = AsyncData(before);
+      rethrow;
+    }
+  }
+
+  /// Titel (nur Notiz-Einträge) und Notiz eines Eintrags ändern (Issue
+  /// #41) — optimistisch wie [moveEntry].
+  Future<void> editEntry(MealplanEntry entry,
+      {required String title, required String text}) async {
+    final before = state.valueOrNull;
+    final beforeWeek = weekEntries;
+    List<MealplanEntry> replaced(MealplanEntry with_) => [
+          for (final e in _flatten(state.valueOrNull))
+            if (e.id == entry.id) with_ else e
+        ];
+    state = AsyncData(_groupByDay(replaced(MealplanEntry.fromJson(
+        {...entry.toJson(), 'title': title, 'text': text}))));
+    try {
+      final saved = await ref.read(apiServiceProvider).updateMealplanEntry(
+          entry,
+          date: entry.date,
+          entryType: entry.entryType,
+          title: title,
+          text: text);
+      state = AsyncData(_groupByDay(replaced(saved)));
+      await _persistState();
+    } catch (e) {
+      weekEntries = beforeWeek;
       if (before != null) state = AsyncData(before);
       rethrow;
     }
@@ -265,6 +350,11 @@ class MealplanNotifier
   Future<void> deleteEntry(String id) async {
     // optimistic local removal
     final current = state.valueOrNull;
+    final currentWeek = weekEntries;
+    weekEntries = [
+      for (final e in weekEntries)
+        if (e.id != id) e
+    ];
     if (current != null) {
       final updated = <DateTime, List<MealplanEntry>>{};
       current.forEach((day, list) {
@@ -280,6 +370,7 @@ class MealplanNotifier
       // Wie moveEntry: scheitert der Server (offline, kein Recht), den
       // Eintrag zurückholen — sonst fehlte er lokal und tauchte beim
       // nächsten Abgleich kommentarlos wieder auf.
+      weekEntries = currentWeek;
       if (current != null) state = AsyncData(current);
       rethrow;
     }

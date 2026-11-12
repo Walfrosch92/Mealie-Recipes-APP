@@ -55,7 +55,12 @@ Future<void> openRecipeAsset(BuildContext context, WidgetRef ref,
   // Video/Audio: direkt vom Server streamen (System-Player im In-App-
   // Browser) statt erst die ganze Datei zu laden. Klappt das nicht (z. B.
   // Proxy verlangt eigene Header), unten wie bisher laden + teilen.
-  if (asset.isMedia && server.isNotEmpty) {
+  // Mit optionalen Zusatz-Headern (z. B. Cloudflare Access) NICHT streamen:
+  // der Browser kann sie nicht mitschicken, landet auf der Login-Seite des
+  // Proxys und meldet trotzdem „geöffnet" — der Ausweichweg unten griffe
+  // nie. Dann gleich über ApiService (mit Headern) laden (Issue #38).
+  final proxyHeaders = settings?.optionalHeaders.isNotEmpty ?? false;
+  if (asset.isMedia && server.isNotEmpty && !proxyHeaders) {
     try {
       final ok = await launchUrl(
           Uri.parse(recipeAssetUrl(server, recipe.id, asset.fileName)),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/sheet_title.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -24,7 +25,6 @@ void showRecipeFilterSheet(BuildContext context) => showModalBottomSheet<void>(
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: context.appCard,
       builder: (_) => const _RecipeFilterSheet(),
     );
 
@@ -108,7 +108,7 @@ class _RecipeFilterSheet extends ConsumerWidget {
             color: ids.isNotEmpty
                 ? AppTokens.accent.withValues(alpha: 0.14)
                 : context.appSurface2,
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(AppTokens.rXs),
           ),
           child: Center(child: icon),
         ),
@@ -138,12 +138,7 @@ class _RecipeFilterSheet extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
             child: Row(children: [
               Expanded(
-                child: Text(l.recipeFilterTitle,
-                    style: TextStyle(
-                        fontFamily: 'PlusJakartaSans',
-                        color: context.appFg,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800)),
+                child: SheetTitle(l.recipeFilterTitle),
               ),
               if (f.hasFilters)
                 TextButton(

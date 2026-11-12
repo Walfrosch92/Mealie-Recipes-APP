@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/sheet_title.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -17,7 +18,6 @@ Future<void> showShoppingListSwitchSheet(BuildContext context) =>
       useRootNavigator: true,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: context.appCard,
       builder: (_) => const _SwitchSheet(),
     );
 
@@ -42,12 +42,7 @@ class _SwitchSheet extends ConsumerWidget {
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(l.switchListTitle,
-                style: TextStyle(
-                    fontFamily: 'PlusJakartaSans',
-                    color: context.appFg,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800)),
+            child: SheetTitle(l.switchListTitle),
           ),
           if (async.isLoading && lists.isEmpty)
             const Padding(

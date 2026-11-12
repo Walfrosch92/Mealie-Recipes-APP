@@ -113,6 +113,7 @@ Instruction _$InstructionFromJson(Map<String, dynamic> json) => Instruction(
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      durationSeconds: (json['durationSeconds'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$InstructionToJson(Instruction instance) =>
@@ -122,6 +123,7 @@ Map<String, dynamic> _$InstructionToJson(Instruction instance) =>
       'title': instance.title,
       'summary': instance.summary,
       'ingredientReferences': instance.ingredientRefs,
+      'durationSeconds': instance.durationSeconds,
     };
 
 RecipeSettings _$RecipeSettingsFromJson(Map<String, dynamic> json) =>

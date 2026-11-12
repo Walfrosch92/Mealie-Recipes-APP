@@ -8,6 +8,7 @@
 //     Caller fällt aufs Rezept-Bild zurück.
 // ---------------------------------------------------------------------------
 
+import '../models/recipe_detail.dart';
 import 'markdown_parse.dart';
 
 class StepTimer {
@@ -20,6 +21,16 @@ class StepTimer {
   const StepTimer(this.minutes, this.position);
 
   /// Kompakte Anzeige, z. B. „5 Min", „1 h 30".
+  /// Beschriftung mit übersetzter Minuten-Abkürzung ([minUnit], z. B.
+  /// `l.minutesShort`: „Min.", „min", „perc"). Vorher stand fest „Min" —
+  /// auch in Englisch, Ungarisch usw.
+  String labelFor(String minUnit) {
+    if (minutes < 60) return '$minutes $minUnit';
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return m == 0 ? '${h}h' : '${h}h $m';
+  }
+
   String get label {
     if (minutes < 60) return '$minutes Min';
     final h = minutes ~/ 60;
@@ -123,3 +134,22 @@ String? stepImageUrl(String stepText, String baseUrl) =>
 /// Entfernt eingebettete Bilder (alle Formen) aus dem Anzeigetext (das Bild
 /// wird separat groß dargestellt).
 String stripMarkdownImages(String text) => stripEmbeddedImages(text);
+
+/// Timer eines Schritts: die im Text erkannten plus — Mealie ≥ 3.30 — die
+/// am Schritt hinterlegte Dauer (`durationSeconds`), sofern sie nicht schon
+/// im Text steht. Die hinterlegte Dauer kommt zuerst (Ein-Tipp-Timer).
+List<StepTimer> timersForStep(Instruction step) {
+  final found = extractStepTimers(step.text);
+  final secs = step.durationSeconds;
+  if (secs == null || secs <= 0) return found;
+  final minutes = (secs / 60).ceil();
+  if (found.any((t) => t.minutes == minutes)) return found;
+  return [StepTimer(minutes, -1), ...found];
+}
+
+/// Hinterlegte Schritt-Dauer lesbar: „45 s“, „10 Min.“, „1 h 30“.
+String formatStepDuration(int seconds, String minUnit) {
+  if (seconds < 60) return '$seconds s';
+  final minutes = (seconds / 60).round();
+  return StepTimer(minutes, 0).labelFor(minUnit);
+}

@@ -271,7 +271,7 @@ class _SubstitutionsBlock extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(10, 8, 4, 4),
       decoration: BoxDecoration(
         color: context.appSurface2,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTokens.rXs),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -280,11 +280,14 @@ class _SubstitutionsBlock extends StatelessWidget {
             const Icon(Icons.swap_horiz_rounded,
                 size: 16, color: AppTokens.accentDeep),
             const SizedBox(width: 6),
-            Text(l.recipeSubstitutionsTitle,
-                style: TextStyle(
-                    color: context.appFgSub,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
+            Flexible(
+                child: Text(l.recipeSubstitutionsTitle,
+                    style: TextStyle(
+                        color: context.appFgSub,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis)),
           ]),
           const SizedBox(height: 8),
           for (final s in item.substitutions)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/sheet_title.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../shared/theme/app_colors.dart';
@@ -54,7 +55,7 @@ class EditSectionHeader extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(AppTokens.rXs),
                 color: AppTokens.accent.withValues(alpha: 0.12),
               ),
               child: Icon(icon, color: AppTokens.accentDeep, size: 18),
@@ -166,7 +167,8 @@ InputDecoration filledEditDecoration(BuildContext context,
       fillColor: context.appSurface2,
       isDense: true,
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+          borderRadius: BorderRadius.circular(AppTokens.rXs),
+          borderSide: BorderSide.none),
     );
 
 /// Umrandetes Kompaktfeld wie in den Zutaten-/Schritt-Zeilen.
@@ -396,9 +398,7 @@ Future<bool> confirmEditAction(BuildContext context,
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(l.cancel)),
             FilledButton(
-              style: destructive
-                  ? FilledButton.styleFrom(backgroundColor: Colors.red)
-                  : null,
+              style: destructive ? AppTokens.dangerButton : null,
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(confirmLabel),
             ),
@@ -505,25 +505,12 @@ class EditSheetHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(title,
-                style: TextStyle(
-                    color: context.appFg,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600)),
-          ),
-          trailing ??
-              TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(l.close)),
-        ],
-      ),
+    return SheetHeader(
+      icon: icon,
+      title: title,
+      trailing: trailing ??
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: Text(l.close)),
     );
   }
 }

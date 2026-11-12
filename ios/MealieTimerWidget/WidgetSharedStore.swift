@@ -137,10 +137,15 @@ enum WidgetSharedStore {
             .sorted { (order[$0.slot] ?? 3) < (order[$1.slot] ?? 3) }
     }
 
+    /// Lokales Kalenderdatum — Mealie-Essensplan-Daten sind reine Tage
+    /// („2026-10-26") ohne Zeitzone. Vorher in UTC formatiert: in Österreich
+    /// zeigte „Heute" zwischen 0 und 1/2 Uhr noch die gestrigen Mahlzeiten,
+    /// und „Morgen" wurde gar nicht vom Server geholt.
     static func dateString(from date: Date) -> String {
         let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(secondsFromGMT: 0)
+        f.timeZone = TimeZone.current
         return f.string(from: date)
     }
 }
@@ -205,6 +210,14 @@ enum WidgetServerSync {
         return try? JSONSerialization.jsonObject(with: data)
     }
 
+    /// Gilt der Zugang, mit dem abgerufen wurde, noch? (Benutzer wechseln
+    /// in der App ersetzt ihn — ein laufender Abruf darf danach nichts mehr
+    /// schreiben.)
+    private static func isStillCurrent(_ access: WidgetServerAccess) -> Bool {
+        guard let now = WidgetKeychain.load() else { return false }
+        return now.url == access.url && now.token == access.token
+    }
+
     static func refreshShopping() async {
         guard due("widgetShoppingFetchedAt"),
               let access = WidgetKeychain.load(),
@@ -218,7 +231,10 @@ enum WidgetServerSync {
             return WidgetShoppingItem(id: id, name: ShoppingText.text(i, exact: exact),
                                       checked: i["checked"] as? Bool ?? false, category: label)
         }
-        guard let data = try? JSONEncoder().encode(items) else { return }
+        // Während des Abrufs das Konto gewechselt (App hat den Zugang
+        // ersetzt/gelöscht)? Dann gehört das Ergebnis zum alten Konto.
+        guard isStillCurrent(access),
+              let data = try? JSONEncoder().encode(items) else { return }
         defaults?.set(data, forKey: "widgetShoppingList")
         defaults?.set(Date().timeIntervalSince1970, forKey: "widgetShoppingFetchedAt")
     }
@@ -243,7 +259,8 @@ enum WidgetServerSync {
             return WidgetMealEntry(date: date, slot: slot, slotName: l10n.s(slot),
                                    recipeName: name, recipeId: recipe?["id"] as? String)
         }
-        guard let data = try? JSONEncoder().encode(entries) else { return }
+        guard isStillCurrent(access),
+              let data = try? JSONEncoder().encode(entries) else { return }
         defaults?.set(data, forKey: "widgetMealplan")
         defaults?.set(Date().timeIntervalSince1970, forKey: "widgetMealplanFetchedAt")
     }

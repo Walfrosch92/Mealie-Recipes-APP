@@ -21,6 +21,7 @@ MealplanEntry _$MealplanEntryFromJson(Map<String, dynamic> json) =>
       userId: _idToStringNullable(json['userId']),
       recipeId: _idToStringNullable(json['recipeId']),
       recipeScale: (json['recipeScale'] as num?)?.toDouble(),
+      endDate: json['endDate'] as String?,
     );
 
 Map<String, dynamic> _$MealplanEntryToJson(MealplanEntry instance) =>
@@ -36,6 +37,7 @@ Map<String, dynamic> _$MealplanEntryToJson(MealplanEntry instance) =>
       'userId': instance.userId,
       'recipeId': instance.recipeId,
       'recipeScale': instance.recipeScale,
+      'endDate': instance.endDate,
     };
 
 MealplanEntryCreate _$MealplanEntryCreateFromJson(Map<String, dynamic> json) =>
@@ -43,7 +45,9 @@ MealplanEntryCreate _$MealplanEntryCreateFromJson(Map<String, dynamic> json) =>
       date: json['date'] as String,
       entryType: json['entryType'] as String,
       title: json['title'] as String?,
+      text: json['text'] as String?,
       recipeId: json['recipeId'] as String?,
+      endDate: json['endDate'] as String?,
     );
 
 Map<String, dynamic> _$MealplanEntryCreateToJson(
@@ -52,5 +56,7 @@ Map<String, dynamic> _$MealplanEntryCreateToJson(
       'date': instance.date,
       'entryType': instance.entryType,
       if (instance.title case final value?) 'title': value,
+      if (instance.text case final value?) 'text': value,
       if (instance.recipeId case final value?) 'recipeId': value,
+      if (instance.endDate case final value?) 'endDate': value,
     };

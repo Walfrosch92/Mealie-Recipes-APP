@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/api/api_service.dart';
+import '../../../core/providers/cached_json_list.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../widgets/tool_widgets.dart';
 
@@ -13,10 +14,20 @@ import '../widgets/tool_widgets.dart';
 // an die URL senden. Mealie erlaubt nur http(s)-URLs.
 // ---------------------------------------------------------------------------
 
-/// Alle Rezept-Aktionen des Haushalts (für das Rezept-Menü).
+/// Alle Rezept-Aktionen des Haushalts (für das Rezept-Menü). Cache-first,
+/// damit der Menüpunkt im Rezept-Optionen-Sheet (iOS/Android, #42) sofort
+/// da ist statt nachträglich ins Sheet zu springen.
 final recipeActionsProvider =
-    FutureProvider.autoDispose<List<Map<String, dynamic>>>(
-        (ref) => ref.watch(apiServiceProvider).fetchRecipeActions());
+    AsyncNotifierProvider<_RecipeActionsNotifier, List<Map<String, dynamic>>>(
+        _RecipeActionsNotifier.new);
+
+class _RecipeActionsNotifier extends CachedJsonListNotifier {
+  @override
+  String get cacheKey => 'recipe_actions';
+  @override
+  Future<List<Map<String, dynamic>>> fetch(ApiService api) =>
+      api.fetchRecipeActions();
+}
 
 class RecipeActionsScreen extends ConsumerStatefulWidget {
   const RecipeActionsScreen({super.key});
@@ -33,7 +44,7 @@ class _RecipeActionsScreenState extends ConsumerState<RecipeActionsScreen> {
     setState(() => _busy = true);
     try {
       await op();
-      ref.invalidate(recipeActionsProvider);
+      await ref.read(recipeActionsProvider.notifier).refresh();
     } catch (e) {
       if (mounted) showToolError(context, fail, e);
     } finally {
@@ -64,7 +75,7 @@ class _RecipeActionsScreenState extends ConsumerState<RecipeActionsScreen> {
       title: l.recipeActionsTitle,
       description: l.recipeActionsDescription,
       busy: _busy,
-      onRefresh: () async => ref.refresh(recipeActionsProvider.future),
+      onRefresh: () => ref.read(recipeActionsProvider.notifier).refresh(),
       actions: [
         IconButton(
           tooltip: l.recipeActionNew,
@@ -100,8 +111,7 @@ class _RecipeActionsScreenState extends ConsumerState<RecipeActionsScreen> {
                       '${a['actionType'] == 'post' ? l.recipeActionTypePost : l.recipeActionTypeLink} · ${a['url'] ?? ''}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                      style: TextStyle(color: context.appFgSub, fontSize: 13)),
                   onTap: () => _edit(a),
                   trailing: IconButton(
                     tooltip: l.delete,

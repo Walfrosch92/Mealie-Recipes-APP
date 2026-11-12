@@ -2,9 +2,9 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/app_snack.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
-import '../../../core/api/api_service.dart';
 import '../../../core/utils/platform_features.dart';
 import '../../../shared/theme/app_colors.dart';
 
@@ -99,35 +99,42 @@ class ToolCard extends StatelessWidget {
         border: Border.all(color: context.appSeparator),
         boxShadow: context.appShadowSm,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (title != null)
-            Row(children: [
-              if (icon != null) ...[
-                Icon(icon, color: AppTokens.accentDeep, size: 20),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: Text(title!,
-                    style: TextStyle(
-                        fontFamily: 'PlusJakartaSans',
-                        color: context.appFg,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2)),
-              ),
-              if (trailing != null) trailing!,
-            ]),
-          if (subtitle != null) ...[
-            const SizedBox(height: 6),
-            Text(subtitle!,
-                style: TextStyle(
-                    color: context.appFgSub, fontSize: 13.5, height: 1.4)),
+      // Durchsichtiges Material: ListTiles/ExpansionTiles in der Karte malen
+      // Hintergrund und Tipp-Effekt sonst unter die Kartenfarbe (unsichtbar,
+      // im Debug-Build eine Fehlermeldung).
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (title != null)
+              Row(children: [
+                if (icon != null) ...[
+                  Icon(icon, color: AppTokens.accentDeep, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Text(title!,
+                      style: TextStyle(
+                          fontFamily: 'PlusJakartaSans',
+                          color: context.appFg,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2)),
+                ),
+                if (trailing != null) trailing!,
+              ]),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Text(subtitle!,
+                  style: TextStyle(
+                      color: context.appFgSub, fontSize: 14, height: 1.4)),
+            ],
+            if (title != null && children.isNotEmpty)
+              const SizedBox(height: 12),
+            ...children,
           ],
-          if (title != null && children.isNotEmpty) const SizedBox(height: 12),
-          ...children,
-        ],
+        ),
       ),
     );
   }
@@ -201,7 +208,7 @@ class ToolStatusRow extends StatelessWidget {
                     child: Text(detail!,
                         style: TextStyle(
                             color: context.appFgSub,
-                            fontSize: 12.5,
+                            fontSize: 13,
                             height: 1.35)),
                   ),
               ],
@@ -286,9 +293,7 @@ Future<bool> confirmTool(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(l.cancel)),
             FilledButton(
-              style: destructive
-                  ? FilledButton.styleFrom(backgroundColor: Colors.red)
-                  : null,
+              style: destructive ? AppTokens.dangerButton : null,
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(confirmLabel ?? (destructive ? l.delete : l.ok)),
             ),
@@ -298,16 +303,12 @@ Future<bool> confirmTool(
       false;
 }
 
-/// Snackbar „[fallback]: Server-Meldung".
-void showToolError(BuildContext context, String fallback, Object error) {
-  final detail = mealieErrorMessage(error);
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(detail == null ? fallback : '$fallback: $detail')));
-}
+/// Fehler-Snackbar im App-weiten Format (siehe app_snack.dart).
+void showToolError(BuildContext context, String fallback, Object error) =>
+    showErrorSnack(context, fallback, error);
 
 void showToolMessage(BuildContext context, String message) =>
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    showAppSnack(context, message);
 
 /// „Speichern unter"-Dialog und Datei schreiben. `true` = gespeichert,
 /// `false` = abgebrochen.

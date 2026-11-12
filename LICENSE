@@ -1,0 +1,51 @@
+Mealie Recipes — Source-Available License
+
+Copyright (c) 2026 walfrosch92. All rights reserved.
+
+The source code in this repository is published so that anyone can see how
+the app works and check what it does with their data. It is NOT open-source
+software, and publishing it here does not grant any rights beyond those
+listed below.
+
+You may
+
+  1. read and study the source code;
+  2. build the app from this source and run it — unmodified or with your own
+     changes — on your own devices for your personal, non-commercial use;
+  3. report problems and propose changes (issues, pull requests). By
+     submitting a contribution you allow the copyright holder to use, modify
+     and distribute it as part of the app, under any terms, without
+     compensation.
+
+Without prior written permission from the copyright holder you may not
+
+  1. redistribute this source code or any part of it, modified or not;
+  2. distribute builds of the app, or of software derived from it, to anyone
+     else — this includes app stores, download pages and package managers;
+  3. use the source code, the app or parts of them commercially;
+  4. use the name "Mealie Recipes", the app icons, logos or screenshots for
+     another app or service;
+  5. remove or alter copyright, license or attribution notices.
+
+Third-party components
+
+Fonts, sounds and software libraries included in or used by this project
+remain under their own licenses. See THIRD_PARTY_NOTICES.md. Nothing in this
+license restricts rights you have under those licenses.
+
+Trademarks
+
+"Mealie" is the name of an independent open-source project. This app is a
+third-party client; it is not affiliated with, endorsed by or an official
+product of the Mealie project.
+
+No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Contact: see README.md.

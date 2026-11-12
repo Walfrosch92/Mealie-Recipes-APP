@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/shimmer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -51,7 +52,11 @@ class CookbookRecipesScreen extends ConsumerWidget {
         child: SafeArea(
           top: false,
           child: recipesAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const ListSkeleton(
+                rows: 6,
+                thumbSize: 116,
+                thumbRadius: AppTokens.rLg,
+                spacing: 14),
             error: (e, _) => ErrorRetryView(
               error: e,
               onRetry: () =>

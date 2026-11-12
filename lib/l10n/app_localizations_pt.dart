@@ -42,7 +42,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get next => 'Próximo';
 
   @override
-  String get navHome => 'Início';
+  String get navHome => 'Home';
 
   @override
   String get homeCookToday => 'Cozinhe hoje';
@@ -134,7 +134,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sortDateOldest => 'Mais antiga primeiro';
 
   @override
-  String get sortPrepTimeShort => 'Menor tempo de prepararo';
+  String get sortPrepTimeShort => 'Menor tempo de preparo';
 
   @override
   String get sortPrepTimeLong => 'Maior tempo de preparo';
@@ -522,21 +522,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mealplanTitle => '📅 Plano de refeições';
 
   @override
-  String get mealplanSelectMode => 'Selecionar várias receitas';
-
-  @override
-  String mealplanSelectedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count selecionadas',
-      one: '1 selecionada',
-      zero: 'Seleção',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get breakfast => 'Café da manhã';
 
   @override
@@ -804,6 +789,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shoppingCompletedSubtitle => 'Tudo no carrinho! 🎉';
 
   @override
+  String get shoppingOfflineNoCache => 'Offline – lista não guardada';
+
+  @override
+  String get shoppingOfflineNoCacheSubtitle =>
+      'Ainda não há itens desta lista guardados neste dispositivo. Será carregada assim que voltar a estar online.';
+
+  @override
   String get essensplan => '📅 Plano de refeições';
 
   @override
@@ -892,9 +884,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get allDeleteConfirm => 'Apagar tudo';
-
-  @override
-  String get noMealsThisWeek => 'Nenhuma receita planejada';
 
   @override
   String get entriesInOtherWeeks => 'Há entradas em outras semanas';
@@ -2656,19 +2645,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sem conexão com o servidor – os resultados vêm das receitas salvas neste dispositivo.';
 
   @override
-  String addIngredientsSkippedOnHand(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other:
-          'Adicionado à lista de compras – $count ingredientes disponíveis foram ignorados.',
-      one:
-          'Adicionado à lista de compras – 1 ingrediente disponível foi ignorado.',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get sendPeerOfflineHint =>
       'Indisponível agora – chega quando o app for aberto lá';
 
@@ -4163,4 +4139,940 @@ class AppLocalizationsPt extends AppLocalizations {
   String aliasBelongsTo(String alias, String name) {
     return '\"$alias\" já pertence a \"$name\" — melhor mesclar os dois.';
   }
+
+  @override
+  String get recipeMatchTitle => 'Match de receitas';
+
+  @override
+  String get recipeMatchShuffle => 'Embaralhar';
+
+  @override
+  String recipeMatchCardsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count receitas no baralho',
+      one: '1 receita no baralho',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchNext => 'Próxima';
+
+  @override
+  String get recipeMatchKeep => 'Para a bandeja';
+
+  @override
+  String get recipeMatchKept => 'Colocada na bandeja';
+
+  @override
+  String get recipeMatchAnyTime => 'Qualquer duração';
+
+  @override
+  String recipeMatchMaxTime(int minutes) {
+    return '≤ $minutes min';
+  }
+
+  @override
+  String get recipeMatchEmpty => 'Nenhuma receita correspondente';
+
+  @override
+  String get recipeMatchEmptyHint => 'Altere os filtros ou esvazie a bandeja.';
+
+  @override
+  String get recipeMatchResetFilters => 'Limpar filtros';
+
+  @override
+  String get recipeMatchFlipHint => 'Toque: ingredientes · modo de preparo';
+
+  @override
+  String get recipeMatchFlipBack => 'Virar';
+
+  @override
+  String get recipeMatchOpenRecipe => 'Receita completa';
+
+  @override
+  String get recipeMatchOnHand => 'em casa';
+
+  @override
+  String get recipeMatchTray => 'Bandeja';
+
+  @override
+  String get recipeMatchTrayEmpty =>
+      'Ainda vazia – arraste um cartão para baixo';
+
+  @override
+  String recipeMatchTrayCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count receitas',
+      one: '1 receita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchClear => 'Esvaziar';
+
+  @override
+  String get recipeMatchTrayHint =>
+      'Fica guardada até você esvaziá-la – mesmo se fechar o baralho.';
+
+  @override
+  String get recipeMatchRemove => 'Tirar da bandeja';
+
+  @override
+  String get recipeMatchToMealplan => 'Para o plano de refeições';
+
+  @override
+  String get recipeMatchToShopping => 'Ingredientes para a lista de compras';
+
+  @override
+  String get recipeMatchSelectIngredients => 'Selecionar ingredientes';
+
+  @override
+  String get recipeMatchNoList => 'Selecione primeiro uma lista de compras.';
+
+  @override
+  String get recipeMatchList => 'Lista';
+
+  @override
+  String get recipeMatchOnHandHint =>
+      'Ingredientes que você já tem estão desmarcados.';
+
+  @override
+  String recipeMatchAddCount(int selected, int total) {
+    return 'Adicionar $selected de $total ingredientes';
+  }
+
+  @override
+  String get recipeMatchNoDay => 'Sem dia – fica na bandeja';
+
+  @override
+  String recipeMatchAddMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Adicionar $count refeições',
+      one: 'Adicionar 1 refeição',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recipeMatchMealsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count refeições adicionadas',
+      one: '1 refeição adicionada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchSwipeUp => 'Deslize para cima para abrir a bandeja';
+
+  @override
+  String get weekPlannerTitle => 'Planejar a semana';
+
+  @override
+  String get weekPlannerStepDays => 'Dias';
+
+  @override
+  String get weekPlannerStepPrefs => 'Preferências';
+
+  @override
+  String get weekPlannerStepPreview => 'Pré-visualização';
+
+  @override
+  String get weekPlannerDaysTitle => 'Quais refeições o app deve preencher?';
+
+  @override
+  String get weekPlannerDaysHint =>
+      'Toque nas células. O que já está planejado continua igual.';
+
+  @override
+  String get weekPlannerPresetWeekdays => 'Dias úteis';
+
+  @override
+  String get weekPlannerPlanned => 'planejado';
+
+  @override
+  String get weekPlannerMoreMeals => 'Mostrar mais refeições';
+
+  @override
+  String get weekPlannerFewerMeals => 'Menos refeições';
+
+  @override
+  String weekPlannerMealCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count refeições',
+      one: '1 refeição',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerPrefsTitle => 'No que o app deve prestar atenção?';
+
+  @override
+  String get weekPlannerPrefsHint =>
+      'Tudo opcional – sem escolha, ele mistura suas receitas.';
+
+  @override
+  String get weekPlannerQuick => 'Rápido durante a semana';
+
+  @override
+  String weekPlannerQuickSub(int minutes) {
+    return 'seg–sex no máximo $minutes min';
+  }
+
+  @override
+  String get weekPlannerStale => 'Primeiro o que não é feito há tempo';
+
+  @override
+  String get weekPlannerStaleSub =>
+      'segundo \"Feito por último\" e o plano de refeições';
+
+  @override
+  String get weekPlannerFavorites => 'Planejar favoritas com mais frequência';
+
+  @override
+  String get weekPlannerFavoritesSub => 'receitas com coração e bem avaliadas';
+
+  @override
+  String get weekPlannerVariety => 'Variedade';
+
+  @override
+  String get weekPlannerVarietySub => 'nenhuma categoria duas vezes seguidas';
+
+  @override
+  String get weekPlannerOnlyFrom => 'Apenas de';
+
+  @override
+  String get weekPlannerDiceRules => 'Usar regras do dado';
+
+  @override
+  String get weekPlannerDiceRulesSub =>
+      'sua escolha por refeição nas configurações do plano';
+
+  @override
+  String weekPlannerMatching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count receitas adequadas',
+      one: '1 receita adequada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weekPlannerForMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'para $count refeições',
+      one: 'para 1 refeição',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerSuggest => 'Sugerir';
+
+  @override
+  String get weekPlannerPreviewHint =>
+      'O dado troca, o cadeado mantém. Segure um prato e arraste para outro dia para trocar.';
+
+  @override
+  String get weekPlannerRerollAll => 'Tudo de novo';
+
+  @override
+  String get weekPlannerReroll => 'Sortear de novo';
+
+  @override
+  String get weekPlannerLock => 'Fixar';
+
+  @override
+  String get weekPlannerUnlock => 'Soltar';
+
+  @override
+  String get weekPlannerReasonNever => 'nunca feita';
+
+  @override
+  String get weekPlannerReasonStale => 'não é feita há tempo';
+
+  @override
+  String get weekPlannerReasonFavorite => 'Favorita';
+
+  @override
+  String get weekPlannerNoMatch => 'Nenhuma receita adequada';
+
+  @override
+  String get weekPlannerThenShopping =>
+      'Depois escolher ingredientes para a lista de compras';
+
+  @override
+  String get weekPlannerMostlyEmpty => 'Semana quase vazia';
+
+  @override
+  String weekPlannerMostlyEmptySub(int free, int total) {
+    return '$free de $total dias ainda livres – preencha em três passos.';
+  }
+
+  @override
+  String get previousWeek => 'Semana anterior';
+
+  @override
+  String get nextWeek => 'Próxima semana';
+
+  @override
+  String get weekPlannerAllDays => 'Todos os dias';
+
+  @override
+  String get weekPlannerWeekend => 'Fim de semana';
+
+  @override
+  String get weekPlannerDinners => 'Jantares';
+
+  @override
+  String get weekPlannerLunches => 'Almoços';
+
+  @override
+  String get weekPlannerAllMeals => 'Todas as refeições';
+
+  @override
+  String get mealplanDayEmpty => 'Nada planejado';
+
+  @override
+  String get mealplanDropHere => 'Solte aqui';
+
+  @override
+  String mealplanDayKcal(String kcal) {
+    return '$kcal kcal por porção';
+  }
+
+  @override
+  String mealplanDayKcalPartial(String kcal) {
+    return 'pelo menos $kcal kcal por porção';
+  }
+
+  @override
+  String get globalSearchHint => 'Buscar receitas, itens, funções …';
+
+  @override
+  String get globalSearchIntro =>
+      'Busque receitas, itens da lista de compras, alimentos e livros de receitas – e também funções e configurações do app, por exemplo \"lista\".';
+
+  @override
+  String get globalSearchFunctions => 'Funções';
+
+  @override
+  String globalSearchNoResults(String query) {
+    return 'Nenhum resultado para \"$query\"';
+  }
+
+  @override
+  String get searchClear => 'Limpar busca';
+
+  @override
+  String get recipeMatchPlanWeek => 'Planejar a semana com estas receitas';
+
+  @override
+  String get weekPlannerReasonTray => 'da bandeja';
+
+  @override
+  String get emptyBrowseRecipes => 'Ver receitas';
+
+  @override
+  String get mealplanWeekShopping => 'Ingredientes desta semana';
+
+  @override
+  String get globalSearchActions => 'Ações';
+
+  @override
+  String globalSearchAddToList(String text) {
+    return 'Adicionar \"$text\" à lista de compras';
+  }
+
+  @override
+  String globalSearchAdded(String text) {
+    return '\"$text\" adicionado';
+  }
+
+  @override
+  String get globalSearchImportUrl => 'Importar receita deste endereço';
+
+  @override
+  String get homeContinueCooking => 'Continuar cozinhando';
+
+  @override
+  String homeCookingStep(int step, int total) {
+    return 'Passo $step de $total';
+  }
+
+  @override
+  String get homeCookingPrep => 'Preparação';
+
+  @override
+  String get homeCookingAlmostDone => 'Quase pronto';
+
+  @override
+  String get homeCookingContinue => 'continuar';
+
+  @override
+  String get paneSelectRecipe => 'Escolha uma receita à esquerda.';
+
+  @override
+  String get mealplanDragRecipeHint =>
+      'Arraste uma receita para um dia para planejá-la.';
+
+  @override
+  String get desktopDropUnsupported =>
+      'Estes arquivos não podem ser adicionados como anexos.';
+
+  @override
+  String desktopDropUploaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count anexos adicionados',
+      one: '1 anexo adicionado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get desktopDropAsAttachment => 'Solte para adicionar como anexo';
+
+  @override
+  String get printAction => 'Imprimir';
+
+  @override
+  String get mealplanPrintWeek => 'Imprimir semana';
+
+  @override
+  String get mealplanEntryCooked => 'Cozinhado';
+
+  @override
+  String get recipeSearchClear => 'Limpar pesquisa';
+
+  @override
+  String get organizerShowRecipes => 'Mostrar receitas';
+
+  @override
+  String globalSearchShowAllRecipes(int count) {
+    return 'Mostrar todas as $count receitas';
+  }
+
+  @override
+  String get unnamedEntry => '(sem nome)';
+
+  @override
+  String get mealplanWholeWeek => 'Para a semana toda';
+
+  @override
+  String get mealplanWholeWeekDropHint =>
+      'Larga aqui uma refeição para a planear para a semana toda.';
+
+  @override
+  String get mealplanMovedToWholeWeek => 'Planeado para a semana toda';
+
+  @override
+  String get mealplanCookToday => 'Cozinhar hoje';
+
+  @override
+  String get mealplanPlanWholeWeek => 'Planear para a semana toda';
+
+  @override
+  String mealplanPlanWholeWeekRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get calendarFeedDuration => 'Duração (minutos)';
+
+  @override
+  String get calendarFeedEventDetails => 'Detalhes do evento';
+
+  @override
+  String calendarFeedEventDetailsHint(String fields) {
+    return 'Personaliza como as refeições aparecem no calendário. Campos: $fields';
+  }
+
+  @override
+  String get calendarFeedEventTitle => 'Título do evento';
+
+  @override
+  String get calendarFeedEventDescription => 'Descrição do evento';
+
+  @override
+  String get calendarFeedEventDetailsWarning =>
+      'Alterar isto muda a ligação do calendário — se já subscreveste, volta a subscrever com a nova ligação.';
+
+  @override
+  String get stepDurationMinutes => 'Duração (minutos)';
+
+  @override
+  String stepDurationSaved(String duration) {
+    return 'Duração guardada: $duration. Ao editar passa a minutos inteiros.';
+  }
+
+  @override
+  String get sortTotalTimeShort => 'Menor tempo total';
+
+  @override
+  String get sortTotalTimeLong => 'Maior tempo total';
+
+  @override
+  String recipeCreatedBy(String name) {
+    return 'Criado por $name';
+  }
+
+  @override
+  String get timelineReplacePhoto => 'Substituir foto';
+
+  @override
+  String get pasteRecipeTitle => 'Colar receita';
+
+  @override
+  String get pasteRecipeDescription =>
+      'Cola uma receita em JSON (schema.org) ou o código HTML de uma página web.';
+
+  @override
+  String get pasteRecipeDescription330 =>
+      'Cola uma receita exportada do Mealie (JSON) — é importada com a estrutura completa: alimentos, unidades e ligações dos passos. JSON (schema.org) e o código HTML de uma página também funcionam.';
+
+  @override
+  String get pasteRecipeHint => 'Cola aqui JSON ou HTML';
+
+  @override
+  String get pasteRecipeButton => 'Colar receita';
+
+  @override
+  String get pasteRecipeImport => 'Importar';
+
+  @override
+  String get aiPromptsTitle => 'Prompts de IA';
+
+  @override
+  String get aiPromptsTeaser =>
+      'Personaliza as instruções que o Mealie dá ao teu fornecedor de IA — para todas as tarefas ou para cada uma.';
+
+  @override
+  String get aiPromptsDescription =>
+      'Personaliza as instruções que o Mealie dá ao teu fornecedor de IA para cada tarefa. Os prompts do Mealie estão em inglês, mas isso não muda o idioma das tuas receitas: mantêm o idioma da origem, a menos que as queiras traduzir. Podes escrever as tuas instruções em qualquer idioma.';
+
+  @override
+  String get aiPromptsGlobal => 'Instruções para todos os prompts';
+
+  @override
+  String get aiPromptsGlobalDescription =>
+      'Adicionado a cada prompt que produz dados de receitas, como criar receitas, analisar ingredientes e traduzir. Os prompts de sistema não são afetados.';
+
+  @override
+  String get aiPromptsGlobalPlaceholder =>
+      'p. ex. Usa sempre unidades métricas.';
+
+  @override
+  String get aiPromptsList => 'Prompts';
+
+  @override
+  String get aiPromptSystem => 'Sistema';
+
+  @override
+  String get aiPromptSystemDescription =>
+      'Este é um prompt de sistema. Transcreve o material de origem o mais fielmente possível antes de virar receita, por isso as instruções para todos os prompts não lhe são adicionadas. Alterá-lo normalmente não é necessário e pode tornar as importações menos fiáveis.';
+
+  @override
+  String get aiPromptAppended => 'Adicionado';
+
+  @override
+  String get aiPromptOverridden => 'Substituído';
+
+  @override
+  String get aiPromptModeDefault => 'Predefinido';
+
+  @override
+  String get aiPromptModeAppend => 'Adicionar';
+
+  @override
+  String get aiPromptModeOverride => 'Substituir';
+
+  @override
+  String get aiPromptAppendDescription =>
+      'Estas instruções são adicionadas ao prompt do Mealie e têm prioridade quando os dois entram em conflito.';
+
+  @override
+  String get aiPromptOverrideDescription =>
+      'O teu prompt substitui totalmente o do Mealie, por isso futuras atualizações do Mealie não se aplicam. Os dados de que a tarefa precisa, como a tua lista de unidades, continuam a ser adicionados depois.';
+
+  @override
+  String get aiPromptDefaultChanged =>
+      'O prompt do Mealie mudou desde que o substituíste. Compara-o com o teu ou volta ao predefinido para usar a nova versão.';
+
+  @override
+  String get aiPromptViewDefault => 'Ver prompt predefinido';
+
+  @override
+  String get aiPromptHideDefault => 'Ocultar prompt predefinido';
+
+  @override
+  String get aiPromptSaved => 'Prompt guardado';
+
+  @override
+  String get aiPromptSaveFailed => 'Não foi possível guardar o prompt';
+
+  @override
+  String get aiPromptTitleBuildRecipe => 'Criar receita';
+
+  @override
+  String get aiPromptTitleParseIngredients => 'Analisar ingredientes';
+
+  @override
+  String get aiPromptTitleRecipeVideo => 'Receita a partir de vídeo';
+
+  @override
+  String get aiPromptTitleOrganizers => 'Atribuir organizadores';
+
+  @override
+  String get aiPromptTitleTranslate => 'Traduzir receita';
+
+  @override
+  String get aiPromptTitleCompileSource => 'Ler material de origem';
+
+  @override
+  String get aiPromptTitleTranscribe => 'Transcrever áudio';
+
+  @override
+  String get aiPromptDescBuildRecipe =>
+      'Transforma o material lido de uma página, foto ou texto numa receita estruturada.';
+
+  @override
+  String get aiPromptDescParseIngredients =>
+      'Usado pelo analisador de ingredientes com IA para separar cada ingrediente em quantidade, unidade, alimento e nota.';
+
+  @override
+  String get aiPromptDescRecipeVideo =>
+      'Transforma a transcrição e a descrição de um vídeo numa receita.';
+
+  @override
+  String get aiPromptDescOrganizers =>
+      'Escolhe as etiquetas, categorias e utensílios de uma receita importada.';
+
+  @override
+  String get aiPromptDescTranslate =>
+      'Traduz uma receita importada para o idioma escolhido.';
+
+  @override
+  String get aiPromptDescCompileSource =>
+      'Lê páginas web, fotos e textos para um registo em texto simples da receita.';
+
+  @override
+  String get aiPromptDescTranscribe =>
+      'Transcreve áudio quando o teu fornecedor de áudio não o consegue fazer diretamente.';
+
+  @override
+  String get mealplanNoteHint => 'Nota (opcional)';
+
+  @override
+  String get mealplanEditTitle => 'Editar entrada';
+
+  @override
+  String get mealplanEntryTitleLabel => 'Título';
+
+  @override
+  String get mealplanEntryNoteLabel => 'Nota';
+
+  @override
+  String mealplanCreateRecipe(String name) {
+    return 'Nova receita \"$name\"';
+  }
+
+  @override
+  String get mealplanCreateRecipeSubtitle =>
+      'Cria uma receita vazia, planeia-a e abre o editor';
+
+  @override
+  String get importOptionsTitle => 'Opções de importação';
+
+  @override
+  String get importOptionsHint =>
+      'Quanto a IA do Mealie faz no seu servidor ao importar. Cada etapa extra é uma solicitação de IA própria – quanto menos, mais rápido.';
+
+  @override
+  String get importTranslateTitle => 'Traduzir receita';
+
+  @override
+  String get importOrganizersTitle => 'Categorias e tags';
+
+  @override
+  String get importOrganizersCreate => 'Criar novas';
+
+  @override
+  String get importOrganizersExisting => 'Só existentes';
+
+  @override
+  String get importOrganizersNone => 'Nenhuma';
+
+  @override
+  String get importOrganizersCreateHint =>
+      'A IA atribui tags, categorias e utensílios e cria os que faltam.';
+
+  @override
+  String get importOrganizersExistingHint =>
+      'A IA usa só tags, categorias e utensílios que já existem.';
+
+  @override
+  String get importOrganizersNoneHint =>
+      'A receita chega sem tags, categorias e utensílios. O Mealie executa a etapa mesmo assim, então a importação não fica mais rápida.';
+
+  @override
+  String get importStarting => 'Enviando ao servidor…';
+
+  @override
+  String get importRunning => 'Importando receita…';
+
+  @override
+  String get aiImagesRunning => 'A IA está lendo as páginas…';
+
+  @override
+  String get importStreamPhotosTitle => 'Importar fotos com progresso ao vivo';
+
+  @override
+  String get importStreamPhotosHint =>
+      'Mostra cada etapa e mantém a conexão aberta em importações longas. Desative para enviar numa única requisição como antes – p. ex. se seu proxy bloquear streaming.';
+
+  @override
+  String get weekPlannerDiceRulesMealieSub =>
+      'as regras do Mealie da sua casa (ajustes do plano de refeições)';
+
+  @override
+  String get syncStarted =>
+      'Recarregando receitas, imagens e listas do servidor…';
+
+  @override
+  String get syncDone => 'Tudo atualizado';
+
+  @override
+  String get recipeReloaded => 'Receita recarregada';
+
+  @override
+  String get logoutTitle => 'Sair / trocar de usuário';
+
+  @override
+  String get logoutConfirm =>
+      'Receitas, listas e alterações ainda não sincronizadas são removidas deste dispositivo. Seus ajustes do app e o endereço do servidor continuam – basta entrar de novo.';
+
+  @override
+  String get reloadRecipe => 'Recarregar do servidor';
+
+  @override
+  String get wifiServerTitle => 'Outro endereço no Wi-Fi';
+
+  @override
+  String get wifiServerHint =>
+      'Para o mesmo servidor em um segundo endereço, p. ex. o IP local em casa e ZeroTier, Tailscale ou um domínio fora. Na rede Wi-Fi indicada o app usa este endereço automaticamente; em qualquer outro lugar, a URL do servidor acima.';
+
+  @override
+  String get wifiSsidLabel => 'Nome da rede Wi-Fi';
+
+  @override
+  String get wifiServerUrl => 'Endereço nesta rede Wi-Fi';
+
+  @override
+  String get wifiUseCurrent => 'Usar o Wi-Fi atual';
+
+  @override
+  String get wifiNameUnavailable =>
+      'Não foi possível ler o nome do Wi-Fi. Conecte-se à rede e permita o acesso à localização – o Android e o iOS só informam o nome do Wi-Fi com essa permissão.';
+
+  @override
+  String wifiServerActive(String ssid) {
+    return 'Ativo: endereço da rede “$ssid”';
+  }
+
+  @override
+  String wifiServerStandardActive(String ssid) {
+    return 'Ativo: URL do servidor (fora de “$ssid”)';
+  }
+
+  @override
+  String get wifiServerRemove => 'Remover';
+
+  @override
+  String get switchUserTitle => 'Trocar de usuário';
+
+  @override
+  String switchUserBody(String name) {
+    return '$name continua salvo neste dispositivo – com todas as receitas, listas e alterações ainda não sincronizadas. Você volta pela sua foto de perfil ou pela página de login.';
+  }
+
+  @override
+  String get allowBiometricTitle => 'Voltar com o desbloqueio do dispositivo';
+
+  @override
+  String get allowBiometricHint =>
+      'Face ID, digital ou PIN do dispositivo em vez da senha. Qualquer pessoa que consiga desbloquear este dispositivo poderá entrar nesta conta.';
+
+  @override
+  String get allow => 'Permitir';
+
+  @override
+  String unlockAccountReason(String name) {
+    return 'Trocar para $name';
+  }
+
+  @override
+  String signInAs(String name) {
+    return 'Entrar como $name';
+  }
+
+  @override
+  String wrongAccountError(String name) {
+    return 'Essa é a conta “$name”. Entre com a conta salva.';
+  }
+
+  @override
+  String get accountSaveOffline =>
+      'Não é possível salvar a conta agora – o servidor não está acessível.';
+
+  @override
+  String get signOutRemoveTitle => 'Sair e remover';
+
+  @override
+  String get signOutRemoveConfirm =>
+      'Esta conta e todos os seus dados neste dispositivo (receitas, listas, alterações ainda não sincronizadas) são removidos. Seus ajustes do app continuam.';
+
+  @override
+  String get removeSavedAccount => 'Remover deste dispositivo';
+
+  @override
+  String removeSavedAccountConfirm(String name) {
+    return 'Remover “$name” e todos os dados salvos deste dispositivo? As alterações ainda não sincronizadas serão perdidas.';
+  }
+
+  @override
+  String get savedAccountsTitle => 'Contas salvas';
+
+  @override
+  String get addAccount => 'Adicionar outra conta';
+
+  @override
+  String get biometricOff => 'Parar de usar o desbloqueio do dispositivo';
+
+  @override
+  String get orNewAccount => 'Ou entre com outra conta:';
+
+  @override
+  String get importVideoTitle => 'Links de vídeo';
+
+  @override
+  String get importVideoFast => 'Rápido';
+
+  @override
+  String get importVideoThorough => 'Completo (IA)';
+
+  @override
+  String get importVideoFastHint =>
+      'O Mealie transcreve o vídeo e cria a receita com uma única solicitação de IA – geralmente bem mais rápido. Sem tradução e sem categorias/tags. Você ainda pode ligar a IA em cada importação.';
+
+  @override
+  String get importVideoThoroughHint =>
+      'O interruptor de IA liga automaticamente para links de vídeo: várias etapas de IA, com tradução e categorias/tags conforme definido acima. Demora mais.';
+
+  @override
+  String get importPresetFast => 'Rápido';
+
+  @override
+  String get importPresetThorough => 'Completo';
+
+  @override
+  String get importPresetCustom => 'Personalizado';
+
+  @override
+  String get importPresetFastTitle =>
+      'O mínimo de etapas de IA – a menor espera';
+
+  @override
+  String get importPresetFastVideo =>
+      'Links de vídeo: o Mealie transcreve o vídeo e cria a receita com uma única solicitação de IA (o interruptor de IA fica desligado).';
+
+  @override
+  String get importPresetFastTranslate =>
+      'Sem tradução – a receita fica no idioma original.';
+
+  @override
+  String get importPresetFastOrganizers =>
+      'Só categorias e tags existentes são atribuídas; nenhuma nova é criada.';
+
+  @override
+  String get importPresetThoroughTitle =>
+      'A importação completa com IA do Mealie – demora mais, aproveita ao máximo';
+
+  @override
+  String get importPresetThoroughVideo =>
+      'Links de vídeo são importados automaticamente com IA – em várias etapas (preparar a fonte, criar a receita…).';
+
+  @override
+  String get importPresetThoroughTranslate =>
+      'A receita é traduzida para o idioma de importação abaixo se estiver em outro idioma.';
+
+  @override
+  String get importPresetThoroughOrganizers =>
+      'Categorias e tags adequadas são atribuídas; as que faltam são criadas.';
+
+  @override
+  String get importPresetCustomTitle => 'Ajuste cada opção você mesmo';
+
+  @override
+  String get importPresetCustomBody =>
+      'Você começa com o que sua escolha anterior fazia e muda só o que precisa – p. ex. importações de vídeo rápidas, mas com tradução.';
+
+  @override
+  String get sidebarPinHint =>
+      'Dica: mantenha um bloco pressionado e arraste-o para a barra lateral para fixá-lo lá.';
+
+  @override
+  String get sidebarDropHere => 'Soltar aqui';
+
+  @override
+  String sidebarShortcutTitle(String name) {
+    return 'Atalho para “$name”';
+  }
+
+  @override
+  String sidebarShortcutPrompt(String modifier) {
+    return 'Pressione agora a combinação de teclas desejada, com $modifier.';
+  }
+
+  @override
+  String get sidebarShortcutTaken => 'Esta combinação já está em uso.';
+
+  @override
+  String get sidebarShortcutNone => 'Sem atalho';
+
+  @override
+  String get sidebarShortcutChange => 'Alterar atalho';
+
+  @override
+  String get sidebarUnpin => 'Remover da barra lateral';
+
+  @override
+  String sidebarFull(int count) {
+    return 'A barra lateral está cheia – no máximo $count itens próprios.';
+  }
+
+  @override
+  String get tabletSidebar => 'Barra lateral na horizontal';
+
+  @override
+  String get tabletSidebarSubtitle =>
+      'Mostra a navegação à esquerda em vez de embaixo quando o tablet está na horizontal';
 }

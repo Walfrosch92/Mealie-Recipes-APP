@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/gradient_button.dart' show SheetHandle;
+import '../../../shared/widgets/sheet_title.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/utils/search_match.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../organizers/providers/organizers_provider.dart'
@@ -324,7 +327,7 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(hint,
-                    style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                    style: TextStyle(color: context.appFgSub, fontSize: 13)),
               ),
           ],
         ),
@@ -338,7 +341,7 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
         subtitle: subtitle == null
             ? null
             : Text(subtitle,
-                style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                style: TextStyle(color: context.appFgSub, fontSize: 13)),
         value: value,
         activeTrackColor: AppTokens.accent,
         onChanged: onChanged,
@@ -510,9 +513,10 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
                 runSpacing: 6,
                 children: [
                   for (final a in _aliases)
-                    InputChip(
-                      label: Text(a),
-                      onDeleted: () => setState(() => _aliases.remove(a)),
+                    AppChip(
+                      label: a,
+                      onRemove: () => setState(() => _aliases.remove(a)),
+                      removeTooltip: l.delete,
                     ),
                 ],
               ),
@@ -567,7 +571,7 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
         foods: widget.allItems.where((m) => m['id'] != _item?['id']).toList(),
       ),
     );
-    if (result != null) setState(() => _subs.add(result));
+    if (result != null && mounted) setState(() => _subs.add(result));
   }
 
   Widget _substitutionEditor(AppLocalizations l) => Column(
@@ -612,20 +616,15 @@ class _FoodUnitEditSheetState extends ConsumerState<_FoodUnitEditSheet> {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+          20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-              _item == null
-                  ? (_isUnit ? l.newUnit : l.newFood)
-                  : (_isUnit ? l.editUnit : l.editFood),
-              style: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  color: context.appFg,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800)),
+          const Center(child: SheetHandle()),
+          SheetTitle(_item == null
+              ? (_isUnit ? l.newUnit : l.newFood)
+              : (_isUnit ? l.editUnit : l.editFood)),
           const SizedBox(height: 16),
           Flexible(
             child: SingleChildScrollView(
@@ -686,9 +685,11 @@ class _SubstitutionDialogState extends State<_SubstitutionDialog> {
     final terms = searchTerms(_search.text);
     final matches = terms.isEmpty
         ? const <Map<String, dynamic>>[]
-        : widget.foods
-            .where((m) =>
-                terms.every(normalizeForSearch(foodUnitName(m)).contains))
+        : rankBySearch(
+                widget.foods.where((m) =>
+                    terms.every(normalizeForSearch(foodUnitName(m)).contains)),
+                terms,
+                foodUnitName)
             .take(6)
             .toList();
     return AlertDialog(
@@ -700,9 +701,14 @@ class _SubstitutionDialogState extends State<_SubstitutionDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_food != null)
-              InputChip(
-                label: Text(foodUnitName(_food!)),
-                onDeleted: () => setState(() => _food = null),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: AppChip(
+                  label: foodUnitName(_food!),
+                  selected: true,
+                  onRemove: () => setState(() => _food = null),
+                  removeTooltip: l.delete,
+                ),
               )
             else ...[
               TextField(

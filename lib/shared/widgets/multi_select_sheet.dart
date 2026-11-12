@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'sheet_title.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -39,7 +40,6 @@ Future<MultiSelectResult?> showMultiSelectSheet(
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: context.appCard,
       builder: (_) => _MultiSelectSheet(
         title: title,
         initial: initial,
@@ -114,12 +114,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
           padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
           child: Row(children: [
             Expanded(
-              child: Text(widget.title,
-                  style: TextStyle(
-                      fontFamily: 'PlusJakartaSans',
-                      color: context.appFg,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800)),
+              child: SheetTitle(widget.title),
             ),
             if (_selected.isNotEmpty)
               TextButton(

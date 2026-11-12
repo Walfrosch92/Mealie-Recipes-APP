@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/shimmer.dart';
+import '../../../shared/widgets/swipe_context_menu.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -11,6 +13,7 @@ import '../../../shared/widgets/animations.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../providers/cookbooks_provider.dart';
 import '../../../shared/widgets/error_view.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 
 // ---------------------------------------------------------------------------
 // Cookbooks — Übersicht der Haushalts-Kochbücher (GET /api/households/
@@ -44,13 +47,16 @@ class CookbooksScreen extends ConsumerWidget {
         child: SafeArea(
           top: false,
           child: cookbooksAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const ListSkeleton(),
             error: (e, _) => ErrorRetryView(
               error: e,
               onRetry: () => ref.read(cookbooksProvider.notifier).reload(),
             ),
             data: (books) => books.isEmpty
-                ? _EmptyState(message: l.cookbooksEmpty)
+                ? EmptyStateView(
+                    icon: Icons.menu_book_rounded,
+                    message: l.cookbooksEmpty,
+                    scrollable: false)
                 : RefreshIndicator(
                     onRefresh: () =>
                         ref.read(cookbooksProvider.notifier).reload(),
@@ -83,15 +89,15 @@ class _CookbookCard extends ConsumerWidget {
     final ok = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: context.appCard,
+            backgroundColor: ctx.appCard,
             content: Text(l.deleteOrganizerConfirm(cookbook.name),
-                style: TextStyle(color: context.appFg)),
+                style: TextStyle(color: ctx.appFg)),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -114,24 +120,25 @@ class _CookbookCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final description = cookbook.description?.trim() ?? '';
-    return Slidable(
+    return SwipeContextMenu(
+        child: Slidable(
       key: ValueKey(cookbook.id),
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.5,
+        extentRatio: AppTokens.swipeExtent(2),
         children: [
           SlidableAction(
             onPressed: (_) => context.push('/cookbooks/${cookbook.id}/edit'),
-            backgroundColor: const Color(0xFF0A84FF),
+            backgroundColor: AppTokens.swipeEdit,
             foregroundColor: Colors.white,
-            icon: Icons.edit,
+            icon: Icons.edit_rounded,
             label: l.edit,
           ),
           SlidableAction(
             onPressed: (_) => _confirmDelete(context, ref),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTokens.swipeDelete,
             foregroundColor: Colors.white,
-            icon: Icons.delete,
+            icon: Icons.delete_outline_rounded,
             label: l.delete,
           ),
         ],
@@ -155,7 +162,7 @@ class _CookbookCard extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
                   gradient: AppTokens.accentGradient,
                   boxShadow: context.appAccentGlow,
                 ),
@@ -196,31 +203,6 @@ class _CookbookCard extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  final String message;
-  const _EmptyState({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.menu_book_rounded,
-                size: 56, color: context.appFgTertiary),
-            const SizedBox(height: 14),
-            Text(message,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: context.appFgSub, fontSize: 15)),
-          ],
-        ),
-      ),
-    );
+    ));
   }
 }

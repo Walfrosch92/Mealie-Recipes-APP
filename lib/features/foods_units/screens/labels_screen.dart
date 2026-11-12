@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/swipe_context_menu.dart';
+import '../../../shared/widgets/tap_area.dart';
+import '../../../shared/widgets/app_search_field.dart';
+import '../../../shared/widgets/app_snack.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -15,6 +19,9 @@ import '../../shopping_list/providers/shopping_list_provider.dart'
     show shoppingLabelsProvider, shoppingListProvider;
 import '../../shopping_list/screens/shopping_list_screen.dart'
     show shoppingCategoryColor;
+import '../../../shared/widgets/search_jump.dart';
+import '../../../shared/widgets/empty_state_view.dart';
+import '../../../core/utils/hex_color.dart';
 
 // ---------------------------------------------------------------------------
 // Abteilungen (Mealie „Labels") verwalten — wie die Webapp: anlegen,
@@ -55,10 +62,8 @@ Future<ShoppingLabel?> createLabelInteractive(
     await ref.read(shoppingLabelsProvider.notifier).refreshQuiet();
     return created;
   } catch (e) {
-    final detail = mealieErrorMessage(e);
-    messenger.showSnackBar(SnackBar(
-        content: Text(
-            detail == null ? l.createFailed : '${l.createFailed}: $detail')));
+    messenger.showSnackBar(
+        SnackBar(content: Text(userErrorMessage(e, l.createFailed))));
     return null;
   }
 }
@@ -70,7 +75,8 @@ class LabelsScreen extends ConsumerStatefulWidget {
   ConsumerState<LabelsScreen> createState() => _LabelsScreenState();
 }
 
-class _LabelsScreenState extends ConsumerState<LabelsScreen> {
+class _LabelsScreenState extends ConsumerState<LabelsScreen>
+    with SearchJumpMixin {
   String _query = '';
   bool _selecting = false;
   final Set<String> _selected = {};
@@ -84,15 +90,13 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
 
   void _error(String fallback, Object e) {
     if (!mounted) return;
-    final detail = mealieErrorMessage(e);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(detail == null ? fallback : '$fallback: $detail')));
+    showErrorSnack(context, fallback, e);
   }
 
   Future<void> _edit(ShoppingLabel? label) async {
     final l = AppLocalizations.of(context)!;
     final result = await showLabelEditDialog(context, label: label);
-    if (result == null) return;
+    if (result == null || !mounted) return;
     setState(() => _busy = true);
     try {
       final api = ref.read(apiServiceProvider);
@@ -123,7 +127,7 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -161,9 +165,12 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
     final labels = [...async.valueOrNull ?? const <ShoppingLabel>[]]
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     final terms = searchTerms(_query);
-    final shown = labels
-        .where((x) => terms.every(normalizeForSearch(x.name).contains))
-        .toList();
+    final shown = rankBySearch(
+        labels.where((x) => terms.every(normalizeForSearch(x.name).contains)),
+        terms,
+        (x) => x.name);
+    // Sprung aus der globalen Suche (?highlight=<id>).
+    handleSearchJump(context, [for (final x in shown) x.id]);
 
     return PopScope(
       canPop: !_selecting,
@@ -213,10 +220,25 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
                     tooltip: l.newLabel,
                     onPressed: () => _edit(null),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.checklist_rounded, color: context.appFg),
-                    tooltip: l.selectAction,
-                    onPressed: () => setState(() => _selecting = true),
+                  // „Auswählen" im ⋮-Menü — wie bei Lebensmitteln/Einheiten.
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert_rounded, color: context.appFg),
+                    color: context.appCard,
+                    onSelected: (v) {
+                      if (v == 'select') setState(() => _selecting = true);
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'select',
+                        child: Row(children: [
+                          Icon(Icons.checklist_rounded,
+                              color: context.appFg, size: 20),
+                          const SizedBox(width: 12),
+                          Text(l.selectAction,
+                              style: TextStyle(color: context.appFg)),
+                        ]),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -228,42 +250,26 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
                 if (_busy) const LinearProgressIndicator(minHeight: 2),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                  child: TextField(
+                  child: AppSearchField(
                     onChanged: (v) => setState(() => _query = v),
-                    onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                    style: TextStyle(color: context.appFg),
-                    decoration: InputDecoration(
-                      hintText: l.search,
-                      prefixIcon:
-                          Icon(Icons.search_rounded, color: context.appFgSub),
-                      filled: true,
-                      fillColor: context.appCard,
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTokens.rSm),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
                   ),
                 ),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: _refresh,
                     child: labels.isEmpty
-                        ? ListView(children: [
-                            Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: async.isLoading
-                                  ? const Center(
-                                      child: CircularProgressIndicator())
-                                  : Text(l.foodsUnitsEmpty,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          color: context.appFgSub,
-                                          fontSize: 15)),
-                            ),
-                          ])
+                        ? (async.isLoading
+                            ? ListView(children: const [
+                                Padding(
+                                    padding: EdgeInsets.all(32),
+                                    child: Center(
+                                        child: CircularProgressIndicator())),
+                              ])
+                            : EmptyStateView(
+                                icon: Icons.label_rounded,
+                                message: l.foodsUnitsEmpty))
                         : ListView.builder(
+                            controller: searchScroll,
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                             itemCount: shown.length,
                             itemBuilder: (_, i) {
@@ -323,18 +329,21 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
                                   ]),
                                 ),
                               );
+                              final marked = searchHighlight(lb.id, tile);
                               return EntranceOnce(
                                 id: 'label-${lb.id}',
                                 index: i,
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: _selecting
-                                      ? tile
-                                      : Slidable(
+                                      ? marked
+                                      : SwipeContextMenu(
+                                          child: Slidable(
                                           key: ValueKey(lb.id),
                                           endActionPane: ActionPane(
                                             motion: const DrawerMotion(),
-                                            extentRatio: 0.3,
+                                            extentRatio:
+                                                AppTokens.swipeExtent(1),
                                             children: [
                                               SlidableAction(
                                                 onPressed: (_) async {
@@ -344,15 +353,17 @@ class _LabelsScreenState extends ConsumerState<LabelsScreen> {
                                                     await _deleteIds([lb.id]);
                                                   }
                                                 },
-                                                backgroundColor: Colors.red,
+                                                backgroundColor:
+                                                    AppTokens.swipeDelete,
                                                 foregroundColor: Colors.white,
-                                                icon: Icons.delete,
+                                                icon: Icons
+                                                    .delete_outline_rounded,
                                                 label: l.delete,
                                               ),
                                             ],
                                           ),
-                                          child: tile,
-                                        ),
+                                          child: marked,
+                                        )),
                                 ),
                               );
                             },
@@ -403,25 +414,17 @@ class _LabelDialogState extends ConsumerState<_LabelDialog> {
     }
     return null;
   }
+
   late final _hex = TextEditingController(
       text: _normalize(widget.label?.color) ?? _kPalette[5]);
   bool _nameError = false;
 
   static String? _normalize(String? c) {
-    if (c == null) return null;
-    var v = c.trim().toUpperCase();
-    if (!v.startsWith('#')) v = '#$v';
-    // Mealie speichert teils #RRGGBBAA — für die Anzeige reicht RGB.
-    if (v.length == 9) v = v.substring(0, 7);
-    return RegExp(r'^#[0-9A-F]{6}$').hasMatch(v) ? v : null;
+    final h = normalizeHexRgb(c);
+    return h == null ? null : '#$h';
   }
 
-  Color? get _color {
-    final v = _normalize(_hex.text);
-    return v == null
-        ? null
-        : Color(int.parse('FF${v.substring(1)}', radix: 16));
-  }
+  Color? get _color => colorFromHex(_hex.text);
 
   @override
   void dispose() {
@@ -457,22 +460,21 @@ class _LabelDialogState extends ConsumerState<_LabelDialog> {
             ),
             const SizedBox(height: 16),
             Text(l.colorLabel,
-                style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                style: TextStyle(color: context.appFgSub, fontSize: 13)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
                 for (final hex in _kPalette)
-                  GestureDetector(
+                  TapArea(
                     onTap: () => setState(() => _hex.text = hex),
                     child: Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(
-                            int.parse('FF${hex.substring(1)}', radix: 16)),
+                        color: colorFromHex(hex),
                         border: Border.all(
                             color: current == hex
                                 ? context.appFg

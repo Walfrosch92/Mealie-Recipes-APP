@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_service.dart';
@@ -7,9 +8,11 @@ import '../../../core/models/recipe_detail.dart';
 import '../../../core/models/timeline_event.dart';
 import '../../../core/services/local_cache.dart';
 import '../../../core/services/log_manager.dart';
+import '../../../core/utils/media_urls.dart';
 import '../../recipes/providers/recipes_provider.dart';
 import '../../../core/utils/server_time.dart';
 import '../services/offline_cooked_queue.dart';
+import 'cooked_marks_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Zeitleiste — Cache-first (Offline-Prinzip): sofort den letzten Stand aus
@@ -85,6 +88,41 @@ class RecipeTimelineNotifier
     if (ref.exists(globalTimelineProvider)) {
       ref.read(globalTimelineProvider.notifier).removeLocal(ev.id);
     }
+    // Gelöschtes „Ich hab's gemacht" → Haken im Essensplan neu bestimmen.
+    if (ev.eventType == 'comment') {
+      if (ev.timestampLocal case final t?) {
+        final key = cookedMarkKey(ev.recipeId, t);
+        ref
+            .read(localCookedMarksProvider.notifier)
+            .update((s) => {...s}..remove(key));
+      }
+      ref.invalidate(cookedMarksProvider);
+    }
+  }
+
+  /// Foto hinzufügen bzw. ersetzen.
+  Future<void> setImage(TimelineEvent ev, File photo) async {
+    await ref.read(apiServiceProvider).uploadTimelineEventImage(ev.id, photo);
+    _afterImageChange(ev.copyWith(hasImage: true));
+  }
+
+  /// Foto entfernen (Mealie ≥ 3.30).
+  Future<void> removeImage(TimelineEvent ev) async {
+    await ref.read(apiServiceProvider).removeTimelineEventImage(ev);
+    _afterImageChange(ev.copyWith(hasImage: false));
+  }
+
+  void _afterImageChange(TimelineEvent updated) {
+    // Gleiche URL, neues Bild → zwischengespeicherte Kopien verwerfen.
+    final server = ref.read(apiServiceProvider).settings.serverUrl;
+    for (final size in ['min-original', 'original']) {
+      CachedNetworkImage.evictFromCache(
+          timelineImageUrl(server, updated.recipeId, updated.id, size: size));
+    }
+    _replace(updated);
+    if (ref.exists(globalTimelineProvider)) {
+      ref.read(globalTimelineProvider.notifier).replaceLocal(updated);
+    }
   }
 
   Future<void> updateMessage(TimelineEvent ev, String message) async {
@@ -120,8 +158,18 @@ Future<MadeThisResult> recordRecipeMade(
 }) async {
   final timestamp = when ?? DateTime.now();
   final childMessageText = childMessage?.call(recipe.name);
+  // Haken im Essensplan sofort (Server-Stand zieht nach).
+  void markCooked() {
+    final local = timestamp.toLocal();
+    container.read(localCookedMarksProvider.notifier).update((s) => {
+          ...s,
+          cookedMarkKey(recipe.id, local),
+          for (final c in childRecipes) cookedMarkKey(c.id, local),
+        });
+  }
+
   try {
-    return await sendRecipeMade(container,
+    final result = await sendRecipeMade(container,
         recipe: recipe,
         subject: subject,
         message: message,
@@ -129,6 +177,8 @@ Future<MadeThisResult> recordRecipeMade(
         photo: photo,
         childRecipes: childRecipes,
         childMessageText: childMessageText);
+    markCooked();
+    return result;
   } catch (e) {
     if (!isConnectionError(e)) rethrow;
     // Offline: vormerken statt verlieren, „Zuletzt gekocht" schon lokal
@@ -146,6 +196,7 @@ Future<MadeThisResult> recordRecipeMade(
       await container.read(recipesProvider.notifier).upsertOne(
           recipe.copyWith(lastMade: timestamp.toUtc().toIso8601String()));
     }
+    markCooked();
     return MadeThisResult.queued;
   }
 }

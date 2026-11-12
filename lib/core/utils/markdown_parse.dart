@@ -415,6 +415,18 @@ String flattenMarkdownBlockMarkers(String text) {
   return out.join('\n');
 }
 
+/// Markdown → reiner Text für einzeilige Vorschauen (z. B. Rezept-
+/// Beschreibung in Suchlisten): Bilder raus, Block-Marker weg, Inline-Syntax
+/// aufgelöst (Links behalten nur ihr Label), Zeilen zu einem Fließtext.
+String markdownToPlainText(String text) {
+  final flat = flattenMarkdownBlockMarkers(stripEmbeddedImages(text));
+  return flat
+      .split('\n')
+      .map((line) => parseInlineMarkdown(line).map((s) => s.text).join().trim())
+      .where((line) => line.isNotEmpty)
+      .join(' ');
+}
+
 /// Löst eine Markdown-URL auf: absolute http(s)-URLs unverändert, relative
 /// Pfade (Mealie-Assets wie `/api/media/...`) gegen [serverUrl]. Liefert null,
 /// wenn keine brauchbare URL entsteht.

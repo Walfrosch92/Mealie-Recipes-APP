@@ -28,6 +28,11 @@ class AsyncActionButton extends StatefulWidget {
   /// Volle Breite (für Formular-Buttons).
   final bool expand;
 
+  /// false = kein Spinner im Button, während die Aktion läuft — für
+  /// Aufrufer, die den Fortschritt selbst anzeigen (Import-Fortschritt),
+  /// damit sich nicht zwei Spinner gleichzeitig drehen.
+  final bool showBusySpinner;
+
   const AsyncActionButton({
     super.key,
     required this.onPressed,
@@ -38,6 +43,7 @@ class AsyncActionButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(vertical: 15, horizontal: 18),
     this.borderRadius = AppTokens.rMd,
     this.expand = false,
+    this.showBusySpinner = true,
   });
 
   @override
@@ -66,7 +72,7 @@ class _AsyncActionButtonState extends State<AsyncActionButton> {
     final enabled = widget.onPressed != null && !_busy;
     final radius = BorderRadius.circular(widget.borderRadius);
 
-    final Widget? leading = _busy
+    final Widget? leading = _busy && widget.showBusySpinner
         ? SizedBox(
             width: 16,
             height: 16,

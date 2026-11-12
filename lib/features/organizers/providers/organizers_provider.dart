@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/models/organizer_item.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/local_cache.dart';
 import '../../../core/services/log_manager.dart';
 import '../../recipes/providers/recipes_provider.dart';
@@ -35,7 +36,25 @@ class OrganizersNotifier
     final items =
         _sorted(await ref.read(apiServiceProvider).fetchOrganizers(arg));
     await LocalCache.saveOrganizers(arg, items);
+    unawaited(_pruneDiceFilters(items));
     return items;
+  }
+
+  /// Würfel-Auswahl im Mahlzeitenplan an den Server-Stand angleichen — nur
+  /// nach einem erfolgreichen Abruf bzw. Löschen, nie aus dem Cache.
+  Future<void> _pruneDiceFilters(List<OrganizerItem> items) async {
+    final prefix = switch (arg) {
+      OrganizerKind.category => 'c:',
+      OrganizerKind.tag => 't:',
+      OrganizerKind.tool => null,
+    };
+    if (prefix == null) return;
+    try {
+      await ref.read(settingsProvider.future);
+      await ref
+          .read(settingsProvider.notifier)
+          .pruneMealDiceFilters(prefix, {for (final i in items) i.id});
+    } catch (_) {}
   }
 
   Future<void> _refreshInBackground() async {
@@ -93,7 +112,9 @@ class OrganizersNotifier
 
   Future<void> delete(OrganizerItem item) async {
     await ref.read(apiServiceProvider).deleteOrganizer(arg, item.id);
-    await _set(_current.where((i) => i.id != item.id).toList());
+    final remaining = _current.where((i) => i.id != item.id).toList();
+    await _set(remaining);
+    unawaited(_pruneDiceFilters(remaining));
     await ref
         .read(recipesProvider.notifier)
         .stripOrganizerEverywhere(arg, item.id);

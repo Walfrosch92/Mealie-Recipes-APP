@@ -1,8 +1,14 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/mealie_version.dart';
+import '../../users/providers/users_provider.dart' show userDisplayName;
+import '../../../core/providers/cached_json_list.dart';
+import '../../../core/utils/cooking_step_utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -12,11 +18,14 @@ import '../../../core/models/recipe_detail.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/platform_features.dart';
 import '../../webapp_tools/widgets/recipe_web_tools.dart';
+import '../../webapp_tools/screens/recipe_actions_screen.dart'
+    show recipeActionsProvider;
 import '../../../core/api/api_service.dart';
 import '../../../core/services/log_manager.dart';
 import '../../../core/utils/ingredient_display.dart' as ingdisp;
 import '../../../core/utils/yield_format.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/liquid_glass.dart' show GlassTabBar;
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/ingredient_section_header.dart';
@@ -36,6 +45,7 @@ import '../../cooking_mode/providers/cooking_session_provider.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../../mealplan/providers/mealplan_provider.dart';
 import '../../shopping_list/providers/shopping_list_provider.dart';
+import '../../recipe_match/screens/recipe_match_shopping_screen.dart';
 import '../../recipe_send/services/recipe_send_service.dart';
 import '../services/recipe_pdf_service.dart';
 import '../../../shared/widgets/recipe_image.dart';
@@ -44,13 +54,25 @@ import '../../../core/utils/server_time.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../mealplan/widgets/meal_type_chip_row.dart';
 import '../widgets/recipe_share_link_dialog.dart';
+import '../../../core/desktop/desktop_file_drop.dart';
 
 class RecipeDetailScreen extends ConsumerStatefulWidget {
   final String slug;
 
   /// Start-Multiplikator (z. B. Portionen eines Mahlzeitplan-Eintrags).
   final double? initialScale;
-  const RecipeDetailScreen({super.key, required this.slug, this.initialScale});
+
+  /// Desktop-Zweispalten-Ansicht: rechts neben der Rezeptliste eingebettet —
+  /// „Zurück" schließt dann nur die rechte Spalte ([onClose]).
+  final bool embedded;
+  final VoidCallback? onClose;
+  const RecipeDetailScreen({
+    super.key,
+    required this.slug,
+    this.initialScale,
+    this.embedded = false,
+    this.onClose,
+  });
 
   @override
   ConsumerState<RecipeDetailScreen> createState() => _RecipeDetailScreenState();
@@ -66,7 +88,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   final Set<int> _checkedTools = {};
   final Set<int> _completedSteps = {};
   // Busy-Flags für die „in den Wagen"-Buttons (zeigen die Warenkorb-Animation).
-  bool _addingAll = false;
   bool _addingSelected = false;
 
   // Hero-Bild bewusst STARR (2026-09-27, User-Wunsch): der frühere
@@ -79,6 +100,10 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   // Rezeptliste. Verhindert „There is nothing to pop", falls die Detailansicht
   // ausnahmsweise nicht gepusht (sondern als Stack-Wurzel) erreicht wurde.
   void _goBack(BuildContext context) {
+    if (widget.embedded) {
+      widget.onClose?.call();
+      return;
+    }
     if (context.canPop()) {
       context.pop();
     } else {
@@ -102,6 +127,26 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     }
   }
 
+  bool _reloading = false;
+
+  Future<void> _reloadFromServer() async {
+    if (_reloading || widget.slug.isEmpty) return;
+    _reloading = true;
+    HapticFeedback.selectionClick();
+    final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context)!;
+    try {
+      await ref.read(recipeDetailProvider(widget.slug).notifier).reloadNow();
+      messenger.showSnackBar(SnackBar(
+          content: Text(l.recipeReloaded),
+          duration: const Duration(seconds: 2)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(userErrorMessage(e))));
+    } finally {
+      _reloading = false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -110,6 +155,9 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(recipeDetailProvider(widget.slug).notifier).checkForUpdates();
+        // Rezept-Aktionen vorladen (Cache-first), damit der Menüpunkt im
+        // Optionen-Sheet sofort feststeht.
+        if (!PlatformFeatures.webAppTools) ref.read(recipeActionsProvider);
       }
     });
     // „Zuletzt angesehen": sobald das Rezept da ist (auch aus dem Cache).
@@ -129,17 +177,15 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       loading: () => Scaffold(
         backgroundColor: context.appBg,
         appBar: AppBar(
-          leading: _BackButton(onTap: () => _goBack(context)),
+          leading: AppBackButton(onTap: () => _goBack(context)),
           title: Text(l.details),
         ),
-        body: Center(
-            child: Text(l.loadingRecipe,
-                style: TextStyle(color: context.appFgSub))),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: context.appBg,
         appBar: AppBar(
-          leading: _BackButton(onTap: () => _goBack(context)),
+          leading: AppBackButton(onTap: () => _goBack(context)),
           title: Text(l.details),
         ),
         // Mit Grund (offline, Anmeldung abgelaufen, Rezept gelöscht …)
@@ -150,7 +196,13 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           onRetry: () => ref.invalidate(recipeDetailProvider(widget.slug)),
         ),
       ),
-      data: (recipe) => _buildDetail(context, recipe, settings),
+      // Desktop: Dateien auf das Rezept ziehen → Anhänge (nur mit Recht).
+      data: (recipe) => RecipeAttachmentDrop(
+        recipe: recipe,
+        enabled: recipeEditAccess(ref.watch(userPermissionsProvider), recipe) ==
+            RecipeEditAccess.allowed,
+        child: _buildDetail(context, recipe, settings),
+      ),
     );
   }
 
@@ -158,7 +210,12 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       BuildContext context, RecipeDetail recipe, AppSettings? settings) {
     final l = AppLocalizations.of(context)!;
 
-    final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    // Eingebettet (Desktop-Zweispalter in der Rezeptliste) liegt die Ansicht
+    // in der Tab-Shell — die schwebende Tab-Leiste deckt dann den unteren
+    // Rand ab. „Kochen starten" und das Scroll-Ende rücken darüber; sonst
+    // lag der Knopf halb hinter der Leiste.
+    final bottomSafe = MediaQuery.paddingOf(context).bottom +
+        (widget.embedded ? GlassTabBar.heightOf(context) : 0);
     final heroHeight = LargeScreen.isWide(context) ? 460.0 : 320.0;
     const ctaBarHeight = 56.0;
     final ctaReserve = ctaBarHeight + bottomSafe + 30;
@@ -169,6 +226,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       backgroundColor: context.appBg,
       extendBodyBehindAppBar: true,
       body: WithCookingModeFAB(
+        fullWidth: true,
         bottomInset: ctaReserve + 8,
         child: Stack(
           children: [
@@ -230,7 +288,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                             decoration: BoxDecoration(
                               color: context.appBg,
                               borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(24)),
+                                  top: Radius.circular(AppTokens.rXl)),
                             ),
                             // Große Anzeige (Windows/macOS): Inhalt als zentrierte
                             // Lesespalte statt über die ganze Fensterbreite.
@@ -258,8 +316,13 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(
                                         16, 12, 16, 0),
-                                    child: Text(
-                                      recipe.description!,
+                                    // Mealie erlaubt Markdown in der
+                                    // Beschreibung (#43); reiner Text bleibt
+                                    // dank Fast-Path identisch.
+                                    child: MarkdownText(
+                                      text: recipe.description!,
+                                      serverUrl: settings?.serverUrl,
+                                      apiToken: settings?.apiToken,
                                       style: TextStyle(
                                           color: context.appFgSub,
                                           fontSize: 14),
@@ -276,8 +339,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                   child: _ActionButton(
                                     icon: Icons.shopping_cart_outlined,
                                     label: l.addAllIngredients,
-                                    color: const Color(0xFF0A84FF),
-                                    busy: _addingAll,
+                                    color: AppTokens.accentDeep,
                                     onTap: () =>
                                         _addAllIngredients(context, recipe),
                                   ),
@@ -304,7 +366,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                   child: _ActionButton(
                                     icon: Icons.calendar_month_outlined,
                                     label: l.planMeal,
-                                    color: const Color(0xFF0A84FF),
+                                    color: AppTokens.accentDeep,
                                     onTap: () =>
                                         _showPlanSheet(context, recipe),
                                   ),
@@ -412,19 +474,24 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                   const SizedBox(height: 16),
                                 ],
 
-                                // Anhänge (Mealie `assets`: PDFs, Bilder, Textdateien).
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  child: RecipeAssetsSection(
-                                    recipe: recipe,
-                                    editable: recipeEditAccess(
-                                            ref.watch(userPermissionsProvider),
-                                            recipe) ==
-                                        RecipeEditAccess.allowed,
+                                // Anhänge (Mealie `assets`: PDFs, Bilder, Textdateien) — wie im
+                                // Web nur, wenn am Rezept „Anhänge anzeigen" aktiv ist. Bilder in
+                                // den Schritten (Markdown) bleiben davon unberührt.
+                                if (recipe.settings?.showAssets ?? true) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child: RecipeAssetsSection(
+                                      recipe: recipe,
+                                      editable: recipeEditAccess(
+                                              ref.watch(
+                                                  userPermissionsProvider),
+                                              recipe) ==
+                                          RecipeEditAccess.allowed,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 20),
+                                  const SizedBox(height: 20),
+                                ],
 
                                 // Notizen (Mealie-Rezeptnotizen: Titel+Text, inline editierbar).
                                 Padding(
@@ -492,6 +559,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
               right: 0,
               bottom: 0,
               child: _StartCookingCTA(
+                bottomInset: bottomSafe,
                 label: l.startCooking,
                 onTap: () {
                   final n = ref.read(cookingSessionsProvider.notifier);
@@ -509,50 +577,19 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     );
   }
 
+  // Wie Mealies „Zur Einkaufsliste"-Dialog (RecipeDialogAddToShoppingList):
+  // alle Zutaten zum Anhaken, „Im Haushalt vorrätig" ist abgewählt und mit
+  // einem Tipp wieder dabei (Issue #39). Vorher wurden Vorräte still
+  // übersprungen. Nutzt den vorhandenen Auswahl-Bildschirm von Rezept-Match
+  // und Essensplan — gleiche Optik, gleicher Weg (addRecipe mit Faktor,
+  // Rezept-Verknüpfung, offline Warteschlange).
   Future<void> _addAllIngredients(
       BuildContext context, RecipeDetail recipe) async {
-    if (_addingAll) return;
-    final l = AppLocalizations.of(context)!;
     final settings = ref.read(settingsProvider).valueOrNull;
     if (settings == null || settings.shoppingListId.isEmpty) return;
-    final notifier = ref.read(shoppingListProvider.notifier);
-    setState(() => _addingAll = true);
-    // Vom Server abgelehnte Zutaten (HTTP 422/500) zählen — vorher wurden
-    // die still verschluckt und der Erfolgs-Snackbar log.
-    var failed = 0;
-    // „Im Haushalt vorrätig" überspringen (Mealie-Web wählt sie ab).
-    var skipped = 0;
-    try {
-      final onHand = await notifier.onHandChecker();
-      bool skipIf(Ingredient ing) {
-        final hit = onHand(ing);
-        if (hit) skipped++;
-        return hit;
-      }
-
-      // Wie Mealies „Zur Einkaufsliste" (inkl. Rezept-Verknüpfung), dann
-      // einmal refreshen, damit die Server-Labels gemeinsam ankommen.
-      failed = await notifier.addRecipe(
-        shoppingListId: settings.shoppingListId,
-        recipe: recipe,
-        multiplier: _multiplier,
-        skipIf: skipIf,
-      );
-      await notifier.refresh();
-    } finally {
-      if (mounted) setState(() => _addingAll = false);
-    }
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(failed > 0
-            ? l.addIngredientsFailedCount(failed)
-            : skipped > 0
-                ? l.addIngredientsSkippedOnHand(skipped)
-                : l.addIngredientsMessage),
-        duration: Duration(seconds: skipped > 0 ? 3 : 2),
-      ),
-    );
+    await Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(
+        builder: (_) => RecipeMatchShoppingScreen(
+            recipes: [recipe], scales: {recipe.id: _multiplier})));
   }
 
   // Add only the checked ingredients to the shopping list.
@@ -652,7 +689,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       context: context,
-      backgroundColor: context.appCard,
       useRootNavigator: true,
       builder: (sheetCtx) => SafeArea(
         child: SingleChildScrollView(
@@ -666,7 +702,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
               child: Text(l.recipeOptionsTitle,
                   style: TextStyle(
                       fontFamily: 'PlusJakartaSans',
-                      color: context.appFg,
+                      color: sheetCtx.appFg,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.3)),
@@ -676,7 +712,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
                   color: AppTokens.accent.withValues(alpha: 0.12),
                 ),
                 child: const Icon(Icons.devices_rounded,
@@ -684,10 +720,31 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
               ),
               title: Text(l.sendToDevice,
                   style: TextStyle(
-                      color: context.appFg, fontWeight: FontWeight.w600)),
+                      color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 _showSendSheet(context, recipe);
+              },
+            ),
+            // Dieses eine Rezept neu vom Server holen (Text + Bild). Bewusst
+            // im Menü statt als Zieh-Geste: die passiert oft unabsichtlich.
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
+                  color: AppTokens.accent.withValues(alpha: 0.12),
+                ),
+                child: const Icon(Icons.sync_rounded,
+                    color: AppTokens.accentDeep, size: 20),
+              ),
+              title: Text(l.reloadRecipe,
+                  style: TextStyle(
+                      color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _reloadFromServer();
               },
             ),
             // Builder liefert einen eigenen Button-Context fürs Popover —
@@ -701,7 +758,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
                     color: Colors.red.withValues(alpha: 0.12),
                   ),
                   child: const Icon(Icons.picture_as_pdf_rounded,
@@ -709,7 +766,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 ),
                 title: Text(l.exportAsPdf,
                     style: TextStyle(
-                        color: context.appFg, fontWeight: FontWeight.w600)),
+                        color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
                 onTap: () {
                   final box = btnCtx.findRenderObject() as RenderBox?;
                   final origin = box == null
@@ -720,13 +777,34 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 },
               ),
             ),
+            // Desktop: direkt drucken (System-Druckdialog).
+            if (PlatformFeatures.webAppTools)
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
+                    color: AppTokens.accent.withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(Icons.print_rounded,
+                      color: AppTokens.accentDeep, size: 20),
+                ),
+                title: Text(l.printAction,
+                    style: TextStyle(
+                        color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _exportPdf(context, recipe, print: true);
+                },
+              ),
             // Freigabe-Link (Server-Token, ohne Konto lesbar) + QR-Code.
             ListTile(
               leading: Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
                   color: AppTokens.accent.withValues(alpha: 0.12),
                 ),
                 child: const Icon(Icons.qr_code_2_rounded,
@@ -734,12 +812,41 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
               ),
               title: Text(l.recipeShareLinkMenu,
                   style: TextStyle(
-                      color: context.appFg, fontWeight: FontWeight.w600)),
+                      color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
               onTap: () {
                 Navigator.pop(sheetCtx);
                 showRecipeShareLinkDialog(context, recipe);
               },
             ),
+            // iOS/Android (#42): Rezept-Aktionen des Haushalts (Desktop hat
+            // sie im Webapp-Funktionen-Sheet). Ohne Aktionen kein Eintrag —
+            // das Sheet bleibt dann unverändert.
+            if (!PlatformFeatures.webAppTools)
+              Consumer(builder: (_, cRef, __) {
+                final actions =
+                    cRef.watch(recipeActionsProvider).valueOrNull ?? const [];
+                if (actions.isEmpty) return const SizedBox.shrink();
+                return ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTokens.rSm),
+                      color: AppTokens.accent.withValues(alpha: 0.12),
+                    ),
+                    child: const Icon(Icons.bolt_rounded,
+                        color: AppTokens.accentDeep, size: 20),
+                  ),
+                  title: Text(l.recipeActionsTitle,
+                      style: TextStyle(
+                          color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    showRecipeActionsPickerSheet(
+                        context, ref, recipe, _multiplier, actions);
+                  },
+                );
+              }),
             // Desktop: Webapp-Funktionen (Duplizieren, Freigabe-Link,
             // Export, Rezept-Aktionen) in einem eigenen Sheet.
             if (PlatformFeatures.webAppTools)
@@ -748,7 +855,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
                     color: AppTokens.accent.withValues(alpha: 0.12),
                   ),
                   child: const Icon(Icons.dashboard_customize_rounded,
@@ -756,7 +863,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 ),
                 title: Text(l.recipeWebToolsMenu,
                     style: TextStyle(
-                        color: context.appFg, fontWeight: FontWeight.w600)),
+                        color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   showRecipeWebToolsSheet(context, ref, recipe, _multiplier);
@@ -767,15 +874,15 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
                   color: AppTokens.accent.withValues(alpha: 0.12),
                 ),
-                child: const Icon(Icons.edit_outlined,
+                child: const Icon(Icons.edit_rounded,
                     color: AppTokens.accentDeep, size: 20),
               ),
               title: Text(l.edit,
                   style: TextStyle(
-                      color: context.appFg, fontWeight: FontWeight.w600)),
+                      color: sheetCtx.appFg, fontWeight: FontWeight.w600)),
               // Gesperrtes Rezept eines anderen: wie in Mealie nur der
               // Ersteller/Admin → ausgegraut mit Begründung.
               subtitle: editLocked
@@ -783,7 +890,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                       editAccess == RecipeEditAccess.otherHousehold
                           ? l.recipeOtherHouseholdHint
                           : l.recipeLockedHint,
-                      style: TextStyle(color: context.appFgSub, fontSize: 12))
+                      style: TextStyle(color: sheetCtx.appFgSub, fontSize: 12))
                   : null,
               enabled: !editLocked,
               onTap: () {
@@ -796,7 +903,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
                   color: Colors.red.withValues(alpha: 0.12),
                 ),
                 child: const Icon(Icons.delete_outline_rounded,
@@ -809,7 +916,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
               subtitle: mayDelete
                   ? null
                   : Text(l.recipeDeleteOwnerOnlyHint,
-                      style: TextStyle(color: context.appFgSub, fontSize: 12)),
+                      style: TextStyle(color: sheetCtx.appFgSub, fontSize: 12)),
               enabled: mayDelete,
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -826,40 +933,49 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   // Erzeugt das PDF (Bild eingebettet, keine Server-Referenz mehr danach)
   // und öffnet das System-Share-Sheet. Läuft im Hintergrund — der Screen
   // bleibt bedienbar, ein Snackbar zeigt Fortschritt/Ergebnis.
+  /// [print] = Desktop: Druckdialog statt Teilen.
   Future<void> _exportPdf(BuildContext context, RecipeDetail recipe,
-      {Rect? sharePositionOrigin}) async {
+      {Rect? sharePositionOrigin, bool print = false}) async {
     final l = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
     final api = ref.read(apiServiceProvider);
     messenger.showSnackBar(SnackBar(
       content: Text(l.generatingPdf),
       duration: const Duration(seconds: 30),
-      behavior: SnackBarBehavior.floating,
     ));
+    final labels = RecipePdfLabels(
+      servings: l.servings,
+      time: l.recipeTime,
+      rating: l.rating,
+      ingredients: l.ingredients,
+      instructions: l.instructions,
+      notes: l.notes,
+      generatedBy: 'Mealie Recipes',
+    );
     try {
-      await RecipePdfService.exportAndShare(
-        recipe: recipe,
-        api: api,
-        multiplier: _multiplier,
-        includeImage: true,
-        labels: RecipePdfLabels(
-          servings: l.servings,
-          time: l.recipeTime,
-          rating: l.rating,
-          ingredients: l.ingredients,
-          instructions: l.instructions,
-          notes: l.notes,
-          generatedBy: 'Mealie Recipes',
-        ),
-        sharePositionOrigin: sharePositionOrigin,
-      );
+      if (print) {
+        await RecipePdfService.printRecipe(
+            recipe: recipe,
+            api: api,
+            multiplier: _multiplier,
+            includeImage: true,
+            labels: labels);
+      } else {
+        await RecipePdfService.exportAndShare(
+          recipe: recipe,
+          api: api,
+          multiplier: _multiplier,
+          includeImage: true,
+          labels: labels,
+          sharePositionOrigin: sharePositionOrigin,
+        );
+      }
       messenger.hideCurrentSnackBar();
     } catch (e) {
       LogManager.shared.log('⚠️ PDF-Export fehlgeschlagen: $e');
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(SnackBar(
         content: Text(l.pdfExportFailed),
-        behavior: SnackBarBehavior.floating,
       ));
     }
   }
@@ -869,7 +985,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       context: context,
-      backgroundColor: context.appCard,
       // Keine vorberechneten peers mehr — das BottomSheet ist ein
       // ConsumerWidget und macht selbst ein `ref.watch(recipeSendProvider)`,
       // damit Peers die nach dem Öffnen entdeckt werden live in der Liste
@@ -883,7 +998,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     showModalBottomSheet(
       useSafeArea: true,
       context: context,
-      backgroundColor: context.appCard,
       isScrollControlled: true,
       builder: (_) => _PlanSheet(recipe: recipe),
     );
@@ -893,20 +1007,18 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.appCard,
-        title:
-            Text(l.confirmDeleteTitle, style: TextStyle(color: context.appFg)),
+      builder: (dctx) => AlertDialog(
+        backgroundColor: dctx.appCard,
+        title: Text(l.confirmDeleteTitle, style: TextStyle(color: dctx.appFg)),
         content: Text(l.confirmDeleteMessage,
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: dctx.appFgSub)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
+              onPressed: () => Navigator.pop(dctx), child: Text(l.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
+            style: AppTokens.dangerButton,
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dctx);
               try {
                 await ref.read(apiServiceProvider).deleteRecipe(recipe.id);
               } catch (e) {
@@ -987,7 +1099,7 @@ class _ActionButtonState extends State<_ActionButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       onTap: widget.busy ? null : widget.onTap,
       child: Container(
         width: double.infinity,
@@ -995,7 +1107,7 @@ class _ActionButtonState extends State<_ActionButton>
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: widget.color,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTokens.rSm),
         ),
         child: widget.busy
             // Während die App im Hintergrund hinzufügt: Warenkorb fährt
@@ -1030,11 +1142,14 @@ class _ActionButtonState extends State<_ActionButton>
                 children: [
                   Icon(widget.icon, color: Colors.white, size: 18),
                   const SizedBox(width: 8),
-                  Text(widget.label,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600)),
+                  Flexible(
+                      child: Text(widget.label,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis)),
                 ],
               ),
       ),
@@ -1062,7 +1177,7 @@ class _SegmentControl extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: context.appCard,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
         border: Border.all(color: context.appSeparator, width: 1),
         boxShadow: context.appShadowSm,
       ),
@@ -1070,7 +1185,7 @@ class _SegmentControl extends StatelessWidget {
         children: List.generate(labels.length, (i) {
           final active = i == selected;
           return Expanded(
-            child: GestureDetector(
+            child: TapArea(
               behavior: HitTestBehavior.opaque,
               onTap: () {
                 if (active) return;
@@ -1083,7 +1198,7 @@ class _SegmentControl extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: active ? AppTokens.accentGradient : null,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppTokens.rXs),
                   boxShadow: active
                       ? const [
                           BoxShadow(
@@ -1167,8 +1282,8 @@ class _PortionStepper extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
         scrollable: true,
-        backgroundColor: context.appCard,
-        title: Text(l.servings, style: TextStyle(color: context.appFg)),
+        backgroundColor: ctx.appCard,
+        title: Text(l.servings, style: TextStyle(color: ctx.appFg)),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -1176,7 +1291,7 @@ class _PortionStepper extends StatelessWidget {
           keyboardType: ingdisp.quantityKeyboardType,
           autocorrect: false,
           enableSuggestions: false,
-          style: TextStyle(color: context.appFg),
+          style: TextStyle(color: ctx.appFg),
         ),
         actions: [
           TextButton(
@@ -1206,7 +1321,7 @@ class _PortionStepper extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       decoration: BoxDecoration(
         color: context.appCard,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
         border: Border.all(color: context.appSeparator, width: 1),
         boxShadow: context.appShadowSm,
       ),
@@ -1226,7 +1341,7 @@ class _PortionStepper extends StatelessWidget {
           _stepBtn(context, Icons.remove_rounded,
               () => onChanged((multiplier - 0.5).clamp(0.5, 20.0))),
           if (base != null && current != null)
-            GestureDetector(
+            TapArea(
               onTap: () => _promptExactServings(context, base, current),
               child: Container(
                 constraints: const BoxConstraints(minWidth: 44),
@@ -1267,7 +1382,7 @@ class _PortionStepper extends StatelessWidget {
   }
 
   Widget _stepBtn(BuildContext context, IconData icon, VoidCallback onTap) {
-    return GestureDetector(
+    return TapArea(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
@@ -1325,7 +1440,7 @@ class _IngredientsContent extends StatelessWidget {
             if (section != null)
               IngredientSectionHeader(title: section, isFirst: i == 0),
             if (ing.hasContent)
-              GestureDetector(
+              TapArea(
                 onTap: () {
                   HapticFeedback.selectionClick();
                   onToggleCheck(i);
@@ -1347,7 +1462,7 @@ class _IngredientsContent extends StatelessWidget {
                         width: 23,
                         height: 23,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(7),
+                          borderRadius: BorderRadius.circular(AppTokens.rXs),
                           gradient: isChecked ? AppTokens.accentGradient : null,
                           border: isChecked
                               ? null
@@ -1366,31 +1481,28 @@ class _IngredientsContent extends StatelessWidget {
                             if (amount.isNotEmpty)
                               TextSpan(
                                 text: '$amount ',
-                                style: TextStyle(
-                                  color: isChecked
-                                      ? context.appFgTertiary
-                                      : AppTokens.accentDeep,
+                                style: const TextStyle(
+                                  color: AppTokens.accentDeep,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                             TextSpan(text: name),
                           ]),
+                          // Angehakt = für die Einkaufsliste ausgewählt — der
+                          // Haken vorne reicht. Durchstreichen/Ausgrauen
+                          // läse sich wie „erledigt“ und widerspräche dem.
                           style: TextStyle(
-                            color: isChecked
-                                ? context.appFgTertiary
-                                : context.appFg,
+                            color: context.appFg,
                             fontSize: 15,
                             height: 1.3,
-                            decoration:
-                                isChecked ? TextDecoration.lineThrough : null,
                           ),
                         ),
                       ),
                       // Verlinktes Rezept (Mealie „Rezept als Zutat"): öffnen.
                       if (ing.referencedRecipe != null &&
                           ing.food?.name?.isNotEmpty != true)
-                        GestureDetector(
+                        TapArea(
                           behavior: HitTestBehavior.opaque,
                           onTap: () => context
                               .push('/recipes/${ing.referencedRecipe!.id}'),
@@ -1446,7 +1558,7 @@ class _InstructionsContent extends StatelessWidget {
         return [
           if (section != null)
             IngredientSectionHeader(title: section, isFirst: i == 0),
-          GestureDetector(
+          TapArea(
             onTap: () => onToggle(i),
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -1474,7 +1586,7 @@ class _InstructionsContent extends StatelessWidget {
                           : Colors.transparent,
                     ),
                     child: done
-                        ? const Icon(Icons.check,
+                        ? const Icon(Icons.check_rounded,
                             size: 14, color: Color(0xFF30D158))
                         : null,
                   ),
@@ -1512,6 +1624,24 @@ class _InstructionsContent extends StatelessWidget {
                             height: 1.5,
                           ),
                         ),
+                        // Mealie ≥ 3.30: hinterlegte Dauer dieses Schritts.
+                        if ((step.durationSeconds ?? 0) > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Row(children: [
+                              const Icon(Icons.timer_outlined,
+                                  size: 15, color: AppTokens.accentDeep),
+                              const SizedBox(width: 4),
+                              Text(
+                                formatStepDuration(step.durationSeconds!,
+                                    AppLocalizations.of(context)!.minutesShort),
+                                style: const TextStyle(
+                                    color: AppTokens.accentDeep,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ]),
+                          ),
                       ],
                     ),
                   ),
@@ -1577,10 +1707,21 @@ class _ToolsSection extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Nährwerte — Kacheln im 2er-Raster, Werte pro Portion. Mealie speichert sie
-// als Text ohne Einheit („74.9"); die Einheit kommt hier dazu, Zahlen werden
-// im Format der App-Sprache angezeigt (de: „74,9").
+// Nährwerte — EINE kompakte Karte (TestFlight-Wunsch): Kalorien groß, darunter
+// ein dreigeteilter Balken Eiweiß/Fett/Kohlenhydrate nach Energieanteil
+// (4/9/4 kcal je g) mit Legende in Gramm; alle übrigen Werte als schlichte
+// Zeilen darunter. Werte pro Portion. Mealie speichert sie als Text ohne
+// Einheit („74.9"); die Einheit kommt hier dazu, Zahlen werden im Format der
+// App-Sprache angezeigt (de: „74,9").
 // ---------------------------------------------------------------------------
+
+/// Makros im Balken: Schlüssel, kcal je Gramm, Farbe (hell → dunkel, damit
+/// sie sich auch ohne Farbsehen unterscheiden).
+const _kMacros = [
+  ('proteinContent', 4.0, Color(0xFFFFC27A)),
+  ('fatContent', 9.0, Color(0xFFFF8A00)),
+  ('carbohydrateContent', 4.0, Color(0xFFA9500C)),
+];
 
 class _NutritionSection extends ConsumerWidget {
   final Map<String, String> nutrition;
@@ -1618,11 +1759,31 @@ class _NutritionSection extends ConsumerWidget {
     return '$formatted ${_units[key] ?? 'g'}';
   }
 
+  static double? _number(String? raw) =>
+      raw == null ? null : double.tryParse(raw.trim().replaceAll(',', '.'));
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final expanded = isDetailSectionExpanded(ref, DetailSection.nutrition);
-    final entries = nutrition.entries.toList();
+    final calories = nutrition['calories']?.trim() ?? '';
+    final macros = [
+      for (final (key, kcalPerGram, color) in _kMacros)
+        if ((_number(nutrition[key]) ?? 0) > 0)
+          (
+            key: key,
+            energy: _number(nutrition[key])! * kcalPerGram,
+            color: color
+          ),
+    ];
+    final macroKeys = {for (final m in _kMacros) m.$1};
+    final rest = nutrition.entries
+        .where((e) =>
+            e.key != 'calories' &&
+            !(macroKeys.contains(e.key) && (_number(e.value) ?? 0) > 0) &&
+            e.value.trim().isNotEmpty)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1636,50 +1797,94 @@ class _NutritionSection extends ConsumerWidget {
         ),
         CollapsibleBody(
           expanded: expanded,
-          child: LayoutBuilder(builder: (context, box) {
-            const gap = 10.0;
-            final tileWidth = (box.maxWidth - gap) / 2;
-            return Wrap(
-              spacing: gap,
-              runSpacing: gap,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            decoration: detailCardDecoration(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final e in entries)
-                  Container(
-                    width: tileWidth,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    decoration: e.key == 'calories'
-                        ? BoxDecoration(
-                            gradient: AppTokens.accentGradient,
-                            borderRadius: BorderRadius.circular(AppTokens.rMd),
-                          )
-                        : detailCardDecoration(context),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_label(l, e.key),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                if (calories.isNotEmpty)
+                  Text(_value(context, 'calories', calories),
+                      style: TextStyle(
+                          fontFamily: 'PlusJakartaSans',
+                          color: context.appFg,
+                          fontSize: 30,
+                          height: 1.1,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5)),
+                if (macros.isNotEmpty) ...[
+                  if (calories.isNotEmpty) const SizedBox(height: 14),
+                  // Balken: Breite je Makro = Anteil an der Makro-Energie.
+                  SizedBox(
+                    height: 12,
+                    child: Row(children: [
+                      for (var i = 0; i < macros.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 4),
+                        Expanded(
+                          flex:
+                              (macros[i].energy * 10).round().clamp(1, 1 << 30),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: macros[i].color,
+                              borderRadius:
+                                  BorderRadius.circular(AppTokens.rXs),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ]),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 16, runSpacing: 8, children: [
+                    for (final m in macros)
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Container(
+                          width: 11,
+                          height: 11,
+                          decoration: BoxDecoration(
+                            color: m.color,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(_label(l, m.key),
                             style: TextStyle(
-                                color: e.key == 'calories'
-                                    ? Colors.white.withValues(alpha: 0.9)
-                                    : context.appFgSub,
-                                fontSize: 12)),
-                        const SizedBox(height: 2),
+                                color: context.appFgSub, fontSize: 14)),
+                        const SizedBox(width: 5),
+                        Text(_value(context, m.key, nutrition[m.key]!),
+                            style: TextStyle(
+                                color: context.appFg,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700)),
+                      ]),
+                  ]),
+                ],
+                if (rest.isNotEmpty) ...[
+                  if (calories.isNotEmpty || macros.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Divider(height: 1, color: context.appSeparator),
+                    const SizedBox(height: 4),
+                  ],
+                  for (final e in rest)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: Row(children: [
+                        Expanded(
+                          child: Text(_label(l, e.key),
+                              style: TextStyle(
+                                  color: context.appFgSub, fontSize: 14)),
+                        ),
                         Text(_value(context, e.key, e.value),
                             style: TextStyle(
-                                fontFamily: 'PlusJakartaSans',
-                                color: e.key == 'calories'
-                                    ? Colors.white
-                                    : context.appFg,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800)),
-                      ],
+                                color: context.appFg,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600)),
+                      ]),
                     ),
-                  ),
+                ],
               ],
-            );
-          }),
+            ),
+          ),
         ),
       ],
     );
@@ -1696,7 +1901,7 @@ class _ToolRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
@@ -1712,7 +1917,7 @@ class _ToolRow extends StatelessWidget {
               width: 23,
               height: 23,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(7),
+                borderRadius: BorderRadius.circular(AppTokens.rXs),
                 gradient: isChecked ? AppTokens.accentGradient : null,
                 border: isChecked
                     ? null
@@ -1728,10 +1933,9 @@ class _ToolRow extends StatelessWidget {
               child: Text(
                 name,
                 style: TextStyle(
-                  color: isChecked ? context.appFgTertiary : context.appFg,
+                  color: context.appFg,
                   fontSize: 15,
                   height: 1.3,
-                  decoration: isChecked ? TextDecoration.lineThrough : null,
                 ),
               ),
             ),
@@ -1788,7 +1992,7 @@ class _TagPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: context.appSurface2,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
       ),
       child:
           Text(label, style: TextStyle(color: context.appFgSub, fontSize: 13)),
@@ -1850,7 +2054,7 @@ class _SendSheet extends ConsumerWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTokens.rSm),
                       color: peer.remembered
                           ? context.appSurface2
                           : AppTokens.accent.withValues(alpha: 0.12),
@@ -1871,8 +2075,8 @@ class _SendSheet extends ConsumerWidget {
                   // Öffnen der App auf dem Gerät zugestellt.
                   subtitle: peer.remembered
                       ? Text(l.sendPeerOfflineHint,
-                          style: TextStyle(
-                              color: context.appFgSub, fontSize: 12.5))
+                          style:
+                              TextStyle(color: context.appFgSub, fontSize: 13))
                       : null,
                   trailing: Icon(Icons.send_rounded,
                       color: context.appFgTertiary, size: 18),
@@ -1927,9 +2131,21 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
   DateTime _date = DateTime.now();
   String _mealType = 'dinner';
 
+  /// Mealie ≥ 3.30: für die ganze Woche (des gewählten Datums) planen — dann
+  /// zählt nur die Woche, kein bestimmter Tag.
+  bool _wholeWeek = false;
+
+  String _iso(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final v330 = ref.watch(mealie330Provider);
+    final weekStart = startOfWeek(_date, ref.watch(weekStartWeekdayProvider));
+    final dateFmt = DateFormat.MMMd(Localizations.localeOf(context).toString());
+    final weekLabel = l.mealplanPlanWholeWeekRange(
+        dateFmt.format(weekStart), dateFmt.format(addDays(weekStart, 6)));
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(context).bottom,
@@ -1953,7 +2169,20 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3)),
           const SizedBox(height: 16),
-          GestureDetector(
+          // Mealie ≥ 3.30: „Für die ganze Woche planen“ (wie die Webapp).
+          if (v330)
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              activeTrackColor: AppTokens.accent,
+              value: _wholeWeek,
+              onChanged: (v) => setState(() => _wholeWeek = v),
+              title: Text(l.mealplanPlanWholeWeek,
+                  style: TextStyle(
+                      color: context.appFg,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600)),
+            ),
+          TapArea(
             onTap: () async {
               final d = await showDatePicker(
                 context: context,
@@ -1961,7 +2190,7 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
                 firstDate: DateTime.now().subtract(const Duration(days: 7)),
                 lastDate: DateTime.now().add(const Duration(days: 60)),
               );
-              if (d != null) setState(() => _date = d);
+              if (d != null && mounted) setState(() => _date = d);
             },
             child: Container(
               padding: const EdgeInsets.all(14),
@@ -1973,11 +2202,17 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_rounded,
-                      color: AppTokens.accentDeep, size: 18),
+                  Icon(
+                      _wholeWeek
+                          ? Icons.date_range_rounded
+                          : Icons.calendar_today_rounded,
+                      color: AppTokens.accentDeep,
+                      size: 18),
                   const SizedBox(width: 10),
+                  // Ganze Woche: nur die Woche zählt — ein Tipp wählt per
+                  // beliebigem Tag eine andere Woche.
                   Text(
-                    '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}',
+                    _wholeWeek ? weekLabel : _iso(_date),
                     style: TextStyle(
                         color: context.appFg,
                         fontSize: 15,
@@ -1999,14 +2234,17 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
             label: l.save,
             icon: Icons.event_available_rounded,
             onTap: () async {
-              final dateStr =
-                  '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}';
+              // Ganze Woche: Eintrag beginnt am Wochenbeginn (Mealie-
+              // Einstellung), endDate setzt addEntry.
+              final week = v330 && _wholeWeek;
+              final dateStr = _iso(week ? weekStart : _date);
               try {
                 await ref.read(mealplanProvider.notifier).addEntry(
                       date: dateStr,
                       entryType: _mealType,
                       recipeId: widget.recipe.id,
                       title: widget.recipe.name,
+                      week: week,
                     );
               } catch (e) {
                 // Vorher unbehandelt: offline passierte beim Tippen nichts.
@@ -2029,30 +2267,6 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
 // ---------------------------------------------------------------------------
 // Shared back button
 // ---------------------------------------------------------------------------
-
-class _BackButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _BackButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: context.appSurface2,
-            borderRadius: BorderRadius.circular(17),
-          ),
-          child: Icon(Icons.chevron_left, color: context.appFg, size: 22),
-        ),
-      ),
-    );
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Premium-Redesign: Full-bleed Hero-Header
@@ -2089,7 +2303,6 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final token = settings?.apiToken ?? '';
     final topPad = MediaQuery.paddingOf(context).top;
     // „Rezeptbilder anzeigen" gilt nur für Listen (so steht es auch in der
     // Einstellung) — das Titelbild im Rezept selbst ist immer sichtbar.
@@ -2102,12 +2315,11 @@ class _HeroHeader extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          GestureDetector(
+          TapArea(
             onTap: () => showRecipeImageViewer(
               context,
               recipeId: recipe.id,
               imageUrl: _imageUrl,
-              httpHeaders: {'Authorization': 'Bearer $token'},
             ),
             child: Stack(
               fit: StackFit.expand,
@@ -2118,7 +2330,6 @@ class _HeroHeader extends StatelessWidget {
                   child: RecipeImage(
                     recipeId: recipe.id,
                     imageUrl: _imageUrl,
-                    httpHeaders: {'Authorization': 'Bearer $token'},
                     placeholder: (_) => _placeholder(),
                   ),
                 ),
@@ -2198,7 +2409,7 @@ class _HeroHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'PlusJakartaSans',
                     color: Colors.white,
-                    fontSize: 25,
+                    fontSize: 26,
                     height: 1.12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
@@ -2222,8 +2433,8 @@ class _HeroHeader extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: context.appBg,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppTokens.rXl)),
               ),
               alignment: Alignment.topCenter,
               padding: const EdgeInsets.only(top: 10),
@@ -2257,7 +2468,7 @@ class _HeroHeader extends StatelessWidget {
       );
 }
 
-class _HeroMetaRow extends StatelessWidget {
+class _HeroMetaRow extends ConsumerWidget {
   final RecipeDetail recipe;
   final double multiplier;
   final String Function(int) fmt;
@@ -2265,7 +2476,7 @@ class _HeroMetaRow extends StatelessWidget {
       {required this.recipe, required this.multiplier, required this.fmt});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = <Widget>[];
     final t = recipe.totalTime ?? recipe.prepTime ?? recipe.cookTime;
     if ((t ?? 0) > 0) items.add(_item(Icons.schedule_rounded, fmt(t!)));
@@ -2282,6 +2493,21 @@ class _HeroMetaRow extends StatelessWidget {
       final l = AppLocalizations.of(context)!;
       final date = MaterialLocalizations.of(context).formatShortDate(lastMade);
       items.add(_item(Icons.history_rounded, '${l.lastCooked}: $date'));
+    }
+    // Wer das Rezept angelegt hat (wie „Rezept-Besitzer“ in Mealie 3.30) —
+    // aus der zwischengespeicherten Mitgliederliste der Gruppe.
+    final ownerId = recipe.userId;
+    if ((ownerId ?? '').isNotEmpty) {
+      for (final u in ref.watch(groupMembersProvider).valueOrNull ??
+          const <Map<String, dynamic>>[]) {
+        if (u['id']?.toString() != ownerId) continue;
+        final name = userDisplayName(u);
+        if (name.isNotEmpty) {
+          items.add(_item(Icons.person_rounded,
+              AppLocalizations.of(context)!.recipeCreatedBy(name)));
+        }
+        break;
+      }
     }
     if (items.isEmpty) return const SizedBox.shrink();
     return Wrap(spacing: 16, runSpacing: 4, children: items);
@@ -2321,7 +2547,7 @@ class _HeroChip extends StatelessWidget {
           child: Text(label,
               style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600)),
         ),
       ),
@@ -2343,7 +2569,7 @@ class _GlassCircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
@@ -2385,7 +2611,7 @@ class _RatingRow extends StatelessWidget {
           final half = !filled &&
               (recipe.rating ?? 0) > i &&
               (recipe.rating ?? 0) < i + 1;
-          return GestureDetector(
+          return TapArea(
             onTap: () => onRate((i + 1).toDouble()),
             behavior: HitTestBehavior.opaque,
             child: Padding(
@@ -2403,7 +2629,7 @@ class _RatingRow extends StatelessWidget {
                       : (filled
                           ? Icons.star_rounded
                           : Icons.star_outline_rounded),
-                  color: Colors.amber,
+                  color: AppTokens.star,
                   size: 24,
                 ),
               ),
@@ -2430,11 +2656,15 @@ class _RatingRow extends StatelessWidget {
 class _StartCookingCTA extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
-  const _StartCookingCTA({required this.label, required this.onTap});
+
+  /// Unterer Abstand: SafeArea, eingebettet zusätzlich die Tab-Leiste.
+  final double bottomInset;
+  const _StartCookingCTA(
+      {required this.label, required this.onTap, required this.bottomInset});
 
   @override
   Widget build(BuildContext context) {
-    final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    final bottomSafe = bottomInset;
     return Container(
       // Knopf auf großer Anzeige (Windows/macOS) so breit wie die Lesespalte.
       padding: EdgeInsets.fromLTRB(18 + LargeScreen.inset(context), 14,
@@ -2458,7 +2688,7 @@ class _StartCookingCTA extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             gradient: AppTokens.accentGradient,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppTokens.rMd),
             boxShadow: const [
               BoxShadow(
                   color: Color(0x73FF7800),
@@ -2472,11 +2702,14 @@ class _StartCookingCTA extends StatelessWidget {
               const Icon(Icons.local_fire_department_rounded,
                   color: Colors.white, size: 22),
               const SizedBox(width: 9),
-              Text(label,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700)),
+              Flexible(
+                  child: Text(label,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis)),
             ],
           ),
         ),
@@ -2556,7 +2789,7 @@ class _OriginalUrlButton extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                           color: AppTokens.accentDeep,
-                          fontSize: 13.5,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700)),
                 ),
               ],

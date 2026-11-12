@@ -199,15 +199,6 @@
   "syncNow": "Sync now",
   "offlineBadge": "Offline",
   "mealplanTitle": "📅 Meal Plan",
-  "mealplanSelectMode": "Select multiple recipes",
-  "mealplanSelectedCount": "{count, plural, =0{Select} =1{1 selected} other{{count} selected}}",
-  "@mealplanSelectedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "breakfast": "Breakfast",
   "lunch": "Lunch",
   "dinner": "Dinner",
@@ -307,6 +298,8 @@
   "completeShopping": "Complete Shopping",
   "shoppingCompleted": "Shopping Completed",
   "shoppingCompletedSubtitle": "All in the cart! 🎉",
+  "shoppingOfflineNoCache": "Offline – list not saved",
+  "shoppingOfflineNoCacheSubtitle": "No items of this list are stored on this device yet. It will load as soon as you're back online.",
   "essensplan": "📅 Meal Plan",
   "resteverwertung": "🥗 Recipe Finder",
   "copyCode": "Copy Code",
@@ -335,7 +328,6 @@
   "openAIHintTitle": "File Analysis Info",
   "openAIHintBody": "Recipe analysis uses the OpenAI API. Make sure your API key is configured in the Mealie server settings.",
   "allDeleteConfirm": "Delete all",
-  "noMealsThisWeek": "No meals planned",
   "entriesInOtherWeeks": "There are entries in other weeks",
   "availableWeeks": "Available weeks:",
   "currentWeek": "Current Week",
@@ -1124,14 +1116,6 @@
   "finderLoadingRecipes": "Loading Recipes",
   "finderClearSelection": "Clear Selection",
   "finderOfflineHint": "No connection to the server – results come from the recipes stored on this device.",
-  "addIngredientsSkippedOnHand": "{count, plural, =1{Added to your shopping list – 1 ingredient on hand was skipped.} other{Added to your shopping list – {count} ingredients on hand were skipped.}}",
-  "@addIngredientsSkippedOnHand": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "sendPeerOfflineHint": "Not reachable right now – arrives when the app is opened there",
   "sendDeliveredLater": "“{device}” is not reachable right now. The recipe will arrive as soon as the app is opened there.",
   "sendQueuedOffline": "No connection right now. The recipe will be sent automatically as soon as you're back online.",
@@ -2789,5 +2773,492 @@
         "type": "String"
       }
     }
-  }
+  },
+  "recipeMatchTitle": "Recipe Match",
+  "recipeMatchShuffle": "Shuffle",
+  "recipeMatchCardsLeft": "{count, plural, =1{1 recipe in the deck} other{{count} recipes in the deck}}",
+  "@recipeMatchCardsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMatchNext": "Next",
+  "recipeMatchKeep": "Onto the tray",
+  "recipeMatchKept": "Put on the tray",
+  "recipeMatchAnyTime": "Any duration",
+  "recipeMatchMaxTime": "≤ {minutes} min",
+  "@recipeMatchMaxTime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMatchEmpty": "No matching recipes",
+  "recipeMatchEmptyHint": "Change the filters or clear the tray.",
+  "recipeMatchResetFilters": "Reset filters",
+  "recipeMatchFlipHint": "Tap: ingredients · instructions",
+  "recipeMatchFlipBack": "Flip back",
+  "recipeMatchOpenRecipe": "Full recipe",
+  "recipeMatchOnHand": "on hand",
+  "recipeMatchTray": "Tray",
+  "recipeMatchTrayEmpty": "Still empty – drag a card down",
+  "recipeMatchTrayCount": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@recipeMatchTrayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMatchClear": "Clear",
+  "recipeMatchTrayHint": "Stays until you clear it – even when you close the deck.",
+  "recipeMatchRemove": "Remove from tray",
+  "recipeMatchToMealplan": "Add to meal plan",
+  "recipeMatchToShopping": "Ingredients to shopping list",
+  "recipeMatchSelectIngredients": "Select ingredients",
+  "recipeMatchNoList": "Select a shopping list first.",
+  "recipeMatchList": "List",
+  "recipeMatchOnHandHint": "Ingredients on hand are already deselected.",
+  "recipeMatchAddCount": "Add {selected} of {total} ingredients",
+  "@recipeMatchAddCount": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMatchNoDay": "No day yet – stays on the tray",
+  "recipeMatchAddMeals": "{count, plural, =1{Add 1 meal} other{Add {count} meals}}",
+  "@recipeMatchAddMeals": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMatchMealsAdded": "{count, plural, =1{1 meal added} other{{count} meals added}}",
+  "@recipeMatchMealsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeMatchSwipeUp": "Swipe up to open the tray",
+  "weekPlannerTitle": "Plan the week",
+  "weekPlannerStepDays": "Days",
+  "weekPlannerStepPrefs": "Preferences",
+  "weekPlannerStepPreview": "Preview",
+  "weekPlannerDaysTitle": "Which meals should the app fill?",
+  "weekPlannerDaysHint": "Tap the cells. Anything already planned stays as it is.",
+  "weekPlannerPresetWeekdays": "Weekdays",
+  "weekPlannerPlanned": "planned",
+  "weekPlannerMoreMeals": "Show more meals",
+  "weekPlannerFewerMeals": "Fewer meals",
+  "weekPlannerMealCount": "{count, plural, =1{1 meal} other{{count} meals}}",
+  "@weekPlannerMealCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekPlannerPrefsTitle": "What should the app look out for?",
+  "weekPlannerPrefsHint": "All optional – without a choice it picks a colourful mix of your recipes.",
+  "weekPlannerQuick": "Quick on weekdays",
+  "weekPlannerQuickSub": "Mon–Fri at most {minutes} min",
+  "@weekPlannerQuickSub": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "weekPlannerStale": "Long-uncooked first",
+  "weekPlannerStaleSub": "based on \"Last cooked\" and the meal plan",
+  "weekPlannerFavorites": "Plan favorites more often",
+  "weekPlannerFavoritesSub": "hearted and highly rated recipes",
+  "weekPlannerVariety": "Variety",
+  "weekPlannerVarietySub": "no category twice in a row",
+  "weekPlannerOnlyFrom": "Only from",
+  "weekPlannerDiceRules": "Use dice rules",
+  "weekPlannerDiceRulesSub": "your choice per meal from the Meal Plan Settings",
+  "weekPlannerMatching": "{count, plural, =1{1 matching recipe} other{{count} matching recipes}}",
+  "@weekPlannerMatching": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekPlannerForMeals": "{count, plural, =1{for 1 meal} other{for {count} meals}}",
+  "@weekPlannerForMeals": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weekPlannerSuggest": "Suggest",
+  "weekPlannerPreviewHint": "The dice swaps, the lock keeps. Hold a dish and drag it onto another day to swap them.",
+  "weekPlannerRerollAll": "Reroll all",
+  "weekPlannerReroll": "Reroll",
+  "weekPlannerLock": "Lock",
+  "weekPlannerUnlock": "Unlock",
+  "weekPlannerReasonNever": "never cooked",
+  "weekPlannerReasonStale": "not cooked in a while",
+  "weekPlannerReasonFavorite": "Favorite",
+  "weekPlannerNoMatch": "No matching recipe",
+  "weekPlannerThenShopping": "Then choose ingredients for the shopping list",
+  "weekPlannerMostlyEmpty": "Week almost empty",
+  "weekPlannerMostlyEmptySub": "{free} of {total} days still free – fill them in three steps.",
+  "@weekPlannerMostlyEmptySub": {
+    "placeholders": {
+      "free": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "previousWeek": "Previous week",
+  "nextWeek": "Next week",
+  "weekPlannerAllDays": "All days",
+  "weekPlannerWeekend": "Weekend",
+  "weekPlannerDinners": "Dinners",
+  "weekPlannerLunches": "Lunches",
+  "weekPlannerAllMeals": "All meals",
+  "mealplanDayEmpty": "Nothing planned",
+  "mealplanDropHere": "Drop here",
+  "mealplanDayKcal": "{kcal} kcal per serving",
+  "mealplanDayKcalPartial": "at least {kcal} kcal per serving",
+  "@mealplanDayKcal": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "@mealplanDayKcalPartial": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "globalSearchHint": "Search recipes, items, features …",
+  "globalSearchIntro": "Search for recipes, shopping list items, foods and cookbooks – and for features and settings of the app, e.g. \"list\".",
+  "globalSearchFunctions": "Features",
+  "globalSearchNoResults": "No results for \"{query}\"",
+  "searchClear": "Clear search",
+  "@globalSearchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeMatchPlanWeek": "Plan the week with these recipes",
+  "weekPlannerReasonTray": "from the tray",
+  "emptyBrowseRecipes": "Browse recipes",
+  "mealplanWeekShopping": "Ingredients for this week",
+  "globalSearchActions": "Actions",
+  "globalSearchAddToList": "Add \"{text}\" to the shopping list",
+  "globalSearchAdded": "\"{text}\" added",
+  "globalSearchImportUrl": "Import recipe from this address",
+  "@globalSearchAddToList": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "@globalSearchAdded": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "homeContinueCooking": "Continue cooking",
+  "homeCookingStep": "Step {step} of {total}",
+  "homeCookingPrep": "Preparation",
+  "homeCookingAlmostDone": "Almost done",
+  "homeCookingContinue": "continue",
+  "@homeCookingStep": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "paneSelectRecipe": "Choose a recipe on the left.",
+  "mealplanDragRecipeHint": "Drag a recipe onto a day to plan it.",
+  "desktopDropUnsupported": "These files can't be added as attachments.",
+  "desktopDropUploaded": "{count, plural, =1{1 attachment added} other{{count} attachments added}}",
+  "desktopDropAsAttachment": "Drop to add as attachment",
+  "printAction": "Print",
+  "mealplanPrintWeek": "Print week",
+  "@desktopDropUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mealplanEntryCooked": "Cooked",
+  "recipeSearchClear": "Clear search",
+  "organizerShowRecipes": "Show recipes",
+  "globalSearchShowAllRecipes": "Show all {count} recipes",
+  "@globalSearchShowAllRecipes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unnamedEntry": "(no name)",
+  "mealplanWholeWeek": "For the whole week",
+  "mealplanWholeWeekDropHint": "Drop a meal here to plan it for the whole week.",
+  "mealplanMovedToWholeWeek": "Planned for the whole week",
+  "mealplanCookToday": "Cooking it today",
+  "mealplanPlanWholeWeek": "Plan for the whole week",
+  "mealplanPlanWholeWeekRange": "{from} – {to}",
+  "@mealplanPlanWholeWeekRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarFeedDuration": "Length (minutes)",
+  "calendarFeedEventDetails": "Event Details",
+  "calendarFeedEventDetailsHint": "Customize how meals show up in your calendar. Merge fields: {fields}",
+  "calendarFeedEventTitle": "Event Title",
+  "calendarFeedEventDescription": "Event Description",
+  "calendarFeedEventDetailsWarning": "Changing these changes the calendar link — if you've already subscribed, subscribe again with the new link.",
+  "@calendarFeedEventDetailsHint": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "stepDurationMinutes": "Duration (minutes)",
+  "stepDurationSaved": "Saved duration: {duration}. Editing replaces it with whole minutes.",
+  "@stepDurationSaved": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "sortTotalTimeShort": "Shortest total time",
+  "sortTotalTimeLong": "Longest total time",
+  "recipeCreatedBy": "Created by {name}",
+  "@recipeCreatedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineReplacePhoto": "Replace photo",
+  "pasteRecipeTitle": "Paste recipe",
+  "pasteRecipeDescription": "Paste a recipe as JSON (schema.org) or a web page's HTML source.",
+  "pasteRecipeDescription330": "Paste a recipe exported from Mealie (JSON) — it is imported with its full structure: foods, units and step links. JSON (schema.org) and a web page's HTML source work too.",
+  "pasteRecipeHint": "Paste JSON or HTML here",
+  "pasteRecipeButton": "Paste recipe",
+  "pasteRecipeImport": "Import",
+  "aiPromptsTitle": "AI Prompts",
+  "aiPromptsTeaser": "Customize the instructions Mealie gives your AI provider — for all tasks or for each one.",
+  "aiPromptsDescription": "Customize the instructions Mealie gives your AI provider for each task. Mealie's prompts are written in English, but that doesn't change the language of your recipes: they keep the language of their source unless you choose to translate them. You can write your own instructions in any language.",
+  "aiPromptsGlobal": "Instructions for All Prompts",
+  "aiPromptsGlobalDescription": "Added to every prompt that produces recipe data, such as building recipes, parsing ingredients, and translating. System prompts aren't affected.",
+  "aiPromptsGlobalPlaceholder": "e.g. Always use metric units.",
+  "aiPromptsList": "Prompts",
+  "aiPromptSystem": "System",
+  "aiPromptSystemDescription": "This is a system prompt. It transcribes your source material as faithfully as possible before it's turned into a recipe, so the instructions for all prompts aren't added to it. Changing it usually isn't necessary, and can make imports less reliable.",
+  "aiPromptAppended": "Appended",
+  "aiPromptOverridden": "Overridden",
+  "aiPromptModeDefault": "Default",
+  "aiPromptModeAppend": "Append",
+  "aiPromptModeOverride": "Override",
+  "aiPromptAppendDescription": "These instructions are added to Mealie's prompt, and take priority wherever the two conflict.",
+  "aiPromptOverrideDescription": "Your prompt replaces Mealie's prompt entirely, so future updates to Mealie's prompt won't apply to it. Any data the task needs, such as your list of units, is still added after your prompt.",
+  "aiPromptDefaultChanged": "Mealie's prompt has changed since you overrode it. Compare it with yours, or switch back to the default to use the new version.",
+  "aiPromptViewDefault": "View Default Prompt",
+  "aiPromptHideDefault": "Hide Default Prompt",
+  "aiPromptSaved": "Prompt saved",
+  "aiPromptSaveFailed": "Failed to save prompt",
+  "aiPromptTitleBuildRecipe": "Build Recipe",
+  "aiPromptTitleParseIngredients": "Parse Ingredients",
+  "aiPromptTitleRecipeVideo": "Recipe from Video",
+  "aiPromptTitleOrganizers": "Assign Organizers",
+  "aiPromptTitleTranslate": "Translate Recipe",
+  "aiPromptTitleCompileSource": "Read Source Material",
+  "aiPromptTitleTranscribe": "Transcribe Audio",
+  "aiPromptDescBuildRecipe": "Turns the source material read from a webpage, photo, or text into a structured recipe.",
+  "aiPromptDescParseIngredients": "Used by the AI ingredient parser to split each ingredient into its quantity, unit, food, and note.",
+  "aiPromptDescRecipeVideo": "Turns a video's transcript and caption into a recipe.",
+  "aiPromptDescOrganizers": "Picks the tags, categories, and tools for an imported recipe.",
+  "aiPromptDescTranslate": "Translates an imported recipe into the language you choose.",
+  "aiPromptDescCompileSource": "Reads webpages, photos, and text into a plain-text record of the recipe.",
+  "aiPromptDescTranscribe": "Transcribes audio when your audio provider can't transcribe it directly.",
+  "mealplanNoteHint": "Note (optional)",
+  "mealplanEditTitle": "Edit entry",
+  "mealplanEntryTitleLabel": "Title",
+  "mealplanEntryNoteLabel": "Note",
+  "mealplanCreateRecipe": "New recipe \"{name}\"",
+  "@mealplanCreateRecipe": {
+    "description": "Issue #41: Rezeptsuche ohne Treffer → leeres Rezept anlegen",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mealplanCreateRecipeSubtitle": "Creates an empty recipe, plans it and opens the editor",
+  "importOptionsTitle": "Import options",
+  "importOptionsHint": "How much Mealie’s AI does on your server when importing. Every extra step is its own AI request – the fewer, the faster.",
+  "importTranslateTitle": "Translate recipe",
+  "importOrganizersTitle": "Categories & tags",
+  "importOrganizersCreate": "Add new",
+  "importOrganizersExisting": "Existing only",
+  "importOrganizersNone": "None",
+  "importOrganizersCreateHint": "AI assigns tags, categories and tools and creates missing ones.",
+  "importOrganizersExistingHint": "AI only uses tags, categories and tools that already exist.",
+  "importOrganizersNoneHint": "The recipe is imported without tags, categories and tools. Mealie still runs this step, so the import doesn't get faster.",
+  "importStarting": "Sending to server…",
+  "importRunning": "Importing recipe…",
+  "aiImagesRunning": "The AI is reading the pages…",
+  "importStreamPhotosTitle": "Photo import with live progress",
+  "importStreamPhotosHint": "Shows each step and keeps the connection open during long imports. Turn off to upload in a single request as before – e.g. if your proxy blocks streaming.",
+  "weekPlannerDiceRulesMealieSub": "your household's Mealie rules (meal plan settings)",
+  "syncStarted": "Reloading recipes, images and lists from the server…",
+  "syncDone": "Everything is up to date",
+  "recipeReloaded": "Recipe reloaded",
+  "logoutTitle": "Sign out / switch user",
+  "logoutConfirm": "Recipes, lists and changes not yet synced are removed from this device. Your app settings and the server address stay, so you only need to sign in again.",
+  "reloadRecipe": "Reload from server",
+  "wifiServerTitle": "Different address on Wi-Fi",
+  "wifiServerHint": "For the same server under a second address, e.g. the local IP at home and ZeroTier, Tailscale or a domain on the go. On the Wi-Fi below the app uses this address automatically, everywhere else the server URL above.",
+  "wifiSsidLabel": "Wi-Fi name",
+  "wifiServerUrl": "Address on this Wi-Fi",
+  "wifiUseCurrent": "Use current Wi-Fi",
+  "wifiNameUnavailable": "Couldn’t read the Wi-Fi name. Connect to the Wi-Fi and allow location access – Android and iOS only reveal the Wi-Fi name with it.",
+  "wifiServerActive": "Active: address on Wi-Fi “{ssid}”",
+  "@wifiServerActive": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiServerStandardActive": "Active: server URL (not on “{ssid}”)",
+  "@wifiServerStandardActive": {
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiServerRemove": "Remove",
+  "switchUserTitle": "Switch user",
+  "switchUserBody": "{name} stays saved on this device – with all recipes, lists and changes not yet synced. You can switch back via your profile picture or the sign-in page.",
+  "@switchUserBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "allowBiometricTitle": "Switch back with device unlock",
+  "allowBiometricHint": "Face ID, fingerprint or device PIN instead of the password. Anyone who can unlock this device can then open this account.",
+  "allow": "Allow",
+  "unlockAccountReason": "Switch to {name}",
+  "@unlockAccountReason": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "signInAs": "Sign in as {name}",
+  "@signInAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wrongAccountError": "That’s the account “{name}”. Please sign in with the saved account.",
+  "@wrongAccountError": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSaveOffline": "The account can’t be saved right now – the server isn’t reachable.",
+  "signOutRemoveTitle": "Sign out and remove",
+  "signOutRemoveConfirm": "This account and all its data on this device (recipes, lists, changes not yet synced) are removed. Your app settings stay.",
+  "removeSavedAccount": "Remove from this device",
+  "removeSavedAccountConfirm": "Remove “{name}” and all its saved data from this device? Changes not yet synced will be lost.",
+  "@removeSavedAccountConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "savedAccountsTitle": "Saved accounts",
+  "addAccount": "Add another account",
+  "biometricOff": "Stop using device unlock",
+  "orNewAccount": "Or sign in with another account:",
+  "importVideoTitle": "Video links",
+  "importVideoFast": "Fast",
+  "importVideoThorough": "Thorough (AI)",
+  "importVideoFastHint": "Mealie transcribes the video and builds the recipe with a single AI request – usually much faster. No translation and no categories/tags. You can still switch AI on per import.",
+  "importVideoThoroughHint": "The AI switch turns on automatically for video links: several AI steps, with translation and categories/tags as set above. Takes longer.",
+  "importPresetFast": "Fast",
+  "importPresetThorough": "Thorough",
+  "importPresetCustom": "Custom",
+  "importPresetFastTitle": "As few AI steps as possible – the shortest wait",
+  "importPresetFastVideo": "Video links: Mealie transcribes the video and builds the recipe with a single AI request (the AI switch stays off).",
+  "importPresetFastTranslate": "No translation – the recipe stays in its original language.",
+  "importPresetFastOrganizers": "Only existing categories and tags are assigned, no new ones are created.",
+  "importPresetThoroughTitle": "Mealie’s full AI import – takes longer, gets the most out",
+  "importPresetThoroughVideo": "Video links are imported with AI automatically – in several steps (compile the source, build the recipe, …).",
+  "importPresetThoroughTranslate": "The recipe is translated into the import language below if it’s written in another language.",
+  "importPresetThoroughOrganizers": "Matching categories and tags are assigned; missing ones are created.",
+  "importPresetCustomTitle": "Set each option yourself",
+  "importPresetCustomBody": "Start from what your previous choice did and change only what you need – e.g. fast video imports but with translation.",
+  "sidebarPinHint": "Tip: press and hold a tile and drag it onto the sidebar to pin it there.",
+  "sidebarDropHere": "Drop here",
+  "sidebarShortcutTitle": "Shortcut for “{name}”",
+  "@sidebarShortcutTitle": {"placeholders": {"name": {"type": "String"}}},
+  "sidebarShortcutPrompt": "Now press the key combination you want, including {modifier}.",
+  "@sidebarShortcutPrompt": {"placeholders": {"modifier": {"type": "String"}}},
+  "sidebarShortcutTaken": "This combination is already in use.",
+  "sidebarShortcutNone": "No shortcut",
+  "sidebarShortcutChange": "Change shortcut",
+  "sidebarUnpin": "Remove from sidebar",
+  "sidebarFull": "The sidebar is full – at most {count} entries of your own.",
+  "@sidebarFull": {"placeholders": {"count": {"type": "int"}}},
+  "tabletSidebar": "Sidebar in landscape",
+  "tabletSidebarSubtitle": "Shows the navigation on the left instead of at the bottom when the tablet is held sideways"
 }

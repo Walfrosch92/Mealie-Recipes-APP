@@ -6,13 +6,20 @@
 // ---------------------------------------------------------------------------
 
 Map<String, String>? authHeadersFor(
-    String url, String serverUrl, String apiToken) {
+    String url, String serverUrl, String apiToken,
+    {Map<String, String> extra = const {}}) {
   var base = serverUrl.trim();
   while (base.endsWith('/')) {
     base = base.substring(0, base.length - 1);
   }
-  final own = base.isNotEmpty &&
-      apiToken.isNotEmpty &&
-      (url == base || url.startsWith('$base/'));
-  return own ? {'Authorization': 'Bearer $apiToken'} : null;
+  final own = base.isNotEmpty && (url == base || url.startsWith('$base/'));
+  if (!own) return null;
+  // [extra] = optionale Zusatz-Header aus den Einstellungen (z. B.
+  // Cloudflare-Access): ohne sie lädt ein Reverse-Proxy keine Bilder
+  // (Issue #38). Wie der Token NUR an den eigenen Server.
+  final headers = <String, String>{
+    if (apiToken.isNotEmpty) 'Authorization': 'Bearer $apiToken',
+    ...extra,
+  };
+  return headers.isEmpty ? null : headers;
 }

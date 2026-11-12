@@ -41,7 +41,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get next => 'Dalej';
 
   @override
-  String get navHome => 'Start';
+  String get navHome => 'Home';
 
   @override
   String get homeCookToday => 'Ugotuj dzisiaj';
@@ -523,23 +523,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get mealplanTitle => '📅 Plan posiłków';
 
   @override
-  String get mealplanSelectMode => 'Zaznacz kilka przepisów';
-
-  @override
-  String mealplanSelectedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count zaznaczonego',
-      many: '$count zaznaczonych',
-      few: '$count zaznaczone',
-      one: '1 zaznaczony',
-      zero: 'Wybór',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get breakfast => 'Śniadanie';
 
   @override
@@ -808,6 +791,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get shoppingCompletedSubtitle => 'Wszystko w koszyku! 🎉';
 
   @override
+  String get shoppingOfflineNoCache => 'Offline – lista nie jest zapisana';
+
+  @override
+  String get shoppingOfflineNoCacheSubtitle =>
+      'Na tym urządzeniu nie zapisano jeszcze żadnych pozycji z tej listy. Zostanie wczytana, gdy znów będziesz online.';
+
+  @override
   String get essensplan => '📅 Plan posiłków';
 
   @override
@@ -895,9 +885,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get allDeleteConfirm => 'Usuń wszystko';
-
-  @override
-  String get noMealsThisWeek => 'Brak zaplanowanych posiłków';
 
   @override
   String get entriesInOtherWeeks => 'Są wpisy w innych tygodniach';
@@ -2689,19 +2676,6 @@ class AppLocalizationsPl extends AppLocalizations {
       'Brak połączenia z serwerem – wyniki pochodzą z przepisów zapisanych na tym urządzeniu.';
 
   @override
-  String addIngredientsSkippedOnHand(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Dodano do listy zakupów – pominięto $count dostępnego składnika.',
-      many: 'Dodano do listy zakupów – pominięto $count dostępnych składników.',
-      few: 'Dodano do listy zakupów – pominięto $count dostępne składniki.',
-      one: 'Dodano do listy zakupów – pominięto 1 dostępny składnik.',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get sendPeerOfflineHint =>
       'Obecnie niedostępne – dotrze po otwarciu aplikacji na tym urządzeniu';
 
@@ -4200,4 +4174,955 @@ class AppLocalizationsPl extends AppLocalizations {
   String aliasBelongsTo(String alias, String name) {
     return '„$alias” należy już do „$name” – lepiej połącz oba.';
   }
+
+  @override
+  String get recipeMatchTitle => 'Dopasuj przepis';
+
+  @override
+  String get recipeMatchShuffle => 'Przetasuj';
+
+  @override
+  String recipeMatchCardsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count przepisu w talii',
+      many: '$count przepisów w talii',
+      few: '$count przepisy w talii',
+      one: '1 przepis w talii',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchNext => 'Następny';
+
+  @override
+  String get recipeMatchKeep => 'Na tacę';
+
+  @override
+  String get recipeMatchKept => 'Odłożono na tacę';
+
+  @override
+  String get recipeMatchAnyTime => 'Dowolny czas';
+
+  @override
+  String recipeMatchMaxTime(int minutes) {
+    return '≤ $minutes min';
+  }
+
+  @override
+  String get recipeMatchEmpty => 'Brak pasujących przepisów';
+
+  @override
+  String get recipeMatchEmptyHint => 'Zmień filtry lub opróżnij tacę.';
+
+  @override
+  String get recipeMatchResetFilters => 'Wyczyść filtry';
+
+  @override
+  String get recipeMatchFlipHint => 'Dotknij: składniki · przygotowanie';
+
+  @override
+  String get recipeMatchFlipBack => 'Odwróć';
+
+  @override
+  String get recipeMatchOpenRecipe => 'Cały przepis';
+
+  @override
+  String get recipeMatchOnHand => 'w zapasie';
+
+  @override
+  String get recipeMatchTray => 'Taca';
+
+  @override
+  String get recipeMatchTrayEmpty => 'Jeszcze pusta – przeciągnij kartę w dół';
+
+  @override
+  String recipeMatchTrayCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count przepisu',
+      many: '$count przepisów',
+      few: '$count przepisy',
+      one: '1 przepis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchClear => 'Opróżnij';
+
+  @override
+  String get recipeMatchTrayHint =>
+      'Zostaje, dopóki jej nie opróżnisz – także po zamknięciu talii.';
+
+  @override
+  String get recipeMatchRemove => 'Zdejmij z tacy';
+
+  @override
+  String get recipeMatchToMealplan => 'Do planu posiłków';
+
+  @override
+  String get recipeMatchToShopping => 'Składniki na listę zakupów';
+
+  @override
+  String get recipeMatchSelectIngredients => 'Wybierz składniki';
+
+  @override
+  String get recipeMatchNoList => 'Najpierw wybierz listę zakupów.';
+
+  @override
+  String get recipeMatchList => 'Lista';
+
+  @override
+  String get recipeMatchOnHandHint => 'Składniki w zapasie są już odznaczone.';
+
+  @override
+  String recipeMatchAddCount(int selected, int total) {
+    return 'Dodaj $selected z $total składników';
+  }
+
+  @override
+  String get recipeMatchNoDay => 'Brak dnia – zostaje na tacy';
+
+  @override
+  String recipeMatchAddMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Dodaj $count posiłku',
+      many: 'Dodaj $count posiłków',
+      few: 'Dodaj $count posiłki',
+      one: 'Dodaj 1 posiłek',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String recipeMatchMealsAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Dodano $count posiłku',
+      many: 'Dodano $count posiłków',
+      few: 'Dodano $count posiłki',
+      one: 'Dodano 1 posiłek',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get recipeMatchSwipeUp => 'Przesuń w górę, aby otworzyć tacę';
+
+  @override
+  String get weekPlannerTitle => 'Zaplanuj tydzień';
+
+  @override
+  String get weekPlannerStepDays => 'Dni';
+
+  @override
+  String get weekPlannerStepPrefs => 'Preferencje';
+
+  @override
+  String get weekPlannerStepPreview => 'Podgląd';
+
+  @override
+  String get weekPlannerDaysTitle => 'Które posiłki ma uzupełnić aplikacja?';
+
+  @override
+  String get weekPlannerDaysHint =>
+      'Dotknij pól. To, co już zaplanowane, zostaje bez zmian.';
+
+  @override
+  String get weekPlannerPresetWeekdays => 'Dni robocze';
+
+  @override
+  String get weekPlannerPlanned => 'zaplanowane';
+
+  @override
+  String get weekPlannerMoreMeals => 'Pokaż więcej posiłków';
+
+  @override
+  String get weekPlannerFewerMeals => 'Mniej posiłków';
+
+  @override
+  String weekPlannerMealCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posiłku',
+      many: '$count posiłków',
+      few: '$count posiłki',
+      one: '1 posiłek',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerPrefsTitle => 'Na co ma zwracać uwagę aplikacja?';
+
+  @override
+  String get weekPlannerPrefsHint =>
+      'Wszystko opcjonalne – bez wyboru miesza Twoje przepisy.';
+
+  @override
+  String get weekPlannerQuick => 'Szybko w tygodniu';
+
+  @override
+  String weekPlannerQuickSub(int minutes) {
+    return 'pon–pt maks. $minutes min';
+  }
+
+  @override
+  String get weekPlannerStale => 'Najpierw dawno nieprzygotowane';
+
+  @override
+  String get weekPlannerStaleSub =>
+      'według „Ostatnio ugotowane” i planu posiłków';
+
+  @override
+  String get weekPlannerFavorites => 'Częściej ulubione';
+
+  @override
+  String get weekPlannerFavoritesSub =>
+      'przepisy z serduszkiem i dobrze ocenione';
+
+  @override
+  String get weekPlannerVariety => 'Różnorodność';
+
+  @override
+  String get weekPlannerVarietySub => 'żadna kategoria dwa razy z rzędu';
+
+  @override
+  String get weekPlannerOnlyFrom => 'Tylko z';
+
+  @override
+  String get weekPlannerDiceRules => 'Uwzględnij zasady kostki';
+
+  @override
+  String get weekPlannerDiceRulesSub =>
+      'Twój wybór dla posiłków z ustawień planu posiłków';
+
+  @override
+  String weekPlannerMatching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pasującego przepisu',
+      many: '$count pasujących przepisów',
+      few: '$count pasujące przepisy',
+      one: '1 pasujący przepis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weekPlannerForMeals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'na $count posiłku',
+      many: 'na $count posiłków',
+      few: 'na $count posiłki',
+      one: 'na 1 posiłek',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weekPlannerSuggest => 'Zaproponuj';
+
+  @override
+  String get weekPlannerPreviewHint =>
+      'Kostka zmienia, kłódka zatrzymuje. Przytrzymaj danie i przeciągnij je na inny dzień, aby je zamienić.';
+
+  @override
+  String get weekPlannerRerollAll => 'Wszystko od nowa';
+
+  @override
+  String get weekPlannerReroll => 'Losuj ponownie';
+
+  @override
+  String get weekPlannerLock => 'Przypnij';
+
+  @override
+  String get weekPlannerUnlock => 'Odepnij';
+
+  @override
+  String get weekPlannerReasonNever => 'nigdy nie gotowane';
+
+  @override
+  String get weekPlannerReasonStale => 'dawno nie gotowane';
+
+  @override
+  String get weekPlannerReasonFavorite => 'Ulubione';
+
+  @override
+  String get weekPlannerNoMatch => 'Brak pasującego przepisu';
+
+  @override
+  String get weekPlannerThenShopping =>
+      'Następnie wybierz składniki na listę zakupów';
+
+  @override
+  String get weekPlannerMostlyEmpty => 'Tydzień prawie pusty';
+
+  @override
+  String weekPlannerMostlyEmptySub(int free, int total) {
+    return '$free z $total dni jeszcze wolnych – uzupełnij je w trzech krokach.';
+  }
+
+  @override
+  String get previousWeek => 'Poprzedni tydzień';
+
+  @override
+  String get nextWeek => 'Następny tydzień';
+
+  @override
+  String get weekPlannerAllDays => 'Wszystkie dni';
+
+  @override
+  String get weekPlannerWeekend => 'Weekend';
+
+  @override
+  String get weekPlannerDinners => 'Kolacje';
+
+  @override
+  String get weekPlannerLunches => 'Obiady';
+
+  @override
+  String get weekPlannerAllMeals => 'Wszystkie posiłki';
+
+  @override
+  String get mealplanDayEmpty => 'Nic nie zaplanowano';
+
+  @override
+  String get mealplanDropHere => 'Upuść tutaj';
+
+  @override
+  String mealplanDayKcal(String kcal) {
+    return '$kcal kcal na porcję';
+  }
+
+  @override
+  String mealplanDayKcalPartial(String kcal) {
+    return 'co najmniej $kcal kcal na porcję';
+  }
+
+  @override
+  String get globalSearchHint => 'Szukaj przepisów, pozycji, funkcji …';
+
+  @override
+  String get globalSearchIntro =>
+      'Szukaj przepisów, pozycji z listy zakupów, produktów i książek kucharskich – a także funkcji i ustawień aplikacji, np. „lista”.';
+
+  @override
+  String get globalSearchFunctions => 'Funkcje';
+
+  @override
+  String globalSearchNoResults(String query) {
+    return 'Brak wyników dla „$query”';
+  }
+
+  @override
+  String get searchClear => 'Wyczyść wyszukiwanie';
+
+  @override
+  String get recipeMatchPlanWeek => 'Zaplanuj tydzień z tymi przepisami';
+
+  @override
+  String get weekPlannerReasonTray => 'z tacy';
+
+  @override
+  String get emptyBrowseRecipes => 'Zobacz przepisy';
+
+  @override
+  String get mealplanWeekShopping => 'Składniki na ten tydzień';
+
+  @override
+  String get globalSearchActions => 'Akcje';
+
+  @override
+  String globalSearchAddToList(String text) {
+    return 'Dodaj „$text” do listy zakupów';
+  }
+
+  @override
+  String globalSearchAdded(String text) {
+    return 'Dodano „$text”';
+  }
+
+  @override
+  String get globalSearchImportUrl => 'Importuj przepis z tego adresu';
+
+  @override
+  String get homeContinueCooking => 'Kontynuuj gotowanie';
+
+  @override
+  String homeCookingStep(int step, int total) {
+    return 'Krok $step z $total';
+  }
+
+  @override
+  String get homeCookingPrep => 'Przygotowanie';
+
+  @override
+  String get homeCookingAlmostDone => 'Prawie gotowe';
+
+  @override
+  String get homeCookingContinue => 'dalej';
+
+  @override
+  String get paneSelectRecipe => 'Wybierz przepis po lewej.';
+
+  @override
+  String get mealplanDragRecipeHint =>
+      'Przeciągnij przepis na dzień, aby go zaplanować.';
+
+  @override
+  String get desktopDropUnsupported =>
+      'Tych plików nie można dodać jako załączników.';
+
+  @override
+  String desktopDropUploaded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Dodano $count załącznika',
+      many: 'Dodano $count załączników',
+      few: 'Dodano $count załączniki',
+      one: 'Dodano 1 załącznik',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get desktopDropAsAttachment => 'Upuść, aby dodać jako załącznik';
+
+  @override
+  String get printAction => 'Drukuj';
+
+  @override
+  String get mealplanPrintWeek => 'Drukuj tydzień';
+
+  @override
+  String get mealplanEntryCooked => 'Ugotowane';
+
+  @override
+  String get recipeSearchClear => 'Wyczyść wyszukiwanie';
+
+  @override
+  String get organizerShowRecipes => 'Pokaż przepisy';
+
+  @override
+  String globalSearchShowAllRecipes(int count) {
+    return 'Pokaż wszystkie przepisy ($count)';
+  }
+
+  @override
+  String get unnamedEntry => '(bez nazwy)';
+
+  @override
+  String get mealplanWholeWeek => 'Na cały tydzień';
+
+  @override
+  String get mealplanWholeWeekDropHint =>
+      'Upuść tu posiłek, aby zaplanować go na cały tydzień.';
+
+  @override
+  String get mealplanMovedToWholeWeek => 'Zaplanowano na cały tydzień';
+
+  @override
+  String get mealplanCookToday => 'Gotuję dziś';
+
+  @override
+  String get mealplanPlanWholeWeek => 'Zaplanuj na cały tydzień';
+
+  @override
+  String mealplanPlanWholeWeekRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get calendarFeedDuration => 'Czas trwania (minuty)';
+
+  @override
+  String get calendarFeedEventDetails => 'Szczegóły wydarzenia';
+
+  @override
+  String calendarFeedEventDetailsHint(String fields) {
+    return 'Dostosuj wygląd posiłków w kalendarzu. Pola: $fields';
+  }
+
+  @override
+  String get calendarFeedEventTitle => 'Tytuł wydarzenia';
+
+  @override
+  String get calendarFeedEventDescription => 'Opis wydarzenia';
+
+  @override
+  String get calendarFeedEventDetailsWarning =>
+      'Zmiana tych pól zmienia link do kalendarza — jeśli już subskrybujesz, zasubskrybuj ponownie nowym linkiem.';
+
+  @override
+  String get stepDurationMinutes => 'Czas trwania (minuty)';
+
+  @override
+  String stepDurationSaved(String duration) {
+    return 'Zapisany czas: $duration. Po edycji liczą się pełne minuty.';
+  }
+
+  @override
+  String get sortTotalTimeShort => 'Najkrótszy czas całkowity';
+
+  @override
+  String get sortTotalTimeLong => 'Najdłuższy czas całkowity';
+
+  @override
+  String recipeCreatedBy(String name) {
+    return 'Utworzone przez $name';
+  }
+
+  @override
+  String get timelineReplacePhoto => 'Zastąp zdjęcie';
+
+  @override
+  String get pasteRecipeTitle => 'Wklej przepis';
+
+  @override
+  String get pasteRecipeDescription =>
+      'Wklej przepis jako JSON (schema.org) lub kod HTML strony internetowej.';
+
+  @override
+  String get pasteRecipeDescription330 =>
+      'Wklej przepis wyeksportowany z Mealie (JSON) — zostanie zaimportowany z pełną strukturą: produktami, jednostkami i powiązaniami kroków. Działa też JSON (schema.org) i kod HTML strony.';
+
+  @override
+  String get pasteRecipeHint => 'Wklej tutaj JSON lub HTML';
+
+  @override
+  String get pasteRecipeButton => 'Wklej przepis';
+
+  @override
+  String get pasteRecipeImport => 'Importuj';
+
+  @override
+  String get aiPromptsTitle => 'Prompty AI';
+
+  @override
+  String get aiPromptsTeaser =>
+      'Dostosuj instrukcje, które Mealie przekazuje dostawcy AI — dla wszystkich zadań lub każdego z osobna.';
+
+  @override
+  String get aiPromptsDescription =>
+      'Dostosuj instrukcje, które Mealie przekazuje dostawcy AI dla każdego zadania. Prompty Mealie są po angielsku, ale nie zmienia to języka przepisów: zachowują język źródła, chyba że zdecydujesz się je przetłumaczyć. Własne instrukcje możesz pisać w dowolnym języku.';
+
+  @override
+  String get aiPromptsGlobal => 'Instrukcje dla wszystkich promptów';
+
+  @override
+  String get aiPromptsGlobalDescription =>
+      'Dodawane do każdego promptu tworzącego dane przepisu, np. budowanie przepisów, analiza składników i tłumaczenie. Nie dotyczy promptów systemowych.';
+
+  @override
+  String get aiPromptsGlobalPlaceholder =>
+      'np. Zawsze używaj jednostek metrycznych.';
+
+  @override
+  String get aiPromptsList => 'Prompty';
+
+  @override
+  String get aiPromptSystem => 'System';
+
+  @override
+  String get aiPromptSystemDescription =>
+      'To prompt systemowy. Możliwie wiernie przepisuje materiał źródłowy, zanim powstanie z niego przepis, dlatego instrukcje dla wszystkich promptów nie są do niego dodawane. Zmiana zwykle nie jest potrzebna i może pogorszyć niezawodność importu.';
+
+  @override
+  String get aiPromptAppended => 'Dodano';
+
+  @override
+  String get aiPromptOverridden => 'Nadpisano';
+
+  @override
+  String get aiPromptModeDefault => 'Standardowy';
+
+  @override
+  String get aiPromptModeAppend => 'Dodaj';
+
+  @override
+  String get aiPromptModeOverride => 'Nadpisz';
+
+  @override
+  String get aiPromptAppendDescription =>
+      'Te instrukcje są dodawane do promptu Mealie i mają pierwszeństwo, gdy oba są sprzeczne.';
+
+  @override
+  String get aiPromptOverrideDescription =>
+      'Twój prompt całkowicie zastępuje prompt Mealie, więc przyszłe aktualizacje Mealie go nie obejmą. Dane potrzebne do zadania, np. lista jednostek, są nadal dodawane po Twoim prompcie.';
+
+  @override
+  String get aiPromptDefaultChanged =>
+      'Prompt Mealie zmienił się od czasu nadpisania. Porównaj go ze swoim lub wróć do domyślnego, aby użyć nowej wersji.';
+
+  @override
+  String get aiPromptViewDefault => 'Pokaż domyślny prompt';
+
+  @override
+  String get aiPromptHideDefault => 'Ukryj domyślny prompt';
+
+  @override
+  String get aiPromptSaved => 'Prompt zapisany';
+
+  @override
+  String get aiPromptSaveFailed => 'Nie udało się zapisać promptu';
+
+  @override
+  String get aiPromptTitleBuildRecipe => 'Stwórz przepis';
+
+  @override
+  String get aiPromptTitleParseIngredients => 'Analizuj składniki';
+
+  @override
+  String get aiPromptTitleRecipeVideo => 'Przepis z wideo';
+
+  @override
+  String get aiPromptTitleOrganizers => 'Przypisz organizatory';
+
+  @override
+  String get aiPromptTitleTranslate => 'Przetłumacz przepis';
+
+  @override
+  String get aiPromptTitleCompileSource => 'Przeczytaj materiał źródłowy';
+
+  @override
+  String get aiPromptTitleTranscribe => 'Przepisz dźwięk';
+
+  @override
+  String get aiPromptDescBuildRecipe =>
+      'Zamienia materiał ze strony, zdjęcia lub tekstu w uporządkowany przepis.';
+
+  @override
+  String get aiPromptDescParseIngredients =>
+      'Używany przez analizator składników AI do podziału składnika na ilość, jednostkę, produkt i notatkę.';
+
+  @override
+  String get aiPromptDescRecipeVideo =>
+      'Zamienia transkrypcję i opis wideo w przepis.';
+
+  @override
+  String get aiPromptDescOrganizers =>
+      'Wybiera tagi, kategorie i przybory dla zaimportowanego przepisu.';
+
+  @override
+  String get aiPromptDescTranslate =>
+      'Tłumaczy zaimportowany przepis na wybrany język.';
+
+  @override
+  String get aiPromptDescCompileSource =>
+      'Odczytuje strony, zdjęcia i teksty do zwykłego tekstu przepisu.';
+
+  @override
+  String get aiPromptDescTranscribe =>
+      'Przepisuje dźwięk, gdy dostawca audio nie potrafi zrobić tego bezpośrednio.';
+
+  @override
+  String get mealplanNoteHint => 'Notatka (opcjonalnie)';
+
+  @override
+  String get mealplanEditTitle => 'Edytuj wpis';
+
+  @override
+  String get mealplanEntryTitleLabel => 'Tytuł';
+
+  @override
+  String get mealplanEntryNoteLabel => 'Notatka';
+
+  @override
+  String mealplanCreateRecipe(String name) {
+    return 'Nowy przepis „$name”';
+  }
+
+  @override
+  String get mealplanCreateRecipeSubtitle =>
+      'Tworzy pusty przepis, planuje go i otwiera edytor';
+
+  @override
+  String get importOptionsTitle => 'Opcje importu';
+
+  @override
+  String get importOptionsHint =>
+      'Ile AI Mealie robi na twoim serwerze przy imporcie. Każdy dodatkowy krok to osobne zapytanie AI – im mniej, tym szybciej.';
+
+  @override
+  String get importTranslateTitle => 'Przetłumacz przepis';
+
+  @override
+  String get importOrganizersTitle => 'Kategorie i tagi';
+
+  @override
+  String get importOrganizersCreate => 'Twórz nowe';
+
+  @override
+  String get importOrganizersExisting => 'Tylko istniejące';
+
+  @override
+  String get importOrganizersNone => 'Brak';
+
+  @override
+  String get importOrganizersCreateHint =>
+      'AI przypisuje tagi, kategorie i narzędzia oraz tworzy brakujące.';
+
+  @override
+  String get importOrganizersExistingHint =>
+      'AI używa tylko istniejących tagów, kategorii i narzędzi.';
+
+  @override
+  String get importOrganizersNoneHint =>
+      'Przepis trafia bez tagów, kategorii i narzędzi. Mealie i tak wykonuje ten krok, więc import nie jest szybszy.';
+
+  @override
+  String get importStarting => 'Wysyłanie na serwer…';
+
+  @override
+  String get importRunning => 'Importowanie przepisu…';
+
+  @override
+  String get aiImagesRunning => 'AI czyta strony…';
+
+  @override
+  String get importStreamPhotosTitle => 'Import zdjęć z postępem na żywo';
+
+  @override
+  String get importStreamPhotosHint =>
+      'Pokazuje każdy krok i utrzymuje połączenie przy długich importach. Wyłącz, aby wysyłać jednym żądaniem jak dotąd – np. gdy proxy blokuje strumieniowanie.';
+
+  @override
+  String get weekPlannerDiceRulesMealieSub =>
+      'reguły Mealie Twojego gospodarstwa (ustawienia planu posiłków)';
+
+  @override
+  String get syncStarted =>
+      'Ponowne wczytywanie przepisów, zdjęć i list z serwera…';
+
+  @override
+  String get syncDone => 'Wszystko jest aktualne';
+
+  @override
+  String get recipeReloaded => 'Przepis wczytany ponownie';
+
+  @override
+  String get logoutTitle => 'Wyloguj / zmień użytkownika';
+
+  @override
+  String get logoutConfirm =>
+      'Przepisy, listy i niezsynchronizowane zmiany zostaną usunięte z tego urządzenia. Ustawienia aplikacji i adres serwera zostają – wystarczy zalogować się ponownie.';
+
+  @override
+  String get reloadRecipe => 'Wczytaj ponownie z serwera';
+
+  @override
+  String get wifiServerTitle => 'Inny adres w sieci Wi-Fi';
+
+  @override
+  String get wifiServerHint =>
+      'Dla tego samego serwera pod drugim adresem, np. lokalne IP w domu i ZeroTier, Tailscale lub domena poza domem. W podanej sieci Wi-Fi aplikacja automatycznie używa tego adresu, w innych miejscach adresu serwera powyżej.';
+
+  @override
+  String get wifiSsidLabel => 'Nazwa sieci Wi-Fi';
+
+  @override
+  String get wifiServerUrl => 'Adres w tej sieci Wi-Fi';
+
+  @override
+  String get wifiUseCurrent => 'Użyj bieżącej sieci Wi-Fi';
+
+  @override
+  String get wifiNameUnavailable =>
+      'Nie można odczytać nazwy sieci Wi-Fi. Połącz się z siecią i zezwól na dostęp do lokalizacji – Android i iOS udostępniają nazwę sieci tylko wtedy.';
+
+  @override
+  String wifiServerActive(String ssid) {
+    return 'Aktywny: adres w sieci „$ssid”';
+  }
+
+  @override
+  String wifiServerStandardActive(String ssid) {
+    return 'Aktywny: adres serwera (poza siecią „$ssid”)';
+  }
+
+  @override
+  String get wifiServerRemove => 'Usuń';
+
+  @override
+  String get switchUserTitle => 'Zmień użytkownika';
+
+  @override
+  String switchUserBody(String name) {
+    return '$name pozostaje zapisane na tym urządzeniu – ze wszystkimi przepisami, listami i jeszcze niezsynchronizowanymi zmianami. Wrócisz przez zdjęcie profilowe lub stronę logowania.';
+  }
+
+  @override
+  String get allowBiometricTitle => 'Wracaj odblokowaniem urządzenia';
+
+  @override
+  String get allowBiometricHint =>
+      'Face ID, odcisk palca lub PIN urządzenia zamiast hasła. Każdy, kto może odblokować to urządzenie, wejdzie wtedy na to konto.';
+
+  @override
+  String get allow => 'Zezwól';
+
+  @override
+  String unlockAccountReason(String name) {
+    return 'Przełącz na $name';
+  }
+
+  @override
+  String signInAs(String name) {
+    return 'Zaloguj jako $name';
+  }
+
+  @override
+  String wrongAccountError(String name) {
+    return 'To jest konto „$name”. Zaloguj się na zapisane konto.';
+  }
+
+  @override
+  String get accountSaveOffline =>
+      'Nie można teraz zapisać konta – serwer jest niedostępny.';
+
+  @override
+  String get signOutRemoveTitle => 'Wyloguj i usuń';
+
+  @override
+  String get signOutRemoveConfirm =>
+      'To konto i wszystkie jego dane na tym urządzeniu (przepisy, listy, niezsynchronizowane zmiany) zostaną usunięte. Ustawienia aplikacji zostają.';
+
+  @override
+  String get removeSavedAccount => 'Usuń z tego urządzenia';
+
+  @override
+  String removeSavedAccountConfirm(String name) {
+    return 'Usunąć „$name” i wszystkie zapisane dane z tego urządzenia? Niezsynchronizowane zmiany zostaną utracone.';
+  }
+
+  @override
+  String get savedAccountsTitle => 'Zapisane konta';
+
+  @override
+  String get addAccount => 'Dodaj kolejne konto';
+
+  @override
+  String get biometricOff => 'Nie używaj odblokowania urządzenia';
+
+  @override
+  String get orNewAccount => 'Lub zaloguj się na inne konto:';
+
+  @override
+  String get importVideoTitle => 'Linki do filmów';
+
+  @override
+  String get importVideoFast => 'Szybko';
+
+  @override
+  String get importVideoThorough => 'Dokładnie (AI)';
+
+  @override
+  String get importVideoFastHint =>
+      'Mealie transkrybuje film i tworzy przepis jednym zapytaniem AI – zwykle znacznie szybciej. Bez tłumaczenia i bez kategorii/tagów. Przełącznik AI nadal można włączyć przy imporcie.';
+
+  @override
+  String get importVideoThoroughHint =>
+      'Przy linkach do filmów przełącznik AI włącza się automatycznie: kilka kroków AI, z tłumaczeniem i kategoriami/tagami jak ustawiono powyżej. Trwa dłużej.';
+
+  @override
+  String get importPresetFast => 'Szybko';
+
+  @override
+  String get importPresetThorough => 'Dokładnie';
+
+  @override
+  String get importPresetCustom => 'Własne';
+
+  @override
+  String get importPresetFastTitle =>
+      'Jak najmniej kroków AI – najkrótsze czekanie';
+
+  @override
+  String get importPresetFastVideo =>
+      'Linki do filmów: Mealie transkrybuje film i tworzy przepis jednym zapytaniem AI (przełącznik AI pozostaje wyłączony).';
+
+  @override
+  String get importPresetFastTranslate =>
+      'Bez tłumaczenia – przepis zostaje w oryginalnym języku.';
+
+  @override
+  String get importPresetFastOrganizers =>
+      'Przypisywane są tylko istniejące kategorie i tagi, nowe nie są tworzone.';
+
+  @override
+  String get importPresetThoroughTitle =>
+      'Pełny import AI Mealie – trwa dłużej, daje najwięcej';
+
+  @override
+  String get importPresetThoroughVideo =>
+      'Linki do filmów są automatycznie importowane z AI – w kilku krokach (przygotowanie źródła, utworzenie przepisu…).';
+
+  @override
+  String get importPresetThoroughTranslate =>
+      'Przepis jest tłumaczony na poniższy język importu, jeśli jest w innym języku.';
+
+  @override
+  String get importPresetThoroughOrganizers =>
+      'Przypisywane są pasujące kategorie i tagi, brakujące są tworzone.';
+
+  @override
+  String get importPresetCustomTitle => 'Ustaw każdą opcję samodzielnie';
+
+  @override
+  String get importPresetCustomBody =>
+      'Zaczynasz od tego, co robił poprzedni wybór, i zmieniasz tylko to, czego potrzebujesz – np. szybkie importy filmów, ale z tłumaczeniem.';
+
+  @override
+  String get sidebarPinHint =>
+      'Wskazówka: przytrzymaj kafelek i przeciągnij go na pasek boczny, aby go tam przypiąć.';
+
+  @override
+  String get sidebarDropHere => 'Upuść tutaj';
+
+  @override
+  String sidebarShortcutTitle(String name) {
+    return 'Skrót dla „$name”';
+  }
+
+  @override
+  String sidebarShortcutPrompt(String modifier) {
+    return 'Naciśnij teraz wybraną kombinację klawiszy z $modifier.';
+  }
+
+  @override
+  String get sidebarShortcutTaken => 'Ta kombinacja jest już zajęta.';
+
+  @override
+  String get sidebarShortcutNone => 'Bez skrótu';
+
+  @override
+  String get sidebarShortcutChange => 'Zmień skrót';
+
+  @override
+  String get sidebarUnpin => 'Usuń z paska bocznego';
+
+  @override
+  String sidebarFull(int count) {
+    return 'Pasek boczny jest pełny – maksymalnie $count własnych pozycji.';
+  }
+
+  @override
+  String get tabletSidebar => 'Pasek boczny w poziomie';
+
+  @override
+  String get tabletSidebarSubtitle =>
+      'Pokazuje nawigację po lewej zamiast na dole, gdy tablet jest trzymany poziomo';
 }

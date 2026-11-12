@@ -4,6 +4,7 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../widgets/tool_widgets.dart';
 
 // ---------------------------------------------------------------------------
@@ -225,8 +226,7 @@ class _NotifiersScreenState extends ConsumerState<NotifiersScreen> {
                       n['enabled'] == true
                           ? l.notifierEventCount(_activeCount(n))
                           : l.disabledLabel,
-                      style:
-                          TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                      style: TextStyle(color: context.appFgSub, fontSize: 13)),
                   onTap: () => _edit(n),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -345,7 +345,7 @@ class _NotifierDialogState extends State<_NotifierDialog> {
                   child: Text(title,
                       style: TextStyle(
                           color: context.appFgSub,
-                          fontSize: 12.5,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700)),
                 ),
                 Wrap(
@@ -353,10 +353,13 @@ class _NotifierDialogState extends State<_NotifierDialog> {
                   runSpacing: 6,
                   children: [
                     for (final (key, label) in options)
-                      FilterChip(
-                        label: Text(label),
+                      AppChip(
+                        label: label,
+                        icon:
+                            _options[key] == true ? Icons.check_rounded : null,
                         selected: _options[key] == true,
-                        onSelected: (v) => setState(() => _options[key] = v),
+                        onTap: () => setState(
+                            () => _options[key] = !(_options[key] == true)),
                       ),
                   ],
                 ),

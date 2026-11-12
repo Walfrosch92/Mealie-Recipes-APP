@@ -58,9 +58,6 @@ List<String> allowedAssetExtensions({required bool mealie329}) => [
       if (mealie329) ...kAllowedAssetExtensions329,
     ];
 
-const kVideoAssetExtensions = {'mp4', 'mov', 'm4v', 'webm'};
-const kAudioAssetExtensions = {'mp3', 'm4a'};
-
 /// mdi-Icon wie in der Webapp-Auswahl, passend zur Dateiendung.
 String assetIconForExtension(String ext) => switch (ext.toLowerCase()) {
       'pdf' => 'mdi-file-pdf-box',

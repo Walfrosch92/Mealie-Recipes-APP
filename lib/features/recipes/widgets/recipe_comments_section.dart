@@ -1,6 +1,7 @@
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -110,7 +111,7 @@ class _RecipeCommentsSectionState extends ConsumerState<RecipeCommentsSection> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -167,7 +168,7 @@ class _RecipeCommentsSectionState extends ConsumerState<RecipeCommentsSection> {
             padding: const EdgeInsets.fromLTRB(16, 4, 6, 4),
             decoration: BoxDecoration(
               color: context.appCard,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(AppTokens.rXl),
               border: Border.all(color: context.appSeparator, width: 1),
               boxShadow: context.appShadowSm,
             ),
@@ -183,7 +184,7 @@ class _RecipeCommentsSectionState extends ConsumerState<RecipeCommentsSection> {
                     // Mehrzeilig: Tippen daneben schließt die Tastatur.
                     onTapOutside: (_) => FocusScope.of(context).unfocus(),
                     textCapitalization: TextCapitalization.sentences,
-                    style: TextStyle(color: context.appFg, fontSize: 14.5),
+                    style: TextStyle(color: context.appFg, fontSize: 15),
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: l.commentHint,
@@ -200,7 +201,8 @@ class _RecipeCommentsSectionState extends ConsumerState<RecipeCommentsSection> {
                   child: Semantics(
                     button: true,
                     label: l.send,
-                    child: GestureDetector(
+                    child: TapArea(
+                      semanticLabel: AppLocalizations.of(context)!.send,
                       onTap: canSend ? _send : null,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
@@ -286,7 +288,7 @@ class _CommentCard extends StatelessWidget {
                     style: TextStyle(
                         fontFamily: 'PlusJakartaSans',
                         color: context.appFg,
-                        fontSize: 14.5,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700)),
                 if (when != null)
                   Padding(

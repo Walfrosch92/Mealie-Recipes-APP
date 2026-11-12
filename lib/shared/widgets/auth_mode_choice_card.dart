@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 import '../../core/api/api_service.dart';
 
@@ -34,7 +35,7 @@ class AuthModeChoiceCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       color: selected ? primary.withValues(alpha: 0.12) : null,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
         side:
             selected ? BorderSide(color: primary, width: 1.5) : BorderSide.none,
       ),
@@ -42,7 +43,8 @@ class AuthModeChoiceCard extends StatelessWidget {
         leading: Icon(icon, color: selected ? primary : null),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: selected ? Icon(Icons.check_circle, color: primary) : null,
+        trailing:
+            selected ? Icon(Icons.check_circle_rounded, color: primary) : null,
         onTap: onTap,
       ),
     );

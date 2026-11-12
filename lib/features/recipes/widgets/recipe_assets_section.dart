@@ -46,7 +46,6 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
       isScrollControlled: true,
       context: context,
       useRootNavigator: true,
-      backgroundColor: context.appCard,
       builder: (ctx) => SafeArea(
         child: SingleChildScrollView(
 // Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
@@ -78,15 +77,13 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
             if (mealie329) ...[
               if (PlatformFeatures.camera)
                 ListTile(
-                  leading:
-                      Icon(Icons.videocam_rounded, color: ctx.appFg),
+                  leading: Icon(Icons.videocam_rounded, color: ctx.appFg),
                   title: Text(l.assetsRecordVideo,
                       style: TextStyle(color: ctx.appFg)),
                   onTap: () => Navigator.pop(ctx, 'videoCamera'),
                 ),
               ListTile(
-                leading:
-                    Icon(Icons.video_library_rounded, color: ctx.appFg),
+                leading: Icon(Icons.video_library_rounded, color: ctx.appFg),
                 title: Text(l.assetsChooseVideo,
                     style: TextStyle(color: ctx.appFg)),
                 onTap: () => Navigator.pop(ctx, 'videoGallery'),
@@ -105,9 +102,8 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
       final path = res?.path;
       if (path != null) file = File(path);
     } else if (source == 'videoCamera' || source == 'videoGallery') {
-      file = await _pickVideo(source == 'videoCamera'
-          ? ImageSource.camera
-          : ImageSource.gallery);
+      file = await _pickVideo(
+          source == 'videoCamera' ? ImageSource.camera : ImageSource.gallery);
     } else {
       file = await pickPhotoWithSource(context);
     }
@@ -198,7 +194,7 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -252,7 +248,7 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: AppTokens.accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppTokens.rXs),
                       ),
                       child:
                           Icon(_icon(a), size: 20, color: AppTokens.accentDeep),
@@ -267,13 +263,13 @@ class _RecipeAssetsSectionState extends ConsumerState<RecipeAssetsSection> {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   color: context.appFg,
-                                  fontSize: 14.5,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w700)),
                           if (a.extension.isNotEmpty)
                             Text(a.extension.toUpperCase(),
                                 style: TextStyle(
                                     color: context.appFgTertiary,
-                                    fontSize: 11.5)),
+                                    fontSize: 12)),
                         ],
                       ),
                     ),

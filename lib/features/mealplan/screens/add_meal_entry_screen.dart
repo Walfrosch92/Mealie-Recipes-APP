@@ -2,7 +2,12 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
+import '../../../shared/widgets/app_search_field.dart';
+import '../../../shared/widgets/app_bar_text_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/utils/mealie_version.dart';
 import 'package:intl/intl.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -200,7 +205,14 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
   String _selectedSlot = 'lunch';
   final _searchCtrl = TextEditingController();
   String _search = '';
+
+  /// Optionale Notiz zum Eintrag (Mealie `text`) — für Rezepte und
+  /// eigene Mahlzeiten (Issue #41).
+  final _noteCtrl = TextEditingController();
   bool _submitting = false;
+
+  /// Mealie ≥ 3.30: für die ganze Woche des gewählten Datums planen.
+  bool _wholeWeek = false;
 
   // Würfelmodus — 3 zufällige Rezeptvorschläge statt der Suchliste. Datum
   // und Slot bleiben unverändert oben wählbar, der Würfel ersetzt nur den
@@ -412,13 +424,12 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
     showModalBottomSheet(
       useSafeArea: true,
       context: context,
-      backgroundColor: context.appCard,
       isScrollControlled: true,
-      builder: (_) => RecipeSortSheet(
+      builder: (sheetCtx) => RecipeSortSheet(
         current: _sort,
         onSelect: (sort) {
           setState(() => _sort = sort);
-          Navigator.of(context).pop();
+          Navigator.of(sheetCtx).pop();
         },
       ),
     );
@@ -433,29 +444,70 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _noteCtrl.dispose();
     super.dispose();
   }
 
   String _fmtDate(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  Future<void> _add({String? recipeId, String? title}) async {
-    if (_submitting) return;
+  /// Liefert true, wenn der Eintrag angelegt (und der Screen geschlossen)
+  /// wurde.
+  Future<bool> _add({String? recipeId, String? title}) async {
+    if (_submitting) return false;
     setState(() => _submitting = true);
     try {
+      // Ganze Woche: Eintrag beginnt am Wochenbeginn (Mealie-Einstellung).
+      final date = _wholeWeek
+          ? startOfWeek(_selectedDate, ref.read(weekStartWeekdayProvider))
+          : _selectedDate;
       await ref.read(mealplanProvider.notifier).addEntry(
-            date: _fmtDate(_selectedDate),
+            date: _fmtDate(date),
             entryType: _selectedSlot,
             recipeId: recipeId,
             title: title,
+            text: _noteCtrl.text,
+            week: _wholeWeek,
           );
       if (mounted) Navigator.pop(context);
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() => _submitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(userErrorMessage(e))),
       );
+      return false;
+    }
+  }
+
+  /// Suche ohne Treffer → leeres Rezept mit dem Suchbegriff als Namen
+  /// anlegen, gleich einplanen und im Editor öffnen (Issue #41) — wie
+  /// „Rezept erstellen" im Import-Screen.
+  Future<void> _addNewRecipe(String name) async {
+    name = name.trim();
+    if (name.isEmpty || _submitting) return;
+    final l = AppLocalizations.of(context)!;
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _submitting = true);
+    RecipeDetail recipe;
+    try {
+      recipe = await ref.read(apiServiceProvider).createRecipe({'name': name});
+      await ref.read(recipesProvider.notifier).upsertOne(recipe);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      messenger.showSnackBar(
+          SnackBar(content: Text(mealieErrorMessage(e) ?? l.createFailed)));
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    // Nur wenn das Einplanen geklappt hat (Screen geschlossen): Editor auf.
+    // Sonst steht das neue Rezept jetzt in der Suchliste zur Auswahl.
+    if (await _add(recipeId: recipe.id)) {
+      unawaited(router.push('/recipes/${recipe.id}/edit'));
     }
   }
 
@@ -471,11 +523,11 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
     return Scaffold(
       backgroundColor: context.appBg,
       appBar: AppBar(
-        leading: TextButton(
+        leading: AppBarTextButton(
+          label: l.cancel,
           onPressed: () => Navigator.pop(context),
-          child: Text(l.cancel),
         ),
-        leadingWidth: 100,
+        leadingWidth: AppBarTextButton.leadingWidth,
         title: Text(l.planMeal),
         centerTitle: true,
         actions: [
@@ -514,7 +566,8 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(AppTokens.rSm),
                                 gradient: AppTokens.accentGradient,
                                 boxShadow: context.appAccentGlow,
                               ),
@@ -549,7 +602,7 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
                             color: context.appFg,
                             fontSize: 16,
                             fontWeight: FontWeight.w600)),
-                    GestureDetector(
+                    TapArea(
                       onTap: _pickDate,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -581,6 +634,39 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
                   ],
                 ),
               ),
+              // Mealie ≥ 3.30: „Für die ganze Woche planen“ (wie die Webapp).
+              if (ref.watch(mealie330Provider))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
+                  child: SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    activeTrackColor: AppTokens.accent,
+                    value: _wholeWeek,
+                    onChanged: (v) => setState(() => _wholeWeek = v),
+                    title: Text(l.mealplanPlanWholeWeek,
+                        style: TextStyle(
+                            color: context.appFg,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600)),
+                    subtitle: _wholeWeek
+                        ? Text(
+                            l.mealplanPlanWholeWeekRange(
+                              DateFormat.MMMd(Localizations.localeOf(context)
+                                      .toString())
+                                  .format(startOfWeek(_selectedDate,
+                                      ref.watch(weekStartWeekdayProvider))),
+                              DateFormat.MMMd(Localizations.localeOf(context)
+                                      .toString())
+                                  .format(addDays(
+                                      startOfWeek(_selectedDate,
+                                          ref.watch(weekStartWeekdayProvider)),
+                                      6)),
+                            ),
+                            style: TextStyle(
+                                color: context.appFgSub, fontSize: 13))
+                        : null,
+                  ),
+                ),
               const SizedBox(height: 16),
 
               // Slot segmented picker
@@ -592,7 +678,33 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
                   l: l,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
+              // Notiz zum Eintrag (Mealie `text`), z. B. „doppelte Menge,
+              // Gäste kommen" — gilt nur für diesen Tag (Issue #41).
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _noteCtrl,
+                  minLines: 1,
+                  maxLines: 3,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(color: context.appFg),
+                  decoration: InputDecoration(
+                    hintText: l.mealplanNoteHint,
+                    hintStyle: TextStyle(color: context.appFgSub),
+                    prefixIcon: Icon(Icons.sticky_note_2_outlined,
+                        color: context.appFgSub),
+                    filled: true,
+                    fillColor: context.appCard,
+                    isDense: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTokens.rXs),
+                        borderSide: BorderSide.none),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
 
               // Locked recipe → confirm button; else → searchable recipe list
               if (hasLockedRecipe)
@@ -617,27 +729,15 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: TextField(
+                              child: AppSearchField(
                                 controller: _searchCtrl,
-                                style: TextStyle(color: context.appFg),
+                                hintText: l.searchRecipes,
                                 onChanged: (v) => setState(() {
                                   _search = v;
                                   // Tippen beendet den Würfelmodus wieder —
                                   // Suche und Würfel-Vorschläge sind exklusiv.
                                   _diceResults = null;
                                 }),
-                                decoration: InputDecoration(
-                                  hintText: l.searchRecipes,
-                                  hintStyle: TextStyle(color: context.appFgSub),
-                                  prefixIcon: Icon(Icons.search,
-                                      color: context.appFgSub),
-                                  filled: true,
-                                  fillColor: context.appCard,
-                                  isDense: true,
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none),
-                                ),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -692,17 +792,30 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
               leading: _SearchThumbnail(
                   recipe: recipe, baseUrl: baseUrl, token: token),
               title: Text(recipe.name, style: TextStyle(color: context.appFg)),
-              trailing: Icon(Icons.add_circle,
+              trailing: Icon(Icons.add_circle_rounded,
                   color: Theme.of(context).colorScheme.primary),
               onTap: () => _add(recipeId: recipe.id),
             )),
-        // Custom meal option when search has no exact matches
-        if (_search.isNotEmpty && filtered.isEmpty)
+        // Keine Treffer: als eigene Mahlzeit (Notiz) eintragen oder gleich
+        // ein leeres Rezept anlegen (Issue #41).
+        if (_search.trim().isNotEmpty && filtered.isEmpty) ...[
           ListTile(
-            title: Text('➕ ${l.addCustomMeal} "$_search"',
+            leading: Icon(Icons.sticky_note_2_outlined,
+                color: Theme.of(context).colorScheme.primary),
+            title: Text('${l.addCustomMeal} "${_search.trim()}"',
                 style: TextStyle(color: context.appFg)),
-            onTap: () => _add(title: _search),
+            onTap: () => _add(title: _search.trim()),
           ),
+          ListTile(
+            leading: Icon(Icons.post_add_rounded,
+                color: Theme.of(context).colorScheme.primary),
+            title: Text(l.mealplanCreateRecipe(_search.trim()),
+                style: TextStyle(color: context.appFg)),
+            subtitle: Text(l.mealplanCreateRecipeSubtitle,
+                style: TextStyle(color: context.appFgSub, fontSize: 13)),
+            onTap: () => _addNewRecipe(_search),
+          ),
+        ],
       ],
     );
   }
@@ -753,7 +866,7 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null && mounted) setState(() => _selectedDate = picked);
   }
 }
 
@@ -780,7 +893,7 @@ class _SlotSegmented extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: context.appCard,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
         border: Border.all(color: context.appSeparator, width: 1),
         boxShadow: context.appShadowSm,
       ),
@@ -820,14 +933,13 @@ class _SearchThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppTokens.rXs),
       child: SizedBox(
         width: 48,
         height: 48,
         child: RecipeImage(
           recipeId: recipe.id,
           imageUrl: _imageUrl,
-          httpHeaders: {'Authorization': 'Bearer $token'},
           placeholder: _placeholder,
         ),
       ),

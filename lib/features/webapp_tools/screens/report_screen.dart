@@ -147,7 +147,7 @@ class _ReportListCardState extends ConsumerState<ReportListCard> {
               subtitle: Text(
                   '${formatToolDate(context, r['timestamp'])} · '
                   '${reportStatusLabel(l, r['status']?.toString())}',
-                  style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                  style: TextStyle(color: context.appFgSub, fontSize: 13)),
               onTap: r['status'] == 'in-progress'
                   ? null
                   : () => context.push('/reports/${r['id']}'),

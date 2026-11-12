@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'sheet_title.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../features/recipes/providers/recipes_provider.dart';
@@ -34,6 +35,12 @@ class RecipeSortSheet extends StatelessWidget {
       (RecipeSort.dateOldest, l.sortDateOldest, Icons.event_rounded),
       (RecipeSort.prepTimeShort, l.sortPrepTimeShort, Icons.schedule_rounded),
       (RecipeSort.prepTimeLong, l.sortPrepTimeLong, Icons.history_rounded),
+      (RecipeSort.totalTimeShort, l.sortTotalTimeShort, Icons.timer_outlined),
+      (
+        RecipeSort.totalTimeLong,
+        l.sortTotalTimeLong,
+        Icons.hourglass_bottom_rounded
+      ),
       (RecipeSort.ratingHighest, l.sortRatingHighest, Icons.star_rounded),
       (RecipeSort.ratingLowest, l.sortRatingLowest, Icons.star_border_rounded),
     ];
@@ -45,13 +52,7 @@ class RecipeSortSheet extends StatelessWidget {
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-            child: Text(l.sortRecipes,
-                style: TextStyle(
-                    fontFamily: 'PlusJakartaSans',
-                    color: context.appFg,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3)),
+            child: SheetTitle(l.sortRecipes),
           ),
           // Scrollable so the 8 options never overflow on small screens.
           Flexible(

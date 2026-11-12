@@ -59,10 +59,12 @@ struct MealplanProvider: TimelineProvider {
         )
     }
 
+    /// Datum in der App-Sprache mit landesüblichem Muster (vorher fest
+    /// „EEE, d. MMM" in Systemsprache → z. B. „Mon, 26. Oct").
     private func formatDate(_ date: Date) -> String {
         let f = DateFormatter()
-        f.dateFormat = "EEE, d. MMM"
-        f.locale = Locale.current
+        f.locale = Locale(identifier: WidgetSharedStore.loadLanguage())
+        f.setLocalizedDateFormatFromTemplate("EEEdMMM")
         return f.string(from: date)
     }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/providers/settings_provider.dart';
@@ -9,6 +10,7 @@ import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../providers/recently_viewed_provider.dart';
 import '../providers/recipes_provider.dart';
 import 'recipe_list_screen.dart' show RecipeCard;
+import '../../../shared/widgets/empty_state_view.dart';
 
 // ---------------------------------------------------------------------------
 // Zuletzt angesehen (Kachel in „Weiteres") — die zuletzt geöffneten Rezepte,
@@ -48,19 +50,13 @@ class RecentlyViewedScreen extends ConsumerWidget {
         child: SafeArea(
           top: false,
           child: recipes.isEmpty
-              ? ListView(children: [
-                  const SizedBox(height: 80),
-                  Icon(Icons.history_rounded,
-                      size: 56, color: context.appFgTertiary),
-                  const SizedBox(height: 14),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(l.recentlyViewedEmpty,
-                        textAlign: TextAlign.center,
-                        style:
-                            TextStyle(color: context.appFgSub, fontSize: 15)),
-                  ),
-                ])
+              ? EmptyStateView(
+                  icon: Icons.history_rounded,
+                  message: l.recentlyViewedEmpty,
+                  actionLabel: l.emptyBrowseRecipes,
+                  actionIcon: Icons.restaurant_menu_rounded,
+                  onAction: () => context.go('/recipes'),
+                )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
                   itemCount: recipes.length,
@@ -110,11 +106,10 @@ class RecentlyViewedScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         scrollable: true,
-        backgroundColor: context.appCard,
-        title:
-            Text(l.recentlyViewedClear, style: TextStyle(color: context.appFg)),
+        backgroundColor: ctx.appCard,
+        title: Text(l.recentlyViewedClear, style: TextStyle(color: ctx.appFg)),
         content: Text(l.recentlyViewedClearMessage,
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: ctx.appFgSub)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),

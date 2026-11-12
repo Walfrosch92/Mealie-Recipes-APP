@@ -2,8 +2,8 @@ import '../../../core/utils/platform_features.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,21 +16,17 @@ import '../../../core/models/app_settings.dart';
 import '../../../core/models/shopping_reminder_location.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/app_icon_service.dart';
-import '../../../core/services/local_cache.dart';
 import '../../../core/services/log_manager.dart';
-import '../../../core/services/recipe_detail_cache.dart';
 import '../../../core/services/recipe_image_store.dart';
 import '../../../core/services/support_mail_service.dart';
+import '../../../core/services/wifi_name.dart';
 import '../../../shared/theme/app_colors.dart';
-import '../../../shared/widgets/async_action_button.dart';
-import '../../../shared/widgets/auth_mode_choice_card.dart';
 import '../../../shared/widgets/gradient_button.dart' show SheetHandle;
-import '../../../shared/widgets/import_language_sheet.dart';
 import '../../../shared/widgets/liquid_glass.dart';
 import '../../auth/providers/biometric_lock_provider.dart';
+import '../../auth/services/account_switcher.dart';
+import '../../auth/widgets/renew_token_sheet.dart';
 import '../../recipes/providers/recipes_provider.dart';
-import '../../shopping_list/providers/foods_units_provider.dart';
-import '../../shopping_list/providers/pending_changes_provider.dart';
 import '../../shopping_list/providers/shopping_list_provider.dart';
 import '../../shopping_list/providers/shopping_lists_provider.dart';
 import '../services/shopping_reminder_location_service.dart';
@@ -45,10 +41,61 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  // ── Sprung aus der globalen Suche: /settings?section=<key>&t=<ms> ──────
+  // scrollt zum Abschnitt und hebt ihn kurz orange hervor.
+  final Map<String, GlobalKey> _sectionKeys = {
+    for (final k in const [
+      'connection',
+      'shopping',
+      'advanced',
+      'personalization',
+      'security',
+      'developer',
+    ])
+      k: GlobalKey(),
+  };
+  String? _handledJump;
+  String? _highlight;
+  Timer? _highlightTimer;
+
+  void _handleSectionJump(BuildContext context) {
+    final Uri uri;
+    try {
+      uri = GoRouterState.of(context).uri;
+    } catch (_) {
+      return;
+    }
+    final section = uri.queryParameters['section'];
+    if (section == null) {
+      _handledJump = null;
+      return;
+    }
+    final jump = uri.query;
+    if (jump == _handledJump) return;
+    _handledJump = jump;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _sectionKeys[section]?.currentContext;
+      if (!mounted || ctx == null) return;
+      Scrollable.ensureVisible(ctx,
+          alignment: 0.05,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut);
+      setState(() => _highlight = section);
+      _highlightTimer?.cancel();
+      _highlightTimer = Timer(const Duration(milliseconds: 1800), () {
+        if (mounted) setState(() => _highlight = null);
+      });
+    });
+  }
+
   // Temp state — only saved on button press, mirrors iOS SetupView
   final _urlCtrl = TextEditingController();
   final _tokenCtrl = TextEditingController();
   final _householdCtrl = TextEditingController();
+  // WLAN-Umschaltung: andere Adresse desselben Servers im Heim-WLAN.
+  final _wifiUrlCtrl = TextEditingController();
+  final _wifiSsidCtrl = TextEditingController();
+  bool _readingWifi = false;
   final _hk1 = TextEditingController();
   final _hv1 = TextEditingController();
   final _hk2 = TextEditingController();
@@ -64,8 +111,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String? _generatedTokenId;
 
   String _tempLang = 'de';
-  // Leer = der App-Sprache folgen (AppSettings.importLanguage).
-  String _tempImportLang = '';
   String _tempApiVersion = 'v2';
   bool _tempSendHeaders = false;
   bool _tempShowImages = true;
@@ -104,6 +149,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _urlCtrl,
       _tokenCtrl,
       _householdCtrl,
+      _wifiUrlCtrl,
+      _wifiSsidCtrl,
       _hk1,
       _hv1,
       _hk2,
@@ -164,9 +211,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _loadFrom(AppSettings s) {
-    _urlCtrl.text = s.serverUrl;
+    // Eingetragene Adresse, NICHT die evtl. gerade aktive WLAN-Adresse.
+    _urlCtrl.text = s.primaryServerUrl;
     _tokenCtrl.text = s.apiToken;
     _householdCtrl.text = s.householdId;
+    _wifiUrlCtrl.text = s.wifiServerUrl;
+    _wifiSsidCtrl.text = s.wifiSsid;
     _hk1.text = s.optionalHeaderKey1;
     _hv1.text = s.optionalHeaderValue1;
     _hk2.text = s.optionalHeaderKey2;
@@ -175,7 +225,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _hv3.text = s.optionalHeaderValue3;
     setState(() {
       _tempLang = s.selectedLanguage;
-      _tempImportLang = s.importLanguage;
       _tempApiVersion = s.apiVersion;
       _tempSendHeaders = s.sendOptionalHeaders;
       _tempShowImages = s.showRecipeImages;
@@ -193,10 +242,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   void dispose() {
+    _highlightTimer?.cancel();
     _autosaveDebounce?.cancel();
     _urlCtrl.dispose();
     _tokenCtrl.dispose();
     _householdCtrl.dispose();
+    _wifiUrlCtrl.dispose();
+    _wifiSsidCtrl.dispose();
     _hk1.dispose();
     _hv1.dispose();
     _hk2.dispose();
@@ -250,13 +302,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
     final result = await showModalBottomSheet<(String, String?, String)>(
       context: context,
-      backgroundColor: context.appCard,
       // useRootNavigator: Tab-Screens liegen in einem Branch-Navigator —
       // ohne das Flag läge das Sheet hinter der fixen GlassTabBar.
       useRootNavigator: true,
       useSafeArea: true,
       isScrollControlled: true,
-      builder: (_) => _RenewTokenSheet(
+      builder: (_) => RenewTokenSheet(
         serverUrl: url,
         sendOptionalHeaders: _tempSendHeaders,
         headerKey1: _hk1.text.trim(),
@@ -352,11 +403,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.appCard,
+        backgroundColor: ctx.appCard,
         title: Text(l.shoppingReminderPermissionTitle,
-            style: TextStyle(color: context.appFg)),
+            style: TextStyle(color: ctx.appFg)),
         content: Text(l.shoppingReminderNotificationsOff,
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: ctx.appFgSub)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
@@ -384,11 +435,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.appCard,
+        backgroundColor: ctx.appCard,
         title: Text(l.shoppingReminderPermissionTitle,
-            style: TextStyle(color: context.appFg)),
+            style: TextStyle(color: ctx.appFg)),
         content: Text(l.shoppingReminderPermissionMessage,
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: ctx.appFgSub)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -411,7 +462,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (_tempReminderLocations.length >= 3) return;
     final added = await showModalBottomSheet<ShoppingReminderLocation>(
       context: context,
-      backgroundColor: context.appCard,
       useRootNavigator: true,
       useSafeArea: true,
       isScrollControlled: true,
@@ -444,6 +494,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String get _cleanServerUrl =>
       _urlCtrl.text.trim().replaceAll(RegExp(r'/+$'), '');
 
+  String get _cleanWifiUrl =>
+      _wifiUrlCtrl.text.trim().replaceAll(RegExp(r'/+$'), '');
+
+  /// „Aktuelles WLAN übernehmen": Standortberechtigung anfragen (Android/iOS
+  /// geben den WLAN-Namen nur damit heraus) und den Namen eintragen.
+  Future<void> _useCurrentWifi() async {
+    final l = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _readingWifi = true);
+    String? name;
+    try {
+      await ensureWifiNamePermission();
+      name = await readWifiName();
+    } finally {
+      if (mounted) setState(() => _readingWifi = false);
+    }
+    if (!mounted) return;
+    if (name == null) {
+      HapticFeedback.vibrate();
+      messenger.showSnackBar(SnackBar(content: Text(l.wifiNameUnavailable)));
+      return;
+    }
+    HapticFeedback.selectionClick();
+    _wifiSsidCtrl.text = name; // Listener → Autosave
+  }
+
   Future<void> _persistAll() async {
     final current =
         ref.read(settingsProvider).valueOrNull ?? const AppSettings();
@@ -464,10 +540,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           serverUrl: _cleanServerUrl,
           apiToken: _tokenCtrl.text.trim(),
           householdId: _householdCtrl.text.trim(),
+          wifiServerUrl: _cleanWifiUrl,
+          wifiSsid: _wifiSsidCtrl.text.trim(),
           shoppingListId: _tempShoppingListId,
           apiVersion: _tempApiVersion,
           selectedLanguage: _tempLang,
-          importLanguage: _tempImportLang,
           showRecipeImages: _tempShowImages,
           isBiometricLockEnabled: _tempBiometric,
           enableLogging: _tempLogging,
@@ -514,7 +591,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(l.settingsSaved),
-        behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -534,15 +610,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogCtx) => AlertDialog(
-          backgroundColor: context.appCard,
+          backgroundColor: dialogCtx.appCard,
           title: Text(l.offlineRecipeImagesDisableConfirm,
-              style: TextStyle(color: context.appFg)),
+              style: TextStyle(color: dialogCtx.appFg)),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, false),
                 child: Text(l.cancel)),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: AppTokens.dangerButton,
               onPressed: () => Navigator.pop(dialogCtx, true),
               child: Text(l.delete),
             ),
@@ -567,15 +643,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // Dialog liegt auf dem ROOT-Navigator — mit dem Screen-Context würde
       // pop() den Branch-Navigator (die Tab-Seite!) treffen statt den Dialog.
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: context.appCard,
+        backgroundColor: dialogCtx.appCard,
         title: Text(l.resetSettingsConfirm,
-            style: TextStyle(color: context.appFg)),
+            style: TextStyle(color: dialogCtx.appFg)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogCtx, false),
               child: Text(l.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: AppTokens.dangerButton,
             onPressed: () => Navigator.pop(dialogCtx, true),
             child: Text(l.resetSettings),
           ),
@@ -583,48 +659,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
     if (confirmed == true && mounted) {
-      // App-generiertes Token vorher aufräumen (best-effort) — sonst sammelt
-      // sich im Mealie-Profil bei jedem Reset+Neu-Login ein weiteres Token
-      // an. Manuell eingegebene Tokens (generatedApiTokenId leer) bleiben
-      // unangetastet — die gehören dem Nutzer, nicht der App.
-      final currentSettings = ref.read(settingsProvider).valueOrNull;
-      if (currentSettings != null &&
-          currentSettings.generatedApiTokenId.isNotEmpty) {
-        try {
-          await ApiService(currentSettings)
-              .deleteLongLiveToken(currentSettings.generatedApiTokenId);
-        } catch (e) {
-          LogManager.shared
-              .log('⚠️ Generiertes API-Token konnte nicht gelöscht werden: $e');
-        }
-      }
-      await ref.read(settingsProvider.notifier).reset();
-      // Voller Cache-Wipe: SharedPreferences ist durch reset() bereits
-      // geleert, aber die file-basierten Caches (RecipeDetail-File-Cache
-      // im application-Cache-Directory) und die in-memory-Provider-States
-      // bleiben sonst stehen. Issue: „App reset doesn't clear local cache".
-      await RecipeDetailCacheManager.shared.clear();
-      await RecipeImageStore.shared.removeAll();
-      // Belt-and-suspenders: SharedPreferences-Cache-Keys explizit nochmal
-      // ausschreiben falls neue Caches dazukommen die _prefs.clear() noch
-      // nicht abdeckt. LocalCache.saveX([]) ist no-op aber sichert die Form.
-      await LocalCache.saveShoppingItems(const []);
-      await LocalCache.saveShoppingLabels(const []);
-      await LocalCache.saveFoodsCatalog(const []);
-      await LocalCache.saveUnitsCatalog(const []);
-      await LocalCache.saveCurrentUser(null);
-      // Falls das Gerät noch die alten Rezept-Keys mitschleppt: mit weg.
-      await LocalCache.purgeLegacyRecipeCaches();
-      // In-memory Provider-States invalidieren — sonst zeigen Home/Listen
-      // den letzten geladenen Stand bis zum nächsten App-Start.
-      ref.invalidate(recipesProvider);
-      ref.invalidate(shoppingListProvider);
-      ref.invalidate(shoppingLabelsProvider);
-      ref.invalidate(foodsCatalogProvider);
-      ref.invalidate(unitsCatalogProvider);
-      ref.invalidate(currentUserProvider);
-      ref.invalidate(pendingShoppingChangesProvider);
-      if (mounted) context.go('/setup');
+      // Alles weg — auch die gespeicherten Konten. Von der App erzeugte
+      // Tokens werden vorher auf dem Server aufgeräumt (best-effort), damit
+      // sich im Mealie-Profil nicht bei jedem Reset+Neu-Login weitere
+      // ansammeln; manuell eingegebene bleiben (gehören dem Nutzer).
+      await resetEverything(ref.read(settingsProvider).valueOrNull);
     }
   }
 
@@ -656,12 +695,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     });
 
+    _handleSectionJump(context);
+
     return Scaffold(
       backgroundColor: context.appBg,
       extendBody: true,
       appBar: AppBar(title: Text(l.settingsTitle)),
       body: WithCookingModeFAB(
-        bottomInset: GlassTabBar.height + 24,
+        fullWidth: true,
+        bottomInset: GlassTabBar.heightOf(context) + 24,
         child: SingleChildScrollView(
           // Kein SafeArea um den Scroll → System-Inset (Gesten/3-Button) additiv
           // ins Bottom-Padding, sonst verdeckt die GlassTabBar das letzte Element.
@@ -670,11 +712,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               LargeScreen.inset(context, base: 16),
               16,
               LargeScreen.inset(context, base: 16),
-              GlassTabBar.height + 28 + MediaQuery.paddingOf(context).bottom),
+              GlassTabBar.heightOf(context) +
+                  28 +
+                  MediaQuery.paddingOf(context).bottom),
           child: Column(
             children: [
               // ── Verbindung ─────────────────────────────────────────
               _SectionCard(
+                key: _sectionKeys['connection'],
+                highlighted: _highlight == 'connection',
                 title: l.connectionSection,
                 icon: Icons.dns_rounded,
                 iconColor: Colors.blue,
@@ -698,6 +744,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         }),
                         l: l,
                       ),
+                    const SizedBox(height: 12),
+                    _WifiServerBlock(
+                      l: l,
+                      urlCtrl: _wifiUrlCtrl,
+                      ssidCtrl: _wifiSsidCtrl,
+                      reading: _readingWifi,
+                      onUseCurrent: _useCurrentWifi,
+                      onChanged: () => setState(() {}),
+                    ),
                     const SizedBox(height: 12),
                     _ModernSecureField(
                       label: l.token,
@@ -736,9 +791,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               // ── Einkaufsliste auswählen ─────────────────────────────
               _SectionCard(
                 // Plain title without the 🛒 emoji that l.shoppingList carries
+                key: _sectionKeys['shopping'],
+                highlighted: _highlight == 'shopping',
                 title: l.shoppingList.replaceFirst(RegExp(r'^\S+\s+'), ''),
                 icon: Icons.format_list_bulleted_rounded,
-                iconColor: Colors.green,
+                iconColor: AppTokens.success,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -746,14 +803,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       children: [
                         Expanded(
                           child: _shoppingLists.isEmpty
-                              ? GestureDetector(
+                              ? TapArea(
                                   onTap: _fetchShoppingLists,
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 12, vertical: 14),
                                     decoration: BoxDecoration(
                                       color: context.appSurface2,
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius:
+                                          BorderRadius.circular(AppTokens.rSm),
                                     ),
                                     child: Text(
                                       _tempShoppingListId.isEmpty
@@ -768,7 +826,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       horizontal: 12, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: context.appSurface2,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppTokens.rSm),
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<String>(
@@ -793,8 +852,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                                         const BoxDecoration(
                                                             shape:
                                                                 BoxShape.circle,
-                                                            color:
-                                                                Colors.green),
+                                                            color: AppTokens
+                                                                .success),
                                                     margin:
                                                         const EdgeInsets.only(
                                                             right: 8),
@@ -819,21 +878,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         const SizedBox(width: 8),
                         // Green refresh button
-                        GestureDetector(
+                        TapArea(
                           onTap: _loadingLists ? null : _fetchShoppingLists,
                           child: Container(
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Colors.green, Color(0xFF2ECC71)],
+                                colors: [
+                                  AppTokens.success,
+                                  AppTokens.successLight
+                                ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(AppTokens.rSm),
                               boxShadow: [
                                 BoxShadow(
-                                    color: Colors.green.withValues(alpha: 0.3),
+                                    color: AppTokens.success
+                                        .withValues(alpha: 0.3),
                                     blurRadius: 5,
                                     offset: const Offset(0, 3)),
                               ],
@@ -890,14 +954,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                       if (_tempReminderLocations.length < 3)
-                        GestureDetector(
+                        TapArea(
                           onTap: _addReminderLocation,
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               color: context.appSurface2,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(AppTokens.rSm),
                               border: Border.all(
                                   color: context.appSeparator, width: 1),
                             ),
@@ -907,10 +972,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 Icon(Icons.add_location_alt_rounded,
                                     size: 18, color: AppTokens.accentDeep),
                                 const SizedBox(width: 6),
-                                Text(l.shoppingReminderAddLocation,
-                                    style: TextStyle(
-                                        color: AppTokens.accentDeep,
-                                        fontWeight: FontWeight.w600)),
+                                Flexible(
+                                    child: Text(l.shoppingReminderAddLocation,
+                                        style: TextStyle(
+                                            color: AppTokens.accentDeep,
+                                            fontWeight: FontWeight.w600),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis)),
                               ],
                             ),
                           ),
@@ -930,6 +998,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // ── Erweiterte Optionen ──────────────────────────────────
               _SectionCard(
+                key: _sectionKeys['advanced'],
+                highlighted: _highlight == 'advanced',
                 title: l.advancedOptions,
                 icon: Icons.settings_applications_rounded,
                 iconColor: Colors.purple,
@@ -943,13 +1013,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Container(
                       decoration: BoxDecoration(
                         color: context.appSurface2,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppTokens.rXs),
                       ),
                       child: Row(
                         children: ['v2', 'v3'].map((v) {
                           final selected = _tempApiVersion == v;
                           return Expanded(
-                            child: GestureDetector(
+                            child: TapArea(
                               onTap: () {
                                 setState(() => _tempApiVersion = v);
                                 _persistAll();
@@ -963,7 +1033,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   color: selected
                                       ? context.appCard
                                       : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(7),
+                                  borderRadius:
+                                      BorderRadius.circular(AppTokens.rXs),
                                   boxShadow: selected
                                       ? [
                                           BoxShadow(
@@ -1067,6 +1138,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // ── Personalisierung ─────────────────────────────────────
               _SectionCard(
+                key: _sectionKeys['personalization'],
+                highlighted: _highlight == 'personalization',
                 title: l.personalization,
                 icon: Icons.brush_rounded,
                 iconColor: Colors.pink,
@@ -1076,14 +1149,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _LabelRow(
                       icon: Icons.language_rounded,
                       label: l.language,
-                      trailing: GestureDetector(
+                      trailing: TapArea(
                         onTap: () => _showLanguagePicker(context),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 12),
                           decoration: BoxDecoration(
                             color: context.appSurface2,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppTokens.rSm),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -1092,44 +1165,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   style: const TextStyle(fontSize: 18)),
                               const SizedBox(width: 8),
                               Text(_langName(_tempLang),
-                                  style: TextStyle(color: context.appFg)),
-                              const SizedBox(width: 8),
-                              Icon(Icons.unfold_more,
-                                  size: 16, color: context.appFgSub),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Sprache des KI-Rezeptimports — kann bewusst von der
-                    // App-Sprache abweichen (deutlich mehr Sprachen), damit
-                    // Rezepte auch in Muttersprachen ankommen, die die
-                    // Oberfläche nicht anbietet.
-                    _LabelRow(
-                      icon: Icons.translate_rounded,
-                      label: l.importLanguage,
-                      subtitle: l.importLanguageSubtitle,
-                      trailing: GestureDetector(
-                        onTap: _showImportLanguagePicker,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: context.appSurface2,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                  importLanguageFlag(
-                                      _tempImportLang, _tempLang),
-                                  style: const TextStyle(fontSize: 18)),
-                              const SizedBox(width: 8),
-                              Text(
-                                  importLanguageLabel(
-                                      _tempImportLang, _tempLang),
                                   style: TextStyle(color: context.appFg)),
                               const SizedBox(width: 8),
                               Icon(Icons.unfold_more,
@@ -1150,6 +1185,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
+                    // Nur auf Tablets: Seitenleiste im Querformat an/aus.
+                    if (LargeScreen.isTablet(context)) ...[
+                      _ModernToggle(
+                        label: l.tabletSidebar,
+                        subtitle: l.tabletSidebarSubtitle,
+                        icon: Icons.view_sidebar_outlined,
+                        value: ref
+                                .watch(settingsProvider)
+                                .valueOrNull
+                                ?.tabletSidebar ??
+                            true,
+                        onChanged: (v) {
+                          final s = ref.read(settingsProvider).valueOrNull;
+                          if (s == null) return;
+                          ref
+                              .read(settingsProvider.notifier)
+                              .save(s.copyWith(tabletSidebar: v));
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     _ModernToggle(
                       label: l.showRecipeImages,
                       subtitle: l.showRecipeImagesSubtitle,
@@ -1182,6 +1238,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // ── Sicherheit ───────────────────────────────────────────
               _SectionCard(
+                key: _sectionKeys['security'],
+                highlighted: _highlight == 'security',
                 title: l.securitySettings,
                 icon: Icons.shield_rounded,
                 iconColor: const Color(0xFF5C5CE0),
@@ -1200,6 +1258,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               // ── Entwickler ───────────────────────────────────────────
               _SectionCard(
+                key: _sectionKeys['developer'],
+                highlighted: _highlight == 'developer',
                 title: l.developer,
                 icon: Icons.hardware_rounded,
                 iconColor: Colors.orange,
@@ -1225,7 +1285,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: context.appSurface2,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTokens.rSm),
                       ),
                       child: Row(
                         children: [
@@ -1261,7 +1321,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 children: [
                                   Row(children: [
                                     const Icon(Icons.disc_full_rounded,
-                                        size: 14, color: Colors.green),
+                                        size: 14, color: AppTokens.success),
                                     const SizedBox(width: 4),
                                     Text(
                                         '${LogManager.shared.sizeKB.toStringAsFixed(1)} KB',
@@ -1299,7 +1359,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Expanded(
                           child: _GradientButton(
                             label: l.delete,
-                            icon: Icons.delete_rounded,
+                            icon: Icons.delete_outline_rounded,
                             colors: [
                               Colors.red,
                               Colors.red.withValues(alpha: 0.8)
@@ -1336,6 +1396,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ],
                       fullWidth: true,
                       onTap: () => showWhatsNew(context),
+                    ),
+                    const SizedBox(height: 4),
+                    // Lizenzen der verwendeten Schriften und Pakete.
+                    TextButton.icon(
+                      onPressed: () => showLicensePage(
+                          context: context, applicationName: 'Mealie Recipes'),
+                      icon: const Icon(Icons.gavel_rounded, size: 18),
+                      label: Text(MaterialLocalizations.of(context)
+                          .viewLicensesButtonLabel),
                     ),
                   ],
                 ),
@@ -1379,7 +1448,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showModalBottomSheet(
       useSafeArea: true,
       context: context,
-      backgroundColor: context.appCard,
       // useRootNavigator: Tab-Screens leben seit dem Shell-Umbau in einem
       // Branch-Navigator — ohne das Flag öffnete das Sheet DARIN und lag
       // hinter der fixen GlassTabBar (der letzte Sprach-Eintrag war verdeckt).
@@ -1403,7 +1471,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Text(l.language,
                       style: TextStyle(
-                          color: context.appFg,
+                          color: sheetCtx.appFg,
                           fontSize: 17,
                           fontWeight: FontWeight.w600)),
                 ),
@@ -1423,9 +1491,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       leading: Text(_flagEmoji(code),
                           style: const TextStyle(fontSize: 22)),
                       title: Text(_langName(code),
-                          style: TextStyle(color: context.appFg)),
+                          style: TextStyle(color: sheetCtx.appFg)),
                       trailing: _tempLang == code
-                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          ? const Icon(Icons.check_circle_rounded,
+                              color: AppTokens.success)
                           : null,
                       onTap: () {
                         setState(() => _tempLang = code);
@@ -1459,16 +1528,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       // Pops müssen den Dialog-Context nutzen (Root- vs. Branch-Navigator).
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: context.appCard,
+        backgroundColor: dialogCtx.appCard,
         title: Text(l.logsWithCount(LogManager.shared.count),
-            style: TextStyle(color: context.appFg)),
+            style: TextStyle(color: dialogCtx.appFg)),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: SelectableText(
               logs.isEmpty ? l.noLogs : logs,
               style: TextStyle(
-                  color: context.appFgSub,
+                  color: dialogCtx.appFgSub,
                   fontFamily: 'monospace',
                   fontSize: 11),
             ),
@@ -1486,23 +1555,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
     );
-  }
-
-  // Importsprache: wie der App-Sprachpicker sofort persistiert (und nicht erst
-  // beim „Änderungen speichern"), damit der nächste Import ohne Umweg in der
-  // gewünschten Sprache ankommt.
-  Future<void> _showImportLanguagePicker() async {
-    final picked = await showImportLanguageSheet(
-      context,
-      current: _tempImportLang,
-      appLanguageLabel: _langName(_tempLang),
-    );
-    if (picked == null || !mounted) return;
-    setState(() => _tempImportLang = picked);
-    final cur = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
-    await ref
-        .read(settingsProvider.notifier)
-        .save(cur.copyWith(importLanguage: picked));
   }
 
   // Support-Mail: entweder direkt in der Mail-App (Empfänger/Betreff/Text
@@ -1530,18 +1582,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (dialogCtx) => AlertDialog(
         // Querformat/Tastatur: Inhalt scrollt, Knöpfe bleiben sichtbar.
         scrollable: true,
-        backgroundColor: context.appCard,
-        title: Text(l.supportContact, style: TextStyle(color: context.appFg)),
+        backgroundColor: dialogCtx.appCard,
+        title: Text(l.supportContact, style: TextStyle(color: dialogCtx.appFg)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l.supportDialogMessage,
-                style: TextStyle(color: context.appFgSub, fontSize: 14)),
+                style: TextStyle(color: dialogCtx.appFgSub, fontSize: 14)),
             const SizedBox(height: 14),
             // Adresse antippbar: fürs Share-Sheet, das kein Empfängerfeld hat.
             InkWell(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppTokens.rXs),
               onTap: () {
                 copyAddress();
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -1552,16 +1604,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.alternate_email_rounded,
-                        size: 16, color: context.appFgSub),
+                        size: 16, color: dialogCtx.appFgSub),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(address,
                           style: TextStyle(
-                              color: context.appFg,
+                              color: dialogCtx.appFg,
                               fontSize: 14,
                               fontWeight: FontWeight.w600)),
                     ),
-                    Icon(Icons.copy_rounded, size: 16, color: context.appFgSub),
+                    Icon(Icons.copy_rounded,
+                        size: 16, color: dialogCtx.appFgSub),
                   ],
                 ),
               ),
@@ -1652,234 +1705,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// „API-Token erneuern"-Sheet — gleiche Wahl wie Setup Step 1 (eigenes Token
-// einfügen vs. per Login erzeugen lassen), aber als Re-Login-Flow: prüft im
-// Token-Zweig die Verbindung (testConnection + fetchShoppingLists, validiert
-// den Bearer implizit), im Passwort-Zweig läuft Login→Token-Erzeugung wie im
-// Setup. Liefert bei Erfolg (token, generatedId, version) an den Aufrufer;
-// PERSISTIERT NICHTS selbst — das übernimmt weiterhin „Änderungen speichern".
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _RenewTokenSheet extends StatefulWidget {
-  final String serverUrl;
-  final bool sendOptionalHeaders;
-  final String headerKey1;
-  final String headerValue1;
-  final String headerKey2;
-  final String headerValue2;
-  final String headerKey3;
-  final String headerValue3;
-
-  const _RenewTokenSheet({
-    required this.serverUrl,
-    required this.sendOptionalHeaders,
-    required this.headerKey1,
-    required this.headerValue1,
-    required this.headerKey2,
-    required this.headerValue2,
-    required this.headerKey3,
-    required this.headerValue3,
-  });
-
-  @override
-  State<_RenewTokenSheet> createState() => _RenewTokenSheetState();
-}
-
-class _RenewTokenSheetState extends State<_RenewTokenSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _tokenCtrl = TextEditingController();
-  final _usernameCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  AuthMode _mode = AuthMode.password;
-  String? _error;
-
-  @override
-  void dispose() {
-    _tokenCtrl.dispose();
-    _usernameCtrl.dispose();
-    _passwordCtrl.dispose();
-    super.dispose();
-  }
-
-  AppSettings _probeSettings(String ver) => AppSettings(
-        serverUrl: widget.serverUrl,
-        apiVersion: ver,
-        sendOptionalHeaders: widget.sendOptionalHeaders,
-        optionalHeaderKey1: widget.headerKey1,
-        optionalHeaderValue1: widget.headerValue1,
-        optionalHeaderKey2: widget.headerKey2,
-        optionalHeaderValue2: widget.headerValue2,
-        optionalHeaderKey3: widget.headerKey3,
-        optionalHeaderValue3: widget.headerValue3,
-      );
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _error = null);
-    Object? lastError;
-    for (final ver in ['v3', 'v2']) {
-      try {
-        if (_mode == AuthMode.token) {
-          final token = _tokenCtrl.text.trim();
-          final svc = ApiService(_probeSettings(ver).copyWith(apiToken: token));
-          await svc.testConnection();
-          // fetchShoppingLists validiert implizit den Bearer (401 bei
-          // falschem Token) — testConnection allein prüft nur Erreichbarkeit.
-          await svc.fetchShoppingLists();
-          if (!mounted) return;
-          Navigator.pop(context, (token, null, ver));
-          return;
-        } else {
-          final loginSvc = ApiService(_probeSettings(ver));
-          final jwt = await loginSvc.loginWithPassword(
-              _usernameCtrl.text.trim(), _passwordCtrl.text);
-          final device = Platform.isIOS
-              ? 'iOS'
-              : (Platform.isAndroid ? 'Android' : Platform.operatingSystem);
-          final (id, token) = await loginSvc.createLongLiveToken(
-              jwt, 'Mealie Recipes – $device');
-          if (!mounted) return;
-          Navigator.pop(context, (token, id, ver));
-          return;
-        }
-      } catch (e) {
-        lastError = e;
-      }
-    }
-    if (!mounted) return;
-    final l = AppLocalizations.of(context)!;
-    setState(() {
-      _error =
-          (lastError is DioException && lastError.response?.statusCode == 401)
-              ? (_mode == AuthMode.password
-                  ? l.loginInvalidCredentials
-                  : l.connectionFailedCheck)
-              : l.connectionFailedCheck;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Center(child: SheetHandle()),
-              const SizedBox(height: 6),
-              Center(
-                child: Text(l.renewApiToken,
-                    style: TextStyle(
-                        fontFamily: 'PlusJakartaSans',
-                        color: context.appFg,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3)),
-              ),
-              const SizedBox(height: 16),
-              Text(l.setupAuthChoiceTitle,
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 10),
-              AuthModeChoiceCard(
-                mode: AuthMode.password,
-                selected: _mode == AuthMode.password,
-                icon: Icons.auto_awesome_rounded,
-                title: l.authModePasswordTitle,
-                subtitle: l.authModePasswordSubtitle,
-                onTap: () => setState(() {
-                  _mode = AuthMode.password;
-                  _error = null;
-                }),
-              ),
-              const SizedBox(height: 8),
-              AuthModeChoiceCard(
-                mode: AuthMode.token,
-                selected: _mode == AuthMode.token,
-                icon: Icons.key_outlined,
-                title: l.authModeTokenTitle,
-                subtitle: l.authModeTokenSubtitle,
-                onTap: () => setState(() {
-                  _mode = AuthMode.token;
-                  _error = null;
-                }),
-              ),
-              const SizedBox(height: 16),
-              if (_mode == AuthMode.token)
-                TextFormField(
-                  controller: _tokenCtrl,
-                  decoration: InputDecoration(
-                    labelText: l.apiToken,
-                    hintText: l.apiTokenPlaceholder,
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.key_outlined),
-                  ),
-                  obscureText: true,
-                  autocorrect: false,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l.required : null,
-                )
-              else ...[
-                TextFormField(
-                  controller: _usernameCtrl,
-                  decoration: InputDecoration(
-                    labelText: l.username,
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.person_outline),
-                  ),
-                  autocorrect: false,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l.required : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordCtrl,
-                  decoration: InputDecoration(
-                    labelText: l.password,
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock_outline),
-                  ),
-                  obscureText: true,
-                  autocorrect: false,
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? l.required : null,
-                ),
-                const SizedBox(height: 6),
-                Text(l.setupPasswordHint,
-                    style: Theme.of(context).textTheme.bodySmall),
-              ],
-              const SizedBox(height: 16),
-              if (_error != null) ...[
-                Text(_error!,
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error)),
-                const SizedBox(height: 16),
-              ],
-              AsyncActionButton(
-                expand: true,
-                label:
-                    _mode == AuthMode.password ? l.loginAndConnect : l.connect,
-                onPressed: _submit,
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // iOS-style SectionCard — mirrors SetupView.SectionCard
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1906,8 +1731,11 @@ class _AppIconPickerRow extends StatelessWidget {
           children: [
             Icon(Icons.apps_rounded, size: 20, color: context.appFgSub),
             const SizedBox(width: 8),
-            Text(l.appIcon,
-                style: TextStyle(color: context.appFg, fontSize: 15)),
+            Flexible(
+                child: Text(l.appIcon,
+                    style: TextStyle(color: context.appFg, fontSize: 15),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis)),
           ],
         ),
         const SizedBox(height: 12),
@@ -1932,13 +1760,13 @@ class _AppIconPickerRow extends StatelessWidget {
       BuildContext context, bool modern, String asset, String label) {
     final selected = modern == modernActive;
     final primary = Theme.of(context).colorScheme.primary;
-    return GestureDetector(
+    return TapArea(
       onTap: () => onSelect(modern),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: context.appSurface2,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppTokens.rSm),
           border: Border.all(
             color: selected ? primary : Colors.transparent,
             width: 2,
@@ -1947,7 +1775,7 @@ class _AppIconPickerRow extends StatelessWidget {
         child: Column(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTokens.rSm),
               child:
                   Image.asset(asset, width: 56, height: 56, fit: BoxFit.cover),
             ),
@@ -1966,6 +1794,7 @@ class _AppIconPickerRow extends StatelessWidget {
                   child: Text(label,
                       textAlign: TextAlign.center,
                       maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: context.appFg, fontSize: 12)),
                 ),
               ],
@@ -1983,21 +1812,33 @@ class _SectionCard extends StatelessWidget {
   final Color iconColor;
   final Widget child;
 
+  /// Kurz orange umrandet nach einem Sprung aus der globalen Suche.
+  final bool highlighted;
+
   const _SectionCard({
+    super.key,
     required this.title,
     this.icon,
     required this.iconColor,
     required this.child,
+    this.highlighted = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
       width: double.infinity,
       padding: const EdgeInsets.all(20),
+      foregroundDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTokens.rLg),
+        border: Border.all(
+            color: highlighted ? AppTokens.accent : Colors.transparent,
+            width: 2),
+      ),
       decoration: BoxDecoration(
         color: context.appCard,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTokens.rLg),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -2022,11 +1863,14 @@ class _SectionCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
               ],
-              Text(title,
-                  style: TextStyle(
-                      color: context.appFg,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600)),
+              Flexible(
+                  child: Text(title,
+                      style: TextStyle(
+                          color: context.appFg,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis)),
             ],
           ),
           const SizedBox(height: 16),
@@ -2066,14 +1910,18 @@ class _ModernField extends StatelessWidget {
         Row(children: [
           Icon(icon, size: 14, color: context.appFgSub),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(color: context.appFgSub, fontSize: 13)),
+          Flexible(
+              child: Text(label,
+                  style: TextStyle(color: context.appFgSub, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis)),
         ]),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           decoration: BoxDecoration(
             color: context.appSurface2,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.rSm),
           ),
           child: Row(
             children: [
@@ -2133,15 +1981,18 @@ class _ModernSecureFieldState extends State<_ModernSecureField> {
         Row(children: [
           Icon(widget.icon, size: 14, color: context.appFgSub),
           const SizedBox(width: 4),
-          Text(widget.label,
-              style: TextStyle(color: context.appFgSub, fontSize: 13)),
+          Flexible(
+              child: Text(widget.label,
+                  style: TextStyle(color: context.appFgSub, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis)),
         ]),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           decoration: BoxDecoration(
             color: context.appSurface2,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.rSm),
           ),
           child: Row(
             children: [
@@ -2160,7 +2011,11 @@ class _ModernSecureFieldState extends State<_ModernSecureField> {
                   ),
                 ),
               ),
-              GestureDetector(
+              TapArea(
+                minSize: true,
+                semanticLabel: _obscure
+                    ? AppLocalizations.of(context)!.a11yShowPassword
+                    : AppLocalizations.of(context)!.a11yHidePassword,
                 onTap: () => setState(() => _obscure = !_obscure),
                 child: Icon(_obscure ? Icons.visibility_off : Icons.visibility,
                     size: 18, color: context.appFgSub),
@@ -2195,7 +2050,7 @@ class _SmallField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
           decoration: BoxDecoration(
             color: context.appSurface2,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTokens.rXs),
           ),
           child: TextField(
             controller: controller,
@@ -2283,7 +2138,7 @@ class _ReminderLocationTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: context.appSurface2,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
       ),
       child: Row(
         children: [
@@ -2294,7 +2149,9 @@ class _ReminderLocationTile extends StatelessWidget {
                 style: TextStyle(color: context.appFg, fontSize: 14),
                 overflow: TextOverflow.ellipsis),
           ),
-          GestureDetector(
+          TapArea(
+            minSize: true,
+            semanticLabel: AppLocalizations.of(context)!.a11yRemove,
             onTap: onDelete,
             child: Icon(Icons.close_rounded, size: 18, color: context.appFgSub),
           ),
@@ -2473,17 +2330,12 @@ class _AddReminderLocationSheetState extends State<_AddReminderLocationSheet> {
 class _LabelRow extends StatelessWidget {
   final IconData icon;
   final String label;
-
-  /// Optionale Erklärzeile unter dem Label — nur dort gesetzt, wo das Label
-  /// allein nicht verrät, was die Einstellung bewirkt.
-  final String? subtitle;
   final Widget trailing;
 
   const _LabelRow({
     required this.icon,
     required this.label,
     required this.trailing,
-    this.subtitle,
   });
 
   @override
@@ -2494,13 +2346,12 @@ class _LabelRow extends StatelessWidget {
         Row(children: [
           Icon(icon, size: 14, color: context.appFgSub),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(color: context.appFgSub, fontSize: 13)),
+          Flexible(
+              child: Text(label,
+                  style: TextStyle(color: context.appFgSub, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis)),
         ]),
-        if (subtitle != null) ...[
-          const SizedBox(height: 2),
-          Text(subtitle!,
-              style: TextStyle(color: context.appFgTertiary, fontSize: 12)),
-        ],
         const SizedBox(height: 6),
         trailing,
       ],
@@ -2533,7 +2384,7 @@ class _GradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       onTap: onTap,
       child: Container(
         width: fullWidth ? double.infinity : null,
@@ -2545,7 +2396,7 @@ class _GradientButton extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTokens.rMd),
           boxShadow: onTap != null
               ? [
                   BoxShadow(
@@ -2584,11 +2435,175 @@ class _GradientButton extends StatelessWidget {
 // URL Warning
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Verbindung → „Andere Adresse im WLAN": dieselbe Mealie-Instanz unter
+/// einer zweiten Adresse (z. B. lokale IP zu Hause, ZeroTier/Tailscale/
+/// Domain unterwegs). Der SettingsNotifier schaltet beim WLAN-Wechsel
+/// automatisch um. Eingeklappt, solange nichts eingetragen ist.
+class _WifiServerBlock extends ConsumerStatefulWidget {
+  final AppLocalizations l;
+  final TextEditingController urlCtrl;
+  final TextEditingController ssidCtrl;
+  final bool reading;
+  final VoidCallback onUseCurrent;
+  final VoidCallback onChanged;
+
+  const _WifiServerBlock({
+    required this.l,
+    required this.urlCtrl,
+    required this.ssidCtrl,
+    required this.reading,
+    required this.onUseCurrent,
+    required this.onChanged,
+  });
+
+  @override
+  ConsumerState<_WifiServerBlock> createState() => _WifiServerBlockState();
+}
+
+class _WifiServerBlockState extends ConsumerState<_WifiServerBlock> {
+  late bool _open =
+      widget.urlCtrl.text.isNotEmpty || widget.ssidCtrl.text.isNotEmpty;
+
+  @override
+  void didUpdateWidget(_WifiServerBlock old) {
+    super.didUpdateWidget(old);
+    // Werte kommen erst per _loadFrom (nach dem ersten Frame) an.
+    if (!_open &&
+        (widget.urlCtrl.text.isNotEmpty || widget.ssidCtrl.text.isNotEmpty)) {
+      _open = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.l;
+    if (!_open) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton.icon(
+          onPressed: () => setState(() => _open = true),
+          icon: const Icon(Icons.wifi_rounded, size: 18),
+          label: Text(l.wifiServerTitle),
+        ),
+      );
+    }
+    final s = ref.watch(settingsProvider).valueOrNull;
+    String? status;
+    if (s != null && s.hasWifiServer) {
+      status = s.usingWifiServer
+          ? l.wifiServerActive(s.wifiSsid)
+          : l.wifiServerStandardActive(s.wifiSsid);
+    }
+    final urlText = widget.urlCtrl.text.trim();
+    final urlInvalid = urlText.isNotEmpty &&
+        !urlText.startsWith('http://') &&
+        !urlText.startsWith('https://');
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: context.appSurface2, width: 1.5),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(children: [
+            const Icon(Icons.wifi_rounded, size: 18, color: Colors.blue),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(l.wifiServerTitle,
+                  style: TextStyle(
+                      color: context.appFg,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700)),
+            ),
+            IconButton(
+              tooltip: l.wifiServerRemove,
+              visualDensity: VisualDensity.compact,
+              icon:
+                  Icon(Icons.close_rounded, size: 18, color: context.appFgSub),
+              onPressed: () {
+                widget.urlCtrl.clear();
+                widget.ssidCtrl.clear();
+                setState(() => _open = false);
+                widget.onChanged();
+              },
+            ),
+          ]),
+          Text(l.wifiServerHint,
+              style: TextStyle(
+                  color: context.appFgSub, fontSize: 13, height: 1.35)),
+          const SizedBox(height: 12),
+          _ModernField(
+            label: l.wifiSsidLabel,
+            icon: Icons.wifi_rounded,
+            controller: widget.ssidCtrl,
+            placeholder: 'MeinWLAN',
+            onChanged: (_) => widget.onChanged(),
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: widget.reading ? null : widget.onUseCurrent,
+              icon: widget.reading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.my_location_rounded, size: 18),
+              label: Text(l.wifiUseCurrent),
+            ),
+          ),
+          _ModernField(
+            label: l.wifiServerUrl,
+            icon: Icons.lan_rounded,
+            controller: widget.urlCtrl,
+            placeholder: 'http://192.168.1.10:9000',
+            keyboardType: TextInputType.url,
+            onChanged: (_) => widget.onChanged(),
+          ),
+          if (urlInvalid)
+            _UrlWarning(
+              onFix: () {
+                widget.urlCtrl.text = 'http://$urlText';
+                widget.urlCtrl.selection = TextSelection.fromPosition(
+                    TextPosition(offset: widget.urlCtrl.text.length));
+                widget.onChanged();
+              },
+              l: l,
+              fixLabel: '+ http://',
+            ),
+          if (status != null) ...[
+            const SizedBox(height: 10),
+            Row(children: [
+              Icon(
+                  s!.usingWifiServer
+                      ? Icons.check_circle_rounded
+                      : Icons.public_rounded,
+                  size: 15,
+                  color:
+                      s.usingWifiServer ? AppTokens.success : context.appFgSub),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(status,
+                    style: TextStyle(color: context.appFgSub, fontSize: 13)),
+              ),
+            ]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _UrlWarning extends StatelessWidget {
   final VoidCallback onFix;
   final AppLocalizations l;
 
-  const _UrlWarning({required this.onFix, required this.l});
+  /// Abweichende Beschriftung (WLAN-Adresse: lokal meist `http://`).
+  final String? fixLabel;
+
+  const _UrlWarning({required this.onFix, required this.l, this.fixLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -2604,7 +2619,8 @@ class _UrlWarning extends StatelessWidget {
           ),
           TextButton(
             onPressed: onFix,
-            child: Text(l.urlAddScheme, style: const TextStyle(fontSize: 12)),
+            child: Text(fixLabel ?? l.urlAddScheme,
+                style: const TextStyle(fontSize: 12)),
           ),
         ],
       ),
@@ -2636,11 +2652,14 @@ class _ThemeModeRow extends StatelessWidget {
           children: [
             Icon(Icons.palette_outlined, size: 18, color: context.appFgSub),
             const SizedBox(width: 8),
-            Text(l.theme,
-                style: TextStyle(
-                    color: context.appFg,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600)),
+            Flexible(
+                child: Text(l.theme,
+                    style: TextStyle(
+                        color: context.appFg,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis)),
           ],
         ),
         const SizedBox(height: 10),
@@ -2648,13 +2667,13 @@ class _ThemeModeRow extends StatelessWidget {
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: context.appSurface2,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.rSm),
           ),
           child: Row(
             children: opts.map((o) {
               final active = current == o.$1;
               return Expanded(
-                child: GestureDetector(
+                child: TapArea(
                   behavior: HitTestBehavior.opaque,
                   onTap: active ? null : () => onSelect(o.$1),
                   child: AnimatedContainer(
@@ -2663,7 +2682,7 @@ class _ThemeModeRow extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: active ? context.appCard : Colors.transparent,
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(AppTokens.rXs),
                       boxShadow: active ? context.appShadowSm : null,
                     ),
                     child: Row(
@@ -2680,6 +2699,7 @@ class _ThemeModeRow extends StatelessWidget {
                             fit: BoxFit.scaleDown,
                             child: Text(o.$3,
                                 maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color:
                                       active ? context.appFg : context.appFgSub,

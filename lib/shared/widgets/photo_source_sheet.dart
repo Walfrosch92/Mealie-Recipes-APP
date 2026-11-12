@@ -20,7 +20,6 @@ Future<File?> pickPhotoWithSource(BuildContext context) async {
     isScrollControlled: true,
     context: context,
     useRootNavigator: true,
-    backgroundColor: context.appCard,
     builder: (ctx) => SafeArea(
       child: SingleChildScrollView(
 // Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.

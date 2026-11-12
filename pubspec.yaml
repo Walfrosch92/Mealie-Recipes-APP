@@ -1,7 +1,7 @@
 name: mealie_recipes
 description: Mealie Recipes 3rd Party App for Android and iOS
 publish_to: 'none'
-version: 1.27.12+4
+version: 1.27.14+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -27,6 +27,7 @@ dependencies:
 
   # Image Caching (replaces Kingfisher)
   cached_network_image: ^4.0.4
+  flutter_cache_manager: ^3.4.5
 
   # Local Notifications (replaces UNUserNotificationCenter)
   flutter_local_notifications: ^22.3.2
@@ -72,6 +73,12 @@ dependencies:
   # natives Setup nötig; keine Flutter-SDK/Core-Alternative zum Erzeugen
   # von PDFs vorhanden. share_plus (unten) übernimmt den Versand.
   pdf: ^3.11.1
+  # Desktop (Windows/macOS): echter System-Druckdialog für Rezept,
+  # Einkaufsliste und Wochenplan.
+  printing: ^5.15.1
+  # Desktop: Dateien ins Fenster ziehen (Anhänge, Link-Dateien → Import).
+  # 0.8.x: 0.9 braucht cross_file 0.4, share_plus 13 aber 0.3.
+  desktop_drop: ^0.8.4
 
   # Swipe actions (edit/delete) — mirrors iOS swipeActions
   flutter_slidable: ^4.0.3
@@ -130,6 +137,12 @@ dependencies:
   # Zeitzonen-Datenbank für geplante Benachrichtigungen
   timezone: ^0.11.2
 
+  # WLAN-Umschaltung der Server-Adresse (Einstellungen → Verbindung):
+  # Netzwechsel erkennen + Namen (SSID) des verbundenen WLANs lesen.
+  connectivity_plus: ^7.3.1
+  network_info_plus: ^8.2.1
+  shared_preferences_platform_interface: ^2.4.2
+
 
 dev_dependencies:
   flutter_test:
@@ -156,6 +169,9 @@ flutter:
     - assets/audio/
     - assets/images/
     - assets/changelog/
+    # Lizenztexte der Schriften (SIL OFL) — für die Lizenzseite der App.
+    - assets/fonts/OFL-Inter.txt
+    - assets/fonts/OFL-PlusJakartaSans.txt
 
   fonts:
     # Variable fonts → ein TTF deckt alle Gewichte ab; Flutter mappt

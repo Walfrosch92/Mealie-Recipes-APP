@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../core/utils/cooking_step_utils.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/markdown_text.dart';
 import '../models/recipe_draft.dart';
 import 'edit_common.dart';
+import '../../../shared/widgets/tap_surface.dart';
 
 /// Aktionen im „⋯"-Menü eines Schritts (wie das Schritt-Menü der Webapp).
 enum StepAction {
@@ -35,6 +39,9 @@ class StepEditRow extends StatelessWidget {
   final ValueChanged<StepAction> onAction;
   final VoidCallback onChanged;
 
+  /// Mealie ≥ 3.30: Feld „Dauer (Minuten)“ anzeigen.
+  final bool showDuration;
+
   const StepEditRow({
     super.key,
     required this.item,
@@ -46,6 +53,7 @@ class StepEditRow extends StatelessWidget {
     required this.apiToken,
     required this.onAction,
     required this.onChanged,
+    this.showDuration = false,
   });
 
   @override
@@ -82,28 +90,22 @@ class StepEditRow extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               if (item.preview)
-                InkWell(
+                TapSurface(
                   onTap: () => onAction(StepAction.togglePreview),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.appSurface2,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: item.text.text.trim().isEmpty
-                        ? Text('—',
-                            style: TextStyle(color: context.appFgTertiary))
-                        : MarkdownText(
-                            text: item.text.text,
-                            style: TextStyle(
-                                color: context.appFg,
-                                fontSize: 15,
-                                height: 1.4),
-                            serverUrl: serverUrl,
-                            apiToken: apiToken,
-                          ),
-                  ),
+                  color: context.appSurface2,
+                  borderRadius: BorderRadius.circular(AppTokens.rXs),
+                  padding: const EdgeInsets.all(12),
+                  width: double.infinity,
+                  child: item.text.text.trim().isEmpty
+                      ? Text('—',
+                          style: TextStyle(color: context.appFgTertiary))
+                      : MarkdownText(
+                          text: item.text.text,
+                          style: TextStyle(
+                              color: context.appFg, fontSize: 15, height: 1.4),
+                          serverUrl: serverUrl,
+                          apiToken: apiToken,
+                        ),
                 )
               else
                 TextField(
@@ -117,6 +119,31 @@ class StepEditRow extends StatelessWidget {
                   minLines: 2,
                   maxLines: null,
                 ),
+              // Mealie ≥ 3.30: Dauer dieses Schritts (Timer im Kochmodus).
+              if (showDuration) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 200,
+                  child: TextField(
+                    onTapOutside: unfocusOnTapOutside,
+                    controller: item.duration,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (_) => onChanged(),
+                    decoration:
+                        outlinedEditDecoration(l.stepDurationMinutes).copyWith(
+                      prefixIcon: const Icon(Icons.timer_outlined, size: 18),
+                      // Sekundengenauer Server-Wert: wird beim Ändern zu
+                      // ganzen Minuten (wie in der Webapp).
+                      helperText: (item.savedDurationSeconds ?? 0) % 60 != 0
+                          ? l.stepDurationSaved(formatStepDuration(
+                              item.savedDurationSeconds!, l.minutesShort))
+                          : null,
+                      helperMaxLines: 3,
+                    ),
+                  ),
+                ),
+              ],
               Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [

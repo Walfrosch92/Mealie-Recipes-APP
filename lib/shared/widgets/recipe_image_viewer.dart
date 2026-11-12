@@ -1,9 +1,13 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart' show VelocityTracker;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/providers/settings_provider.dart';
 import '../../core/services/recipe_image_store.dart';
+import '../../core/utils/media_urls.dart';
 
 // ---------------------------------------------------------------------------
 // Vollbild-Ansicht des Rezeptbilds (Tippen auf das Bild in der Detailansicht).
@@ -15,7 +19,14 @@ import '../../core/services/recipe_image_store.dart';
 //   - Ist es höher als der Bildschirm (z. B. abfotografierte Rezeptseite) →
 //     volle Breite, vertikal scrollbar mit Scrollbalken. Zoom UND Scrollen in
 //     einer Geste kollidieren, deshalb hier bewusst nur Scrollen.
+//
+// Schließen: ✕ oben links ODER nach unten wischen (das Bild folgt dem Finger,
+// der Hintergrund blendet aus; ab ~120 px bzw. schnellem Wisch geht es zu).
+// Gezoomte Bilder wischen nicht weg, lange Bilder nur am oberen Rand.
 // ---------------------------------------------------------------------------
+
+/// Weg, ab dem das Loslassen schließt.
+const _kDismissDistance = 120.0;
 
 Future<void> showRecipeImageViewer(
   BuildContext context, {
@@ -25,8 +36,9 @@ Future<void> showRecipeImageViewer(
   bool useOfflineCopy = true,
 }) {
   return Navigator.of(context, rootNavigator: true).push(PageRouteBuilder(
-    opaque: true,
-    barrierColor: Colors.black,
+    // Durchsichtig, damit beim Wegwischen das Rezept dahinter auftaucht —
+    // den schwarzen Hintergrund malt die Ansicht selbst.
+    opaque: false,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (_, __, ___) => _RecipeImageViewer(
       recipeId: recipeId,
@@ -50,8 +62,9 @@ Future<void> showImageGalleryViewer(
 }) {
   if (urls.isEmpty) return Future.value();
   return Navigator.of(context, rootNavigator: true).push(PageRouteBuilder(
-    opaque: true,
-    barrierColor: Colors.black,
+    // Durchsichtig, damit beim Wegwischen das Rezept dahinter auftaucht —
+    // den schwarzen Hintergrund malt die Ansicht selbst.
+    opaque: false,
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (_, __, ___) => _ImageGallery(
       urls: urls,
@@ -123,7 +136,7 @@ class _ImageGalleryState extends State<_ImageGallery> {
   }
 }
 
-class _RecipeImageViewer extends StatefulWidget {
+class _RecipeImageViewer extends ConsumerStatefulWidget {
   final String recipeId;
   final String imageUrl;
   final Map<String, String>? httpHeaders;
@@ -140,15 +153,89 @@ class _RecipeImageViewer extends StatefulWidget {
   });
 
   @override
-  State<_RecipeImageViewer> createState() => _RecipeImageViewerState();
+  ConsumerState<_RecipeImageViewer> createState() => _RecipeImageViewerState();
 }
 
-class _RecipeImageViewerState extends State<_RecipeImageViewer> {
+class _RecipeImageViewerState extends ConsumerState<_RecipeImageViewer> {
   late final ImageProvider _provider;
   ImageStream? _stream;
   ImageStreamListener? _listener;
   Size? _size;
   bool _failed = false;
+
+  // Nach-unten-Wischen zum Schließen — über rohe Zeigerereignisse
+  // (Listener) statt eines Gesten-Erkenners: der stand im Gesten-Wettbewerb
+  // mit Zoom (InteractiveViewer) bzw. Scrollen und verlor auf dem Gerät.
+  final _zoom = TransformationController();
+  final _scroll = ScrollController();
+  double _dragDy = 0;
+  bool _dragging = false;
+  int _pointers = 0;
+  Offset? _start;
+  bool _mayDismiss = false;
+  VelocityTracker? _velocity;
+
+  bool get _zoomed => _zoom.value.getMaxScaleOnAxis() > 1.01;
+
+  void _close() => Navigator.of(context).maybePop();
+
+  void _pointerDown(PointerDownEvent e) {
+    _pointers++;
+    if (_pointers > 1) {
+      // Zweiter Finger = Zoom → kein Wegwischen.
+      _resetDrag();
+      return;
+    }
+    _start = e.position;
+    // Nur ungezoomt und — bei langen Bildern — ganz oben.
+    _mayDismiss = !_zoomed && (!_scroll.hasClients || _scroll.offset <= 0);
+    _velocity = VelocityTracker.withKind(e.kind)
+      ..addPosition(e.timeStamp, e.position);
+  }
+
+  void _pointerMove(PointerMoveEvent e) {
+    final start = _start;
+    if (_pointers != 1 || !_mayDismiss || start == null) return;
+    _velocity?.addPosition(e.timeStamp, e.position);
+    final d = e.position - start;
+    if (!_dragging) {
+      // Erst ab einem deutlichen, überwiegend senkrechten Zug nach unten
+      // (seitlich = Bildergalerie blättern, nach oben = scrollen).
+      if (d.dy < 16 || d.dy.abs() < d.dx.abs() * 1.5) {
+        if (d.dy < -16 || d.dx.abs() > 24) _mayDismiss = false;
+        return;
+      }
+    }
+    setState(() {
+      _dragging = true;
+      _dragDy = (d.dy - 16).clamp(0.0, double.infinity);
+    });
+  }
+
+  void _pointerUp(PointerEvent e) {
+    _pointers = (_pointers - 1).clamp(0, 10);
+    if (!_dragging) {
+      if (_pointers == 0) _start = null;
+      return;
+    }
+    final v = _velocity?.getVelocity().pixelsPerSecond.dy ?? 0;
+    if (_dragDy > _kDismissDistance || v > 900) {
+      _close();
+      return;
+    }
+    _resetDrag();
+  }
+
+  void _resetDrag() {
+    _start = null;
+    _mayDismiss = false;
+    if (_dragging || _dragDy != 0) {
+      setState(() {
+        _dragging = false;
+        _dragDy = 0;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -160,7 +247,9 @@ class _RecipeImageViewerState extends State<_RecipeImageViewer> {
     _provider = file != null
         ? FileImage(file)
         : CachedNetworkImageProvider(widget.imageUrl,
-            headers: widget.httpHeaders) as ImageProvider;
+            // Token + optionale Zusatz-Header für den eigenen Server (#38).
+            headers: mergeMediaHeaders(widget.httpHeaders, widget.imageUrl,
+                ref.read(settingsProvider).valueOrNull)) as ImageProvider;
   }
 
   @override
@@ -185,6 +274,8 @@ class _RecipeImageViewerState extends State<_RecipeImageViewer> {
   @override
   void dispose() {
     if (_listener != null) _stream?.removeListener(_listener!);
+    _zoom.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -202,10 +293,14 @@ class _RecipeImageViewerState extends State<_RecipeImageViewer> {
     final displayHeight = box.maxWidth * size.height / size.width;
 
     if (displayHeight > box.maxHeight) {
-      // Sehr langes Bild: volle Breite, scrollen.
+      // Sehr langes Bild: volle Breite, scrollen. Ganz oben nach unten
+      // ziehen schließt (ohne Federeffekt, sonst bremst er den Wisch aus).
       return Scrollbar(
+        controller: _scroll,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scroll,
+          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.only(
               top: MediaQuery.paddingOf(context).top + 56,
               bottom: MediaQuery.paddingOf(context).bottom + 16),
@@ -221,6 +316,7 @@ class _RecipeImageViewerState extends State<_RecipeImageViewer> {
 
     // Passt auf den Bildschirm: zentriert, mit Pinch-Zoom.
     return InteractiveViewer(
+      transformationController: _zoom,
       minScale: 1,
       maxScale: 5,
       child: Center(
@@ -236,12 +332,29 @@ class _RecipeImageViewerState extends State<_RecipeImageViewer> {
   @override
   Widget build(BuildContext context) {
     final topPad = MediaQuery.paddingOf(context).top;
+    // Beim Wegwischen blendet der schwarze Hintergrund aus.
+    final fade = (1 - _dragDy / 400).clamp(0.3, 1.0);
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.black.withValues(alpha: fade),
       body: Stack(
         children: [
           Positioned.fill(
-            child: LayoutBuilder(builder: (_, box) => _content(box)),
+            child: AnimatedContainer(
+              duration:
+                  _dragging ? Duration.zero : const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              transform: Matrix4.translationValues(0, _dragDy, 0),
+              child: Listener(
+                // Ganze Fläche — auch der schwarze Rand neben dem Bild, die
+                // Ladeanzeige und das Fehlerbild (vorher nur das Bild selbst).
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: _pointerDown,
+                onPointerMove: _pointerMove,
+                onPointerUp: _pointerUp,
+                onPointerCancel: _pointerUp,
+                child: LayoutBuilder(builder: (_, box) => _content(box)),
+              ),
+            ),
           ),
           // Schließen
           Positioned(

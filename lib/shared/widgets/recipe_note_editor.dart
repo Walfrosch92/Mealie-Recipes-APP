@@ -146,8 +146,7 @@ Future<bool> confirmDeleteNote(BuildContext context) async {
         TextButton(
             onPressed: () => Navigator.pop(ctx, false), child: Text(l.cancel)),
         FilledButton(
-          style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error),
+          style: AppTokens.dangerButton,
           onPressed: () => Navigator.pop(ctx, true),
           child: Text(l.delete),
         ),
@@ -239,7 +238,7 @@ class RecipeNoteCard extends StatelessWidget {
                     PopupMenuItem(
                       value: 'edit',
                       child: Row(children: [
-                        Icon(Icons.edit_outlined,
+                        Icon(Icons.edit_rounded,
                             size: 19, color: context.appFg),
                         const SizedBox(width: 10),
                         Text(l.edit),

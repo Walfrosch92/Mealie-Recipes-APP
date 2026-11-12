@@ -5,7 +5,10 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
+import '../../../shared/widgets/app_bar_text_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/mealie_version.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -248,6 +251,8 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
     if (d.noteOnlyIngredients) return 0;
     final api = ref.read(apiServiceProvider);
     final mayCreateFoods = ref.read(userPermissionsProvider).mayOrganize;
+    // Einheiten anlegen verlangt Mealie erst ab 3.30 „Organisieren“.
+    final mayCreateUnits = mayCreateFoods || !ref.read(mealie330Provider);
     var asNote = 0;
     for (final i in d.ingredients) {
       final food = i.food.text.trim();
@@ -274,8 +279,16 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
           unit.isNotEmpty &&
           !resolvedUnitOk &&
           _findUnit(unit) == null) {
-        final created = await api.createUnit(unit);
-        if (created != null) _unitsRaw = [..._unitsRaw, created];
+        if (mayCreateUnits) {
+          final created = await api.createUnit(unit);
+          if (created != null) _unitsRaw = [..._unitsRaw, created];
+        } else {
+          // Ohne Recht: Einheit vorne in die Notiz, statt am 403 zu scheitern.
+          final note = i.note.text.trim();
+          i.note.text = note.isEmpty ? unit : '$unit $note';
+          i.unit.text = '';
+          asNote++;
+        }
       }
     }
     return asNote;
@@ -362,7 +375,6 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
             )
           : SnackBar(
               content: Text(l.saveSuccess),
-              backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             ));
       _goBack(force: true);
@@ -376,6 +388,11 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       _showErrorDialog(msg);
     }
   }
+
+  /// Snackbar-Text wie überall: bekannter Grund allein, sonst
+  /// „[fallback]: technische Antwort".
+  String _failText(String fallback, Object e) =>
+      mealieErrorMessage(e) ?? '$fallback: ${_apiError(e)}';
 
   String _apiError(Object e) {
     // Bekannte Fälle (Recht fehlt, offline, Zeitüberschreitung …) verständlich
@@ -447,7 +464,6 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       isScrollControlled: true,
       context: context,
       useRootNavigator: true,
-      backgroundColor: context.appCard,
       builder: (ctx) => SafeArea(
         child: SingleChildScrollView(
 // Querformat/kleine Displays: Inhalt scrollt statt abgeschnitten zu werden.
@@ -639,7 +655,6 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
           useRootNavigator: true,
           useSafeArea: true,
           isScrollControlled: true,
-          backgroundColor: context.appCard,
           builder: (_) => LinkReferencesSheet(
             step: item,
             allSteps: list,
@@ -755,17 +770,15 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l.createFailed}: ${_apiError(e)}')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_failText(l.createFailed, e))));
     }
   }
 
   Future<void> _createCategory() async {
     final l = AppLocalizations.of(context)!;
     final name = await _promptName(l.newCategory,
-        suggestions: [
-          for (final c in ref.read(allCategoriesProvider)) c.name
-        ]);
+        suggestions: [for (final c in ref.read(allCategoriesProvider)) c.name]);
     if (name == null) return;
     try {
       final api = ref.read(apiServiceProvider);
@@ -781,15 +794,16 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l.createFailed}: ${_apiError(e)}')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_failText(l.createFailed, e))));
     }
   }
 
   Future<void> _createTool() async {
     final l = AppLocalizations.of(context)!;
-    final known = ref.read(organizersProvider(OrganizerKind.tool)).valueOrNull ??
-        const <OrganizerItem>[];
+    final known =
+        ref.read(organizersProvider(OrganizerKind.tool)).valueOrNull ??
+            const <OrganizerItem>[];
     final name = await _promptName(l.newTool,
         suggestions: [for (final t in known) t.name]);
     if (name == null) return;
@@ -797,12 +811,11 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       // Vorhandenes Utensil gleichen Namens wiederverwenden (wie bei
       // Schlagworten/Kategorien) statt ein Duplikat anzulegen.
       final q = normalizeForSearch(name);
-      final item = known
-              .where((t) => normalizeForSearch(t.name) == q)
-              .firstOrNull ??
-          await ref
-              .read(organizersProvider(OrganizerKind.tool).notifier)
-              .create(name);
+      final item =
+          known.where((t) => normalizeForSearch(t.name) == q).firstOrNull ??
+              await ref
+                  .read(organizersProvider(OrganizerKind.tool).notifier)
+                  .create(name);
       if (!mounted) return;
       final tools = _draft!.tools;
       if (!tools.any((x) => x['id'] == item.id)) {
@@ -811,8 +824,8 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l.createFailed}: ${_apiError(e)}')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_failText(l.createFailed, e))));
     }
   }
 
@@ -986,27 +999,18 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           centerTitle: true,
-          leadingWidth: 96,
-          leading: TextButton(
+          leadingWidth: AppBarTextButton.leadingWidth,
+          leading: AppBarTextButton(
+            label: l.cancel,
             onPressed: _saving ? null : () => _goBack(),
-            child: Text(l.cancel,
-                maxLines: 1,
-                overflow: TextOverflow.visible,
-                softWrap: false,
-                style: const TextStyle(color: Colors.red)),
           ),
-          title: Text(l.editRecipe,
-              style: TextStyle(color: context.appFg, fontSize: 16)),
+          title: Text(l.editRecipe),
           actions: [
-            TextButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l.saveChanges,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
+            AppBarTextButton(
+              label: l.save,
+              primary: true,
+              busy: _saving,
+              onPressed: _save,
             ),
           ],
         ),
@@ -1091,7 +1095,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                             onTap: _parseIngredients,
                           ),
                         EditActionTile(
-                          icon: Icons.add_circle_outline,
+                          icon: Icons.add_circle_outline_rounded,
                           title: l.addIngredientLine,
                           onTap: () => setState(
                               () => d.ingredients.add(DraftIngredient.empty())),
@@ -1144,6 +1148,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                           serverUrl: serverUrl,
                           apiToken: settings?.apiToken,
                           onAction: (a) => _stepAction(item, a),
+                          showDuration: d.caps.stepDuration,
                           onChanged: _changed,
                         );
                       },
@@ -1153,7 +1158,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                     child: EditSectionBody(
                       child: Column(children: [
                         EditActionTile(
-                          icon: Icons.add_circle_outline,
+                          icon: Icons.add_circle_outline_rounded,
                           title: l.addInstruction,
                           onTap: () =>
                               setState(() => d.steps.add(DraftStep.empty())),
@@ -1227,8 +1232,13 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                           d.tools,
                           _withToolSlug(
                               {'id': t.id, 'name': t.name, 'slug': t.slug})),
-                      onCreateTool: _createTool,
-                      onDeleteTool: _deleteTool,
+                      // Ab Mealie 3.30 nur mit „Organisieren“.
+                      onCreateTool: ref.watch(mayEditOrganizerExtrasProvider)
+                          ? _createTool
+                          : null,
+                      onDeleteTool: ref.watch(mayEditOrganizerExtrasProvider)
+                          ? _deleteTool
+                          : null,
                       l: l,
                     ),
                   ),
@@ -1345,7 +1355,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: GestureDetector(
+          child: TapArea(
             onTap: _changeImage,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppTokens.rLg),
@@ -1392,7 +1402,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                   filled: true,
                   fillColor: context.appSurface2,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTokens.rSm),
                       borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.all(12),
                 ),
@@ -1401,11 +1411,14 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
               Row(children: [
                 Icon(Icons.text_fields, size: 13, color: context.appFgSub),
                 const SizedBox(width: 4),
-                Text(l.descriptionLabel,
-                    style: TextStyle(
-                        color: context.appFgSub,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600)),
+                Flexible(
+                    child: Text(l.descriptionLabel,
+                        style: TextStyle(
+                            color: context.appFgSub,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis)),
               ]),
               const SizedBox(height: 4),
               TextField(
@@ -1420,7 +1433,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                   filled: true,
                   fillColor: context.appSurface2,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTokens.rSm),
                       borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.all(12),
                 ),
@@ -1431,7 +1444,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTokens.accent.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
                   ),
                   child: Row(children: [
                     const Icon(Icons.cloud_off_rounded,
@@ -1451,7 +1464,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
                   ),
                   child: Text(_error!, style: const TextStyle(fontSize: 13)),
                 ),

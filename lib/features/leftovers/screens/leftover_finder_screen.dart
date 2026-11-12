@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -7,6 +8,7 @@ import '../../../core/models/organizer_item.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/apple_icon.dart';
+import '../../../shared/widgets/collapsible_hint.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/multi_select_sheet.dart';
 import '../../../shared/widgets/query_filter_editor.dart';
@@ -24,11 +26,39 @@ import '../providers/leftover_finder_provider.dart';
 // Logik siehe [RecipeFinderNotifier].
 // ---------------------------------------------------------------------------
 
-class LeftoverFinderScreen extends ConsumerWidget {
-  const LeftoverFinderScreen({super.key});
+/// Route in die Rezept-Suche mit [foodId] vorausgewählt (Lupe bei
+/// Lebensmitteln in der globalen Suche und in der Lebensmittel-Liste).
+String recipeFinderFoodRoute(String foodId, String name) =>
+    '/leftovers?food=${Uri.encodeQueryComponent(foodId)}'
+    '&name=${Uri.encodeQueryComponent(name)}';
+
+class LeftoverFinderScreen extends ConsumerStatefulWidget {
+  /// Vorauswahl (siehe [recipeFinderFoodRoute]) — ersetzt die gemerkte
+  /// Zutaten-Auswahl, damit genau die Rezepte mit dieser Zutat erscheinen.
+  final FinderItem? initialFood;
+  const LeftoverFinderScreen({super.key, this.initialFood});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeftoverFinderScreen> createState() =>
+      _LeftoverFinderScreenState();
+}
+
+class _LeftoverFinderScreenState extends ConsumerState<LeftoverFinderScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final food = widget.initialFood;
+    if (food != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(recipeFinderProvider.notifier).showRecipesWithFood(food);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final st = ref.watch(recipeFinderProvider);
     final n = ref.read(recipeFinderProvider.notifier);
@@ -47,33 +77,11 @@ class LeftoverFinderScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
               children: [
-                // ── Beschreibung ─────────────────────────────────────
-                PremiumCard(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(13),
-                          gradient: AppTokens.accentGradient,
-                          boxShadow: context.appAccentGlow,
-                        ),
-                        child: const Icon(Icons.search_rounded,
-                            color: Colors.white, size: 23),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(l.finderDescription,
-                            style: TextStyle(
-                                color: context.appFgSub,
-                                fontSize: 14,
-                                height: 1.4)),
-                      ),
-                    ],
-                  ),
-                ),
+                // ── Beschreibung (ein-/ausklappbar) ──────────────────
+                CollapsibleHint(
+                    text: l.finderDescription,
+                    prefsKey: 'finder_description_collapsed',
+                    icon: Icons.search_rounded),
                 const SizedBox(height: 16),
 
                 // ── Lebensmittel / Utensilien / Einstellungen ────────
@@ -85,13 +93,13 @@ class LeftoverFinderScreen extends ConsumerWidget {
                       icon: kAppleIcon, // Apfel wie die Lebensmittel-Kachel
                       label: l.foodsTitle,
                       count: p.foods.length,
-                      onTap: () => _pickFoods(context, ref),
+                      onTap: () => _pickFoods(context),
                     ),
                     _FilterButton(
                       icon: Icons.soup_kitchen_rounded,
                       label: l.toolsTitle,
                       count: p.tools.length,
-                      onTap: () => _pickTools(context, ref),
+                      onTap: () => _pickTools(context),
                     ),
                     _FilterButton(
                       icon: Icons.filter_alt_rounded,
@@ -200,7 +208,7 @@ class LeftoverFinderScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _pickFoods(BuildContext context, WidgetRef ref) async {
+  Future<void> _pickFoods(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
     final res = await showMultiSelectSheet(
       context,
@@ -229,7 +237,7 @@ class LeftoverFinderScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _pickTools(BuildContext context, WidgetRef ref) async {
+  Future<void> _pickTools(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
     final res = await showMultiSelectSheet(
       context,
@@ -270,7 +278,6 @@ class LeftoverFinderScreen extends ConsumerWidget {
         useRootNavigator: true,
         isScrollControlled: true,
         useSafeArea: true,
-        backgroundColor: context.appCard,
         builder: (_) => const _SettingsSheet(),
       );
 }
@@ -378,7 +385,8 @@ class _ChipWrap extends StatelessWidget {
                           fontWeight: FontWeight.w600)),
                 ),
                 const SizedBox(width: 4),
-                GestureDetector(
+                TapArea(
+                  semanticLabel: AppLocalizations.of(context)!.a11yRemove,
                   onTap: () => onRemove(item),
                   child: const Icon(Icons.close_rounded,
                       size: 16, color: AppTokens.accentDeep),
@@ -432,7 +440,7 @@ class _SuggestionCard extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
+      child: TapArea(
         onTap: () => context.push('/recipes/${s.recipeId}'),
         child: PremiumCard(
           padding: const EdgeInsets.all(12),
@@ -442,7 +450,7 @@ class _SuggestionCard extends ConsumerWidget {
               Row(children: [
                 if (showImage) ...[
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTokens.rXs),
                     child: SizedBox(
                       width: 56,
                       height: 56,
@@ -450,9 +458,6 @@ class _SuggestionCard extends ConsumerWidget {
                         recipeId: s.recipeId,
                         imageUrl: '${settings?.serverUrl ?? ''}/api/media/'
                             'recipes/${s.recipeId}/images/original.webp',
-                        httpHeaders: {
-                          'Authorization': 'Bearer ${settings?.apiToken ?? ''}'
-                        },
                         placeholder: (c) => Container(
                           color: c.appSurface2,
                           child: Icon(Icons.restaurant_rounded,
@@ -511,7 +516,7 @@ class _SuggestionCard extends ConsumerWidget {
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: context.appSurface2,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppTokens.rXs),
                         ),
                         child: Row(mainAxisSize: MainAxisSize.min, children: [
                           Icon(Icons.swap_horiz_rounded,
@@ -522,7 +527,7 @@ class _SuggestionCard extends ConsumerWidget {
                                 l.finderSubstituteForFood(
                                     sub.substitute.name, sub.food.name),
                                 style: TextStyle(
-                                    color: context.appFg, fontSize: 12.5)),
+                                    color: context.appFg, fontSize: 13)),
                           ),
                         ]),
                       ),
@@ -570,9 +575,9 @@ class _ToggleChip extends StatelessWidget {
         color: selected
             ? AppTokens.accent.withValues(alpha: 0.16)
             : context.appSurface2,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTokens.rXs),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTokens.rXs),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(6, 5, 10, 5),
@@ -588,7 +593,7 @@ class _ToggleChip extends StatelessWidget {
                 child: Text(label,
                     style: TextStyle(
                         color: selected ? AppTokens.accentDeep : context.appFg,
-                        fontSize: 12.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600)),
               ),
             ]),
@@ -709,7 +714,7 @@ class _SettingsSheet extends ConsumerWidget {
         );
 
     Widget toggle(String label, bool value, void Function(bool) set) =>
-        SwitchListTile(
+        SwitchListTile.adaptive(
           title: Text(label, style: TextStyle(color: context.appFg)),
           value: value,
           activeTrackColor: AppTokens.accent,

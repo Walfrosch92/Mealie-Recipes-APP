@@ -11,11 +11,6 @@ export 'task_import_models.dart';
 // Google Tasks Import — Android task-import implementation.
 // ---------------------------------------------------------------------------
 
-// Backwards-compat aliases — keep external imports working after the rename
-// to ImportTaskList/ImportTaskItem in task_import_models.dart.
-typedef GoogleTaskItem = ImportTaskItem;
-typedef GoogleTaskList = ImportTaskList;
-
 class GoogleTasksImportService {
   // Schreibender Scope statt readonly — wir wollen importierte Tasks
   // anschließend abhaken (PATCH status=completed) und ggf. löschen

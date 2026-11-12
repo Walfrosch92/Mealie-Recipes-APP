@@ -5,6 +5,7 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/organizer_item.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/async_action_button.dart';
 import '../../../shared/widgets/multi_select_sheet.dart';
 import '../../organizers/providers/organizers_provider.dart';
@@ -116,7 +117,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
       ],
       loading: (ref) => ref.watch(organizersProvider(kind)).isLoading,
     );
-    if (res == null) return;
+    if (res == null || !mounted) return;
     final all = ref.read(organizersProvider(kind)).valueOrNull ?? const [];
     final ids = {for (final s in res.selected) s.id};
     setState(() {
@@ -189,8 +190,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(ctx).colorScheme.error),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.discardChanges),
               ),
@@ -313,15 +313,15 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  ActionChip(
-                    avatar: const Icon(Icons.category_rounded, size: 16),
-                    label: Text('${l.categories}: ${names(row.categories)}'),
-                    onPressed: () => _pick(row, OrganizerKind.category),
+                  AppChip(
+                    icon: Icons.category_rounded,
+                    label: '${l.categories}: ${names(row.categories)}',
+                    onTap: () => _pick(row, OrganizerKind.category),
                   ),
-                  ActionChip(
-                    avatar: const Icon(Icons.sell_rounded, size: 16),
-                    label: Text('${l.tags}: ${names(row.tags)}'),
-                    onPressed: () => _pick(row, OrganizerKind.tag),
+                  AppChip(
+                    icon: Icons.sell_rounded,
+                    label: '${l.tags}: ${names(row.tags)}',
+                    onTap: () => _pick(row, OrganizerKind.tag),
                   ),
                 ],
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/models/organizer_item.dart';
@@ -25,8 +26,8 @@ class OrganizationContent extends StatefulWidget {
   final List<OrganizerItem> allTools;
   final List<RecipeTool> selectedTools;
   final void Function(OrganizerItem) onToggleTool;
-  final VoidCallback onCreateTool;
-  final void Function(OrganizerItem) onDeleteTool;
+  final VoidCallback? onCreateTool;
+  final void Function(OrganizerItem)? onDeleteTool;
   final AppLocalizations l;
 
   const OrganizationContent({
@@ -120,7 +121,7 @@ class _OrganizationContentState extends State<OrganizationContent> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: selected ? primary : context.appSurface2,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTokens.rMd),
         ),
         child: Text(name,
             style: TextStyle(
@@ -132,13 +133,13 @@ class _OrganizationContentState extends State<OrganizationContent> {
 
     // „+"-Chip am Ende jeder Reihe → legt einen neuen Tag/Kategorie an.
     Widget plusChip(VoidCallback onTap) {
-      return GestureDetector(
+      return TapArea(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: context.appSurface2,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppTokens.rMd),
             border: Border.all(color: primary.withValues(alpha: 0.5)),
           ),
           child: Icon(Icons.add_rounded, size: 16, color: primary),
@@ -252,11 +253,13 @@ class _OrganizationContentState extends State<OrganizationContent> {
             children: [
               ...tools.where((t) => visible(t.name)).map((t) => DeletableChip(
                     onTap: () => w.onToggleTool(t),
-                    onDelete: () => w.onDeleteTool(t),
+                    onDelete: w.onDeleteTool == null
+                        ? null
+                        : () => w.onDeleteTool!(t),
                     child: chipVisual(
                         t.name, selectedTools.any((x) => x.id == t.id)),
                   )),
-              plusChip(w.onCreateTool),
+              if (w.onCreateTool != null) plusChip(w.onCreateTool!),
             ],
           ),
         ],

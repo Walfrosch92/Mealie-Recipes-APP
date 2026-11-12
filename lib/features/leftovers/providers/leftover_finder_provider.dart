@@ -256,6 +256,10 @@ class RecipeFinderNotifier extends Notifier<RecipeFinderState> {
   Timer? _debounce;
   int _generation = 0;
 
+  /// Schon eine Auswahl gesetzt (Nutzer oder Sprung von außen)? Dann darf
+  /// das asynchrone Wiederherstellen sie nicht mehr überschreiben.
+  bool _touched = false;
+
   @override
   RecipeFinderState build() {
     ref.onDispose(() => _debounce?.cancel());
@@ -265,11 +269,12 @@ class RecipeFinderNotifier extends Notifier<RecipeFinderState> {
 
   Future<void> _restore() async {
     final saved = await LocalCache.loadJsonList(_kPrefsKey);
-    if (saved.isEmpty) return;
+    if (saved.isEmpty || _touched) return;
     _update(FinderPrefs.fromJson(saved.first), save: false);
   }
 
   void _update(FinderPrefs prefs, {bool save = true}) {
+    if (save) _touched = true;
     state = state.copyWith(prefs: prefs, loading: prefs.hasSelection);
     if (save) unawaited(LocalCache.saveJsonList(_kPrefsKey, [prefs.toJson()]));
     _debounce?.cancel();
@@ -308,6 +313,11 @@ class RecipeFinderNotifier extends Notifier<RecipeFinderState> {
 
   void removeTool(FinderItem t) =>
       setTools(state.prefs.tools.where((x) => x != t).toList());
+
+  /// Sprung aus der Suche („alle Rezepte mit dieser Zutat“): genau diese
+  /// Zutat auswählen, Utensilien leeren — Einstellungen bleiben.
+  void showRecipesWithFood(FinderItem food) =>
+      _update(state.prefs.copyWith(foods: [food], tools: const []));
 
   void clearSelection() =>
       _update(state.prefs.copyWith(foods: const [], tools: const []));

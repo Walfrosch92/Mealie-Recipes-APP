@@ -81,3 +81,66 @@ class ShimmerBox extends StatelessWidget {
     );
   }
 }
+
+/// Platzhalter für eine Liste, solange sie zum ersten Mal lädt: Zeilen mit
+/// Vorschaubild/Symbol und zwei Textzeilen. [thumbSize] und [thumbRadius]
+/// an die echte Zeile anlehnen (Rezeptkarte groß, Listenzeile klein).
+class ListSkeleton extends StatelessWidget {
+  final int rows;
+  final double thumbSize;
+  final double thumbRadius;
+  final double spacing;
+  final EdgeInsetsGeometry padding;
+
+  const ListSkeleton({
+    super.key,
+    this.rows = 8,
+    this.thumbSize = 44,
+    this.thumbRadius = AppTokens.rSm,
+    this.spacing = 16,
+    this.padding = const EdgeInsets.fromLTRB(16, 14, 16, 24),
+  });
+
+  // Unterschiedlich lange Zeilen wirken wie echter Inhalt.
+  static const _titles = [0.62, 0.48, 0.74, 0.55, 0.68, 0.44];
+  static const _subs = [0.34, 0.42, 0.28, 0.38, 0.30, 0.36];
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      child: ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: padding,
+        itemCount: rows,
+        itemBuilder: (_, i) => Padding(
+          padding: EdgeInsets.only(bottom: spacing),
+          child: Row(
+            children: [
+              ShimmerBox(
+                  width: thumbSize, height: thumbSize, radius: thumbRadius),
+              const SizedBox(width: 14),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (_, c) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ShimmerBox(
+                          width: c.maxWidth * _titles[i % _titles.length],
+                          height: 15),
+                      if (thumbSize >= 36) ...[
+                        const SizedBox(height: 9),
+                        ShimmerBox(
+                            width: c.maxWidth * _subs[i % _subs.length],
+                            height: 11),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

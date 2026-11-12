@@ -378,9 +378,13 @@ object WidgetSharedStore {
             .sortedBy { order[it.slot] ?: 3 }
     }
 
+    // Lokales Kalenderdatum — Mealie-Essensplan-Daten sind reine Tage
+    // („2026-10-26") ohne Zeitzone. Vorher in UTC formatiert: in Österreich
+    // zeigte „Heute" zwischen 0 und 1/2 Uhr noch die gestrigen Mahlzeiten,
+    // und „Morgen" wurde gar nicht vom Server geholt.
     fun dateString(date: Date): String {
         val f = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        f.timeZone = TimeZone.getTimeZone("UTC")
+        f.timeZone = TimeZone.getDefault()
         return f.format(date)
     }
 

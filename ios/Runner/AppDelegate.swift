@@ -153,6 +153,35 @@ import UserNotifications
       // Für native→Dart-Push warmer Widget-Taps (siehe deliverDeepLink).
       deepLinkChannel = channel
     }
+    // Farbschema der App an UIKit weitergeben (Kanal `mealie/appearance`,
+    // Dart: NativeAppearance). Ohne das folgen native Fenster (Teilen-Blatt,
+    // Foto-/Dateiauswahl, In-App-Browser) dem System statt der App.
+    //   • setStyle("system" | "light" | "dark") -> nil
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AppearanceBridge") {
+      let channel = FlutterMethodChannel(
+        name: "mealie/appearance", binaryMessenger: registrar.messenger())
+      channel.setMethodCallHandler { call, result in
+        guard call.method == "setStyle" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        let style: UIUserInterfaceStyle
+        switch call.arguments as? String {
+        case "light": style = .light
+        case "dark": style = .dark
+        default: style = .unspecified
+        }
+        DispatchQueue.main.async {
+          for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows {
+              window.overrideUserInterfaceStyle = style
+            }
+          }
+          result(nil)
+        }
+      }
+    }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AppIconBridge") {
       let channel = FlutterMethodChannel(
         name: "mealie/appicon", binaryMessenger: registrar.messenger())

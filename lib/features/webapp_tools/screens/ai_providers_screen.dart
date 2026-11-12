@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/api/api_service.dart';
+import '../../../core/utils/mealie_version.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../widgets/tool_widgets.dart';
 
@@ -185,6 +187,21 @@ class _AiProvidersScreenState extends ConsumerState<AiProvidersScreen> {
                   l.aiImageProviderDescription),
             ],
           ),
+          // Mealie ≥ 3.30: eigene Anweisungen an die KI.
+          if (ref.watch(mealie330Provider))
+            ToolCard(
+              title: l.aiPromptsTitle,
+              icon: Icons.edit_note_rounded,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l.aiPromptsTeaser,
+                      style: TextStyle(color: context.appFgSub, fontSize: 14)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => context.push('/ai-prompts'),
+                ),
+              ],
+            ),
           ToolCard(
             title: l.aiProvidersList,
             icon: Icons.auto_awesome_rounded,
@@ -215,7 +232,7 @@ class _AiProvidersScreenState extends ConsumerState<AiProvidersScreen> {
                             l.aiImageProvider,
                         ].join(' · '),
                         style:
-                            TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                            TextStyle(color: context.appFgSub, fontSize: 13)),
                     onTap: _busy ? null : () => _edit(p['id'].toString()),
                     trailing: IconButton(
                       tooltip: l.delete,
@@ -478,9 +495,13 @@ class _ProviderDialogState extends ConsumerState<_ProviderDialog> {
                         ? Icons.expand_less_rounded
                         : Icons.expand_more_rounded),
                     const SizedBox(width: 6),
-                    Text(l.aiAdvanced,
-                        style: TextStyle(
-                            color: context.appFg, fontWeight: FontWeight.w600)),
+                    Flexible(
+                        child: Text(l.aiAdvanced,
+                            style: TextStyle(
+                                color: context.appFg,
+                                fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis)),
                   ]),
                 ),
               ),

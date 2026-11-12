@@ -141,10 +141,23 @@ class RecipeDetailCacheManager {
   // Operation hinter der vorherigen ein.
   Future<void> _opChain = Future<void>.value();
 
-  Future<T> _serialized<T>(Future<T> Function() op) {
+  /// Kontowechsel-Generation: Schreib-Operationen, die vor einem Wechsel
+  /// eingereiht wurden, laufen danach NICHT mehr (sie trügen Rezepte des
+  /// alten Kontos in die Datei des neuen).
+  int _gen = 0;
+
+  Future<T> _serialized<T>(Future<T> Function() op, {T? skipped}) {
     final done = Completer<T>();
+    final gen = _gen;
+    final isWrite = skipped != null || null is T;
     _opChain = _opChain.then((_) async {
       try {
+        if (isWrite && gen != _gen) {
+          LogManager.shared.log('🔒 Rezept-Cache: Schreiben nach '
+              'Kontowechsel verworfen');
+          done.complete(skipped as T);
+          return;
+        }
         done.complete(await op());
       } catch (e, st) {
         // Fehler wandern zum Aufrufer, brechen aber die Kette nicht ab.
@@ -152,6 +165,26 @@ class RecipeDetailCacheManager {
       }
     });
     return done.future;
+  }
+
+  // ── Kontowechsel ──────────────────────────────────────────────────────────
+
+  /// Vor dem Umräumen: ausstehenden entprellten Write des ALTEN Kontos
+  /// jetzt schreiben (in dessen Ordner) und alle eingereihten Operationen
+  /// abwarten.
+  Future<void> flushForAccountSwitch() async {
+    await flush();
+    await _serialized<void>(() async {});
+  }
+
+  /// Nach dem Umräumen: RAM-Spiegel und Dateipfad vergessen, alles noch
+  /// Eingereihte verwerfen. Der nächste Zugriff liest die Datei des neuen
+  /// Kontos.
+  void resetForAccountSwitch() {
+    _gen++;
+    _cancelPendingWrite();
+    _memory = null;
+    _fileFuture = null;
   }
 
   // ── Public API ────────────────────────────────────────────────────────────

@@ -36,6 +36,11 @@ import 'shopping_lists_provider.dart';
 // ---------------------------------------------------------------------------
 
 final shoppingOfflineProvider = StateProvider<bool>((ref) => false);
+
+/// Offline und für die aktive Liste liegt nichts im Cache — die Liste ist
+/// also UNBEKANNT, nicht leer. Die UI zeigt dann einen Offline-Hinweis statt
+/// „Einkauf erledigt" (Issue #40).
+final shoppingCacheMissingProvider = StateProvider<bool>((ref) => false);
 final shoppingServerSnapshotProvider =
     StateProvider<List<ShoppingItem>>((ref) => const []);
 final shoppingSyncTriggerProvider = StateProvider<int>((ref) => 0);
@@ -242,57 +247,54 @@ final shoppingListProvider =
 class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
   @override
   Future<List<ShoppingItem>> build() async {
-    final api = ref.watch(apiServiceProvider);
+    // Abhängigkeit: Server-Konfig/aktive Liste ändern sich → Neuaufbau.
+    ref.watch(apiServiceProvider);
     // Debounce-Timer stoppen wenn der Provider neu gebaut/disposed wird —
     // sonst feuert _silentRefresh auf einem toten Notifier (ref nach dispose).
     ref.onDispose(() => _watchResyncTimer?.cancel());
+    // Erst die gespeicherten Einstellungen abwarten: vor deren Laden hat
+    // apiServiceProvider nur Defaults OHNE Listen-ID. Früher lief der
+    // Abruf trotzdem, lieferte „leer" und überschrieb den Offline-Cache —
+    // nach einem Kaltstart ohne Netz war die Liste dann weg (Issue #40).
     try {
-      final items = await api.fetchShoppingItems();
-      await LocalCache.saveShoppingItems(items);
-      _onLoadSuccess(items);
-      return items;
-    } catch (e) {
-      // Offline / Serverfehler → gecachte Liste zeigen + Offline-Banner
-      // (isOffline via _onLoadFailure). NIEMALS hart fehlschlagen: ist der
-      // Cache leer oder (z. B. nach Swift-Migration) nicht parsebar, lieber
-      // eine leere Liste mit Offline-Hinweis zeigen als eine Fehlermeldung.
-      // 1:1 zu Swifts isOffline-Pfad (loadShoppingListFromServer-Failure).
-      final cached = await LocalCache.loadShoppingItems();
-      _onLoadFailure();
-      return cached;
-    }
+      await ref.read(settingsProvider.future);
+    } catch (_) {/* Defaults — unten greift die Listen-ID-Prüfung */}
+    return _load(ref.read(apiServiceProvider));
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final api = ref.read(apiServiceProvider);
-      try {
-        final items = await api.fetchShoppingItems();
-        await LocalCache.saveShoppingItems(items);
-        _onLoadSuccess(items);
-        return items;
-      } catch (e) {
-        // Siehe build(): offline → gecachte (ggf. leere) Liste statt Fehler.
-        final cached = await LocalCache.loadShoppingItems();
-        _onLoadFailure();
-        return cached;
-      }
-    });
+    state = await AsyncValue.guard(() => _load(ref.read(apiServiceProvider)));
   }
 
-  // mirrors iOS loadShoppingListFromServer (success branch):
-  // serverSnapshot speichern, isOffline = false, bei pending changes nach
-  // 0.5 s einen Sync-Tick feuern (Notification-Pendant in iOS).
-  //
-  // Abweichung von iOS (bewusst): Pending-ADDS werden automatisch und ohne
-  // Sheet nachgeschoben. Ein Add ist konfliktfrei — es KANN keinen
-  // widersprechenden Server-Stand geben — und der Sheet-Weg hatte eine
-  // Falle: er öffnet nur bei gemountetem Shopping-Screen und braucht eine
-  // User-Bestätigung. Offline (z. B. „Connection refused") erfasste Artikel
-  // blieben so dauerhaft nur lokal sichtbar und erschienen nie in der
-  // Webapp. Das Sheet bleibt für die echten Konfliktfälle
-  // (Check/Menge/Kategorie/Delete) unverändert bestehen.
+  /// Server-Stand der aktiven Liste; offline / Serverfehler → gecachte Liste
+  /// + Offline-Banner (isOffline via _onLoadFailure). NIEMALS hart
+  /// fehlschlagen: ist der Cache leer oder nicht parsebar, lieber eine leere
+  /// Liste mit Offline-Hinweis zeigen als eine Fehlermeldung (1:1 zu Swifts
+  /// isOffline-Pfad, loadShoppingListFromServer-Failure).
+  Future<List<ShoppingItem>> _load(ApiService api) async {
+    final listId = api.settings.shoppingListId;
+    final cacheMissing = ref.read(shoppingCacheMissingProvider.notifier);
+    if (listId.isEmpty) {
+      // Keine Liste ausgewählt: nichts abrufen, nichts cachen, den
+      // Online-/Offline-Status nicht anfassen.
+      cacheMissing.state = false;
+      return const [];
+    }
+    try {
+      final items = await api.fetchShoppingItems();
+      await LocalCache.saveShoppingItems(listId, items);
+      cacheMissing.state = false;
+      _onLoadSuccess(items);
+      return items;
+    } catch (e) {
+      final cached = await LocalCache.loadShoppingItems(listId);
+      cacheMissing.state = cached == null;
+      _onLoadFailure();
+      return cached ?? const [];
+    }
+  }
+
   // ── Offline vorgemerkte Rezept-Verknüpfungen ─────────────────────────────
   static const _kPendingRecipeRefs = 'pending_shopping_recipe_refs';
 
@@ -343,6 +345,18 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     }
   }
 
+  // mirrors iOS loadShoppingListFromServer (success branch):
+  // serverSnapshot speichern, isOffline = false, bei pending changes nach
+  // 0.5 s einen Sync-Tick feuern (Notification-Pendant in iOS).
+  //
+  // Abweichung von iOS (bewusst): Pending-ADDS werden automatisch und ohne
+  // Sheet nachgeschoben. Ein Add ist konfliktfrei — es KANN keinen
+  // widersprechenden Server-Stand geben — und der Sheet-Weg hatte eine
+  // Falle: er öffnet nur bei gemountetem Shopping-Screen und braucht eine
+  // User-Bestätigung. Offline (z. B. „Connection refused") erfasste Artikel
+  // blieben so dauerhaft nur lokal sichtbar und erschienen nie in der
+  // Webapp. Das Sheet bleibt für die echten Konfliktfälle
+  // (Check/Menge/Kategorie/Delete) unverändert bestehen.
   void _onLoadSuccess(List<ShoppingItem> items) {
     ref.read(shoppingServerSnapshotProvider.notifier).state = items;
     ref.read(shoppingOfflineProvider.notifier).state = false;
@@ -590,21 +604,6 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     return _unitLookupCache!;
   }
 
-  // mirrors iOS addIngredients(_:) + buildIngredientName(for:)
-  //
-  // Adds the ingredient as "1x <name>" (whole unit, no fractional qty/unit),
-  // because you can't buy 0.33l milk — you buy 1x milk. The food's saved
-  // label/category is applied via foodId (server assigns it on refresh) —
-  // that holds for BOTH modes below.
-  //
-  // With the "exakte Mengen" setting enabled, the scaled recipe amount goes
-  // into the quantity field (the list row's stepper shows it, e.g. 200) and
-  // the unit stays in the item text ("g Butter") — the row renders
-  // [− qty +] displayName, so a structured unit field would be invisible.
-  // Gibt `false` zurück, wenn der Server den Artikel abgelehnt hat (z. B.
-  // HTTP 422/500) — vorher wurde das verschluckt und die Zutat fehlte
-  // kommentarlos. Netzwerkfehler zählen als Erfolg: der Artikel landet im
-  // Pending-Puffer und wird beim nächsten erfolgreichen Load nachgeschoben.
   /// Zutaten eines verlinkten Unterrezepts hinzufügen. Das Rezept kommt aus
   /// dem Cache (offline-fähig), sonst frisch vom Server. [depth] begrenzt
   /// Verschachtelungen (und schützt vor Rezepten, die sich gegenseitig
@@ -961,6 +960,21 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     };
   }
 
+  // mirrors iOS addIngredients(_:) + buildIngredientName(for:)
+  //
+  // Adds the ingredient as "1x <name>" (whole unit, no fractional qty/unit),
+  // because you can't buy 0.33l milk — you buy 1x milk. The food's saved
+  // label/category is applied via foodId (server assigns it on refresh) —
+  // that holds for BOTH modes below.
+  //
+  // With the "exakte Mengen" setting enabled, the scaled recipe amount goes
+  // into the quantity field (the list row's stepper shows it, e.g. 200) and
+  // the unit stays in the item text ("g Butter") — the row renders
+  // [− qty +] displayName, so a structured unit field would be invisible.
+  // Gibt `false` zurück, wenn der Server den Artikel abgelehnt hat (z. B.
+  // HTTP 422/500) — vorher wurde das verschluckt und die Zutat fehlte
+  // kommentarlos. Netzwerkfehler zählen als Erfolg: der Artikel landet im
+  // Pending-Puffer und wird beim nächsten erfolgreichen Load nachgeschoben.
   Future<bool> addIngredient({
     required String shoppingListId,
     required Ingredient ingredient,
@@ -1305,8 +1319,8 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     // Umbenannt auf ein bekanntes Lebensmittel (Name/Plural/Alias, z. B. per
     // Vorschlag gewählt) → wie beim Hinzufügen damit VERKNÜPFEN statt zum
     // Notiz-Artikel zu machen. Eine Zusatznotiz eines Food-Items bleibt.
-    final renamed = trimmed.isNotEmpty &&
-        trimmed.toLowerCase() != shownName.toLowerCase();
+    final renamed =
+        trimmed.isNotEmpty && trimmed.toLowerCase() != shownName.toLowerCase();
     final linkFood = renamed
         ? resolveFoodByName(
             ref.read(foodsCatalogProvider).valueOrNull ?? const [], trimmed)
@@ -1491,8 +1505,10 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
 
   Future<void> _silentRefresh() async {
     final api = ref.read(apiServiceProvider);
-    final currentListId =
-        ref.read(settingsProvider).valueOrNull?.shoppingListId ?? '';
+    final currentListId = api.settings.shoppingListId;
+    // Ohne Listen-ID gibt es nichts abzugleichen — und kein Grund, den
+    // Offline-Banner zu setzen.
+    if (currentListId.isEmpty) return;
     try {
       final items = await api.fetchShoppingItems();
       final localCurrent = state.valueOrNull ?? const <ShoppingItem>[];
@@ -1505,7 +1521,8 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
       final stillPendingLocal = localCurrent.where((i) =>
           !serverIds.contains(i.id) && i.shoppingListId == currentListId);
       final merged = [...items, ...stillPendingLocal];
-      await LocalCache.saveShoppingItems(merged);
+      await LocalCache.saveShoppingItems(api.settings.shoppingListId, merged);
+      ref.read(shoppingCacheMissingProvider.notifier).state = false;
       _onLoadSuccess(merged);
       state = AsyncData(merged);
     } catch (_) {
@@ -1518,7 +1535,8 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
 
   Future<void> _persistLocalCache() async {
     final list = state.valueOrNull;
-    if (list != null) await LocalCache.saveShoppingItems(list);
+    final listId = ref.read(apiServiceProvider).settings.shoppingListId;
+    if (list != null) await LocalCache.saveShoppingItems(listId, list);
   }
 
   // Erzeugt ein lokales Dummy-Item + PendingAddChange — 1:1 zu Swifts

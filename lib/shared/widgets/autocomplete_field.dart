@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+
+import '../../core/utils/search_match.dart';
 
 // ---------------------------------------------------------------------------
 // Autocomplete-Textfeld gegen eine feste Optionsliste (Server-Einheiten/
@@ -99,25 +102,20 @@ class _AutocompleteFieldState extends State<AutocompleteField> {
         final slot = widget.slotBuilder?.call(value.text) ??
             AutocompleteSlot(
                 prefix: '', query: value.text, options: widget.options);
-        final q = slot.query.trim().toLowerCase();
-        if (q.isEmpty) return const Iterable<_Suggestion>.empty();
-        final starts = <String>[];
-        final contains = <String>[];
+        final terms = searchTerms(slot.query);
+        if (terms.isEmpty) return const Iterable<_Suggestion>.empty();
+        final q = terms.join(' ');
+        final hits = <String>[];
         final seen = <String>{};
         for (final o in slot.options) {
-          final lo = o.toLowerCase();
-          if (lo == q) continue; // exakter Treffer → kein Vorschlag nötig
-          if (!seen.add(lo)) continue;
-          if (lo.startsWith(q)) {
-            starts.add(o);
-          } else if (lo.contains(q)) {
-            contains.add(o);
-          }
+          final n = normalizeForSearch(o);
+          if (n == q) continue; // exakter Treffer → kein Vorschlag nötig
+          if (!seen.add(n)) continue;
+          if (n.contains(q)) hits.add(o);
         }
-        return [...starts, ...contains]
-            .take(8)
-            .map((o) => _Suggestion(
-                o, '${slot.prefix}$o${slot.suffixFor?.call(o) ?? ''}'));
+        // Vorne passende zuerst, dann Wortanfänge, dann „irgendwo drin“.
+        return rankBySearch(hits, terms, (o) => o).take(8).map((o) =>
+            _Suggestion(o, '${slot.prefix}$o${slot.suffixFor?.call(o) ?? ''}'));
       },
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
         return TextField(
@@ -145,7 +143,7 @@ class _AutocompleteFieldState extends State<AutocompleteField> {
           alignment: up ? Alignment.bottomLeft : Alignment.topLeft,
           child: Material(
             elevation: 4,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTokens.rXs),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 220, maxWidth: 260),
               child: ListView.builder(

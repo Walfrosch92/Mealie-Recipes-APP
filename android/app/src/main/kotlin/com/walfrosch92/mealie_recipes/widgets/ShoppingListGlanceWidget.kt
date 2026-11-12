@@ -140,7 +140,7 @@ private fun ShoppingSmall(
                         style = TextStyle(
                             fontSize = 40.sp,
                             fontWeight = FontWeight.Bold,
-                            color = cp(WidgetTheme.PrimaryText),
+                            color = WidgetTheme.PrimaryTextProvider,
                         ),
                     )
                     Text(text = l10n.s("open"), style = WidgetTheme.Caption2)

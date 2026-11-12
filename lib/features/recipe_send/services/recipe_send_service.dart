@@ -11,6 +11,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/accounts/account_scope.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -189,6 +190,9 @@ final pendingRecipesProvider =
 // ---------------------------------------------------------------------------
 
 class PendingRecipesNotifier extends Notifier<List<PendingRecipe>> {
+  /// Kontowechsel: siehe AccountScope.isCurrent.
+  final int _epoch = AccountScope.epoch;
+
   @override
   List<PendingRecipe> build() {
     // Build ist sync — Hydrate läuft asynchron und ersetzt state sobald da.
@@ -240,6 +244,7 @@ class PendingRecipesNotifier extends Notifier<List<PendingRecipe>> {
   }
 
   void _persist() {
+    if (!AccountScope.isCurrent(_epoch)) return;
     unawaited(LocalCache.savePendingReceivedRecipes(
         state.map((r) => r.toJson()).toList()));
   }
@@ -250,6 +255,11 @@ class PendingRecipesNotifier extends Notifier<List<PendingRecipe>> {
 // ---------------------------------------------------------------------------
 
 class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
+  /// Kontowechsel: Empfang über LAN/CloudKit, der nach dem Wechsel noch
+  /// ankommt, gehört nicht mehr in diesen (alten) Zustand.
+  final int _epoch = AccountScope.epoch;
+  bool get _stale => !AccountScope.isCurrent(_epoch);
+
   BonsoirBroadcast? _broadcast;
   BonsoirDiscovery? _discovery;
   StreamSubscription? _discoverySub;
@@ -413,6 +423,7 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
   }
 
   Future<void> _persistProcessedSendIds() async {
+    if (_stale) return;
     await LocalCache.saveProcessedSendIds(List<String>.from(_processedSendIds));
   }
 
@@ -447,6 +458,7 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
   }
 
   Future<void> _persistPendingOutgoing() async {
+    if (_stale) return;
     await LocalCache.savePendingOutgoingSends(
         _pendingOutgoing.map((s) => s.toJson()).toList());
   }
@@ -712,6 +724,7 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
   ///     → Silent-Push hat ein Recipe für uns geliefert. Volles Rezept
   ///       wird aus Mealie nachgeladen (1:1 zu Swift).
   Future<void> _onCloudKitEvent(dynamic event) async {
+    if (_stale) return;
     if (event is! Map) return;
     final map = event.cast<String, dynamic>();
     final type = map['type'] as String? ?? 'recipe';
@@ -874,6 +887,10 @@ class RecipeSendNotifier extends AsyncNotifier<List<RecipePeer>> {
   // ── Receive (TCP) ─────────────────────────────────────────────────────────
 
   void _onIncomingConnection(Socket socket) {
+    if (_stale) {
+      socket.destroy();
+      return;
+    }
     LogManager.shared.log(
         '📥 SendTo: eingehende Verbindung von ${socket.remoteAddress.address}');
     final buffer = StringBuffer();

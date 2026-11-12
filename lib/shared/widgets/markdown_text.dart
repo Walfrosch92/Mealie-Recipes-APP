@@ -1,10 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'tap_area.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/utils/markdown_parse.dart';
 import '../theme/app_colors.dart';
+import '../../core/providers/settings_provider.dart';
 import '../../core/utils/auth_headers.dart';
 import 'recipe_image_viewer.dart';
 import '../../core/services/recipe_image_store.dart';
@@ -251,7 +254,7 @@ class _MarkdownTextState extends State<MarkdownText> {
 
 /// Eingebettetes Schritt-Bild als gerundete Karte. Der Bearer-Token wird nur
 /// an den eigenen Mealie-Server geschickt, nie an fremde Hosts.
-class _StepImage extends StatelessWidget {
+class _StepImage extends ConsumerWidget {
   final String url;
   final String alt;
   final String? serverUrl;
@@ -265,17 +268,20 @@ class _StepImage extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    // Nur exakt der eigene Server bekommt den Token (auth_headers.dart).
-    final headers = authHeadersFor(url, serverUrl ?? '', apiToken ?? '');
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Nur exakt der eigene Server bekommt Token und optionale Zusatz-Header
+    // (auth_headers.dart, Issue #38).
+    final extra =
+        ref.watch(settingsProvider).valueOrNull?.optionalHeaders ?? const {};
+    Map<String, String>? headersFor(String u) =>
+        authHeadersFor(u, serverUrl ?? '', apiToken ?? '', extra: extra);
+    final headers = headersFor(url);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       // Antippen öffnet das Bild groß (Zoom), wie das Rezeptbild oben.
-      child: GestureDetector(
+      child: TapArea(
         onTap: () => showImageGalleryViewer(context,
-            urls: [url],
-            headersFor: (u) =>
-                authHeadersFor(u, serverUrl ?? '', apiToken ?? '')),
+            urls: [url], headersFor: headersFor),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppTokens.rMd),
           // Offline-Kopie („Rezeptbilder offline speichern"), sonst Netzwerk.

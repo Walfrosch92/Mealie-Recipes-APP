@@ -285,8 +285,7 @@ IngredientDisplay ingredientDisplayParts(Ingredient ing, double multiplier) {
     // Chargen des Unterrezepts, skaliert wie jede andere Menge).
     final a = <String>[
       if (hasQty) formatIngredientQuantity(scaledQty, ing.unit),
-      if (hasUnit)
-        ing.unit!.displayName(plural: shouldPluralize(scaledQty)),
+      if (hasUnit) ing.unit!.displayName(plural: shouldPluralize(scaledQty)),
     ];
     final n = <String>[linked];
     if (ing.note?.isNotEmpty == true) n.add('(${ing.note})');

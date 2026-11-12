@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/gradient_button.dart' show SheetHandle;
+import '../../../shared/widgets/sheet_title.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -37,7 +39,6 @@ Future<void> showMadeThisSheet(BuildContext context, RecipeDetail recipe) {
     useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: context.appCard,
     builder: (_) => _MadeThisSheet(recipe: recipe),
   );
 }
@@ -83,7 +84,7 @@ class _MadeThisSheetState extends ConsumerState<_MadeThisSheet> {
       firstDate: DateTime(2000),
       lastDate: now,
     );
-    if (picked != null) setState(() => _day = picked);
+    if (picked != null && mounted) setState(() => _day = picked);
   }
 
   Future<void> _pickPhoto() async {
@@ -131,19 +132,14 @@ class _MadeThisSheetState extends ConsumerState<_MadeThisSheet> {
     final locale = Localizations.localeOf(context).toString();
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+          20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l.timelineMadeThis,
-                style: TextStyle(
-                    fontFamily: 'PlusJakartaSans',
-                    color: context.appFg,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800)),
+            const Center(child: SheetHandle()), SheetTitle(l.timelineMadeThis),
             const SizedBox(height: 4),
             Text(widget.recipe.name,
                 maxLines: 2,

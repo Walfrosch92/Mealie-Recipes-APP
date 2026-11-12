@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../theme/app_colors.dart';
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
@@ -153,7 +154,7 @@ class _SendFlyState extends State<_SendFly>
       width: 64,
       height: 64,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTokens.rMd),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

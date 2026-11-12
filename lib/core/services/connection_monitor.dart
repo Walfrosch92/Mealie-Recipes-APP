@@ -70,6 +70,23 @@ class ConnectionMonitor extends ChangeNotifier {
     _offline = false;
     notifyListeners();
   }
+
+  /// Kontowechsel: „zuletzt verbunden" gehört zum Konto (wird aus dessen
+  /// Daten neu gelesen).
+  void resetForAccountSwitch() {
+    _offline = false;
+    _lastContact = null;
+    _lastPersisted = null;
+    _loaded = false;
+    notifyListeners();
+  }
+
+  /// Singleton — der ChangeNotifierProvider unten würde es beim Verwerfen
+  /// des ProviderScopes (Kontowechsel startet die App-Zustände neu) sonst
+  /// endgültig entsorgen, und jeder spätere Listener-Aufruf würfe.
+  @override
+  // ignore: must_call_super
+  void dispose() {}
 }
 
 final connectionMonitorProvider = ChangeNotifierProvider<ConnectionMonitor>(

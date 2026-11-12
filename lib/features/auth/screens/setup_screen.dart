@@ -8,15 +8,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
+import '../../../core/accounts/account_storage.dart';
+import '../../../core/accounts/saved_account.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/app_settings.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/log_manager.dart';
+import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/async_action_button.dart';
 import '../../../shared/widgets/auth_mode_choice_card.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/import_language_sheet.dart';
 import '../../recipes/providers/recipes_provider.dart';
+import '../services/account_switcher.dart';
+import '../widgets/account_tab.dart' show SavedAccountAvatar;
 
 // ---------------------------------------------------------------------------
 // Step-by-step setup:
@@ -100,6 +105,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   // Einkaufslisten-Modus (Step 3) — Default AUS wie in den Settings.
   bool _exactQuantities = false;
 
+  // WLAN-Adresse vom zuletzt genutzten gespeicherten Konto (gleicher
+  // Server) — beim Hinzufügen eines weiteren Kontos übernommen.
+  String _prefillWifiUrl = '';
+  String _prefillWifiSsid = '';
+
   @override
   void initState() {
     super.initState();
@@ -107,12 +117,129 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     _lang = settings?.selectedLanguage ?? 'de';
     _importLang = settings?.importLanguage ?? '';
     _exactQuantities = settings?.addExactQuantities ?? false;
+    // Nach „Abmelden" bleiben Server und Zusatz-Header gespeichert → hier
+    // vorausfüllen, beim Benutzerwechsel nur noch Anmeldedaten eingeben.
+    if (settings != null && settings.primaryServerUrl.isNotEmpty) {
+      _urlCtrl.text = settings.primaryServerUrl;
+      _showHeaders = settings.sendOptionalHeaders;
+      _hk1.text = settings.optionalHeaderKey1;
+      _hv1.text = settings.optionalHeaderValue1;
+      _hk2.text = settings.optionalHeaderKey2;
+      _hv2.text = settings.optionalHeaderValue2;
+      _hk3.text = settings.optionalHeaderKey3;
+      _hv3.text = settings.optionalHeaderValue3;
+    } else {
+      // „Weiteres Konto hinzufügen": Server des zuletzt genutzten Kontos.
+      unawaited(_prefillFromSavedAccount());
+    }
     // Während der Ersteinrichtung Logging erzwingen, damit ALLE Fehler (z. B.
     // fehlgeschlagene Verbindungstests inkl. Server-Antwort) erfasst werden —
     // sonst sind die „Logs" hier immer leer, weil der Logging-Schalter beim
     // Erstlauf noch aus ist.
     LogManager.shared.pinOn();
     LogManager.shared.log('🛠️ Setup geöffnet — Logging aktiv');
+  }
+
+  Future<void> _prefillFromSavedAccount() async {
+    final storage = await AccountStorage.open();
+    final accounts = storage.loadAccounts()
+      ..sort((a, b) => b.lastUsed.compareTo(a.lastUsed));
+    if (accounts.isEmpty || !mounted || _urlCtrl.text.isNotEmpty) return;
+    final last = accounts.first;
+    final stash = storage.readStash(last.id);
+    String v(String k) => stash[k]?.toString() ?? '';
+    setState(() {
+      _urlCtrl.text = last.serverUrl;
+      _showHeaders = stash['sendOptionalHeaders'] == true;
+      _hk1.text = v('optionalHeaderKey1');
+      _hv1.text = v('optionalHeaderValue1');
+      _hk2.text = v('optionalHeaderKey2');
+      _hv2.text = v('optionalHeaderValue2');
+      _hk3.text = v('optionalHeaderKey3');
+      _hv3.text = v('optionalHeaderValue3');
+      _prefillWifiUrl = v('wifiServerUrl');
+      _prefillWifiSsid = v('wifiSsid');
+    });
+  }
+
+  /// Gespeichertes Konto: Tipp = wechseln, lange drücken = Optionen.
+  Future<void> _accountOptions(SavedAccount a) async {
+    final l = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(a.displayName,
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: Text(a.serverLabel),
+            ),
+            if (a.biometricAllowed)
+              ListTile(
+                leading: const Icon(Icons.no_encryption_gmailerrorred_rounded),
+                title: Text(l.biometricOff),
+                onTap: () => Navigator.pop(ctx, 'bio'),
+              ),
+            ListTile(
+              leading:
+                  const Icon(Icons.delete_outline_rounded, color: Colors.red),
+              title: Text(l.removeSavedAccount,
+                  style: const TextStyle(color: Colors.red)),
+              onTap: () => Navigator.pop(ctx, 'remove'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    if (action == 'bio') {
+      await disableBiometricFor(a);
+    } else if (action == 'remove') {
+      await removeSavedAccount(context, a);
+    }
+    ref.invalidate(savedAccountsProvider);
+  }
+
+  Widget _savedAccountsSection(AppLocalizations l) {
+    final view = ref.watch(savedAccountsProvider).valueOrNull;
+    if (view == null || view.accounts.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l.savedAccountsTitle,
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        for (final a in view.accounts)
+          Card(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTokens.rSm)),
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              leading: SavedAccountAvatar(
+                  account: a, file: view.avatarFor(a), radius: 22),
+              title: Text(a.displayName,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text(a.serverLabel,
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: Icon(
+                  a.biometricAllowed
+                      ? Icons.fingerprint_rounded
+                      : Icons.lock_outline_rounded,
+                  color: Theme.of(context).colorScheme.primary),
+              onTap: () => switchAccount(context, ref, target: a),
+              onLongPress: () => _accountOptions(a),
+            ),
+          ),
+        const SizedBox(height: 20),
+        Text(l.orNewAccount, style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: 4),
+      ],
+    );
   }
 
   @override
@@ -151,6 +278,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       optionalHeaderKey3: _hk3.text.trim(),
       optionalHeaderValue3: _hv3.text.trim(),
       generatedApiTokenId: _generatedTokenId ?? '',
+      wifiServerUrl: base.wifiServerUrl.isEmpty && _prefillWifiUrl.isNotEmpty
+          ? _prefillWifiUrl
+          : null,
+      wifiSsid: base.wifiSsid.isEmpty && _prefillWifiSsid.isNotEmpty
+          ? _prefillWifiSsid
+          : null,
     );
   }
 
@@ -183,6 +316,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       try {
         LogManager.shared.log('🔌 Verbindungstest [$ver] startet…');
         await svc.testConnection();
+        // Gespeichertes Konto? Dann dessen Daten aktivieren statt neu
+        // einzurichten (fetchCurrentUser prüft dabei auch das Token).
+        if (await adoptSavedAccountAfterLogin(
+            settings: _buildSettings(version: ver), generatedTokenId: '')) {
+          return;
+        }
         await _loadStep2Data(svc, ver);
         return;
       } catch (e) {
@@ -220,9 +359,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         LogManager.shared.log('🔑 API-Token erzeugt (id=$id)');
         _tokenCtrl.text = token;
         _generatedTokenId = id;
+        // Anmeldung hat geklappt → dem System melden, damit Passwort-Manager
+        // das Speichern/Aktualisieren der Zugangsdaten anbieten.
+        TextInput.finishAutofillContext();
         // Neue Instanz MIT dem frischen Token — households/shopping lists
         // brauchen den Bearer aus dem normalen Interceptor.
         final authedSvc = ApiService(_buildSettings(version: ver));
+        if (await adoptSavedAccountAfterLogin(
+            settings: _buildSettings(version: ver), generatedTokenId: id)) {
+          return;
+        }
         await _loadStep2Data(authedSvc, ver);
         return;
       } catch (e) {
@@ -353,7 +499,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppTokens.rLg),
                 ),
               ),
             ),
@@ -390,9 +536,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 24),
+        _savedAccountsSection(l),
         Center(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppTokens.rXl),
             child: Image.asset('assets/images/app_icon.png',
                 width: 120, height: 120),
           ),
@@ -414,7 +561,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
                 : null,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTokens.rSm),
               side: selected
                   ? BorderSide(
                       color: Theme.of(context).colorScheme.primary, width: 1.5)
@@ -425,7 +572,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   Text(_flagEmoji(code), style: const TextStyle(fontSize: 24)),
               title: Text(_langName(code)),
               trailing: selected
-                  ? Icon(Icons.check_circle,
+                  ? Icon(Icons.check_circle_rounded,
                       color: Theme.of(context).colorScheme.primary)
                   : null,
               onTap: () => _selectLanguage(code),
@@ -492,7 +639,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         Card(
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.rSm),
             side: BorderSide(color: primary, width: 1.5),
           ),
           child: ListTile(
@@ -557,7 +704,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final logs = LogManager.shared.getLogs();
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dctx) => AlertDialog(
         title: Text(l.logsWithCount(LogManager.shared.count)),
         content: SizedBox(
           width: double.maxFinite,
@@ -572,12 +719,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           TextButton(
             onPressed: () {
               Clipboard.setData(ClipboardData(text: logs));
-              Navigator.pop(context);
+              Navigator.pop(dctx);
             },
             child: Text(l.copy),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dctx),
             child: Text(l.close),
           ),
         ],
@@ -587,7 +734,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   // ── Step 1: Connection ──────────────────────────────────────────────────
   Widget _buildConnectStep(AppLocalizations l) {
-    return Form(
+    return AutofillGroup(
+        child: Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -609,6 +757,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             ),
             keyboardType: TextInputType.url,
             autocorrect: false,
+            autofillHints: const [AutofillHints.url],
+            textInputAction: TextInputAction.next,
             onChanged: (_) => setState(() {}),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return l.required;
@@ -626,7 +776,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               padding: const EdgeInsets.only(top: 4),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber, size: 14, color: Colors.red),
+                  const Icon(Icons.warning_amber_rounded,
+                      size: 14, color: Colors.red),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(l.urlInvalidScheme,
@@ -688,6 +839,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 prefixIcon: const Icon(Icons.person_outline),
               ),
               autocorrect: false,
+              // Passwort-Manager / Schlüsselbund: Feld als Benutzername melden.
+              autofillHints: const [AutofillHints.username],
+              textInputAction: TextInputAction.next,
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? l.required : null,
             ),
@@ -711,6 +865,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               ),
               obscureText: _obscurePassword,
               autocorrect: false,
+              autofillHints: const [AutofillHints.password],
+              textInputAction: TextInputAction.done,
               validator: (v) => (v == null || v.isEmpty) ? l.required : null,
             ),
             const SizedBox(height: 6),
@@ -738,8 +894,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(l.optionalHeaders),
-            trailing: Switch(
+            trailing: Switch.adaptive(
               value: _showHeaders,
+              activeTrackColor: AppTokens.accent,
               onChanged: (v) => setState(() => _showHeaders = v),
             ),
           ),
@@ -753,8 +910,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           const SizedBox(height: 16),
 
           if (_error != null) ...[
-            Text(_error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(_error!, style: TextStyle(color: AppTokens.danger)),
             const SizedBox(height: 16),
           ],
 
@@ -771,7 +927,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   // ── Step 2: Haushalt + Einkaufsliste ────────────────────────────────────
@@ -871,7 +1027,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         margin: const EdgeInsets.symmetric(vertical: 4),
         color: selected ? primary.withValues(alpha: 0.12) : null,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTokens.rSm),
           side: selected
               ? BorderSide(color: primary, width: 1.5)
               : BorderSide.none,
@@ -880,7 +1036,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           leading: Icon(icon, color: selected ? primary : null),
           title: Text(title),
           subtitle: Text(body),
-          trailing: selected ? Icon(Icons.check_circle, color: primary) : null,
+          trailing: selected
+              ? Icon(Icons.check_circle_rounded, color: primary)
+              : null,
           onTap: () => _selectExactMode(exact),
         ),
       );
@@ -962,12 +1120,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         const SizedBox(height: 32),
         if (done)
           const Center(
-            child:
-                Icon(Icons.check_circle_rounded, size: 64, color: Colors.green),
+            child: Icon(Icons.check_circle_rounded,
+                size: 64, color: AppTokens.success),
           )
         else ...[
           ClipRRect(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppTokens.rXs),
             child: LinearProgressIndicator(
               // Vor dem ersten Batch (progress 0) unbestimmt animieren.
               value: progress > 0 ? progress : null,
@@ -1119,7 +1277,7 @@ class _SetupTipsCarouselState extends State<_SetupTipsCarousel> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTokens.rMd),
         border: Border.all(color: primary.withValues(alpha: 0.25)),
       ),
       child: Column(
@@ -1129,9 +1287,12 @@ class _SetupTipsCarouselState extends State<_SetupTipsCarousel> {
             children: [
               Icon(Icons.lightbulb_rounded, size: 18, color: primary),
               const SizedBox(width: 8),
-              Text(l.setupTipsHeader,
-                  style:
-                      TextStyle(fontWeight: FontWeight.w700, color: primary)),
+              Flexible(
+                  child: Text(l.setupTipsHeader,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, color: primary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis)),
             ],
           ),
           const SizedBox(height: 10),
@@ -1196,7 +1357,7 @@ class _InfoBox extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(

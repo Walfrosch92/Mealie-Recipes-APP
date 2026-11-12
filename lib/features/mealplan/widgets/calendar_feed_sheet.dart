@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/sheet_title.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -12,9 +13,14 @@ import '../../../core/api/api_service.dart';
 import '../../../core/providers/permissions_provider.dart';
 import '../../../core/utils/iana_timezone.dart';
 import '../../../core/utils/meal_types.dart';
+import '../../../core/utils/mealie_locale.dart';
+import '../../../core/utils/mealie_version.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../core/utils/platform_features.dart';
+import '../../../shared/widgets/collapsible_hint.dart';
 
 // ---------------------------------------------------------------------------
 // Mahlzeitplan als Kalender abonnieren (Mealie ≥ 3.29, iCal-Feed).
@@ -38,11 +44,16 @@ Future<void> showCalendarFeedSheet(BuildContext context) =>
       useRootNavigator: true,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: context.appCard,
       builder: (_) => const _CalendarFeedSheet(),
     );
 
 const _kOptionsKey = 'mealplan_ical_options';
+
+// Mealie-Standardwerte (mealplan_ical_service.py) — nur Abweichungen kommen
+// in den Link, wie in der Webapp.
+const _kDefaultDuration = 60;
+const _kDefaultSummary = r'${type}: ${title}';
+const _kDefaultDescription = '\${note}\n\n\${url}';
 
 /// Vorbelegte Uhrzeiten (Optionen ohne `v: 2` stammen von vor der
 /// Vorbelegung und bekommen sie einmalig dazu).
@@ -56,8 +67,7 @@ class _CalendarFeedSheet extends ConsumerStatefulWidget {
   const _CalendarFeedSheet();
 
   @override
-  ConsumerState<_CalendarFeedSheet> createState() =>
-      _CalendarFeedSheetState();
+  ConsumerState<_CalendarFeedSheet> createState() => _CalendarFeedSheetState();
 }
 
 class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
@@ -74,6 +84,19 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
   /// als ganztägiger Termin.
   final Map<String, String> _times = {..._kDefaultTimes};
 
+  // Mealie ≥ 3.30: Termindauer (Minuten) und Vorlagen für Titel/Beschreibung.
+  final _durationCtrl = TextEditingController(text: '$_kDefaultDuration');
+  final _summaryCtrl = TextEditingController(text: _kDefaultSummary);
+  final _descriptionCtrl = TextEditingController(text: _kDefaultDescription);
+
+  @override
+  void dispose() {
+    _durationCtrl.dispose();
+    _summaryCtrl.dispose();
+    _descriptionCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -85,8 +108,8 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
 
   Future<void> _loadOptions() async {
     try {
-      final raw = (await SharedPreferences.getInstance())
-          .getString(_kOptionsKey);
+      final raw =
+          (await SharedPreferences.getInstance()).getString(_kOptionsKey);
       if (raw == null) return;
       final m = jsonDecode(raw) as Map<String, dynamic>;
       final types = (m['types'] as List?)?.whereType<String>().toSet();
@@ -96,6 +119,13 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
           _types = types.where(kMealTypes.contains).toSet();
         }
         _includeNotes = m['includeNotes'] as bool? ?? true;
+        if (m['duration'] is num) {
+          _durationCtrl.text = '${(m['duration'] as num).toInt()}';
+        }
+        if (m['summary'] is String) _summaryCtrl.text = m['summary'] as String;
+        if (m['description'] is String) {
+          _descriptionCtrl.text = m['description'] as String;
+        }
         _times
           ..clear()
           ..addAll(m['v'] == 2 ? const {} : _kDefaultTimes)
@@ -114,6 +144,9 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
             'types': _types.toList(),
             'includeNotes': _includeNotes,
             'times': _times,
+            'duration': int.tryParse(_durationCtrl.text.trim()),
+            'summary': _summaryCtrl.text,
+            'description': _descriptionCtrl.text,
           }));
     } catch (_) {}
   }
@@ -176,7 +209,10 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
     final query = <String, List<String>>{};
     // Alle Mahlzeiten = Parameter weglassen (wie die Webapp).
     if (_types.isNotEmpty && _types.length < kMealTypes.length) {
-      query['types'] = [for (final t in kMealTypes) if (_types.contains(t)) t];
+      query['types'] = [
+        for (final t in kMealTypes)
+          if (_types.contains(t)) t
+      ];
     }
     if (!_includeNotes) query['includeNotes'] = ['false'];
     var hasTimes = false;
@@ -190,6 +226,31 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
     if (hasTimes) {
       final zone = guessIanaTimeZone();
       if (zone != null) query['tz'] = [zone];
+    }
+    if (ref.read(mealie330Provider)) {
+      // Sprache der Mahlzeiten-Namen im Kalender = App-Sprache (Kalender-
+      // Apps schicken keine Sprache mit).
+      query['lang'] = [
+        mealieLocaleFor(
+            ref.read(settingsProvider).valueOrNull?.selectedLanguage)
+      ];
+      final duration = int.tryParse(_durationCtrl.text.trim());
+      if (hasTimes &&
+          duration != null &&
+          duration >= 1 &&
+          duration <= 1440 &&
+          duration != _kDefaultDuration) {
+        query['duration'] = ['$duration'];
+      }
+      final summary = _summaryCtrl.text;
+      if (summary.trim().isNotEmpty && summary != _kDefaultSummary) {
+        query['summary'] = [summary];
+      }
+      final description = _descriptionCtrl.text;
+      if (description.trim().isNotEmpty &&
+          description != _kDefaultDescription) {
+        query['description'] = [description];
+      }
     }
     return ref.read(apiServiceProvider).mealplanIcalFeedUrl(_token!, query);
   }
@@ -209,8 +270,8 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
     if (ok) return;
     try {
       await launchUrl(
-          Uri.https('calendar.google.com', '/calendar/r',
-              {'cid': webcal.toString()}),
+          Uri.https(
+              'calendar.google.com', '/calendar/r', {'cid': webcal.toString()}),
           // Desktop (Windows/macOS): Standardbrowser — einen In-App-
           // Browser gibt es dort nicht.
           mode: PlatformFeatures.isMobile
@@ -253,7 +314,7 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
               minute: int.tryParse(parts[1]) ?? 0)
           : _defaultTime(type),
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() => _times[type] =
         '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
     _saveOptions();
@@ -276,16 +337,13 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
 
     final children = <Widget>[
       const Center(child: SheetHandle()),
-      Text(l.calendarFeedTitle,
-          style: TextStyle(
-              fontFamily: 'PlusJakartaSans',
-              color: context.appFg,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3)),
+      SheetTitle(l.calendarFeedTitle),
       const SizedBox(height: 8),
-      Text(l.calendarFeedDescription,
-          style: TextStyle(color: context.appFgSub, fontSize: 13, height: 1.4)),
+      CollapsibleHint(
+          text: l.calendarFeedDescription,
+          prefsKey: 'hint_calendar_feed_collapsed',
+          icon: Icons.event_rounded,
+          dense: true),
       const SizedBox(height: 16),
     ];
 
@@ -307,15 +365,18 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
       ]);
     } else if (_token == null) {
       children.addAll([
-        Text(canManage ? l.calendarFeedOff : '${l.calendarFeedOff} ${l.calendarFeedAskManager}',
+        Text(
+            canManage
+                ? l.calendarFeedOff
+                : '${l.calendarFeedOff} ${l.calendarFeedAskManager}',
             style: TextStyle(color: context.appFg, fontSize: 14)),
         if (canManage) ...[
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: _busy
                 ? null
-                : () => _run(
-                    ref.read(apiServiceProvider).createMealplanIcalToken),
+                : () =>
+                    _run(ref.read(apiServiceProvider).createMealplanIcalToken),
             icon: const Icon(Icons.event_available_rounded),
             label: Text(l.calendarFeedTurnOn),
           ),
@@ -338,20 +399,23 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
   }
 
   List<Widget> _feedOptions(AppLocalizations l, bool canManage) {
-    final selected = [for (final t in kMealTypes) if (_types.contains(t)) t];
+    final selected = [
+      for (final t in kMealTypes)
+        if (_types.contains(t)) t
+    ];
     return [
       // Mahlzeiten
       Text(l.calendarFeedMealTypes,
-          style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+          style: TextStyle(color: context.appFgSub, fontSize: 13)),
       const SizedBox(height: 6),
       Wrap(spacing: 6, runSpacing: 6, children: [
         for (final t in kMealTypes)
-          FilterChip(
-            label: Text(mealTypeLabel(t, l)),
+          AppChip(
+            label: mealTypeLabel(t, l),
+            icon: _types.contains(t) ? Icons.check_rounded : null,
             selected: _types.contains(t),
-            selectedColor: AppTokens.accent.withValues(alpha: 0.25),
-            checkmarkColor: AppTokens.accentDeep,
-            onSelected: (on) {
+            onTap: () {
+              final on = !_types.contains(t);
               // Mindestens eine Mahlzeit bleibt gewählt.
               if (!on && _types.length == 1) return;
               setState(() => on ? _types.add(t) : _types.remove(t));
@@ -359,8 +423,9 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
             },
           ),
       ]),
-      SwitchListTile(
+      SwitchListTile.adaptive(
         contentPadding: EdgeInsets.zero,
+        activeTrackColor: AppTokens.accent,
         title: Text(l.calendarFeedIncludeNotes),
         value: _includeNotes,
         onChanged: (v) {
@@ -370,17 +435,19 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
       ),
       // Uhrzeiten
       Text(l.calendarFeedTimesHint,
-          style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+          style: TextStyle(color: context.appFgSub, fontSize: 13)),
       const SizedBox(height: 6),
       Wrap(spacing: 6, runSpacing: 6, children: [
         for (final t in selected)
-          InputChip(
-            avatar: const Icon(Icons.schedule_rounded, size: 16),
-            label: Text(_times[t] == null
+          AppChip(
+            icon: Icons.schedule_rounded,
+            label: _times[t] == null
                 ? mealTypeLabel(t, l)
-                : '${mealTypeLabel(t, l)} · ${_times[t]}'),
-            onPressed: () => _pickTime(t),
-            onDeleted: _times[t] == null
+                : '${mealTypeLabel(t, l)} · ${_times[t]}',
+            selected: _times[t] != null,
+            onTap: () => _pickTime(t),
+            removeTooltip: l.delete,
+            onRemove: _times[t] == null
                 ? null
                 : () {
                     setState(() => _times.remove(t));
@@ -388,6 +455,76 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
                   },
           ),
       ]),
+      // ── Mealie ≥ 3.30: Termindauer + eigene Vorlagen ─────────────────
+      if (ref.watch(mealie330Provider)) ...[
+        if (_types.any((t) => (_times[t] ?? '').isNotEmpty)) ...[
+          const SizedBox(height: 14),
+          TextField(
+            controller: _durationCtrl,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: l.calendarFeedDuration,
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (_) {
+              setState(() {});
+              _saveOptions();
+            },
+          ),
+        ],
+        const SizedBox(height: 6),
+        Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(bottom: 8),
+            title: Text(l.calendarFeedEventDetails,
+                style: TextStyle(
+                    color: context.appFg,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600)),
+            children: [
+              Text(
+                  l.calendarFeedEventDetailsHint(
+                      r'${type}, ${title}, ${note}, ${url}'),
+                  style: TextStyle(color: context.appFgSub, fontSize: 13)),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _summaryCtrl,
+                decoration: InputDecoration(
+                  labelText: l.calendarFeedEventTitle,
+                  isDense: true,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (_) {
+                  setState(() {});
+                  _saveOptions();
+                },
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _descriptionCtrl,
+                minLines: 2,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  labelText: l.calendarFeedEventDescription,
+                  isDense: true,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (_) {
+                  setState(() {});
+                  _saveOptions();
+                },
+              ),
+              const SizedBox(height: 6),
+              Text(l.calendarFeedEventDetailsWarning,
+                  style: TextStyle(color: context.appFgTertiary, fontSize: 12)),
+            ],
+          ),
+        ),
+      ],
       const SizedBox(height: 18),
       // Abonnieren — öffnet den Standard-Kalender.
       FilledButton.icon(
@@ -421,7 +558,7 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
       if (canManage) ...[
         const SizedBox(height: 18),
         Text(l.calendarFeedResetHint,
-            style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+            style: TextStyle(color: context.appFgSub, fontSize: 13)),
         const SizedBox(height: 6),
         Row(children: [
           Expanded(
@@ -429,13 +566,12 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
               onPressed: _busy
                   ? null
                   : () async {
-                      if (!await _confirm(l.calendarFeedResetHint,
-                          l.calendarFeedReset)) {
+                      if (!await _confirm(
+                          l.calendarFeedResetHint, l.calendarFeedReset)) {
                         return;
                       }
-                      await _run(ref
-                          .read(apiServiceProvider)
-                          .createMealplanIcalToken);
+                      await _run(
+                          ref.read(apiServiceProvider).createMealplanIcalToken);
                     },
               icon: const Icon(Icons.refresh_rounded),
               label: Text(l.calendarFeedReset),
@@ -447,8 +583,8 @@ class _CalendarFeedSheetState extends ConsumerState<_CalendarFeedSheet> {
               onPressed: _busy
                   ? null
                   : () async {
-                      if (!await _confirm(l.calendarFeedResetHint,
-                          l.calendarFeedTurnOff)) {
+                      if (!await _confirm(
+                          l.calendarFeedResetHint, l.calendarFeedTurnOff)) {
                         return;
                       }
                       await _run(() async {

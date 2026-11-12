@@ -5,6 +5,7 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/providers/permissions_provider.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/async_action_button.dart';
 import '../widgets/tool_widgets.dart';
 
@@ -219,14 +220,14 @@ class _DebugScreenState extends ConsumerState<DebugScreen> {
         ]),
         const SizedBox(height: 10),
         Text(l.debugTryExample,
-            style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+            style: TextStyle(color: context.appFgSub, fontSize: 13)),
         const SizedBox(height: 6),
         Wrap(
           spacing: 6,
           runSpacing: 6,
           children: [
             for (final e in _examples)
-              ActionChip(label: Text(e), onPressed: () => _parse(e)),
+              AppChip(label: e, onTap: () => _parse(e)),
           ],
         ),
         if (parsed != null && ing is Map) ...[

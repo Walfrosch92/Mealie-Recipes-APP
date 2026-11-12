@@ -145,9 +145,8 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         scrollable: true,
-        backgroundColor: context.appCard,
-        title: Text(l.duplicatesMergeTitle,
-            style: TextStyle(color: context.appFg)),
+        backgroundColor: ctx.appCard,
+        title: Text(l.duplicatesMergeTitle, style: TextStyle(color: ctx.appFg)),
         content: Text(
             [
               l.duplicatesMergeMessage(keep.name, remove.length),
@@ -155,14 +154,13 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
               if (!canSurelyEditRecipe(ref.read(userPermissionsProvider), keep))
                 l.duplicatesMergeNoEditHint,
             ].join('\n\n'),
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: ctx.appFgSub)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(l.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
+            style: AppTokens.dangerButton,
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l.duplicatesMerge),
           ),
@@ -196,18 +194,16 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         scrollable: true,
-        backgroundColor: context.appCard,
-        title:
-            Text(l.confirmDeleteTitle, style: TextStyle(color: context.appFg)),
+        backgroundColor: ctx.appCard,
+        title: Text(l.confirmDeleteTitle, style: TextStyle(color: ctx.appFg)),
         content: Text('${r.name}\n\n${l.confirmDeleteMessage}',
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: ctx.appFgSub)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(l.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
+            style: AppTokens.dangerButton,
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l.delete),
           ),
@@ -450,12 +446,14 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
         padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
         child: Row(children: [
           Icon(
-            kept ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+            kept
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
             color: kept ? AppTokens.accent : context.appFgTertiary,
           ),
           const SizedBox(width: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTokens.rXs),
             child: SizedBox(
               width: 52,
               height: 52,
@@ -463,7 +461,6 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                 recipeId: r.id,
                 imageUrl:
                     '$baseUrl/api/media/recipes/${r.id}/images/original.webp',
-                httpHeaders: {'Authorization': 'Bearer $token'},
                 placeholder: (_) => Container(
                   color: context.appSurface2,
                   child: Icon(Icons.restaurant_menu_rounded,
@@ -492,9 +489,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                 const SizedBox(height: 2),
                 Text(kept ? l.duplicatesKeeps : l.duplicatesWillBeDeleted,
                     style: TextStyle(
-                        color: kept
-                            ? AppTokens.accentDeep
-                            : Theme.of(context).colorScheme.error,
+                        color: kept ? AppTokens.accentDeep : AppTokens.danger,
                         fontSize: 12,
                         fontWeight: FontWeight.w600)),
               ],

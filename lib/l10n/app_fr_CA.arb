@@ -33,11 +33,17 @@
   "finderIncludeToolsOnHand": "Inclure les outils à disposition",
   "finderMaxMissingTools": "Outils manquants max",
   "finderSelectedTools": "Outils sélectionnés",
-  "addIngredientsSkippedOnHand": "{count, plural, =1{Ajouté à votre liste d'épicerie – 1 ingrédient disponible a été ignoré.} other{Ajouté à votre liste d'épicerie – {count} ingrédients disponibles ont été ignorés.}}",
   "shoppingReminderNotificationsOff": "Les notifications de Mealie Recipes sont désactivées — sans elles, le rappel d'épicerie ne peut pas s'afficher. Autorisez-les dans les réglages.",
   "shoppingReminderInactiveHint": "Le rappel d'épicerie ne peut pas fonctionner : réglez l'accès à la position sur « Toujours » et autorisez les notifications.",
   "notifierShoppingListEvents": "Événements de la liste d'épicerie",
   "duplicatesMergeMessage": "« {name} » est conservée. {count, plural, =1{1 autre recette sera supprimée} other{{count} autres recettes seront supprimées}}.\n\nCatégories, mots-clés, outils, notes, repas planifiés de votre foyer et votre favori sont repris. Les commentaires, l’historique et les pièces jointes des recettes supprimées sont perdus.",
   "duplicatesMergeNoEditHint": "Vous ne pouvez pas modifier la recette conservée (recette d'un autre utilisateur verrouillée ou d'un autre foyer). Les catégories, mots-clés, outils et notes ne sont donc pas repris ; seuls les repas planifiés et votre favori le sont.",
-  "yieldLabel": "Rendement"
+  "yieldLabel": "Rendement",
+  "recipeMatchToShopping": "Ingrédients sur la liste d'épicerie",
+  "recipeMatchNoList": "Choisis d'abord une liste d'épicerie.",
+  "weekPlannerThenShopping": "Ensuite choisir les ingrédients pour la liste d'épicerie",
+  "weekPlannerDinners": "Soupers",
+  "weekPlannerLunches": "Dîners",
+  "globalSearchIntro": "Recherche des recettes, des articles de la liste d'épicerie, des aliments et des livres de recettes – ainsi que des fonctions et réglages de l'app, p. ex. « liste ».",
+  "globalSearchAddToList": "Ajouter « {text} » à la liste d'épicerie"
 }

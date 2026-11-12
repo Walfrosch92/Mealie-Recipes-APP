@@ -23,8 +23,8 @@ String? guessIanaTimeZone() {
     DateTime(now.year, 7, 15, 12),
     now,
   ];
-  bool matches(tz.Location loc) => probes.every((d) =>
-      loc.timeZone(d.millisecondsSinceEpoch).offset == d.timeZoneOffset);
+  bool matches(tz.Location loc) => probes.every(
+      (d) => loc.timeZone(d.millisecondsSinceEpoch).offset == d.timeZoneOffset);
 
   final abbr = now.timeZoneName;
   String? fallback;

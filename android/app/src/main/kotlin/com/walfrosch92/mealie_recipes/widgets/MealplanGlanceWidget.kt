@@ -81,7 +81,13 @@ class MealplanGlanceWidget : GlanceAppWidget() {
         val todayMeals = WidgetSharedStore.entriesForDateString(todayStr, all)
         val tomorrowMeals = WidgetSharedStore.entriesForDateString(tomorrowStr, all)
 
-        val fmtDate = SimpleDateFormat("EEE, d. MMM", Locale.getDefault())
+        // Datum in der App-Sprache mit landesüblichem Muster (vorher fest
+        // „EEE, d. MMM" in Systemsprache → z. B. „Mon, 26. Oct").
+        val dateLocale = Locale.forLanguageTag(lang.replace('_', '-'))
+        val fmtDate = SimpleDateFormat(
+            android.text.format.DateFormat.getBestDateTimePattern(dateLocale, "EEEdMMM"),
+            dateLocale,
+        )
 
         provideContent {
             GlanceTheme {

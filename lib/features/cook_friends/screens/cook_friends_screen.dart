@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/app_search_field.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,9 +79,9 @@ class _CookFriendsScreenState extends ConsumerState<CookFriendsScreen> {
     final id = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: context.appCard,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTokens.rXl)),
       ),
       builder: (_) => const _HostRecipePicker(),
     );
@@ -252,7 +253,7 @@ class _CookFriendsScreenState extends ConsumerState<CookFriendsScreen> {
       children: [
         if (cfState.error != null) ...[
           Text(_errorText(l, cfState.error!),
-              style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              style: TextStyle(color: AppTokens.danger)),
           const SizedBox(height: 16),
         ],
         // Host (nur wenn KEIN Gastmodus)
@@ -277,10 +278,10 @@ class _CookFriendsScreenState extends ConsumerState<CookFriendsScreen> {
                 const SizedBox(height: 4),
                 // Host entscheidet, ob Gäste die geteilten Rezepte auf ihrem
                 // eigenen Server speichern dürfen.
-                SwitchListTile(
+                SwitchListTile.adaptive(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  activeThumbColor: AppTokens.accent,
+                  activeTrackColor: AppTokens.accent,
                   value: _allowGuestSave,
                   onChanged: (v) => setState(() => _allowGuestSave = v),
                   title: Text(l.allowGuestSaveRecipes,
@@ -509,7 +510,7 @@ class _IconBadge extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
         gradient: AppTokens.accentGradient,
         boxShadow: context.appAccentGlow,
       ),
@@ -569,30 +570,12 @@ class _HostRecipePickerState extends ConsumerState<_HostRecipePicker> {
                     letterSpacing: -0.3)),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: TextField(
+              child: AppSearchField(
                 controller: _ctrl,
                 autofocus: true,
-                style: TextStyle(color: context.appFg),
+                hintText: l.searchRecipe,
+                fillColor: context.appSurface2,
                 onChanged: (v) => setState(() => _q = v),
-                decoration: InputDecoration(
-                  hintText: l.searchRecipe,
-                  hintStyle: TextStyle(color: context.appFgTertiary),
-                  prefixIcon:
-                      Icon(Icons.search_rounded, color: context.appFgSub),
-                  filled: true,
-                  fillColor: context.appSurface2,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTokens.rSm),
-                    borderSide: BorderSide(color: context.appSeparator),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTokens.rSm),
-                    borderSide:
-                        const BorderSide(color: AppTokens.accent, width: 1.5),
-                  ),
-                ),
               ),
             ),
             Expanded(
@@ -609,7 +592,8 @@ class _HostRecipePickerState extends ConsumerState<_HostRecipePicker> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(AppTokens.rSm),
                               color: AppTokens.accent.withValues(alpha: 0.12),
                             ),
                             child: const Icon(Icons.restaurant_menu_rounded,

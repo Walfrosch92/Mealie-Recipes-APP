@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/app_search_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -255,9 +256,10 @@ class _RecipeDataScreenState extends ConsumerState<RecipeDataScreen> {
       ...ref.watch(recipesProvider).valueOrNull ?? const <RecipeDetail>[]
     ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     final terms = searchTerms(_query);
-    final shown = all
-        .where((r) => terms.every(normalizeForSearch(r.name).contains))
-        .toList();
+    final shown = rankBySearch(
+        all.where((r) => terms.every(normalizeForSearch(r.name).contains)),
+        terms,
+        (r) => r.name);
     // Ausgewählte, die es nicht mehr gibt (gelöscht), stillschweigend weg.
     _selected.removeWhere((id) => !all.any((r) => r.id == id));
     final sel = _selectedRecipes(all);
@@ -316,20 +318,9 @@ class _RecipeDataScreenState extends ConsumerState<RecipeDataScreen> {
             child: Text(allShownSelected ? l.deselectAllAction : l.selectAll),
           ),
           children: [
-            TextField(
+            AppSearchField(
+              fillColor: context.appSurface2,
               onChanged: (v) => setState(() => _query = v),
-              style: TextStyle(color: context.appFg),
-              decoration: InputDecoration(
-                hintText: l.search,
-                isDense: true,
-                prefixIcon: Icon(Icons.search_rounded, color: context.appFgSub),
-                filled: true,
-                fillColor: context.appSurface2,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTokens.rSm),
-                  borderSide: BorderSide.none,
-                ),
-              ),
             ),
             const SizedBox(height: 8),
             if (all.isEmpty)
@@ -365,8 +356,8 @@ class _RecipeDataScreenState extends ConsumerState<RecipeDataScreen> {
                           ].join('  '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              color: context.appFgSub, fontSize: 11.5)),
+                          style:
+                              TextStyle(color: context.appFgSub, fontSize: 12)),
                     );
                   },
                 ),
@@ -398,8 +389,7 @@ class _RecipeDataScreenState extends ConsumerState<RecipeDataScreen> {
                       style: TextStyle(color: context.appFg)),
                   subtitle: Text(
                       '${e['size'] ?? ''} · ${l.recipeDataExportExpires(formatToolDate(context, e['expires']))}',
-                      style:
-                          TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                      style: TextStyle(color: context.appFgSub, fontSize: 13)),
                   trailing: IconButton(
                     tooltip: l.downloadAction,
                     icon: const Icon(Icons.download_rounded),

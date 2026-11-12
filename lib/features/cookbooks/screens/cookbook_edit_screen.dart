@@ -91,16 +91,15 @@ class _CookbookEditScreenState extends ConsumerState<CookbookEditScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         scrollable: true,
-        backgroundColor: context.appCard,
-        content: Text(l.discardChangesConfirm,
-            style: TextStyle(color: context.appFg)),
+        backgroundColor: ctx.appCard,
+        content:
+            Text(l.discardChangesConfirm, style: TextStyle(color: ctx.appFg)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(l.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
+            style: AppTokens.dangerButton,
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l.discardChanges),
           ),
@@ -232,9 +231,7 @@ class _CookbookEditScreenState extends ConsumerState<CookbookEditScreen> {
                 ),
                 const SizedBox(height: 16),
                 if (_error != null) ...[
-                  Text(_error!,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.error)),
+                  Text(_error!, style: TextStyle(color: AppTokens.danger)),
                   const SizedBox(height: 16),
                 ],
                 AsyncActionButton(

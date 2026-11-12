@@ -4,7 +4,25 @@
 import 'shopping_reminder_location.dart';
 
 class AppSettings {
+  /// Adresse, über die die App GERADE mit Mealie spricht — alle API-, Bild-
+  /// und Link-Aufrufe lesen dieses Feld. Normalerweise die eingetragene
+  /// Server-Adresse; ist eine WLAN-Adresse eingerichtet und das Handy im
+  /// hinterlegten WLAN, setzt der [SettingsNotifier] hier die WLAN-Adresse
+  /// ein (nur im Speicher, gespeichert wird immer [primaryServerUrl]).
   final String serverUrl;
+
+  /// Die vom Nutzer eingetragene (Standard-)Adresse, falls [serverUrl] gerade
+  /// auf die WLAN-Adresse umgestellt ist. Leer = identisch mit [serverUrl].
+  /// Nicht direkt lesen, sondern über [primaryServerUrl].
+  final String standardServerUrl;
+
+  /// Alternative Adresse desselben Servers für zu Hause, z. B.
+  /// `http://192.168.1.10:9000` — gilt, solange das Handy mit [wifiSsid]
+  /// verbunden ist. Leer = keine Umschaltung.
+  final String wifiServerUrl;
+
+  /// Name (SSID) des WLANs, in dem [wifiServerUrl] gilt.
+  final String wifiSsid;
   final String apiToken;
   final String householdId;
   final String shoppingListId;
@@ -27,7 +45,39 @@ class AppSettings {
   /// gewählter Wert (z. B. „uk", weil die Oberfläche das nicht anbietet)
   /// bleibt dagegen bestehen. Auflösung über [effectiveImportLanguage].
   final String importLanguage;
+
+  /// KI-Import: Rezept in [effectiveImportLanguage] übersetzen lassen. Aus =
+  /// `translateLanguage` wird nicht mitgeschickt, Mealie spart sich den
+  /// Übersetzungs-KI-Aufruf (#45).
+  final bool importTranslate;
+
+  /// KI-Import: Schlagworte/Kategorien/Utensilien. 'create' = zuordnen und
+  /// fehlende anlegen, 'existing' = nur vorhandene zuordnen, 'none' = keine
+  /// (Mealie ordnet trotzdem zu, die App entfernt sie danach wieder — die
+  /// API kennt keinen Schalter, der den Schritt ganz abstellt) (#45).
+  final String importOrganizers;
+
+  /// Foto/PDF-Import über /create/ai/stream (Live-Fortschritt, Verbindung
+  /// bleibt offen). Aus = wie bisher eine Anfrage an /create/ai.
+  final bool importStreamPhotos;
+
+  /// Video-Links (Instagram, TikTok, YouTube …) automatisch mit KI
+  /// importieren (`/create/ai/stream`: gründlich, mehrere KI-Schritte inkl.
+  /// Übersetzung/Kategorien) oder schnell über `/create/url` (Mealie
+  /// transkribiert und baut das Rezept mit EINER KI-Anfrage, Issue #45).
+  /// Legt nur die Vorbelegung des KI-Schalters fest.
+  final bool importVideoAi;
+
+  /// Voreinstellung des KI-Imports (Zahnrad, #45): 'fast' (so wenig
+  /// KI-Schritte wie möglich), 'thorough' (voller KI-Import, Standard) oder
+  /// 'custom' (die einzelnen Schalter oben gelten). Die Rohwerte
+  /// importTranslate/-Organizers/-VideoAi/-StreamPhotos sind nur bei
+  /// 'custom' wirksam — gelesen wird immer über die `use…`-Getter.
+  final String importPreset;
   final bool showRecipeImages;
+
+  /// Tablets im Querformat: Seitenleiste links statt Tab-Leiste unten.
+  final bool tabletSidebar;
   final bool enableLogging;
   final bool isBiometricLockEnabled;
   final bool enableCriticalAlerts;
@@ -103,6 +153,9 @@ class AppSettings {
 
   const AppSettings({
     this.serverUrl = '',
+    this.standardServerUrl = '',
+    this.wifiServerUrl = '',
+    this.wifiSsid = '',
     this.apiToken = '',
     this.householdId = 'Family',
     this.shoppingListId = '',
@@ -110,7 +163,13 @@ class AppSettings {
     this.apiVersion = 'v2',
     this.selectedLanguage = 'en',
     this.importLanguage = '',
+    this.importTranslate = true,
+    this.importOrganizers = 'create',
+    this.importStreamPhotos = true,
+    this.importVideoAi = true,
+    this.importPreset = 'thorough',
     this.showRecipeImages = true,
+    this.tabletSidebar = true,
     this.enableLogging = false,
     this.isBiometricLockEnabled = false,
     this.enableCriticalAlerts = false,
@@ -146,7 +205,61 @@ class AppSettings {
       ? selectedLanguage.replaceAll('_', '-')
       : importLanguage;
 
+  /// `translateLanguage` für den KI-Import, `null` wenn nicht übersetzt
+  /// werden soll.
+  String? get importTranslateLanguage =>
+      useImportTranslate ? effectiveImportLanguage : null;
+
+  // ── Wirksame Import-Optionen je Voreinstellung ──────────────────────────
+  // Schnell: Video-Links über /create/url (EINE KI-Anfrage), keine
+  // Übersetzung, nur vorhandene Kategorien/Tags (der Zuordnungs-Schritt
+  // selbst lässt sich über die API nicht abstellen, legt so aber nichts an).
+  // Gründlich: voller KI-Import inkl. Übersetzung und neuen Kategorien/Tags.
+
+  bool get useImportTranslate => switch (importPreset) {
+        'fast' => false,
+        'custom' => importTranslate,
+        _ => true,
+      };
+
+  String get useImportOrganizers => switch (importPreset) {
+        'fast' => 'existing',
+        'custom' => importOrganizers,
+        _ => 'create',
+      };
+
+  bool get useImportVideoAi => switch (importPreset) {
+        'fast' => false,
+        'custom' => importVideoAi,
+        _ => true,
+      };
+
+  /// Foto/PDF mit Live-Fortschritt — kostet keine Zeit, daher in beiden
+  /// Voreinstellungen an; abschaltbar nur unter „Individuell".
+  bool get useImportStreamPhotos =>
+      importPreset == 'custom' ? importStreamPhotos : true;
+
   bool get isConfigured => serverUrl.isNotEmpty && apiToken.isNotEmpty;
+
+  /// Eingetragene Server-Adresse (unabhängig von der WLAN-Umschaltung) —
+  /// das, was gespeichert und in den Einstellungen angezeigt wird.
+  String get primaryServerUrl =>
+      standardServerUrl.isNotEmpty ? standardServerUrl : serverUrl;
+
+  /// WLAN-Umschaltung vollständig eingerichtet?
+  bool get hasWifiServer => wifiServerUrl.isNotEmpty && wifiSsid.isNotEmpty;
+
+  /// Läuft die App gerade über die WLAN-Adresse?
+  bool get usingWifiServer =>
+      hasWifiServer &&
+      serverUrl == wifiServerUrl &&
+      serverUrl != primaryServerUrl;
+
+  /// Welche Adresse gilt für das WLAN [ssid] (`null` = kein/unbekanntes WLAN)?
+  String serverUrlForSsid(String? ssid) =>
+      hasWifiServer && ssid != null && ssid == wifiSsid
+          ? wifiServerUrl
+          : primaryServerUrl;
   bool get setupComplete => isConfigured || isGuestMode;
 
   Map<String, String> get optionalHeaders {
@@ -164,8 +277,14 @@ class AppSettings {
     return headers;
   }
 
+  /// [serverUrl] setzen heißt „Nutzer trägt eine neue Adresse ein" — die
+  /// gilt dann auch als Standardadresse. Nur die WLAN-Umschaltung im
+  /// [SettingsNotifier] gibt [standardServerUrl] ausdrücklich mit.
   AppSettings copyWith({
     String? serverUrl,
+    String? standardServerUrl,
+    String? wifiServerUrl,
+    String? wifiSsid,
     String? apiToken,
     String? householdId,
     String? shoppingListId,
@@ -173,7 +292,13 @@ class AppSettings {
     String? apiVersion,
     String? selectedLanguage,
     String? importLanguage,
+    bool? importTranslate,
+    String? importOrganizers,
+    bool? importStreamPhotos,
+    bool? importVideoAi,
+    String? importPreset,
     bool? showRecipeImages,
+    bool? tabletSidebar,
     bool? enableLogging,
     bool? isBiometricLockEnabled,
     bool? enableCriticalAlerts,
@@ -202,6 +327,10 @@ class AppSettings {
   }) {
     return AppSettings(
       serverUrl: serverUrl ?? this.serverUrl,
+      standardServerUrl: standardServerUrl ??
+          (serverUrl != null ? '' : this.standardServerUrl),
+      wifiServerUrl: wifiServerUrl ?? this.wifiServerUrl,
+      wifiSsid: wifiSsid ?? this.wifiSsid,
       apiToken: apiToken ?? this.apiToken,
       householdId: householdId ?? this.householdId,
       shoppingListId: shoppingListId ?? this.shoppingListId,
@@ -209,7 +338,13 @@ class AppSettings {
       apiVersion: apiVersion ?? this.apiVersion,
       selectedLanguage: selectedLanguage ?? this.selectedLanguage,
       importLanguage: importLanguage ?? this.importLanguage,
+      importTranslate: importTranslate ?? this.importTranslate,
+      importOrganizers: importOrganizers ?? this.importOrganizers,
+      importStreamPhotos: importStreamPhotos ?? this.importStreamPhotos,
+      importVideoAi: importVideoAi ?? this.importVideoAi,
+      importPreset: importPreset ?? this.importPreset,
       showRecipeImages: showRecipeImages ?? this.showRecipeImages,
+      tabletSidebar: tabletSidebar ?? this.tabletSidebar,
       enableLogging: enableLogging ?? this.enableLogging,
       isBiometricLockEnabled:
           isBiometricLockEnabled ?? this.isBiometricLockEnabled,

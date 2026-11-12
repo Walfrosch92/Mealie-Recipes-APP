@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'core/desktop/desktop_sidebar.dart';
+import 'shared/widgets/app_back_button.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import 'core/providers/settings_provider.dart';
+import 'core/services/native_appearance.dart';
 import 'core/utils/app_l10n.dart';
 import 'core/utils/platform_features.dart';
 import 'core/services/deep_link_handler.dart';
@@ -19,6 +22,7 @@ import 'features/auth/screens/biometric_lock_screen.dart';
 import 'features/recipe_send/screens/pending_recipes_sheet.dart';
 import 'features/recipe_send/services/recipe_send_service.dart';
 import 'features/auth/screens/setup_screen.dart';
+import 'features/auth/widgets/account_tab.dart';
 import 'features/cooking_mode/providers/cooking_session_provider.dart';
 import 'features/timer/services/notification_service.dart';
 import 'features/home/screens/home_screen.dart';
@@ -33,12 +37,18 @@ import 'features/shopping_list/screens/archived_shopping_lists_screen.dart';
 import 'features/mealplan/screens/mealplan_screen.dart';
 import 'features/cooking_mode/screens/cooking_mode_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
+import 'features/leftovers/providers/leftover_finder_provider.dart'
+    show FinderItem;
 import 'features/leftovers/screens/leftover_finder_screen.dart';
 import 'core/models/organizer_item.dart';
 import 'features/organizers/screens/organizers_screen.dart';
 import 'features/timeline/screens/timeline_screen.dart';
 import 'features/recipes/screens/favorites_screen.dart';
 import 'features/recipes/screens/recently_viewed_screen.dart';
+import 'features/recipe_match/screens/recipe_match_screen.dart';
+import 'features/mealplan/screens/week_planner_screen.dart';
+import 'features/search/screens/global_search_screen.dart';
+import 'core/desktop/desktop_shortcuts.dart';
 import 'features/recipe_duplicates/screens/duplicates_screen.dart';
 import 'features/users/screens/user_management_screen.dart';
 import 'features/users/screens/household_management_screen.dart';
@@ -51,6 +61,7 @@ import 'features/cookbooks/screens/cookbook_edit_screen.dart';
 import 'features/cookbooks/screens/cookbook_recipes_screen.dart';
 import 'features/cook_friends/screens/cook_friends_screen.dart';
 import 'features/webapp_tools/screens/admin_screen.dart';
+import 'features/webapp_tools/screens/ai_prompts_screen.dart';
 import 'features/webapp_tools/screens/ai_providers_screen.dart';
 import 'features/webapp_tools/screens/debug_screen.dart';
 import 'features/webapp_tools/screens/backups_screen.dart';
@@ -181,7 +192,8 @@ final _routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: ':slug',
                   parentNavigatorKey: _rootNavigatorKey,
-                  pageBuilder: (ctx, state) => _animatedPage(state,
+                  pageBuilder: (ctx, state) => _animatedPage(
+                      state,
                       RecipeDetailScreen(
                           slug: state.pathParameters['slug']!,
                           // ?scale=… z. B. aus dem Mahlzeitplan (Portionen
@@ -268,8 +280,11 @@ final _routerProvider = Provider<GoRouter>((ref) {
       // Benutzerverwaltung (Kachel nur mit Recht sichtbar).
       GoRoute(
         path: '/users',
-        pageBuilder: (ctx, state) =>
-            _animatedPage(state, const UserManagementScreen()),
+        // ?self=1: eigenes Konto direkt öffnen (Konto-Menü der Tab-Leiste).
+        pageBuilder: (ctx, state) => _animatedPage(
+            state,
+            UserManagementScreen(
+                openSelf: state.uri.queryParameters['self'] == '1')),
       ),
       // Einkaufslisten verwalten (Home-Kachel).
       GoRoute(
@@ -288,6 +303,45 @@ final _routerProvider = Provider<GoRouter>((ref) {
         path: '/recent',
         pageBuilder: (ctx, state) =>
             _animatedPage(state, const RecentlyViewedScreen()),
+      ),
+      // Rezept-Match: Kartenstapel + Tablett (Kachel in „Weiteres").
+      GoRoute(
+        path: '/recipe-match',
+        pageBuilder: (ctx, state) =>
+            _animatedPage(state, const RecipeMatchScreen()),
+      ),
+      // Globale Suche (Suchfeld auf dem Startbildschirm).
+      // Desktop: als schwebende Befehlspalette über der App (durchsichtig,
+      // Klick daneben bzw. Esc schließt); Handy: normale Seite.
+      GoRoute(
+        path: '/search',
+        pageBuilder: (ctx, state) => PlatformFeatures.webAppTools
+            ? CustomTransitionPage<void>(
+                key: state.pageKey,
+                opaque: false,
+                barrierDismissible: true,
+                barrierColor: Colors.black45,
+                transitionDuration: const Duration(milliseconds: 160),
+                reverseTransitionDuration: const Duration(milliseconds: 120),
+                transitionsBuilder: (c, a, _, child) => FadeTransition(
+                  opacity: a,
+                  child: ScaleTransition(
+                      scale: Tween(begin: 0.97, end: 1.0).animate(a),
+                      child: child),
+                ),
+                child: const GlobalSearchScreen(palette: true),
+              )
+            : _animatedPage(state, const GlobalSearchScreen()),
+      ),
+      // Woche planen: Essensplan-Knopf + Kachel in „Weiteres". Optional
+      // ?start=YYYY-MM-DD (erster Tag der Woche).
+      GoRoute(
+        path: '/week-planner',
+        pageBuilder: (ctx, state) => _animatedPage(
+            state,
+            WeekPlannerScreen(
+                weekStart: DateTime.tryParse(
+                    state.uri.queryParameters['start'] ?? ''))),
       ),
       // Duplikatsfinder (Kachel in „Weiteres").
       GoRoute(
@@ -320,8 +374,15 @@ final _routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/leftovers',
-        pageBuilder: (ctx, state) =>
-            _animatedPage(state, const LeftoverFinderScreen()),
+        pageBuilder: (ctx, state) {
+          final qp = state.uri.queryParameters;
+          final id = qp['food'] ?? '';
+          return _animatedPage(
+              state,
+              LeftoverFinderScreen(
+                  initialFood:
+                      id.isEmpty ? null : FinderItem(id, qp['name'] ?? '')));
+        },
       ),
       GoRoute(
         path: '/cookbooks',
@@ -404,6 +465,11 @@ final _routerProvider = Provider<GoRouter>((ref) {
         path: '/ai-providers',
         pageBuilder: (ctx, state) =>
             _animatedPage(state, const AiProvidersScreen()),
+      ),
+      GoRoute(
+        path: '/ai-prompts',
+        pageBuilder: (ctx, state) =>
+            _animatedPage(state, const AiPromptsScreen()),
       ),
       GoRoute(
         path: '/debug',
@@ -490,8 +556,18 @@ class _TabShell extends ConsumerWidget {
                       data: MediaQuery.of(context),
                       child: shell,
                     ),
-                    bottomNavigationBar: GlassTabBar(
-                        current: GlassTab.values[shell.currentIndex]),
+                    // Desktop mit Seitenleiste: keine Tab-Leiste unten.
+                    bottomNavigationBar: DesktopSidebarScope.isActive(context)
+                        ? null
+                        : GlassTabBar(
+                            current: GlassTab.values[shell.currentIndex],
+                            // Start-Tab = Profilbild; nochmal tippen →
+                            // Konto-Menü.
+                            homeIcon: (active) =>
+                                AccountTabIcon(active: active),
+                            onHomeReselect: (tabCtx) =>
+                                showAccountMenu(tabCtx, ref),
+                          ),
                   ),
                 ),
               ),
@@ -799,12 +875,16 @@ class _MealieAppState extends ConsumerState<MealieApp>
       _tryOpenPendingSheet(router, attempts: 0);
     });
 
+    final themeModeName = settingsAsync.valueOrNull?.themeMode ??
+        ref.watch(initialThemeModeProvider);
+    NativeAppearance.apply(themeModeName);
+
     return MaterialApp.router(
       title: 'Mealie Recipes',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
-      themeMode: switch (settingsAsync.valueOrNull?.themeMode) {
+      themeMode: switch (themeModeName) {
         'light' => ThemeMode.light,
         'dark' => ThemeMode.dark,
         _ => ThemeMode.system,
@@ -870,7 +950,14 @@ class _MealieAppState extends ConsumerState<MealieApp>
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (child != null) Positioned.fill(child: child),
+                      // Desktop: Tastenkürzel (Strg/⌘ + K, N, 1–5, …).
+                      if (child != null)
+                        Positioned.fill(
+                            child: DesktopShortcuts(
+                                router: router,
+                                // Breite Fenster: Seitenleiste links.
+                                child: DesktopShell(
+                                    router: router, child: child))),
                       const _BiometricLockOverlay(),
                     ],
                   ),
@@ -958,6 +1045,40 @@ class _MealieAppState extends ConsumerState<MealieApp>
         surface: card,
       ),
       cardColor: card,
+      // Sheets lösen ihren Hintergrund damit im EIGENEN Kontext auf — ein am
+      // Aufrufer abgelesenes `backgroundColor: context.appCard` blieb sonst
+      // auf dem Schema stehen, das beim Öffnen galt.
+      // Automatischer Zurück-Knopf: dasselbe Symbol wie AppBackButton.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (_) =>
+            const Icon(kAppBackIcon, size: kAppBackIconSize),
+      ),
+      // Scrollbalken (v. a. Windows/macOS): schmal, rund, im warmen Grauton
+      // der App statt im Standard-Grau.
+      scrollbarTheme: ScrollbarThemeData(
+        thickness: const WidgetStatePropertyAll(8),
+        radius: const Radius.circular(999),
+        crossAxisMargin: 3,
+        mainAxisMargin: 4,
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          final strong = states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.dragged);
+          return fg.withValues(alpha: strong ? 0.42 : 0.22);
+        }),
+      ),
+      // Alle Meldungen gleich: unten angedockt (nicht schwebend).
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.fixed,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: card,
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: card,
+        modalBackgroundColor: card,
+        surfaceTintColor: Colors.transparent,
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: appBarBg,
         surfaceTintColor: Colors.transparent,

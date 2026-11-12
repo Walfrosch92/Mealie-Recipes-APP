@@ -126,7 +126,7 @@ class _MigrationsScreenState extends ConsumerState<MigrationsScreen> {
             const SizedBox(height: 12),
             Text(_type.description(l),
                 style: TextStyle(
-                    color: context.appFgSub, fontSize: 13.5, height: 1.4)),
+                    color: context.appFgSub, fontSize: 14, height: 1.4)),
             const SizedBox(height: 12),
             Row(children: [
               OutlinedButton.icon(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/utils/meal_types.dart';
@@ -74,7 +75,7 @@ class _MealTypeChipRowState extends State<MealTypeChipRow> {
 
   Widget _chip(
       BuildContext context, AppLocalizations l, String type, bool isSelected) {
-    return GestureDetector(
+    return TapArea(
       key: isSelected ? _selectedKey : null,
       onTap: () => widget.onChanged(type),
       child: AnimatedContainer(
@@ -83,7 +84,7 @@ class _MealTypeChipRowState extends State<MealTypeChipRow> {
         decoration: BoxDecoration(
           gradient: isSelected ? AppTokens.accentGradient : null,
           color: isSelected ? null : context.appSurface2,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTokens.rXs),
           boxShadow: isSelected
               ? const [
                   BoxShadow(

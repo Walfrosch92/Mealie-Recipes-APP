@@ -72,26 +72,73 @@ class LocalCache {
 
   // ── Shopping items ─────────────────────────────────────────────────────────
 
-  static Future<void> saveShoppingItems(List<ShoppingItem> items) async {
+  // Ein Speicherplatz PRO LISTE (`cache_shopping_items_<listId>`). Früher
+  // teilten sich alle Listen den Key `cache_shopping_items` — offline zeigte
+  // ein Listenwechsel dann die Artikel der vorherigen Liste, und eine leere
+  // Antwort (Start ohne geladene Listen-ID, Issue #40) überschrieb den
+  // gesamten Offline-Bestand. Der alte Key wird nur noch als Fallback
+  // gelesen (Altbestand/Swift-Migration in AppDelegate) und beim ersten
+  // Speichern einer Liste entfernt.
+  static String _shoppingKeyFor(String listId) => '${_shoppingKey}_$listId';
+
+  static bool _belongsTo(ShoppingItem i, String listId) =>
+      i.shoppingListId == null ||
+      i.shoppingListId!.isEmpty ||
+      i.shoppingListId == listId;
+
+  static Future<void> saveShoppingItems(
+      String listId, List<ShoppingItem> items) async {
+    if (listId.isEmpty) return;
     try {
       final prefs = await _prefs;
-      final jsonList = items.map((i) => i.toJson()).toList();
-      await prefs.setString(_shoppingKey, jsonEncode(jsonList));
+      final jsonList = [
+        for (final i in items)
+          if (_belongsTo(i, listId)) i.toJson()
+      ];
+      await prefs.setString(_shoppingKeyFor(listId), jsonEncode(jsonList));
+      await prefs.remove(_shoppingKey);
     } catch (_) {}
   }
 
-  static Future<List<ShoppingItem>> loadShoppingItems() async {
+  /// Gecachte Artikel der Liste [listId]. `null` = für diese Liste liegt
+  /// nichts im Cache (≠ leere Liste) — die UI zeigt dann offline einen
+  /// Hinweis statt „Einkauf erledigt".
+  static Future<List<ShoppingItem>?> loadShoppingItems(String listId) async {
+    if (listId.isEmpty) return null;
     try {
       final prefs = await _prefs;
-      final raw = prefs.getString(_shoppingKey);
-      if (raw == null || raw.isEmpty) return [];
-      final list = jsonDecode(raw) as List<dynamic>;
-      return list
-          .map((e) => ShoppingItem.fromJson(e as Map<String, dynamic>))
+      final raw = prefs.getString(_shoppingKeyFor(listId));
+      if (raw != null && raw.isNotEmpty) return _decodeItems(raw, listId);
+      // Fallback: alter gemeinsamer Key. Nur Artikel, die eindeutig zu
+      // dieser Liste gehören — enthält er keine, gilt die Liste als
+      // ungecacht.
+      final legacy = prefs.getString(_shoppingKey);
+      if (legacy == null || legacy.isEmpty) return null;
+      final items = _decodeItems(legacy, listId)
+          .where((i) => i.shoppingListId == listId)
           .toList();
+      return items.isEmpty ? null : items;
     } catch (_) {
-      return [];
+      return null;
     }
+  }
+
+  static List<ShoppingItem> _decodeItems(String raw, String listId) =>
+      (jsonDecode(raw) as List<dynamic>)
+          .map((e) => ShoppingItem.fromJson(e as Map<String, dynamic>))
+          .where((i) => _belongsTo(i, listId))
+          .toList();
+
+  /// Alle Einkaufslisten-Caches löschen (App-Reset).
+  static Future<void> clearShoppingItems() async {
+    try {
+      final prefs = await _prefs;
+      for (final k in prefs.getKeys().toList()) {
+        if (k == _shoppingKey || k.startsWith('${_shoppingKey}_')) {
+          await prefs.remove(k);
+        }
+      }
+    } catch (_) {}
   }
 
   // ── Shopping labels (category colors) ──────────────────────────────────────

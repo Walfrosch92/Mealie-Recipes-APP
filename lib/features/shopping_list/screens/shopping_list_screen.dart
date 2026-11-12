@@ -3,6 +3,10 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/shimmer.dart';
+import '../../../shared/widgets/swipe_context_menu.dart';
+import '../../../shared/widgets/tap_area.dart';
+import '../../../shared/widgets/app_search_field.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -15,7 +19,8 @@ import '../../../core/models/shopping_item.dart';
 import '../../../core/providers/permissions_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/ingredient_display.dart';
-import '../../../core/utils/search_match.dart' show normalizeForSearch, searchTerms;
+import '../../../core/utils/search_match.dart'
+    show normalizeForSearch, searchTerms;
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/autocomplete_field.dart';
 import '../utils/shopping_input_parse.dart';
@@ -34,6 +39,9 @@ import 'google_tasks_import_screen.dart';
 import 'reminders_import_screen.dart';
 import 'sync_changes_sheet.dart';
 import '../../../shared/widgets/error_view.dart';
+import '../../../shared/widgets/tap_surface.dart';
+import '../../../core/desktop/print_service.dart';
+import '../../../core/utils/hex_color.dart';
 
 class ShoppingListScreen extends ConsumerStatefulWidget {
   const ShoppingListScreen({super.key});
@@ -265,8 +273,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _creatingFood = true);
     try {
-      final created =
-          await ref.read(apiServiceProvider).createFood(name);
+      final created = await ref.read(apiServiceProvider).createFood(name);
       final id = created?['id'] as String?;
       final foodName = (created?['name'] as String?)?.trim() ?? '';
       if (id == null || id.isEmpty || foodName.isEmpty) {
@@ -297,16 +304,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       // Dialog liegt auf dem ROOT-Navigator — Pops müssen den Dialog-Context
       // nutzen, sonst poppt der Branch-Navigator die Tab-Seite selbst.
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: context.appCard,
+        backgroundColor: dialogCtx.appCard,
         title: Text(l.completeShoppingTitle,
-            style: TextStyle(color: context.appFg)),
+            style: TextStyle(color: dialogCtx.appFg)),
         content: Text(l.completeShoppingMessage,
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: dialogCtx.appFgSub)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogCtx), child: Text(l.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: AppTokens.dangerButton,
             onPressed: () async {
               Navigator.pop(dialogCtx);
               // archiveCheckedItems already removes the items from local
@@ -368,6 +375,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final collapsed = settings?.collapsedShoppingCategories ?? [];
     final labels = labelsAsync.valueOrNull ?? [];
     final isOffline = ref.watch(shoppingOfflineProvider);
+    final cacheMissing = ref.watch(shoppingCacheMissingProvider);
     // Kataloge für die Autovervollständigung (cache-first, offline-fähig).
     // Foods im Eingabefeld, Einheiten im aufklappbaren Detail-Feld.
     final foodOptions =
@@ -376,11 +384,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             .where((n) => n.isNotEmpty)
             .toList();
     // Einheiten für das aufklappbare Detail-Feld (beide Modi).
-    final unitOptions = (ref.watch(unitsCatalogProvider).valueOrNull ??
-            const <ShoppingUnit>[])
-        .map((u) => u.name ?? '')
-        .where((n) => n.isNotEmpty)
-        .toList();
+    final unitOptions =
+        (ref.watch(unitsCatalogProvider).valueOrNull ?? const <ShoppingUnit>[])
+            .map((u) => u.name ?? '')
+            .where((n) => n.isNotEmpty)
+            .toList();
     // Noch nicht zum Server synchronisierte Adds (Offline-Dummies) — deren
     // Zeilen bekommen ein Cloud-Badge, damit sichtbar ist, dass sie in der
     // Webapp noch fehlen. `watch`: nach dem Auto-Sync verschwindet das Badge.
@@ -415,12 +423,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppTokens.accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(AppTokens.rXs),
                 ),
                 child: Text(l.offlineBadge,
                     style: const TextStyle(
-                        color: Colors.orange,
+                        color: AppTokens.accentDeep,
                         fontSize: 11,
                         fontWeight: FontWeight.w600)),
               ),
@@ -441,7 +449,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             ),
           IconButton(
             tooltip: AppLocalizations.of(context)!.reload,
-            icon: Icon(Icons.refresh, color: context.appFg),
+            icon: Icon(Icons.refresh_rounded, color: context.appFg),
             onPressed: () async {
               // Kataloge mit anstoßen (cache-first: still im Hintergrund),
               // damit neue Webapp-Foods/-Einheiten als Vorschläge auftauchen.
@@ -464,6 +472,14 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   context.push('/shopping/archived');
                 case 'import':
                   _openTaskImport(context);
+                case 'print':
+                  printShoppingList(
+                    title: ref.read(activeShoppingListNameProvider) ??
+                        l.shoppingList.replaceFirst(RegExp(r'^\S+\s+'), ''),
+                    items:
+                        ref.read(shoppingListProvider).valueOrNull ?? const [],
+                    otherLabel: l.unlabeledCategory,
+                  );
               }
             },
             itemBuilder: (_) => [
@@ -477,201 +493,195 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
               if (PlatformFeatures.taskImport)
                 _menuItem(context, 'import', Icons.move_to_inbox_outlined,
                     l.importMenuAction),
+              // Desktop: Einkaufsliste drucken (System-Druckdialog).
+              if (PlatformFeatures.webAppTools)
+                _menuItem(context, 'print', Icons.print_rounded, l.printAction),
             ],
           ),
         ],
       ),
       body: WithCookingModeFAB(
-        bottomInset: GlassTabBar.height + 24,
+        fullWidth: true,
+        bottomInset: GlassTabBar.heightOf(context) + 24,
         child: SafeArea(
           top: false,
           child: listAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const ListSkeleton(
+                rows: 10, thumbSize: 24, thumbRadius: 999, spacing: 22),
             error: (e, _) => ErrorRetryView(
               error: e,
               onRetry: () => ref.read(shoppingListProvider.notifier).refresh(),
             ),
             data: (allItems) {
-              final terms =
-                  _searchOpen ? searchTerms(_searchCtrl.text) : const <String>[];
+              final terms = _searchOpen
+                  ? searchTerms(_searchCtrl.text)
+                  : const <String>[];
               final items = terms.isEmpty
                   ? allItems
                   : allItems.where((i) => _itemMatches(i, terms)).toList();
               return Column(
-              children: [
-                if (_searchOpen)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                    child: TextField(
-                      controller: _searchCtrl,
-                      autofocus: true,
-                      textInputAction: TextInputAction.search,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
+                children: [
+                  if (_searchOpen)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: AppSearchField(
+                        controller: _searchCtrl,
+                        autofocus: true,
                         hintText: l.shoppingSearchHint,
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: _searchCtrl.text.isEmpty
-                            ? null
-                            : IconButton(
-                                icon: const Icon(Icons.clear_rounded),
-                                onPressed: () =>
-                                    setState(_searchCtrl.clear),
-                              ),
-                        isDense: true,
-                        filled: true,
-                        fillColor: context.appCard,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
-                        ),
+                        onChanged: (_) => setState(() {}),
                       ),
                     ),
-                  ),
-                // Item list
-                Expanded(
-                  child: items.isEmpty
-                      ? (terms.isNotEmpty
-                          ? Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(32),
-                                child: Text(l.shoppingSearchNoMatches,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: context.appFgSub,
-                                        fontSize: 15)),
-                              ),
-                            )
-                          : _ShoppingDoneEmptyState(l: l))
-                      : RefreshIndicator(
-                          onRefresh: () async {
-                            ref.invalidate(foodsCatalogProvider);
-                            ref.invalidate(unitsCatalogProvider);
-                            await ref
-                                .read(shoppingLabelsProvider.notifier)
-                                .reload();
-                            await ref
-                                .read(shoppingListProvider.notifier)
-                                .refresh();
-                          },
-                          child: _ShoppingItemList(
-                            items: items,
-                            labels: labels,
-                            pendingAddIds: pendingAddIds,
-                            collapsed: collapsed,
-                            categoryOrder:
-                                settings?.shoppingCategoryOrder ?? [],
-                            exactQuantities:
-                                settings?.addExactQuantities ?? false,
-                            onToggle: (item) => ref
-                                .read(shoppingListProvider.notifier)
-                                .toggleChecked(item),
-                            onQuantityChange:
-                                (item, qty, {bool clearUnit = false}) => ref
-                                    .read(shoppingListProvider.notifier)
-                                    .updateQuantity(item, qty,
-                                        clearUnit: clearUnit),
-                            onDelete: (id) => ref
-                                .read(shoppingListProvider.notifier)
-                                .deleteItem(id),
-                            onCategoryChange: (item, label) => ref
-                                .read(shoppingListProvider.notifier)
-                                .updateItemCategory(item, label),
-                            onEdit: (item, note, qty, label, clearLabel) => ref
-                                .read(shoppingListProvider.notifier)
-                                .editItem(item,
-                                    note: note,
-                                    quantity: qty,
-                                    label: label,
-                                    clearLabel: clearLabel),
-                            onToggleCollapse: (category) {
-                              final s = settings;
-                              if (s == null) return;
-                              final newCollapsed = List<String>.from(collapsed);
-                              if (newCollapsed.contains(category)) {
-                                newCollapsed.remove(category);
-                              } else {
-                                newCollapsed.add(category);
-                              }
-                              ref.read(settingsProvider.notifier).save(
-                                  s.copyWith(
-                                      collapsedShoppingCategories:
-                                          newCollapsed));
+                  // Item list
+                  Expanded(
+                    child: items.isEmpty
+                        ? (terms.isNotEmpty
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Text(l.shoppingSearchNoMatches,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          color: context.appFgSub,
+                                          fontSize: 15)),
+                                ),
+                              )
+                            // Offline ohne Cache: Liste unbekannt, nicht
+                            // erledigt (Issue #40).
+                            : (isOffline && cacheMissing
+                                ? _ShoppingOfflineEmptyState(l: l)
+                                : _ShoppingDoneEmptyState(l: l)))
+                        : RefreshIndicator(
+                            onRefresh: () async {
+                              ref.invalidate(foodsCatalogProvider);
+                              ref.invalidate(unitsCatalogProvider);
+                              await ref
+                                  .read(shoppingLabelsProvider.notifier)
+                                  .reload();
+                              await ref
+                                  .read(shoppingListProvider.notifier)
+                                  .refresh();
                             },
-                            onReorderCategories: (newOrder) {
-                              final s = settings;
-                              if (s == null) return;
-                              // Keep positions of categories not currently shown.
-                              final merged = <String>[
-                                ...newOrder,
-                                ...s.shoppingCategoryOrder
-                                    .where((c) => !newOrder.contains(c)),
-                              ];
-                              ref.read(settingsProvider.notifier).save(
-                                  s.copyWith(shoppingCategoryOrder: merged));
-                              // Mealie speichert die Reihenfolge pro Liste —
-                              // dort mitziehen (Webapp zeigt sie dann genauso).
-                              ref
-                                  .read(shoppingListsProvider.notifier)
-                                  .pushOrderByNames(s.shoppingListId, merged);
-                            },
-                            availableLabels: labels,
+                            child: _ShoppingItemList(
+                              items: items,
+                              labels: labels,
+                              pendingAddIds: pendingAddIds,
+                              collapsed: collapsed,
+                              categoryOrder:
+                                  settings?.shoppingCategoryOrder ?? [],
+                              exactQuantities:
+                                  settings?.addExactQuantities ?? false,
+                              onToggle: (item) => ref
+                                  .read(shoppingListProvider.notifier)
+                                  .toggleChecked(item),
+                              onQuantityChange:
+                                  (item, qty, {bool clearUnit = false}) => ref
+                                      .read(shoppingListProvider.notifier)
+                                      .updateQuantity(item, qty,
+                                          clearUnit: clearUnit),
+                              onDelete: (id) => ref
+                                  .read(shoppingListProvider.notifier)
+                                  .deleteItem(id),
+                              onCategoryChange: (item, label) => ref
+                                  .read(shoppingListProvider.notifier)
+                                  .updateItemCategory(item, label),
+                              onEdit: (item, note, qty, label, clearLabel) =>
+                                  ref
+                                      .read(shoppingListProvider.notifier)
+                                      .editItem(item,
+                                          note: note,
+                                          quantity: qty,
+                                          label: label,
+                                          clearLabel: clearLabel),
+                              onToggleCollapse: (category) {
+                                final s = settings;
+                                if (s == null) return;
+                                final newCollapsed =
+                                    List<String>.from(collapsed);
+                                if (newCollapsed.contains(category)) {
+                                  newCollapsed.remove(category);
+                                } else {
+                                  newCollapsed.add(category);
+                                }
+                                ref.read(settingsProvider.notifier).save(
+                                    s.copyWith(
+                                        collapsedShoppingCategories:
+                                            newCollapsed));
+                              },
+                              onReorderCategories: (newOrder) {
+                                final s = settings;
+                                if (s == null) return;
+                                // Keep positions of categories not currently shown.
+                                final merged = <String>[
+                                  ...newOrder,
+                                  ...s.shoppingCategoryOrder
+                                      .where((c) => !newOrder.contains(c)),
+                                ];
+                                ref.read(settingsProvider.notifier).save(
+                                    s.copyWith(shoppingCategoryOrder: merged));
+                                // Mealie speichert die Reihenfolge pro Liste —
+                                // dort mitziehen (Webapp zeigt sie dann genauso).
+                                ref
+                                    .read(shoppingListsProvider.notifier)
+                                    .pushOrderByNames(s.shoppingListId, merged);
+                              },
+                              availableLabels: labels,
+                            ),
                           ),
-                        ),
-                ),
+                  ),
 
-                // Bottom input bar — mirrors iOS inputSection
-                _InputBar(
-                  ctrl: _ctrl,
-                  focusNode: _focusNode,
-                  qtyCtrl: _qtyCtrl,
-                  unitCtrl: _unitCtrl,
-                  qtyFocus: _qtyFocus,
-                  unitFocus: _unitFocus,
-                  noteCtrl: _noteCtrl,
-                  noteFocus: _noteFocus,
-                  showDetails: _showDetails,
-                  onToggleDetails: () =>
-                      setState(() => _showDetails = !_showDetails),
-                  foodOptions: foodOptions,
-                  unitOptions: unitOptions,
-                  selectedLabel: _selectedLabel,
-                  labels: labels,
-                  inputFocused: _inputFocused,
-                  onAdd: _addItem,
-                  mainSlot: (text) =>
-                      _mainSlot(text, foodOptions, unitOptions),
-                  newFoodName: _newFoodCandidate(isOffline),
-                  creatingFood: _creatingFood,
-                  onAddAsNewFood: _addAsNewFood,
-                  onLabelSelected: (label) =>
-                      setState(() => _selectedLabel = label),
-                  onCreateLabel: () async {
-                    final label =
-                        await showCreateShoppingLabelDialog(context, ref);
-                    if (label != null && context.mounted) {
-                      setState(() => _selectedLabel = label);
-                    }
-                  },
-                  onDeleteLabel: (label) async {
-                    await deleteShoppingLabelWithConfirm(context, ref, label);
-                    if (context.mounted && _selectedLabel?.id == label.id) {
-                      setState(() => _selectedLabel = null);
-                    }
-                  },
-                  onArchive: () => _showArchiveConfirm(context, l),
-                  l: l,
-                ),
+                  // Bottom input bar — mirrors iOS inputSection
+                  _InputBar(
+                    ctrl: _ctrl,
+                    focusNode: _focusNode,
+                    qtyCtrl: _qtyCtrl,
+                    unitCtrl: _unitCtrl,
+                    qtyFocus: _qtyFocus,
+                    unitFocus: _unitFocus,
+                    noteCtrl: _noteCtrl,
+                    noteFocus: _noteFocus,
+                    showDetails: _showDetails,
+                    onToggleDetails: () =>
+                        setState(() => _showDetails = !_showDetails),
+                    foodOptions: foodOptions,
+                    unitOptions: unitOptions,
+                    selectedLabel: _selectedLabel,
+                    labels: labels,
+                    inputFocused: _inputFocused,
+                    onAdd: _addItem,
+                    mainSlot: (text) =>
+                        _mainSlot(text, foodOptions, unitOptions),
+                    newFoodName: _newFoodCandidate(isOffline),
+                    creatingFood: _creatingFood,
+                    onAddAsNewFood: _addAsNewFood,
+                    onLabelSelected: (label) =>
+                        setState(() => _selectedLabel = label),
+                    onCreateLabel: () async {
+                      final label =
+                          await showCreateShoppingLabelDialog(context, ref);
+                      if (label != null && context.mounted) {
+                        setState(() => _selectedLabel = label);
+                      }
+                    },
+                    onDeleteLabel: (label) async {
+                      await deleteShoppingLabelWithConfirm(context, ref, label);
+                      if (context.mounted && _selectedLabel?.id == label.id) {
+                        setState(() => _selectedLabel = null);
+                      }
+                    },
+                    onArchive: () => _showArchiveConfirm(context, l),
+                    l: l,
+                  ),
 
-                // Die GlassTabBar schwebt jetzt als Shell-Overlay (app.dart) —
-                // die Eingabezeile braucht deren Höhe als Abstand, sonst läge sie
-                // hinter dem Glas. Bei offener Tastatur entfällt der Abstand
-                // (die Leiste liegt dann eh hinter der Tastatur), damit die
-                // Eingabezeile direkt über der Tastatur sitzt wie zuvor.
-                SizedBox(
-                    height: MediaQuery.viewInsetsOf(context).bottom > 0
-                        ? 0
-                        : GlassTabBar.height),
-              ],
+                  // Die GlassTabBar schwebt jetzt als Shell-Overlay (app.dart) —
+                  // die Eingabezeile braucht deren Höhe als Abstand, sonst läge sie
+                  // hinter dem Glas. Bei offener Tastatur entfällt der Abstand
+                  // (die Leiste liegt dann eh hinter der Tastatur), damit die
+                  // Eingabezeile direkt über der Tastatur sitzt wie zuvor.
+                  SizedBox(
+                      height: MediaQuery.viewInsetsOf(context).bottom > 0
+                          ? 0
+                          : GlassTabBar.heightOf(context)),
+                ],
               );
             },
           ),
@@ -727,6 +737,50 @@ class _ShoppingDoneEmptyState extends StatelessWidget {
           Text(l.shoppingCompletedSubtitle,
               style: TextStyle(color: context.appFgSub, fontSize: 15)),
         ],
+      ),
+    );
+  }
+}
+
+// Offline und für diese Liste nichts gespeichert — ehrlicher Hinweis statt
+// „Einkauf erledigt" (Issue #40).
+class _ShoppingOfflineEmptyState extends StatelessWidget {
+  final AppLocalizations l;
+  const _ShoppingOfflineEmptyState({required this.l});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.appSurface2,
+              ),
+              child: Icon(Icons.cloud_off_rounded,
+                  size: 48, color: context.appFgSub),
+            ),
+            const SizedBox(height: 20),
+            Text(l.shoppingOfflineNoCache,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    color: context.appFg,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3)),
+            const SizedBox(height: 8),
+            Text(l.shoppingOfflineNoCacheSubtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.appFgSub, fontSize: 15)),
+          ],
+        ),
       ),
     );
   }
@@ -864,7 +918,7 @@ class _ShoppingItemList extends StatelessWidget {
       padding: EdgeInsets.only(
         left: LargeScreen.inset(context),
         right: LargeScreen.inset(context),
-        bottom: GlassTabBar.height + 24,
+        bottom: GlassTabBar.heightOf(context) + 24,
       ),
       // Erledigt-Bereich + „verknüpfte Rezepte" (wie die Webapp unten).
       footer: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -894,19 +948,14 @@ class _ShoppingItemList extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 Color shoppingCategoryColor(String? hex, String name) {
-  if (hex != null && hex.trim().isNotEmpty) {
-    try {
-      final h = hex.replaceAll('#', '').trim();
-      final v = int.parse(h.length == 6 ? 'FF$h' : h, radix: 16);
-      return Color(v);
-    } catch (_) {/* fall through */}
-  }
+  final fromServer = colorFromHex(hex);
+  if (fromServer != null) return fromServer;
   const palette = [
     Colors.teal,
     Colors.indigo,
     Colors.orange,
     Colors.purple,
-    Colors.green,
+    AppTokens.success,
     Colors.red,
     Colors.blue,
     Colors.pink,
@@ -967,62 +1016,58 @@ class _CategorySection extends StatelessWidget {
         // Long-press starts a drag to reorder categories (order persisted).
         ReorderableDelayedDragStartListener(
           index: dragIndex,
-          child: InkWell(
+          child: TapSurface(
             onTap: onToggleCollapse,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              height: 50,
-              decoration: BoxDecoration(
-                color: labelColor,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                      color: labelColor.withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.drag_indicator,
-                      color: textColor.withValues(alpha: 0.7), size: 18),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(category,
-                        style: TextStyle(
-                            fontFamily: 'PlusJakartaSans',
-                            color: textColor,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
-                            fontSize: 16)),
-                  ),
-                  if (count > 0)
-                    Container(
-                      width: 24,
-                      height: 24,
-                      margin: const EdgeInsets.only(right: 6),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: textColor.withValues(alpha: 0.15),
-                      ),
-                      child: Center(
-                        child: Text('$count',
-                            style: TextStyle(
-                                color: textColor,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold)),
-                      ),
+            color: labelColor,
+            borderRadius: BorderRadius.circular(AppTokens.rSm),
+            boxShadow: [
+              BoxShadow(
+                  color: labelColor.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4)),
+            ],
+            margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            height: 50,
+            child: Row(
+              children: [
+                Icon(Icons.drag_indicator,
+                    color: textColor.withValues(alpha: 0.7), size: 18),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(category,
+                      style: TextStyle(
+                          fontFamily: 'PlusJakartaSans',
+                          color: textColor,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                          fontSize: 16)),
+                ),
+                if (count > 0)
+                  Container(
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: textColor.withValues(alpha: 0.15),
                     ),
-                  Icon(
-                    isCollapsed
-                        ? Icons.keyboard_arrow_down
-                        : Icons.keyboard_arrow_up,
-                    color: textColor.withValues(alpha: 0.8),
-                    size: 20,
+                    child: Center(
+                      child: Text('$count',
+                          style: TextStyle(
+                              color: textColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold)),
+                    ),
                   ),
-                ],
-              ),
+                Icon(
+                  isCollapsed
+                      ? Icons.keyboard_arrow_down_rounded
+                      : Icons.keyboard_arrow_up_rounded,
+                  color: textColor.withValues(alpha: 0.8),
+                  size: 20,
+                ),
+              ],
             ),
           ),
         ),
@@ -1130,34 +1175,32 @@ class _LinkedRecipesSectionState extends ConsumerState<_LinkedRecipesSection> {
     }
 
     return Column(children: [
-      InkWell(
+      TapSurface(
         onTap: () => setState(() => _expanded = !_expanded),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: context.appSurface2,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.appSeparator, width: 1),
+        color: context.appSurface2,
+        borderRadius: BorderRadius.circular(AppTokens.rSm),
+        border: Border.all(color: context.appSeparator, width: 1),
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(children: [
+          Icon(Icons.menu_book_rounded, size: 18, color: context.appFgSub),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(l.linkedRecipesCount(refs.length),
+                style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    color: context.appFg,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                    fontSize: 16)),
           ),
-          child: Row(children: [
-            Icon(Icons.menu_book_rounded, size: 18, color: context.appFgSub),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(l.linkedRecipesCount(refs.length),
-                  style: TextStyle(
-                      fontFamily: 'PlusJakartaSans',
-                      color: context.appFg,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
-                      fontSize: 16)),
-            ),
-            Icon(
-                _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                color: context.appFgSub,
-                size: 20),
-          ]),
-        ),
+          Icon(
+              _expanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              color: context.appFgSub,
+              size: 20),
+        ]),
       ),
       if (_expanded)
         for (final r in refs)
@@ -1231,57 +1274,61 @@ class _CompletedSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        InkWell(
+        TapSurface(
           onTap: onToggleCollapse,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: context.appSurface2,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: context.appSeparator, width: 1),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle_outline_rounded,
-                    size: 18, color: context.appFgSub),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(label,
-                      style: TextStyle(
-                          fontFamily: 'PlusJakartaSans',
-                          color: context.appFg,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                          fontSize: 16)),
-                ),
-                Icon(
-                  isCollapsed
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_up,
-                  color: context.appFgSub,
-                  size: 20,
-                ),
-              ],
-            ),
+          color: context.appSurface2,
+          borderRadius: BorderRadius.circular(AppTokens.rSm),
+          border: Border.all(color: context.appSeparator, width: 1),
+          margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Icon(Icons.check_circle_outline_rounded,
+                  size: 18, color: context.appFgSub),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(label,
+                    style: TextStyle(
+                        fontFamily: 'PlusJakartaSans',
+                        color: context.appFg,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        fontSize: 16)),
+              ),
+              Icon(
+                isCollapsed
+                    ? Icons.keyboard_arrow_down_rounded
+                    : Icons.keyboard_arrow_up_rounded,
+                color: context.appFgSub,
+                size: 20,
+              ),
+            ],
           ),
         ),
         if (!isCollapsed)
-          ...items.map((item) => Dismissible(
+          // Wie bei offenen Artikeln: Wischen zeigt „Löschen", statt beim
+          // Durchwischen sofort zu löschen.
+          ...items.map((item) => SwipeContextMenu(
+                  child: Slidable(
                 key: ValueKey('done_${item.id}'),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 16),
-                  color: Colors.red,
-                  child: const Icon(Icons.delete, color: Colors.white),
+                endActionPane: ActionPane(
+                  motion: const DrawerMotion(),
+                  extentRatio: AppTokens.swipeExtent(1),
+                  children: [
+                    SlidableAction(
+                      onPressed: (_) => onDelete(item.id),
+                      backgroundColor: AppTokens.swipeDelete,
+                      foregroundColor: Colors.white,
+                      icon: Icons.delete_outline_rounded,
+                      label: AppLocalizations.of(context)!.delete,
+                    ),
+                  ],
                 ),
-                onDismissed: (_) => onDelete(item.id),
                 child: ListTile(
-                  leading: GestureDetector(
+                  leading: TapArea(
                     onTap: () => onToggle(item),
-                    child: const Icon(Icons.check_circle,
-                        color: Colors.green, size: 22),
+                    child: const Icon(Icons.check_circle_rounded,
+                        color: AppTokens.success, size: 22),
                   ),
                   title: Text(
                     // Exakt AN: voller Webapp-Spiegel („150 g Joghurt") —
@@ -1293,7 +1340,7 @@ class _CompletedSection extends StatelessWidget {
                         decoration: TextDecoration.lineThrough),
                   ),
                 ),
-              )),
+              ))),
       ],
     );
   }
@@ -1359,7 +1406,6 @@ class _ItemRowState extends State<_ItemRow> {
     showModalBottomSheet(
       useSafeArea: true,
       context: context,
-      backgroundColor: context.appCard,
       // Root-Navigator: sonst liegt das Sheet hinter der fixen GlassTabBar.
       useRootNavigator: true,
       isScrollControlled: true,
@@ -1403,32 +1449,33 @@ class _ItemRowState extends State<_ItemRow> {
         : item.displayNamePlural(usePlural);
 
     final l = AppLocalizations.of(context)!;
-    return Slidable(
+    return SwipeContextMenu(
+        child: Slidable(
       key: ValueKey(item.id),
       groupTag: 'shopping-items',
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.5,
+        extentRatio: AppTokens.swipeExtent(2),
         children: [
           // Bearbeiten (blue) — opens category picker, mirrors iOS edit action
           SlidableAction(
             onPressed: (_) => _showCategoryPicker(),
-            backgroundColor: const Color(0xFF0A84FF),
+            backgroundColor: AppTokens.swipeEdit,
             foregroundColor: Colors.white,
-            icon: Icons.edit,
+            icon: Icons.edit_rounded,
             label: l.edit,
           ),
           // Löschen (red) — mirrors iOS delete action
           SlidableAction(
             onPressed: (_) => widget.onDelete(item.id),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTokens.swipeDelete,
             foregroundColor: Colors.white,
-            icon: Icons.delete,
+            icon: Icons.delete_outline_rounded,
             label: l.delete,
           ),
         ],
       ),
-      child: GestureDetector(
+      child: TapArea(
         onLongPress: _showCategoryPicker,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1467,7 +1514,7 @@ class _ItemRowState extends State<_ItemRow> {
               ),
               // Plus button
               _CircleButton(
-                icon: Icons.add,
+                icon: Icons.add_rounded,
                 onTap: () {
                   // ⅛ + → ¼ (2/8) statt 1⅛ — Schritt im Bruch der Zeile.
                   final newQty = stepQuantity(
@@ -1482,7 +1529,7 @@ class _ItemRowState extends State<_ItemRow> {
               // hängt die Notiz gedimmt hinter dem Produktnamen, wie in der
               // Webapp. Für alle anderen Items ist noteAnnotation leer.
               Expanded(
-                child: GestureDetector(
+                child: TapArea(
                   onTap: () => widget.onToggle(item),
                   onLongPress: _showCategoryPicker,
                   child: Text.rich(
@@ -1523,7 +1570,7 @@ class _ItemRowState extends State<_ItemRow> {
               ],
               const SizedBox(width: 8),
               // Checkmark button — Verlaufs-Haken „poppt" beim Abhaken.
-              GestureDetector(
+              TapArea(
                 onTap: () {
                   HapticFeedback.selectionClick();
                   widget.onToggle(item);
@@ -1561,7 +1608,7 @@ class _ItemRowState extends State<_ItemRow> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -1603,7 +1650,7 @@ class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       onTap: onTap,
       child: Container(
         width: 28,
@@ -1810,7 +1857,7 @@ class _EditItemSheetState extends ConsumerState<_EditItemSheet> {
                   ),
                 ),
               _CircleButton(
-                icon: Icons.add,
+                icon: Icons.add_rounded,
                 onTap: () => _stepQty(1),
               ),
             ],
@@ -1826,7 +1873,7 @@ class _EditItemSheetState extends ConsumerState<_EditItemSheet> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                GestureDetector(
+                TapArea(
                   onTap: () => setState(() => _labelId = null),
                   child: _catChip(
                     name: l.unlabeledCategory,
@@ -1862,7 +1909,8 @@ class _EditItemSheetState extends ConsumerState<_EditItemSheet> {
                   );
                 }),
                 // „+"-Chip ganz rechts → neues Label inkl. Farbe anlegen.
-                _AddLabelChip(onTap: _createLabel),
+                if (ref.watch(mayEditOrganizerExtrasProvider))
+                  _AddLabelChip(onTap: _createLabel),
               ],
             ),
           ),
@@ -1888,7 +1936,7 @@ class _EditItemSheetState extends ConsumerState<_EditItemSheet> {
         color: selected
             ? color.withValues(alpha: 0.40)
             : color.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTokens.rLg),
         border: Border.all(
           color: selected ? color : color.withValues(alpha: 0.55),
           width: selected ? 1.6 : 1.0,
@@ -1954,7 +2002,7 @@ Future<void> deleteShoppingLabelWithConfirm(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(l.cancel)),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: AppTokens.dangerButton,
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(l.delete),
             ),
@@ -2055,7 +2103,7 @@ class _CreateLabelDialogState extends State<_CreateLabelDialog> {
               children: _kLabelPalette.map((hex) {
                 final c = _hexToColor(hex);
                 final sel = hex.toUpperCase() == _color.toUpperCase();
-                return GestureDetector(
+                return TapArea(
                   onTap: () => setState(() => _color = hex),
                   child: Container(
                     width: 26,
@@ -2077,7 +2125,8 @@ class _CreateLabelDialogState extends State<_CreateLabelDialog> {
                           : null,
                     ),
                     child: sel
-                        ? const Icon(Icons.check, size: 15, color: Colors.white)
+                        ? const Icon(Icons.check_rounded,
+                            size: 15, color: Colors.white)
                         : null,
                   ),
                 );
@@ -2114,10 +2163,7 @@ const _kLabelPalette = <String>[
 ];
 
 /// Hex (#RRGGBB) → Color.
-Color _hexToColor(String hex) {
-  final clean = hex.startsWith('#') ? hex.substring(1) : hex;
-  return Color(int.parse('FF$clean', radix: 16));
-}
+Color _hexToColor(String hex) => colorFromHex(hex) ?? Colors.grey;
 
 /// Echte Zufallsfarbe über das GESAMTE Hex-Spektrum (#000000–#FFFFFF) — jede
 /// der 16,7 Mio. Farben ist möglich, nicht nur kräftige.
@@ -2134,12 +2180,12 @@ class _AddLabelChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    return GestureDetector(
+    return TapArea(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppTokens.rLg),
           border: Border.all(color: primary.withValues(alpha: 0.6)),
         ),
         child: Icon(Icons.add_rounded, size: 18, color: primary),
@@ -2316,7 +2362,8 @@ class _InputBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              GestureDetector(
+              TapArea(
+                semanticLabel: AppLocalizations.of(context)!.add,
                 onTap: onAdd,
                 child: Container(
                   width: 46,
@@ -2460,7 +2507,7 @@ class _LabelChip extends StatelessWidget {
         color: isSelected
             ? color.withValues(alpha: 0.40)
             : color.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTokens.rLg),
         // Always show a border on non-selected chips too — needed for
         // readability against the dark scaffold (a faint tinted fill alone
         // disappears in dark mode).
@@ -2479,6 +2526,6 @@ class _LabelChip extends StatelessWidget {
       ),
     );
     if (onTap == null) return visual;
-    return GestureDetector(onTap: onTap, child: visual);
+    return TapArea(onTap: onTap, child: visual);
   }
 }

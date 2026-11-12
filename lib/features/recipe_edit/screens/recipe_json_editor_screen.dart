@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/app_bar_text_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -77,7 +78,6 @@ class _RecipeJsonEditorScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(l.saveSuccess),
-        backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ));
       Navigator.of(context).pop(true);
@@ -108,7 +108,7 @@ class _RecipeJsonEditorScreenState
                       onPressed: () => Navigator.pop(ctx, false),
                       child: Text(l.cancel)),
                   FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                    style: AppTokens.dangerButton,
                     onPressed: () => Navigator.pop(ctx, true),
                     child: Text(l.discardChanges),
                   ),
@@ -126,15 +126,11 @@ class _RecipeJsonEditorScreenState
         appBar: AppBar(
           title: Text(l.jsonEditorTitle),
           actions: [
-            TextButton(
-              onPressed: _loading || _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l.save,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
+            AppBarTextButton(
+              label: l.save,
+              primary: true,
+              busy: _saving,
+              onPressed: _loading ? null : _save,
             ),
           ],
         ),
@@ -151,7 +147,7 @@ class _RecipeJsonEditorScreenState
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.orange.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppTokens.rSm),
                         ),
                         child:
                             Text(_error!, style: const TextStyle(fontSize: 13)),
@@ -172,13 +168,14 @@ class _RecipeJsonEditorScreenState
                           style: TextStyle(
                               fontFamily: 'monospace',
                               fontFamilyFallback: const ['Menlo', 'Courier'],
-                              fontSize: 12.5,
+                              fontSize: 13,
                               color: context.appFg),
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: context.appSurface2,
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(AppTokens.rSm),
                                 borderSide: BorderSide.none),
                           ),
                         ),

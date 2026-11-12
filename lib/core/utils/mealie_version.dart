@@ -27,3 +27,10 @@ final serverVersionProvider = Provider<String?>((ref) {
 /// (iCal), Zeit-Filter (`total_time_seconds`), Video-/Audio-Anhänge.
 final mealie329Provider = Provider<bool>(
     (ref) => mealieVersionAtLeast(ref.watch(serverVersionProvider), 3, 29));
+
+/// Mealie ≥ 3.30: Wochen-Einträge im Essensplan (`endDate`), Dauer pro
+/// Schritt (`durationSeconds`), eigene KI-Anweisungen, Kalender-Abo-Vorlagen,
+/// strengere Rechte (Einheiten/Utensilien/Bezeichnungen/Rezept-Aktionen →
+/// „Organisieren“, Webhooks/Benachrichtigungen → „Haushalt verwalten“).
+final mealie330Provider = Provider<bool>(
+    (ref) => mealieVersionAtLeast(ref.watch(serverVersionProvider), 3, 30));

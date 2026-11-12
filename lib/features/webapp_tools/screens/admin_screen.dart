@@ -326,7 +326,7 @@ class _Stat extends StatelessWidget {
                     fontWeight: FontWeight.w800)),
             const SizedBox(height: 2),
             Text(label,
-                style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                style: TextStyle(color: context.appFgSub, fontSize: 13)),
           ],
         ),
       );

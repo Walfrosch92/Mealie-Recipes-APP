@@ -2,6 +2,10 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/providers/settings_provider.dart';
+import '../../core/utils/media_urls.dart';
 
 import '../../core/services/recipe_image_store.dart';
 
@@ -12,7 +16,7 @@ import '../../core/services/recipe_image_store.dart';
 ///
 /// Hört auf Änderungen im Speicher: wird das Bild ersetzt (neues Foto) oder
 /// entfernt, baut NUR ein Widget neu, dessen eigene Datei sich geändert hat.
-class RecipeImage extends StatefulWidget {
+class RecipeImage extends ConsumerStatefulWidget {
   const RecipeImage({
     super.key,
     required this.recipeId,
@@ -35,10 +39,10 @@ class RecipeImage extends StatefulWidget {
   final WidgetBuilder placeholder;
 
   @override
-  State<RecipeImage> createState() => _RecipeImageState();
+  ConsumerState<RecipeImage> createState() => _RecipeImageState();
 }
 
-class _RecipeImageState extends State<RecipeImage> {
+class _RecipeImageState extends ConsumerState<RecipeImage> {
   String? _path;
 
   @override
@@ -69,9 +73,14 @@ class _RecipeImageState extends State<RecipeImage> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider).valueOrNull;
     final network = CachedNetworkImage(
       imageUrl: widget.imageUrl,
-      httpHeaders: widget.httpHeaders,
+      cacheKey: mediaCacheKey(widget.imageUrl, settings),
+      // Token + optionale Zusatz-Header (Reverse-Proxy, Issue #38) für den
+      // eigenen Server — unabhängig davon, was der Aufrufer mitgibt.
+      httpHeaders:
+          mergeMediaHeaders(widget.httpHeaders, widget.imageUrl, settings),
       fit: widget.fit,
       width: widget.width,
       height: widget.height,

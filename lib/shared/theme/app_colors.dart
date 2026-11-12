@@ -21,11 +21,24 @@ class AppTokens {
     stops: [0.0, 0.45, 1.0],
   );
 
-  // Radien
+  // Radien — die einzige Skala der App (Pillen/Kreise: 999).
+  //   rXs  Chips, Badges, kleine Kacheln, Eingabefelder in Zeilen
+  //   rSm  Felder, Buttons, kleine Karten
+  //   rMd  Karten, Dialog-Elemente
+  //   rLg  große Karten, Listen-Container
+  //   rXl  Sheets, Hero-Flächen
+  static const rXs = 10.0;
   static const rSm = 14.0;
   static const rMd = 18.0;
   static const rLg = 22.0;
   static const rXl = 26.0;
+
+  // Schriftgrößen — nur ganze Stufen, keine halben Pixel:
+  //   10 · 11 · 12 · 13 · 14 · 15 · 16 · 17 · 18 · 20 · 22 · 24 · 26 · 30 · 34
+  // (Fließtext 14–16, Nebentext 12–13, Etiketten 10–11, Titel ab 17.)
+
+  /// Seitenrand links/rechts für scrollende Seiteninhalte.
+  static const pageMargin = 16.0;
 
   // Spacing-Skala
   static const s1 = 4.0;
@@ -34,6 +47,34 @@ class AppTokens {
   static const s4 = 16.0;
   static const s5 = 24.0;
   static const s6 = 32.0;
+
+  // Bewertungssterne — überall dieselbe Farbe (Liste, Detail, Editor).
+  static const star = accent;
+
+  /// Fehler-/Warntext und Löschen-Symbole: überall dasselbe kräftige Rot
+  /// (die Theme-Fehlerfarbe ist im Dunkelmodus ein blasses Rosa).
+  static const danger = Colors.red;
+
+  /// Status „erledigt / verbunden / gültig" — ein Grün für die ganze App.
+  static const success = Color(0xFF34B55F);
+  static const successLight = Color(0xFF2ECC71);
+
+  // Wisch-Aktionen (Slidable) — in allen Listen dieselben Farben:
+  // Bearbeiten/Umbenennen neutral, Zweitaktion (Verschieben, Zusammenführen)
+  // im Akzent, Löschen rot.
+  static const swipeEdit = Color(0xFF8E8E93);
+  static const swipeSecondary = accentDeep;
+  static const swipeDelete = Colors.red;
+
+  /// Breite des Aktionsbereichs: gleich breite Knöpfe, egal wie viele.
+  static double swipeExtent(int actions) =>
+      (0.25 * actions).clamp(0.25, 0.75).toDouble();
+
+  /// Knopf für endgültige Aktionen (Löschen, Zusammenführen) in Dialogen:
+  /// immer kräftiges Rot mit weißer Schrift, auch im Dunkelmodus (die
+  /// Theme-Fehlerfarbe wäre dort ein blasses Rosa).
+  static final dangerButton = FilledButton.styleFrom(
+      backgroundColor: Colors.red, foregroundColor: Colors.white);
 }
 
 extension AppColors on BuildContext {

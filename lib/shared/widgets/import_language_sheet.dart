@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'sheet_title.dart';
 import 'package:flutter/services.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -21,7 +22,6 @@ Future<String?> showImportLanguageSheet(
   return showModalBottomSheet<String>(
     useSafeArea: true,
     context: context,
-    backgroundColor: context.appCard,
     // Root-Navigator: sonst liegt das Sheet hinter der fixen GlassTabBar.
     useRootNavigator: true,
     isScrollControlled: true,
@@ -87,14 +87,9 @@ class _ImportLanguageSheetState extends State<_ImportLanguageSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(l.importLanguage,
-                  style: TextStyle(
-                      color: context.appFg,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600)),
-            ),
+            SheetHeader(
+                title: l.importLanguage,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
@@ -106,7 +101,7 @@ class _ImportLanguageSheetState extends State<_ImportLanguageSheet> {
                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   isDense: true,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
                   ),
                 ),
               ),
@@ -127,7 +122,8 @@ class _ImportLanguageSheetState extends State<_ImportLanguageSheet> {
                       subtitle: Text(widget.appLanguageLabel,
                           style: TextStyle(color: context.appFgSub)),
                       trailing: widget.current.isEmpty
-                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          ? const Icon(Icons.check_circle_rounded,
+                              color: AppTokens.success)
                           : null,
                       onTap: () => _pick(''),
                     ),
@@ -144,8 +140,8 @@ class _ImportLanguageSheetState extends State<_ImportLanguageSheet> {
                         title: Text(lang.name,
                             style: TextStyle(color: context.appFg)),
                         trailing: widget.current == lang.code
-                            ? const Icon(Icons.check_circle,
-                                color: Colors.green)
+                            ? const Icon(Icons.check_circle_rounded,
+                                color: AppTokens.success)
                             : null,
                         onTap: () => _pick(lang.code),
                       )),

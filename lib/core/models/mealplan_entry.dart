@@ -34,6 +34,12 @@ class MealplanEntry {
   /// sonst setzt Mealie ihn auf 1 zurück.
   final double? recipeScale;
 
+  /// Mealie ≥ 3.30: Eintrag für eine ganze Woche — letzter Tag (`date` + 6).
+  /// `null` = normaler Eintrag für einen Tag.
+  final String? endDate;
+
+  bool get isWeekEntry => (endDate ?? '').isNotEmpty;
+
   const MealplanEntry({
     required this.id,
     this.groupId,
@@ -46,6 +52,7 @@ class MealplanEntry {
     this.userId,
     this.recipeId,
     this.recipeScale,
+    this.endDate,
   });
 
   factory MealplanEntry.fromJson(Map<String, dynamic> json) =>
@@ -69,18 +76,26 @@ class MealplanEntry {
 // Freitext-Einträge laufen über `title`, exakt wie iOS:
 //   title: recipeId == nil ? note : nil
 // (Mutex-Logik in MealplanNotifier.addEntry.)
+// `text` = zusätzliche Notiz zum Eintrag (Mealie CreatePlanEntry.text) —
+// bei Notiz- UND Rezept-Einträgen (Issue #41).
 @JsonSerializable(includeIfNull: false)
 class MealplanEntryCreate {
   final String date;
   final String entryType;
   final String? title;
+  final String? text;
   final String? recipeId;
+
+  /// Mealie ≥ 3.30: Wochen-Eintrag (`date` = Wochenbeginn, `endDate` = +6).
+  final String? endDate;
 
   const MealplanEntryCreate({
     required this.date,
     required this.entryType,
     this.title,
+    this.text,
     this.recipeId,
+    this.endDate,
   });
 
   factory MealplanEntryCreate.fromJson(Map<String, dynamic> json) =>

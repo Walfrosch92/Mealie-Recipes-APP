@@ -18,6 +18,7 @@ import '../models/timeline_event.dart';
 import '../providers/settings_provider.dart';
 import '../services/connection_monitor.dart';
 import '../services/local_cache.dart';
+import '../accounts/account_scope.dart';
 import '../services/log_manager.dart';
 
 // ---------------------------------------------------------------------------
@@ -129,6 +130,18 @@ class ApiService {
   final AppSettings settings;
   late final Dio _dio;
 
+  /// Kontowechsel-Epoche beim Erzeugen. Nach einem Wechsel lehnt diese
+  /// Instanz neue Anfragen ab und verwirft eintreffende Antworten — ihre
+  /// Aufrufer gehören zum alten Konto und dürften sonst dessen Daten in die
+  /// Zwischenspeicher des neuen schreiben.
+  final int _epoch = AccountScope.epoch;
+  bool get _stale => _epoch != AccountScope.epoch;
+
+  static DioException _switched(RequestOptions o) => DioException(
+      requestOptions: o,
+      type: DioExceptionType.cancel,
+      error: 'account switched');
+
   ApiService(this.settings) {
     _dio = Dio(BaseOptions(
       baseUrl: settings.serverUrl.isEmpty ? '' : settings.serverUrl,
@@ -138,6 +151,9 @@ class ApiService {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
+        if (_stale) return handler.reject(_switched(options));
+        // Bricht beim nächsten Kontowechsel ab (siehe AccountScope).
+        options.cancelToken ??= AccountScope.requestCancelToken;
         // Token und Zusatz-Header (z. B. Cloudflare-Access) NUR an den
         // eigenen Mealie-Server — nie an einen fremden Host, falls je eine
         // absolute URL (z. B. aus Rezeptdaten) hier durchläuft.
@@ -154,6 +170,9 @@ class ApiService {
         handler.next(options);
       },
       onResponse: (response, handler) {
+        if (_stale) {
+          return handler.reject(_switched(response.requestOptions));
+        }
         LogManager.shared
             .log('✅ ${response.statusCode} ${response.requestOptions.uri}');
         if (_isOwnServer(response.requestOptions.uri)) {
@@ -162,6 +181,7 @@ class ApiService {
         handler.next(response);
       },
       onError: (e, handler) {
+        if (_stale) return handler.next(_switched(e.requestOptions));
         // Offline-Hinweis: keine Antwort = nicht erreichbar; jede Antwort
         // (auch 401/500) heißt, der Server ist da.
         if (_isOwnServer(e.requestOptions.uri)) {
@@ -379,8 +399,8 @@ class ApiService {
     final resp = await _dio.get(_path('/api/recipes/$id'));
     final json = Map<String, dynamic>.from(resp.data as Map);
     if (householdLastMade && !json.containsKey('lastMade')) {
-      final lastMade = await fetchHouseholdLastMade(
-          json['slug'] as String? ?? id);
+      final lastMade =
+          await fetchHouseholdLastMade(json['slug'] as String? ?? id);
       if (lastMade != null) json['lastMade'] = lastMade;
     }
     // Frisch vom Server mit dem aktuellen Modell gelesen → aktuelle
@@ -394,8 +414,7 @@ class ApiService {
   /// `null` bei nie gekocht oder Fehler.
   Future<String?> fetchHouseholdLastMade(String slug) async {
     try {
-      final resp =
-          await _dio.get(_path('/api/households/self/recipes/$slug'));
+      final resp = await _dio.get(_path('/api/households/self/recipes/$slug'));
       final v = (resp.data as Map?)?['lastMade'];
       return v is String && v.isNotEmpty ? v : null;
     } catch (_) {
@@ -691,12 +710,24 @@ class ApiService {
   //
   // Die Reihenfolge der Liste bleibt in den Multipart-Parts erhalten; die
   // erste Seite wird von Mealie zum Hauptbild des Rezepts.
-  Future<String> importRecipeFromImages(List<File> imageFiles) async {
+  //
+  // Standard: die STREAM-Variante (/create/ai/stream, wie der Link-Import):
+  // Fortschrittsmeldungen halten die Verbindung offen — Reverse-Proxys
+  // kappen stille Verbindungen oft nach 60–100 s, mehrseitige Fotos brauchen
+  // länger — und zeigen dem Nutzer, was gerade passiert. Im Zahnrad
+  // abschaltbar (AppSettings.importStreamPhotos) → wie bisher eine einzige
+  // Anfrage an /create/ai, etwa falls ein Proxy Streams puffert.
+  Future<String> importRecipeFromImages(
+    List<File> imageFiles, {
+    void Function(String message)? onProgress,
+  }) async {
     if (imageFiles.isEmpty) throw Exception('No images to upload');
     // Zielsprache des KI-Imports: die bewusst gewählte Importsprache, sonst
     // die App-Sprache (siehe AppSettings.effectiveImportLanguage).
+    // Aus (Zahnrad im Import, #45) → kein Feld, Mealie übersetzt nicht.
+    final translate = settings.importTranslateLanguage;
     final queryParams = {
-      'translateLanguage': settings.effectiveImportLanguage,
+      if (translate != null) 'translateLanguage': translate,
     };
     // Eine Liste als Wert → Dio hängt pro Element einen eigenen Part mit
     // demselben Feldnamen `images` an, in genau dieser Reihenfolge.
@@ -715,8 +746,8 @@ class ApiService {
     // pro Versuch: ein MultipartFile-Stream lässt sich nur einmal lesen.
     try {
       final aiForm = FormData.fromMap({
-        'translateLanguage': settings.effectiveImportLanguage,
-        'createNewOrganizers': 'true',
+        if (translate != null) 'translateLanguage': translate,
+        'createNewOrganizers': _createNewOrganizers,
         'images': [
           for (var i = 0; i < imageFiles.length; i++)
             await MultipartFile.fromFile(
@@ -725,15 +756,25 @@ class ApiService {
             ),
         ],
       });
-      final resp = await _dio.post(
-        _path('/api/recipes/create/ai'),
-        data: aiForm,
-        options: Options(
-          contentType: 'multipart/form-data',
-          receiveTimeout: const Duration(seconds: 240),
-        ),
-      );
-      return (resp.data as String? ?? '').replaceAll('"', '').trim();
+      final String slug;
+      if (settings.useImportStreamPhotos) {
+        final resp = await _postAiStream(aiForm);
+        final body = resp.data;
+        if (body == null) throw const AiImportException(null);
+        slug = await readAiImportStream(body.stream, onProgress: onProgress);
+      } else {
+        final resp = await _dio.post(
+          _path('/api/recipes/create/ai'),
+          data: aiForm,
+          options: Options(
+            contentType: 'multipart/form-data',
+            receiveTimeout: const Duration(seconds: 240),
+          ),
+        );
+        slug = (resp.data as String? ?? '').replaceAll('"', '').trim();
+      }
+      await _dropAiOrganizersIfUnwanted(slug);
+      return slug;
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status != 404 && status != 405) rethrow;
@@ -799,6 +840,19 @@ class ApiService {
     return slug;
   }
 
+  /// Eingefügtes Rezept anlegen: HTML, schema.org-JSON oder — ab Mealie
+  /// 3.30 mit voller Struktur — ein Rezept aus einem Mealie-Export.
+  Future<String> importRecipeFromHtmlOrJson(String data) async {
+    final resp = await _dio.post(
+      _path('/api/recipes/create/html-or-json'),
+      data: {'data': data},
+      options: Options(receiveTimeout: const Duration(minutes: 2)),
+    );
+    final slug = (resp.data as String? ?? '').replaceAll('"', '').trim();
+    if (slug.isEmpty) throw const AiImportException(null);
+    return slug;
+  }
+
   /// `image_3.png` — durchnummeriert (die Parts brauchen unterscheidbare
   /// Dateinamen) und mit der ECHTEN Endung, damit der Server den Typ richtig
   /// erkennt: die PDF-Seite kommt als PNG, Fotos als JPG.
@@ -853,31 +907,21 @@ class ApiService {
     String url, {
     void Function(String message)? onProgress,
   }) async {
+    final translate = settings.importTranslateLanguage;
     final formData = FormData.fromMap({
       'url': url,
-      'translateLanguage': settings.effectiveImportLanguage,
+      // Ohne Feld spart Mealie den Übersetzungs-KI-Aufruf (Zahnrad, #45).
+      if (translate != null) 'translateLanguage': translate,
       // Ab 3.23 ordnet Mealie nach dem Import per KI Schlagworte, Kategorien
-      // und Utensilien zu. Standard wäre: nur VORHANDENE verknüpfen. So legt
-      // Mealie fehlende zusätzlich an. Keine Versionsprüfung nötig: das Feld
+      // und Utensilien zu. `true` legt fehlende zusätzlich an, `false`
+      // verknüpft nur vorhandene. Keine Versionsprüfung nötig: das Feld
       // gibt es nur an diesem Endpunkt, ältere Server landen im Rückfall
       // (/create/url) unten und sehen es nie.
-      'createNewOrganizers': 'true',
+      'createNewOrganizers': _createNewOrganizers,
     });
     final Response<ResponseBody> resp;
     try {
-      resp = await _dio.post<ResponseBody>(
-        _path('/api/recipes/create/ai/stream'),
-        data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-          responseType: ResponseType.stream,
-          headers: {
-            'Accept': 'text/event-stream',
-            'Accept-Language': settings.selectedLanguage.replaceAll('_', '-'),
-          },
-          receiveTimeout: const Duration(minutes: 15),
-        ),
-      );
+      resp = await _postAiStream(formData);
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status == 404 || status == 405) {
@@ -888,7 +932,47 @@ class ApiService {
 
     final body = resp.data;
     if (body == null) throw const AiImportException(null);
-    return readAiImportStream(body.stream, onProgress: onProgress);
+    final slug = await readAiImportStream(body.stream, onProgress: onProgress);
+    await _dropAiOrganizersIfUnwanted(slug);
+    return slug;
+  }
+
+  /// POST an /create/ai/stream (Server-Sent Events). Fortschrittstexte
+  /// kommen in der Sprache aus `Accept-Language`.
+  Future<Response<ResponseBody>> _postAiStream(FormData form) =>
+      _dio.post<ResponseBody>(
+        _path('/api/recipes/create/ai/stream'),
+        data: form,
+        options: Options(
+          contentType: 'multipart/form-data',
+          responseType: ResponseType.stream,
+          headers: {
+            'Accept': 'text/event-stream',
+            'Accept-Language': settings.selectedLanguage.replaceAll('_', '-'),
+          },
+          receiveTimeout: const Duration(minutes: 15),
+        ),
+      );
+
+  String get _createNewOrganizers =>
+      settings.useImportOrganizers == 'create' ? 'true' : 'false';
+
+  /// Import-Option „Keine Kategorien & Tags" (#45): Mealies KI-Import
+  /// (/create/ai) ordnet IMMER zu — die API hat keinen Schalter dafür. Mit
+  /// `createNewOrganizers=false` sind es nur vorhandene; die entfernen wir
+  /// hier wieder. Scheitert das, bleibt das Rezept trotzdem angelegt.
+  Future<void> _dropAiOrganizersIfUnwanted(String slug) async {
+    if (settings.useImportOrganizers != 'none' || slug.isEmpty) return;
+    try {
+      await _dio.patch(_path('/api/recipes/$slug'), data: {
+        'tags': <Object>[],
+        'recipeCategory': <Object>[],
+        'tools': <Object>[],
+      });
+    } catch (e) {
+      LogManager.shared
+          .log('🤖 Import: Organizer entfernen fehlgeschlagen: $e');
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -1121,8 +1205,11 @@ class ApiService {
   /// (inkl. Einheiten-Umrechnung) und zählt das Rezept unter „verknüpfte
   /// Rezepte" um [scale] hoch. [ingredients] = Mealie-RecipeIngredient-JSON
   /// (wie GET /recipes liefert, ggf. von der App gefiltert/angepasst).
-  Future<void> addRecipeIngredientsToShoppingList(String listId,
-      String recipeId, double scale, List<Map<String, dynamic>> ingredients) async {
+  Future<void> addRecipeIngredientsToShoppingList(
+      String listId,
+      String recipeId,
+      double scale,
+      List<Map<String, dynamic>> ingredients) async {
     await _dio
         .post(_path('/api/households/shopping/lists/$listId/recipe'), data: [
       {
@@ -1210,7 +1297,12 @@ class ApiService {
   }
 
   Future<List<ShoppingItem>> fetchShoppingItems() async {
-    if (settings.shoppingListId.isEmpty) return [];
+    // Ohne Listen-ID KEIN „leeres Ergebnis" liefern: Aufrufer hielten das
+    // für den Server-Stand und überschrieben damit den Offline-Cache
+    // (Issue #40 — Start ohne Netz zeigte „Einkauf erledigt").
+    if (settings.shoppingListId.isEmpty) {
+      throw StateError('Keine Einkaufsliste ausgewählt');
+    }
     final resp = await _dio.get(
       _path('/api/households/shopping/items'),
       queryParameters: {
@@ -1308,15 +1400,6 @@ class ApiService {
 
   Future<void> deleteShoppingItem(String itemId) async {
     await _dio.delete(_path('/api/households/shopping/items/$itemId'));
-  }
-
-  // Delete all checked items — mirrors iOS deleteShoppingItems(_:)
-  Future<void> deleteCheckedItems(List<ShoppingItem> items) async {
-    for (final item in items.where((i) => i.checked)) {
-      try {
-        await deleteShoppingItem(item.id);
-      } catch (_) {}
-    }
   }
 
   // Fetch labels from api/groups/labels — mirrors iOS fetchShoppingLabels()
@@ -1442,18 +1525,6 @@ class ApiService {
 
   Future<void> deleteCookbook(String id) async {
     await _dio.delete(_path('/api/households/cookbooks/$id'));
-  }
-
-  /// Werkzeuge (Organizer, wie Kategorien/Tags) — für den Kochbuch-Filter-
-  /// Baustein „Utensilien". `onHand` gibt's nur am Rezept selbst, hier immer
-  /// false (RecipeTool.fromJson deckt das fehlende Feld bereits ab).
-  Future<List<RecipeTool>> fetchTools() async {
-    final resp = await _dio
-        .get(_path('/api/organizers/tools'), queryParameters: {'perPage': -1});
-    final data = resp.data as Map<String, dynamic>;
-    return (data['items'] as List<dynamic>? ?? [])
-        .map((e) => RecipeTool.fromJson(e as Map<String, dynamic>))
-        .toList();
   }
 
   /// Mealie „Rezept-Suche" (GET /api/recipes/suggestions) — dieselben
@@ -1797,7 +1868,13 @@ class ApiService {
       _path('/api/households/mealplans'),
       // ALLE: bei 1000 + aufsteigender Sortierung fehlten nach gut einem
       // Jahr Nutzung (3 Mahlzeiten/Tag) ausgerechnet die AKTUELLEN Wochen.
-      queryParameters: {'perPage': -1, 'orderBy': 'date'},
+      // Mealie ≥ 3.30 liefert Wochen-Einträge (`endDate`) nur auf
+      // ausdrücklichen Wunsch; ältere Server ignorieren den Parameter.
+      queryParameters: {
+        'perPage': -1,
+        'orderBy': 'date',
+        'include_week_entries': true,
+      },
     );
     final data = resp.data as Map<String, dynamic>;
     return (data['items'] as List<dynamic>? ?? [])
@@ -1820,13 +1897,24 @@ class ApiService {
   /// zurückgesetzt.
   /// [recipeId] ersetzt das verknüpfte Rezept (Doppelte Rezepte
   /// zusammenführen), sonst bleibt es.
+  /// [week]: `null` = Wochen-/Tageseintrag bleibt, wie er ist; `true` = als
+  /// Wochen-Eintrag ab [date] speichern (`endDate` = +6, Mealie ≥ 3.30);
+  /// `false` = wieder ein normaler Tageseintrag. `endDate` geht IMMER mit —
+  /// fehlt es, macht Mealie aus einem Wochen- einen Tageseintrag.
+  /// [title] / [text]: neuer Titel bzw. neue Notiz (Issue #41), sonst
+  /// bleiben die des Eintrags.
   Future<MealplanEntry> updateMealplanEntry(MealplanEntry entry,
       {required String date,
       required String entryType,
       String? recipeId,
-      double? recipeScale}) async {
+      double? recipeScale,
+      bool? week,
+      String? title,
+      String? text}) async {
     recipeId ??= entry.recipeId ?? entry.recipe?.id;
     recipeScale ??= entry.recipeScale;
+    final asWeek = week ?? entry.isWeekEntry;
+    final endDate = asWeek ? weekEntryEndDate(date) : null;
     final resp = await _dio.put(
       _path('/api/households/mealplans/${entry.id}'),
       data: {
@@ -1835,11 +1923,12 @@ class ApiService {
         'userId': entry.userId,
         'date': date,
         'entryType': entryType,
-        'title': entry.title ?? '',
-        'text': entry.text ?? '',
+        'title': title ?? entry.title ?? '',
+        'text': text ?? entry.text ?? '',
         'recipeId': (recipeId?.isEmpty ?? true) ? null : recipeId,
         // Mealie ≥ 3.29: Portionen-Faktor, fehlt er, wird er auf 1 gesetzt.
         if (recipeScale != null) 'recipeScale': recipeScale,
+        if (endDate != null) 'endDate': endDate,
       },
     );
     return MealplanEntry.fromJson(resp.data as Map<String, dynamic>);
@@ -1874,8 +1963,8 @@ class ApiService {
     // Wie recipeAssetUrl: Server-URL + Pfad (ein Unterpfad in der
     // Server-URL bleibt erhalten, Uri.resolve würde ihn verwerfen).
     final server = settings.serverUrl.replaceAll(RegExp(r'/+$'), '');
-    final uri = Uri.parse(
-        '$server${_path('/api/households/mealplans/ical/$token')}');
+    final uri =
+        Uri.parse('$server${_path('/api/households/mealplans/ical/$token')}');
     return query.isEmpty
         ? uri.toString()
         : uri.replace(queryParameters: query).toString();
@@ -1940,6 +2029,30 @@ class ApiService {
         .toList();
   }
 
+  /// Alle Einträge aller Rezepte im Zeitraum [from]–[to] (Filter wie der
+  /// nächtliche Essensplan-Job von Mealie: `timestamp` als UTC ohne Zone).
+  Future<List<TimelineEvent>> fetchTimelineEventsBetween(
+      DateTime from, DateTime to) async {
+    String utc(DateTime d) => d.toUtc().toIso8601String().replaceFirst('Z', '');
+    final resp = await _dio.get(
+      _path('/api/recipes/timeline/events'),
+      queryParameters: {
+        'page': 1,
+        'perPage': -1,
+        'orderBy': 'timestamp',
+        'orderDirection': 'desc',
+        'queryFilter':
+            'timestamp >= "${utc(from)}" AND timestamp < "${utc(to)}"',
+      },
+    );
+    final body = resp.data;
+    final items = body is Map ? (body['items'] as List? ?? const []) : const [];
+    return items
+        .map(TimelineEvent.tryParse)
+        .whereType<TimelineEvent>()
+        .toList();
+  }
+
   Future<TimelineEvent> createTimelineEvent({
     required String recipeId,
     required String subject,
@@ -1965,6 +2078,16 @@ class ApiService {
     await _dio.put(_path('/api/recipes/timeline/events/${event.id}'), data: {
       'subject': event.subject,
       'eventMessage': event.message,
+    });
+  }
+
+  /// Foto eines Eintrags entfernen (Mealie ≥ 3.30: `image` = „does not have
+  /// image“ löscht die Bilddatei).
+  Future<void> removeTimelineEventImage(TimelineEvent event) async {
+    await _dio.put(_path('/api/recipes/timeline/events/${event.id}'), data: {
+      'subject': event.subject,
+      'eventMessage': event.message,
+      'image': 'does not have image',
     });
   }
 
@@ -2410,6 +2533,29 @@ class ApiService {
     }
   }
 
+  // ── KI-Prompts (Mealie 3.30, Gruppe; Recht „Verwalten") ─────────────────
+
+  /// `{globalInstructions, prompts: [{name, isSystem, defaultContent, mode,
+  /// content, defaultChanged}]}`.
+  Future<Map<String, dynamic>> fetchAiPrompts() async =>
+      _map((await _dio.get(_path('/api/groups/ai-providers/prompts'))).data);
+
+  /// [mode]: `append` | `override` (`global` nur `append`). Antwort wie
+  /// [fetchAiPrompts].
+  Future<Map<String, dynamic>> saveAiPrompt(String name,
+          {required String mode, required String content}) async =>
+      _map((await _dio.put(
+              _path('/api/groups/ai-providers/prompts/'
+                  '${Uri.encodeComponent(name)}'),
+              data: {'mode': mode, 'content': content}))
+          .data);
+
+  /// Zurück auf Mealies Standard-Prompt (bzw. globale Anweisungen leeren).
+  Future<Map<String, dynamic>> resetAiPrompt(String name) async =>
+      _map((await _dio.delete(_path(
+              '/api/groups/ai-providers/prompts/${Uri.encodeComponent(name)}')))
+          .data);
+
   Future<void> deleteAiProvider(String id) async =>
       _dio.delete(_path('/api/groups/ai-providers/providers/$id'));
 
@@ -2472,6 +2618,12 @@ class AiImportException implements Exception {
 String? mealieErrorMessage(Object error) {
   if (error is AiImportException) return error.message;
   final l = currentAppL10n;
+  // TLS-Kette nicht prüfbar (z. B. eigene CA nicht installiert) — eigener
+  // Text statt „keine Verbindung", sonst sucht man den Fehler im Netz.
+  if (_isCertificateError(error) ||
+      (error is DioException && _isCertificateError(error.error))) {
+    return l?.errorCertificate;
+  }
   if (error is SocketException || error is HttpException) {
     return l?.errorNoConnection;
   }
@@ -2533,6 +2685,11 @@ String? mealieErrorMessage(Object error) {
   if (status == 404 && l != null) return l.errorNotFound;
   return null;
 }
+
+bool _isCertificateError(Object? e) =>
+    e is HandshakeException &&
+    (e.osError?.message.contains('CERTIFICATE_VERIFY_FAILED') ??
+        e.message.contains('CERTIFICATE_VERIFY_FAILED'));
 
 /// Text für die Oberfläche: Server-/Verbindungsgrund, sonst [fallback]
 /// bzw. eine allgemeine Meldung — nie technischer Rohtext.
@@ -2624,4 +2781,12 @@ String? _handleAiEvent(
     default:
       return null;
   }
+}
+
+/// Letzter Tag eines Mealie-Wochen-Eintrags (`date` + 6 Tage, „YYYY-MM-DD“).
+String weekEntryEndDate(String date) {
+  final d = DateTime.tryParse(date) ?? DateTime.now();
+  final e = DateTime(d.year, d.month, d.day + 6);
+  return '${e.year.toString().padLeft(4, '0')}-'
+      '${e.month.toString().padLeft(2, '0')}-${e.day.toString().padLeft(2, '0')}';
 }

@@ -59,7 +59,8 @@ class FoodsCatalogNotifier extends AsyncNotifier<List<ShoppingFood>> {
               labelId: f['labelId'] as String?,
               aliases: [
                 for (final a in (f['aliases'] as List?) ?? const [])
-                  if (a is Map && (a['name'] as String?)?.trim().isNotEmpty == true)
+                  if (a is Map &&
+                      (a['name'] as String?)?.trim().isNotEmpty == true)
                     (a['name'] as String).trim(),
               ],
             ))
@@ -145,8 +146,7 @@ ShoppingUnit? resolveUnitByName(List<ShoppingUnit> units, String input) {
     if ((u.id ?? '').isEmpty) continue;
     if ((u.name ?? '').toLowerCase() == q ||
         // Mehrzahl („2 Packungen Milch") wie Mealie.
-        ((u.pluralName ?? '').isNotEmpty &&
-            u.pluralName!.toLowerCase() == q) ||
+        ((u.pluralName ?? '').isNotEmpty && u.pluralName!.toLowerCase() == q) ||
         ((u.abbreviation ?? '').isNotEmpty &&
             u.abbreviation!.toLowerCase() == q)) {
       return u;

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/sheet_title.dart';
+import '../../../shared/widgets/app_bar_text_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
@@ -52,15 +54,12 @@ class _SyncChangesSheetState extends ConsumerState<SyncChangesSheet> {
         backgroundColor: context.appBg,
         surfaceTintColor: Colors.transparent,
         title: Text(l.syncChangesTitle),
-        leading: TextButton(
+        centerTitle: true,
+        leading: AppBarTextButton(
+          label: l.cancel,
           onPressed: _syncing ? null : () => Navigator.pop(context),
-          child: Text(l.cancel,
-              style: TextStyle(
-                  color:
-                      _syncing ? context.appFgTertiary : AppTokens.accentDeep,
-                  fontWeight: FontWeight.w600)),
         ),
-        leadingWidth: 100,
+        leadingWidth: AppBarTextButton.leadingWidth,
       ),
       body: SafeArea(
         top: false,
@@ -247,13 +246,7 @@ class _Section extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
-            child: Text(title,
-                style: TextStyle(
-                    fontFamily: 'PlusJakartaSans',
-                    color: context.appFg,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3)),
+            child: SheetTitle(title),
           ),
           ...children,
         ],
@@ -380,7 +373,7 @@ class _AddRow extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTokens.rXs),
                 gradient: AppTokens.accentGradient,
                 boxShadow: context.appAccentGlow,
               ),

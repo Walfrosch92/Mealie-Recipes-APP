@@ -8,6 +8,7 @@ import '../../cooking_mode/widgets/cooking_mode_fab.dart';
 import '../../../core/models/shopping_item.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../providers/shopping_list_provider.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 
 // ---------------------------------------------------------------------------
 // Archivierte Einkäufe — beim „Einkauf abschließen" abgelegte erledigte
@@ -40,13 +41,10 @@ class ArchivedShoppingListsScreen extends ConsumerWidget {
         child: SafeArea(
           top: false,
           child: lists.isEmpty
-              ? Center(
-                  child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Text(l.archivedEmpty,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: context.appFgSub, height: 1.4)),
-                ))
+              ? EmptyStateView(
+                  icon: Icons.inventory_2_rounded,
+                  message: l.archivedEmpty,
+                  scrollable: false)
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: lists.length,
@@ -76,19 +74,19 @@ class ArchivedShoppingListsScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, AppLocalizations l) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.appCard,
-        title: Text(l.deleteAllConfirmTitle,
-            style: TextStyle(color: context.appFg)),
+      builder: (dctx) => AlertDialog(
+        backgroundColor: dctx.appCard,
+        title:
+            Text(l.deleteAllConfirmTitle, style: TextStyle(color: dctx.appFg)),
         content: Text(l.deleteAllConfirmMessage,
-            style: TextStyle(color: context.appFgSub)),
+            style: TextStyle(color: dctx.appFgSub)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
+              onPressed: () => Navigator.pop(dctx), child: Text(l.cancel)),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: AppTokens.dangerButton,
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dctx);
               ref.read(archivedShoppingListsProvider.notifier).deleteAll();
             },
             child: Text(l.delete),
@@ -119,6 +117,31 @@ class _ArchivedListSection extends StatelessWidget {
     required this.onDelete,
   });
 
+  Future<bool> _confirmDelete(BuildContext context) async {
+    final l = AppLocalizations.of(context)!;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dctx) => AlertDialog(
+            backgroundColor: dctx.appCard,
+            title: Text(l.deleteAllConfirmTitle,
+                style: TextStyle(color: dctx.appFg)),
+            content: Text(l.deleteSelectedConfirm(1),
+                style: TextStyle(color: dctx.appFgSub)),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(dctx, false),
+                  child: Text(l.cancel)),
+              FilledButton(
+                style: AppTokens.dangerButton,
+                onPressed: () => Navigator.pop(dctx, true),
+                child: Text(l.delete),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dismissible(
@@ -126,6 +149,9 @@ class _ArchivedListSection extends StatelessWidget {
       // Minute kollidierten sonst).
       key: ValueKey('dismiss-$id'),
       direction: DismissDirection.endToStart,
+      // Rückfrage wie bei „Alle löschen" — ein archivierter Einkauf lässt
+      // sich nicht wiederherstellen.
+      confirmDismiss: (_) => _confirmDelete(context),
       onDismissed: (_) => onDelete(),
       background: Container(
         alignment: Alignment.centerRight,
@@ -133,9 +159,9 @@ class _ArchivedListSection extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.red,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTokens.rSm),
         ),
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

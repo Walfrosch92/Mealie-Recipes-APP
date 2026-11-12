@@ -1069,18 +1069,6 @@ abstract class AppLocalizations {
   /// **'📅 Meal Plan'**
   String get mealplanTitle;
 
-  /// No description provided for @mealplanSelectMode.
-  ///
-  /// In en, this message translates to:
-  /// **'Select multiple recipes'**
-  String get mealplanSelectMode;
-
-  /// No description provided for @mealplanSelectedCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{Select} =1{1 selected} other{{count} selected}}'**
-  String mealplanSelectedCount(int count);
-
   /// No description provided for @breakfast.
   ///
   /// In en, this message translates to:
@@ -1591,6 +1579,18 @@ abstract class AppLocalizations {
   /// **'All in the cart! 🎉'**
   String get shoppingCompletedSubtitle;
 
+  /// No description provided for @shoppingOfflineNoCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline – list not saved'**
+  String get shoppingOfflineNoCache;
+
+  /// No description provided for @shoppingOfflineNoCacheSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No items of this list are stored on this device yet. It will load as soon as you\'re back online.'**
+  String get shoppingOfflineNoCacheSubtitle;
+
   /// No description provided for @essensplan.
   ///
   /// In en, this message translates to:
@@ -1758,12 +1758,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete all'**
   String get allDeleteConfirm;
-
-  /// No description provided for @noMealsThisWeek.
-  ///
-  /// In en, this message translates to:
-  /// **'No meals planned'**
-  String get noMealsThisWeek;
 
   /// No description provided for @entriesInOtherWeeks.
   ///
@@ -4783,12 +4777,6 @@ abstract class AppLocalizations {
   /// **'No connection to the server – results come from the recipes stored on this device.'**
   String get finderOfflineHint;
 
-  /// No description provided for @addIngredientsSkippedOnHand.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{Added to your shopping list – 1 ingredient on hand was skipped.} other{Added to your shopping list – {count} ingredients on hand were skipped.}}'**
-  String addIngredientsSkippedOnHand(int count);
-
   /// No description provided for @sendPeerOfflineHint.
   ///
   /// In en, this message translates to:
@@ -7356,6 +7344,1530 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\"{alias}\" already belongs to \"{name}\" — better merge the two.'**
   String aliasBelongsTo(String alias, String name);
+
+  /// No description provided for @recipeMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe Match'**
+  String get recipeMatchTitle;
+
+  /// No description provided for @recipeMatchShuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get recipeMatchShuffle;
+
+  /// No description provided for @recipeMatchCardsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recipe in the deck} other{{count} recipes in the deck}}'**
+  String recipeMatchCardsLeft(int count);
+
+  /// No description provided for @recipeMatchNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get recipeMatchNext;
+
+  /// No description provided for @recipeMatchKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Onto the tray'**
+  String get recipeMatchKeep;
+
+  /// No description provided for @recipeMatchKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Put on the tray'**
+  String get recipeMatchKept;
+
+  /// No description provided for @recipeMatchAnyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Any duration'**
+  String get recipeMatchAnyTime;
+
+  /// No description provided for @recipeMatchMaxTime.
+  ///
+  /// In en, this message translates to:
+  /// **'≤ {minutes} min'**
+  String recipeMatchMaxTime(int minutes);
+
+  /// No description provided for @recipeMatchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching recipes'**
+  String get recipeMatchEmpty;
+
+  /// No description provided for @recipeMatchEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the filters or clear the tray.'**
+  String get recipeMatchEmptyHint;
+
+  /// No description provided for @recipeMatchResetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get recipeMatchResetFilters;
+
+  /// No description provided for @recipeMatchFlipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap: ingredients · instructions'**
+  String get recipeMatchFlipHint;
+
+  /// No description provided for @recipeMatchFlipBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip back'**
+  String get recipeMatchFlipBack;
+
+  /// No description provided for @recipeMatchOpenRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Full recipe'**
+  String get recipeMatchOpenRecipe;
+
+  /// No description provided for @recipeMatchOnHand.
+  ///
+  /// In en, this message translates to:
+  /// **'on hand'**
+  String get recipeMatchOnHand;
+
+  /// No description provided for @recipeMatchTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Tray'**
+  String get recipeMatchTray;
+
+  /// No description provided for @recipeMatchTrayEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Still empty – drag a card down'**
+  String get recipeMatchTrayEmpty;
+
+  /// No description provided for @recipeMatchTrayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recipe} other{{count} recipes}}'**
+  String recipeMatchTrayCount(int count);
+
+  /// No description provided for @recipeMatchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get recipeMatchClear;
+
+  /// No description provided for @recipeMatchTrayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays until you clear it – even when you close the deck.'**
+  String get recipeMatchTrayHint;
+
+  /// No description provided for @recipeMatchRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from tray'**
+  String get recipeMatchRemove;
+
+  /// No description provided for @recipeMatchToMealplan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to meal plan'**
+  String get recipeMatchToMealplan;
+
+  /// No description provided for @recipeMatchToShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients to shopping list'**
+  String get recipeMatchToShopping;
+
+  /// No description provided for @recipeMatchSelectIngredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Select ingredients'**
+  String get recipeMatchSelectIngredients;
+
+  /// No description provided for @recipeMatchNoList.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a shopping list first.'**
+  String get recipeMatchNoList;
+
+  /// No description provided for @recipeMatchList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get recipeMatchList;
+
+  /// No description provided for @recipeMatchOnHandHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients on hand are already deselected.'**
+  String get recipeMatchOnHandHint;
+
+  /// No description provided for @recipeMatchAddCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {selected} of {total} ingredients'**
+  String recipeMatchAddCount(int selected, int total);
+
+  /// No description provided for @recipeMatchNoDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No day yet – stays on the tray'**
+  String get recipeMatchNoDay;
+
+  /// No description provided for @recipeMatchAddMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Add 1 meal} other{Add {count} meals}}'**
+  String recipeMatchAddMeals(int count);
+
+  /// No description provided for @recipeMatchMealsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 meal added} other{{count} meals added}}'**
+  String recipeMatchMealsAdded(int count);
+
+  /// No description provided for @recipeMatchSwipeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up to open the tray'**
+  String get recipeMatchSwipeUp;
+
+  /// No description provided for @weekPlannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan the week'**
+  String get weekPlannerTitle;
+
+  /// No description provided for @weekPlannerStepDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get weekPlannerStepDays;
+
+  /// No description provided for @weekPlannerStepPrefs.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get weekPlannerStepPrefs;
+
+  /// No description provided for @weekPlannerStepPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get weekPlannerStepPreview;
+
+  /// No description provided for @weekPlannerDaysTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which meals should the app fill?'**
+  String get weekPlannerDaysTitle;
+
+  /// No description provided for @weekPlannerDaysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the cells. Anything already planned stays as it is.'**
+  String get weekPlannerDaysHint;
+
+  /// No description provided for @weekPlannerPresetWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays'**
+  String get weekPlannerPresetWeekdays;
+
+  /// No description provided for @weekPlannerPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'planned'**
+  String get weekPlannerPlanned;
+
+  /// No description provided for @weekPlannerMoreMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more meals'**
+  String get weekPlannerMoreMeals;
+
+  /// No description provided for @weekPlannerFewerMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer meals'**
+  String get weekPlannerFewerMeals;
+
+  /// No description provided for @weekPlannerMealCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 meal} other{{count} meals}}'**
+  String weekPlannerMealCount(int count);
+
+  /// No description provided for @weekPlannerPrefsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should the app look out for?'**
+  String get weekPlannerPrefsTitle;
+
+  /// No description provided for @weekPlannerPrefsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All optional – without a choice it picks a colourful mix of your recipes.'**
+  String get weekPlannerPrefsHint;
+
+  /// No description provided for @weekPlannerQuick.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick on weekdays'**
+  String get weekPlannerQuick;
+
+  /// No description provided for @weekPlannerQuickSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon–Fri at most {minutes} min'**
+  String weekPlannerQuickSub(int minutes);
+
+  /// No description provided for @weekPlannerStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-uncooked first'**
+  String get weekPlannerStale;
+
+  /// No description provided for @weekPlannerStaleSub.
+  ///
+  /// In en, this message translates to:
+  /// **'based on \"Last cooked\" and the meal plan'**
+  String get weekPlannerStaleSub;
+
+  /// No description provided for @weekPlannerFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan favorites more often'**
+  String get weekPlannerFavorites;
+
+  /// No description provided for @weekPlannerFavoritesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'hearted and highly rated recipes'**
+  String get weekPlannerFavoritesSub;
+
+  /// No description provided for @weekPlannerVariety.
+  ///
+  /// In en, this message translates to:
+  /// **'Variety'**
+  String get weekPlannerVariety;
+
+  /// No description provided for @weekPlannerVarietySub.
+  ///
+  /// In en, this message translates to:
+  /// **'no category twice in a row'**
+  String get weekPlannerVarietySub;
+
+  /// No description provided for @weekPlannerOnlyFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Only from'**
+  String get weekPlannerOnlyFrom;
+
+  /// No description provided for @weekPlannerDiceRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Use dice rules'**
+  String get weekPlannerDiceRules;
+
+  /// No description provided for @weekPlannerDiceRulesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'your choice per meal from the Meal Plan Settings'**
+  String get weekPlannerDiceRulesSub;
+
+  /// No description provided for @weekPlannerMatching.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 matching recipe} other{{count} matching recipes}}'**
+  String weekPlannerMatching(int count);
+
+  /// No description provided for @weekPlannerForMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{for 1 meal} other{for {count} meals}}'**
+  String weekPlannerForMeals(int count);
+
+  /// No description provided for @weekPlannerSuggest.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest'**
+  String get weekPlannerSuggest;
+
+  /// No description provided for @weekPlannerPreviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The dice swaps, the lock keeps. Hold a dish and drag it onto another day to swap them.'**
+  String get weekPlannerPreviewHint;
+
+  /// No description provided for @weekPlannerRerollAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Reroll all'**
+  String get weekPlannerRerollAll;
+
+  /// No description provided for @weekPlannerReroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Reroll'**
+  String get weekPlannerReroll;
+
+  /// No description provided for @weekPlannerLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock'**
+  String get weekPlannerLock;
+
+  /// No description provided for @weekPlannerUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get weekPlannerUnlock;
+
+  /// No description provided for @weekPlannerReasonNever.
+  ///
+  /// In en, this message translates to:
+  /// **'never cooked'**
+  String get weekPlannerReasonNever;
+
+  /// No description provided for @weekPlannerReasonStale.
+  ///
+  /// In en, this message translates to:
+  /// **'not cooked in a while'**
+  String get weekPlannerReasonStale;
+
+  /// No description provided for @weekPlannerReasonFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get weekPlannerReasonFavorite;
+
+  /// No description provided for @weekPlannerNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching recipe'**
+  String get weekPlannerNoMatch;
+
+  /// No description provided for @weekPlannerThenShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Then choose ingredients for the shopping list'**
+  String get weekPlannerThenShopping;
+
+  /// No description provided for @weekPlannerMostlyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Week almost empty'**
+  String get weekPlannerMostlyEmpty;
+
+  /// No description provided for @weekPlannerMostlyEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'{free} of {total} days still free – fill them in three steps.'**
+  String weekPlannerMostlyEmptySub(int free, int total);
+
+  /// No description provided for @previousWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous week'**
+  String get previousWeek;
+
+  /// No description provided for @nextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get nextWeek;
+
+  /// No description provided for @weekPlannerAllDays.
+  ///
+  /// In en, this message translates to:
+  /// **'All days'**
+  String get weekPlannerAllDays;
+
+  /// No description provided for @weekPlannerWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekend'**
+  String get weekPlannerWeekend;
+
+  /// No description provided for @weekPlannerDinners.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinners'**
+  String get weekPlannerDinners;
+
+  /// No description provided for @weekPlannerLunches.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunches'**
+  String get weekPlannerLunches;
+
+  /// No description provided for @weekPlannerAllMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'All meals'**
+  String get weekPlannerAllMeals;
+
+  /// No description provided for @mealplanDayEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing planned'**
+  String get mealplanDayEmpty;
+
+  /// No description provided for @mealplanDropHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here'**
+  String get mealplanDropHere;
+
+  /// No description provided for @mealplanDayKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'{kcal} kcal per serving'**
+  String mealplanDayKcal(String kcal);
+
+  /// No description provided for @mealplanDayKcalPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'at least {kcal} kcal per serving'**
+  String mealplanDayKcalPartial(String kcal);
+
+  /// No description provided for @globalSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search recipes, items, features …'**
+  String get globalSearchHint;
+
+  /// No description provided for @globalSearchIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for recipes, shopping list items, foods and cookbooks – and for features and settings of the app, e.g. \"list\".'**
+  String get globalSearchIntro;
+
+  /// No description provided for @globalSearchFunctions.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get globalSearchFunctions;
+
+  /// No description provided for @globalSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results for \"{query}\"'**
+  String globalSearchNoResults(String query);
+
+  /// No description provided for @searchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get searchClear;
+
+  /// No description provided for @recipeMatchPlanWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan the week with these recipes'**
+  String get recipeMatchPlanWeek;
+
+  /// No description provided for @weekPlannerReasonTray.
+  ///
+  /// In en, this message translates to:
+  /// **'from the tray'**
+  String get weekPlannerReasonTray;
+
+  /// No description provided for @emptyBrowseRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse recipes'**
+  String get emptyBrowseRecipes;
+
+  /// No description provided for @mealplanWeekShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients for this week'**
+  String get mealplanWeekShopping;
+
+  /// No description provided for @globalSearchActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get globalSearchActions;
+
+  /// No description provided for @globalSearchAddToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Add \"{text}\" to the shopping list'**
+  String globalSearchAddToList(String text);
+
+  /// No description provided for @globalSearchAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{text}\" added'**
+  String globalSearchAdded(String text);
+
+  /// No description provided for @globalSearchImportUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Import recipe from this address'**
+  String get globalSearchImportUrl;
+
+  /// No description provided for @homeContinueCooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue cooking'**
+  String get homeContinueCooking;
+
+  /// No description provided for @homeCookingStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String homeCookingStep(int step, int total);
+
+  /// No description provided for @homeCookingPrep.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparation'**
+  String get homeCookingPrep;
+
+  /// No description provided for @homeCookingAlmostDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost done'**
+  String get homeCookingAlmostDone;
+
+  /// No description provided for @homeCookingContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'continue'**
+  String get homeCookingContinue;
+
+  /// No description provided for @paneSelectRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a recipe on the left.'**
+  String get paneSelectRecipe;
+
+  /// No description provided for @mealplanDragRecipeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag a recipe onto a day to plan it.'**
+  String get mealplanDragRecipeHint;
+
+  /// No description provided for @desktopDropUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'These files can\'t be added as attachments.'**
+  String get desktopDropUnsupported;
+
+  /// No description provided for @desktopDropUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 attachment added} other{{count} attachments added}}'**
+  String desktopDropUploaded(int count);
+
+  /// No description provided for @desktopDropAsAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to add as attachment'**
+  String get desktopDropAsAttachment;
+
+  /// No description provided for @printAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get printAction;
+
+  /// No description provided for @mealplanPrintWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Print week'**
+  String get mealplanPrintWeek;
+
+  /// No description provided for @mealplanEntryCooked.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooked'**
+  String get mealplanEntryCooked;
+
+  /// No description provided for @recipeSearchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get recipeSearchClear;
+
+  /// No description provided for @organizerShowRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Show recipes'**
+  String get organizerShowRecipes;
+
+  /// No description provided for @globalSearchShowAllRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count} recipes'**
+  String globalSearchShowAllRecipes(int count);
+
+  /// No description provided for @unnamedEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'(no name)'**
+  String get unnamedEntry;
+
+  /// No description provided for @mealplanWholeWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'For the whole week'**
+  String get mealplanWholeWeek;
+
+  /// No description provided for @mealplanWholeWeekDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop a meal here to plan it for the whole week.'**
+  String get mealplanWholeWeekDropHint;
+
+  /// No description provided for @mealplanMovedToWholeWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned for the whole week'**
+  String get mealplanMovedToWholeWeek;
+
+  /// No description provided for @mealplanCookToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooking it today'**
+  String get mealplanCookToday;
+
+  /// No description provided for @mealplanPlanWholeWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan for the whole week'**
+  String get mealplanPlanWholeWeek;
+
+  /// No description provided for @mealplanPlanWholeWeekRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to}'**
+  String mealplanPlanWholeWeekRange(String from, String to);
+
+  /// No description provided for @calendarFeedDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Length (minutes)'**
+  String get calendarFeedDuration;
+
+  /// No description provided for @calendarFeedEventDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Details'**
+  String get calendarFeedEventDetails;
+
+  /// No description provided for @calendarFeedEventDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize how meals show up in your calendar. Merge fields: {fields}'**
+  String calendarFeedEventDetailsHint(String fields);
+
+  /// No description provided for @calendarFeedEventTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Title'**
+  String get calendarFeedEventTitle;
+
+  /// No description provided for @calendarFeedEventDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Description'**
+  String get calendarFeedEventDescription;
+
+  /// No description provided for @calendarFeedEventDetailsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing these changes the calendar link — if you\'ve already subscribed, subscribe again with the new link.'**
+  String get calendarFeedEventDetailsWarning;
+
+  /// No description provided for @stepDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration (minutes)'**
+  String get stepDurationMinutes;
+
+  /// No description provided for @stepDurationSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved duration: {duration}. Editing replaces it with whole minutes.'**
+  String stepDurationSaved(String duration);
+
+  /// No description provided for @sortTotalTimeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortest total time'**
+  String get sortTotalTimeShort;
+
+  /// No description provided for @sortTotalTimeLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest total time'**
+  String get sortTotalTimeLong;
+
+  /// No description provided for @recipeCreatedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Created by {name}'**
+  String recipeCreatedBy(String name);
+
+  /// No description provided for @timelineReplacePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace photo'**
+  String get timelineReplacePhoto;
+
+  /// No description provided for @pasteRecipeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste recipe'**
+  String get pasteRecipeTitle;
+
+  /// No description provided for @pasteRecipeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a recipe as JSON (schema.org) or a web page\'s HTML source.'**
+  String get pasteRecipeDescription;
+
+  /// No description provided for @pasteRecipeDescription330.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a recipe exported from Mealie (JSON) — it is imported with its full structure: foods, units and step links. JSON (schema.org) and a web page\'s HTML source work too.'**
+  String get pasteRecipeDescription330;
+
+  /// No description provided for @pasteRecipeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste JSON or HTML here'**
+  String get pasteRecipeHint;
+
+  /// No description provided for @pasteRecipeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste recipe'**
+  String get pasteRecipeButton;
+
+  /// No description provided for @pasteRecipeImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get pasteRecipeImport;
+
+  /// No description provided for @aiPromptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Prompts'**
+  String get aiPromptsTitle;
+
+  /// No description provided for @aiPromptsTeaser.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize the instructions Mealie gives your AI provider — for all tasks or for each one.'**
+  String get aiPromptsTeaser;
+
+  /// No description provided for @aiPromptsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize the instructions Mealie gives your AI provider for each task. Mealie\'s prompts are written in English, but that doesn\'t change the language of your recipes: they keep the language of their source unless you choose to translate them. You can write your own instructions in any language.'**
+  String get aiPromptsDescription;
+
+  /// No description provided for @aiPromptsGlobal.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions for All Prompts'**
+  String get aiPromptsGlobal;
+
+  /// No description provided for @aiPromptsGlobalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to every prompt that produces recipe data, such as building recipes, parsing ingredients, and translating. System prompts aren\'t affected.'**
+  String get aiPromptsGlobalDescription;
+
+  /// No description provided for @aiPromptsGlobalPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Always use metric units.'**
+  String get aiPromptsGlobalPlaceholder;
+
+  /// No description provided for @aiPromptsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompts'**
+  String get aiPromptsList;
+
+  /// No description provided for @aiPromptSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get aiPromptSystem;
+
+  /// No description provided for @aiPromptSystemDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a system prompt. It transcribes your source material as faithfully as possible before it\'s turned into a recipe, so the instructions for all prompts aren\'t added to it. Changing it usually isn\'t necessary, and can make imports less reliable.'**
+  String get aiPromptSystemDescription;
+
+  /// No description provided for @aiPromptAppended.
+  ///
+  /// In en, this message translates to:
+  /// **'Appended'**
+  String get aiPromptAppended;
+
+  /// No description provided for @aiPromptOverridden.
+  ///
+  /// In en, this message translates to:
+  /// **'Overridden'**
+  String get aiPromptOverridden;
+
+  /// No description provided for @aiPromptModeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get aiPromptModeDefault;
+
+  /// No description provided for @aiPromptModeAppend.
+  ///
+  /// In en, this message translates to:
+  /// **'Append'**
+  String get aiPromptModeAppend;
+
+  /// No description provided for @aiPromptModeOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Override'**
+  String get aiPromptModeOverride;
+
+  /// No description provided for @aiPromptAppendDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'These instructions are added to Mealie\'s prompt, and take priority wherever the two conflict.'**
+  String get aiPromptAppendDescription;
+
+  /// No description provided for @aiPromptOverrideDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your prompt replaces Mealie\'s prompt entirely, so future updates to Mealie\'s prompt won\'t apply to it. Any data the task needs, such as your list of units, is still added after your prompt.'**
+  String get aiPromptOverrideDescription;
+
+  /// No description provided for @aiPromptDefaultChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Mealie\'s prompt has changed since you overrode it. Compare it with yours, or switch back to the default to use the new version.'**
+  String get aiPromptDefaultChanged;
+
+  /// No description provided for @aiPromptViewDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'View Default Prompt'**
+  String get aiPromptViewDefault;
+
+  /// No description provided for @aiPromptHideDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Default Prompt'**
+  String get aiPromptHideDefault;
+
+  /// No description provided for @aiPromptSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt saved'**
+  String get aiPromptSaved;
+
+  /// No description provided for @aiPromptSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save prompt'**
+  String get aiPromptSaveFailed;
+
+  /// No description provided for @aiPromptTitleBuildRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Build Recipe'**
+  String get aiPromptTitleBuildRecipe;
+
+  /// No description provided for @aiPromptTitleParseIngredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Parse Ingredients'**
+  String get aiPromptTitleParseIngredients;
+
+  /// No description provided for @aiPromptTitleRecipeVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe from Video'**
+  String get aiPromptTitleRecipeVideo;
+
+  /// No description provided for @aiPromptTitleOrganizers.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign Organizers'**
+  String get aiPromptTitleOrganizers;
+
+  /// No description provided for @aiPromptTitleTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate Recipe'**
+  String get aiPromptTitleTranslate;
+
+  /// No description provided for @aiPromptTitleCompileSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Read Source Material'**
+  String get aiPromptTitleCompileSource;
+
+  /// No description provided for @aiPromptTitleTranscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe Audio'**
+  String get aiPromptTitleTranscribe;
+
+  /// No description provided for @aiPromptDescBuildRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns the source material read from a webpage, photo, or text into a structured recipe.'**
+  String get aiPromptDescBuildRecipe;
+
+  /// No description provided for @aiPromptDescParseIngredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by the AI ingredient parser to split each ingredient into its quantity, unit, food, and note.'**
+  String get aiPromptDescParseIngredients;
+
+  /// No description provided for @aiPromptDescRecipeVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Turns a video\'s transcript and caption into a recipe.'**
+  String get aiPromptDescRecipeVideo;
+
+  /// No description provided for @aiPromptDescOrganizers.
+  ///
+  /// In en, this message translates to:
+  /// **'Picks the tags, categories, and tools for an imported recipe.'**
+  String get aiPromptDescOrganizers;
+
+  /// No description provided for @aiPromptDescTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translates an imported recipe into the language you choose.'**
+  String get aiPromptDescTranslate;
+
+  /// No description provided for @aiPromptDescCompileSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads webpages, photos, and text into a plain-text record of the recipe.'**
+  String get aiPromptDescCompileSource;
+
+  /// No description provided for @aiPromptDescTranscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribes audio when your audio provider can\'t transcribe it directly.'**
+  String get aiPromptDescTranscribe;
+
+  /// No description provided for @mealplanNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get mealplanNoteHint;
+
+  /// No description provided for @mealplanEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit entry'**
+  String get mealplanEditTitle;
+
+  /// No description provided for @mealplanEntryTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get mealplanEntryTitleLabel;
+
+  /// No description provided for @mealplanEntryNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get mealplanEntryNoteLabel;
+
+  /// Issue #41: Rezeptsuche ohne Treffer → leeres Rezept anlegen
+  ///
+  /// In en, this message translates to:
+  /// **'New recipe \"{name}\"'**
+  String mealplanCreateRecipe(String name);
+
+  /// No description provided for @mealplanCreateRecipeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creates an empty recipe, plans it and opens the editor'**
+  String get mealplanCreateRecipeSubtitle;
+
+  /// No description provided for @importOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import options'**
+  String get importOptionsTitle;
+
+  /// No description provided for @importOptionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How much Mealie’s AI does on your server when importing. Every extra step is its own AI request – the fewer, the faster.'**
+  String get importOptionsHint;
+
+  /// No description provided for @importTranslateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate recipe'**
+  String get importTranslateTitle;
+
+  /// No description provided for @importOrganizersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories & tags'**
+  String get importOrganizersTitle;
+
+  /// No description provided for @importOrganizersCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new'**
+  String get importOrganizersCreate;
+
+  /// No description provided for @importOrganizersExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing only'**
+  String get importOrganizersExisting;
+
+  /// No description provided for @importOrganizersNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get importOrganizersNone;
+
+  /// No description provided for @importOrganizersCreateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'AI assigns tags, categories and tools and creates missing ones.'**
+  String get importOrganizersCreateHint;
+
+  /// No description provided for @importOrganizersExistingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'AI only uses tags, categories and tools that already exist.'**
+  String get importOrganizersExistingHint;
+
+  /// No description provided for @importOrganizersNoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The recipe is imported without tags, categories and tools. Mealie still runs this step, so the import doesn\'t get faster.'**
+  String get importOrganizersNoneHint;
+
+  /// No description provided for @importStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending to server…'**
+  String get importStarting;
+
+  /// No description provided for @importRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing recipe…'**
+  String get importRunning;
+
+  /// No description provided for @aiImagesRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI is reading the pages…'**
+  String get aiImagesRunning;
+
+  /// No description provided for @importStreamPhotosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo import with live progress'**
+  String get importStreamPhotosTitle;
+
+  /// No description provided for @importStreamPhotosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows each step and keeps the connection open during long imports. Turn off to upload in a single request as before – e.g. if your proxy blocks streaming.'**
+  String get importStreamPhotosHint;
+
+  /// No description provided for @weekPlannerDiceRulesMealieSub.
+  ///
+  /// In en, this message translates to:
+  /// **'your household\'s Mealie rules (meal plan settings)'**
+  String get weekPlannerDiceRulesMealieSub;
+
+  /// No description provided for @syncStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloading recipes, images and lists from the server…'**
+  String get syncStarted;
+
+  /// No description provided for @syncDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is up to date'**
+  String get syncDone;
+
+  /// No description provided for @recipeReloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe reloaded'**
+  String get recipeReloaded;
+
+  /// No description provided for @logoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out / switch user'**
+  String get logoutTitle;
+
+  /// No description provided for @logoutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes, lists and changes not yet synced are removed from this device. Your app settings and the server address stay, so you only need to sign in again.'**
+  String get logoutConfirm;
+
+  /// No description provided for @reloadRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload from server'**
+  String get reloadRecipe;
+
+  /// No description provided for @wifiServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Different address on Wi-Fi'**
+  String get wifiServerTitle;
+
+  /// No description provided for @wifiServerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For the same server under a second address, e.g. the local IP at home and ZeroTier, Tailscale or a domain on the go. On the Wi-Fi below the app uses this address automatically, everywhere else the server URL above.'**
+  String get wifiServerHint;
+
+  /// No description provided for @wifiSsidLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi name'**
+  String get wifiSsidLabel;
+
+  /// No description provided for @wifiServerUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Address on this Wi-Fi'**
+  String get wifiServerUrl;
+
+  /// No description provided for @wifiUseCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Use current Wi-Fi'**
+  String get wifiUseCurrent;
+
+  /// No description provided for @wifiNameUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read the Wi-Fi name. Connect to the Wi-Fi and allow location access – Android and iOS only reveal the Wi-Fi name with it.'**
+  String get wifiNameUnavailable;
+
+  /// No description provided for @wifiServerActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active: address on Wi-Fi “{ssid}”'**
+  String wifiServerActive(String ssid);
+
+  /// No description provided for @wifiServerStandardActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active: server URL (not on “{ssid}”)'**
+  String wifiServerStandardActive(String ssid);
+
+  /// No description provided for @wifiServerRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get wifiServerRemove;
+
+  /// No description provided for @switchUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch user'**
+  String get switchUserTitle;
+
+  /// No description provided for @switchUserBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} stays saved on this device – with all recipes, lists and changes not yet synced. You can switch back via your profile picture or the sign-in page.'**
+  String switchUserBody(String name);
+
+  /// No description provided for @allowBiometricTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch back with device unlock'**
+  String get allowBiometricTitle;
+
+  /// No description provided for @allowBiometricHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID, fingerprint or device PIN instead of the password. Anyone who can unlock this device can then open this account.'**
+  String get allowBiometricHint;
+
+  /// No description provided for @allow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get allow;
+
+  /// No description provided for @unlockAccountReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {name}'**
+  String unlockAccountReason(String name);
+
+  /// No description provided for @signInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in as {name}'**
+  String signInAs(String name);
+
+  /// No description provided for @wrongAccountError.
+  ///
+  /// In en, this message translates to:
+  /// **'That’s the account “{name}”. Please sign in with the saved account.'**
+  String wrongAccountError(String name);
+
+  /// No description provided for @accountSaveOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'The account can’t be saved right now – the server isn’t reachable.'**
+  String get accountSaveOffline;
+
+  /// No description provided for @signOutRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out and remove'**
+  String get signOutRemoveTitle;
+
+  /// No description provided for @signOutRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This account and all its data on this device (recipes, lists, changes not yet synced) are removed. Your app settings stay.'**
+  String get signOutRemoveConfirm;
+
+  /// No description provided for @removeSavedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from this device'**
+  String get removeSavedAccount;
+
+  /// No description provided for @removeSavedAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove “{name}” and all its saved data from this device? Changes not yet synced will be lost.'**
+  String removeSavedAccountConfirm(String name);
+
+  /// No description provided for @savedAccountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved accounts'**
+  String get savedAccountsTitle;
+
+  /// No description provided for @addAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another account'**
+  String get addAccount;
+
+  /// No description provided for @biometricOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop using device unlock'**
+  String get biometricOff;
+
+  /// No description provided for @orNewAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Or sign in with another account:'**
+  String get orNewAccount;
+
+  /// No description provided for @importVideoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Video links'**
+  String get importVideoTitle;
+
+  /// No description provided for @importVideoFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get importVideoFast;
+
+  /// No description provided for @importVideoThorough.
+  ///
+  /// In en, this message translates to:
+  /// **'Thorough (AI)'**
+  String get importVideoThorough;
+
+  /// No description provided for @importVideoFastHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mealie transcribes the video and builds the recipe with a single AI request – usually much faster. No translation and no categories/tags. You can still switch AI on per import.'**
+  String get importVideoFastHint;
+
+  /// No description provided for @importVideoThoroughHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI switch turns on automatically for video links: several AI steps, with translation and categories/tags as set above. Takes longer.'**
+  String get importVideoThoroughHint;
+
+  /// No description provided for @importPresetFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get importPresetFast;
+
+  /// No description provided for @importPresetThorough.
+  ///
+  /// In en, this message translates to:
+  /// **'Thorough'**
+  String get importPresetThorough;
+
+  /// No description provided for @importPresetCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get importPresetCustom;
+
+  /// No description provided for @importPresetFastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'As few AI steps as possible – the shortest wait'**
+  String get importPresetFastTitle;
+
+  /// No description provided for @importPresetFastVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video links: Mealie transcribes the video and builds the recipe with a single AI request (the AI switch stays off).'**
+  String get importPresetFastVideo;
+
+  /// No description provided for @importPresetFastTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'No translation – the recipe stays in its original language.'**
+  String get importPresetFastTranslate;
+
+  /// No description provided for @importPresetFastOrganizers.
+  ///
+  /// In en, this message translates to:
+  /// **'Only existing categories and tags are assigned, no new ones are created.'**
+  String get importPresetFastOrganizers;
+
+  /// No description provided for @importPresetThoroughTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mealie’s full AI import – takes longer, gets the most out'**
+  String get importPresetThoroughTitle;
+
+  /// No description provided for @importPresetThoroughVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video links are imported with AI automatically – in several steps (compile the source, build the recipe, …).'**
+  String get importPresetThoroughVideo;
+
+  /// No description provided for @importPresetThoroughTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'The recipe is translated into the import language below if it’s written in another language.'**
+  String get importPresetThoroughTranslate;
+
+  /// No description provided for @importPresetThoroughOrganizers.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching categories and tags are assigned; missing ones are created.'**
+  String get importPresetThoroughOrganizers;
+
+  /// No description provided for @importPresetCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set each option yourself'**
+  String get importPresetCustomTitle;
+
+  /// No description provided for @importPresetCustomBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from what your previous choice did and change only what you need – e.g. fast video imports but with translation.'**
+  String get importPresetCustomBody;
+
+  /// No description provided for @sidebarPinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: press and hold a tile and drag it onto the sidebar to pin it there.'**
+  String get sidebarPinHint;
+
+  /// No description provided for @sidebarDropHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop here'**
+  String get sidebarDropHere;
+
+  /// No description provided for @sidebarShortcutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcut for “{name}”'**
+  String sidebarShortcutTitle(String name);
+
+  /// No description provided for @sidebarShortcutPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Now press the key combination you want, including {modifier}.'**
+  String sidebarShortcutPrompt(String modifier);
+
+  /// No description provided for @sidebarShortcutTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'This combination is already in use.'**
+  String get sidebarShortcutTaken;
+
+  /// No description provided for @sidebarShortcutNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No shortcut'**
+  String get sidebarShortcutNone;
+
+  /// No description provided for @sidebarShortcutChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change shortcut'**
+  String get sidebarShortcutChange;
+
+  /// No description provided for @sidebarUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from sidebar'**
+  String get sidebarUnpin;
+
+  /// No description provided for @sidebarFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The sidebar is full – at most {count} entries of your own.'**
+  String sidebarFull(int count);
+
+  /// No description provided for @tabletSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Sidebar in landscape'**
+  String get tabletSidebar;
+
+  /// No description provided for @tabletSidebarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the navigation on the left instead of at the bottom when the tablet is held sideways'**
+  String get tabletSidebarSubtitle;
 }
 
 class _AppLocalizationsDelegate

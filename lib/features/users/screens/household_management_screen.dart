@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/error_view.dart';
+import '../../../shared/widgets/app_snack.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/api/api_service.dart';
+import '../../../shared/widgets/search_jump.dart';
 import '../../../core/providers/cached_json_list.dart';
 import '../../../core/providers/permissions_provider.dart';
 import '../../../core/services/local_cache.dart';
@@ -73,11 +76,19 @@ Map<String, dynamic> _pickGroupPrefs(Map<String, dynamic>? raw) => {
         if (raw != null && raw.containsKey(k)) k: raw[k],
     };
 
-class HouseholdManagementScreen extends ConsumerWidget {
+class HouseholdManagementScreen extends ConsumerStatefulWidget {
   const HouseholdManagementScreen({super.key});
 
-  void _snack(BuildContext context, String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  @override
+  ConsumerState<HouseholdManagementScreen> createState() =>
+      _HouseholdManagementScreenState();
+}
+
+// Zustandsbehaftet nur für den Sprung aus der globalen Suche
+// (?highlight=own bzw. =<Haushalts-ID>, siehe SearchJumpMixin).
+class _HouseholdManagementScreenState
+    extends ConsumerState<HouseholdManagementScreen> with SearchJumpMixin {
+  void _snack(BuildContext context, String text) => showAppSnack(context, text);
 
   Future<void> _openOwnHouseholdPrefs(BuildContext context, WidgetRef ref) =>
       _openPrefsSheet(
@@ -167,7 +178,6 @@ class HouseholdManagementScreen extends ConsumerWidget {
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: context.appCard,
       builder: (_) => _AdminEntitySheet(entity: h, household: true),
     );
     unawaited(ref.read(adminHouseholdsProvider.notifier).refresh());
@@ -180,7 +190,6 @@ class HouseholdManagementScreen extends ConsumerWidget {
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: context.appCard,
       builder: (_) => _AdminEntitySheet(entity: g, household: false),
     );
     unawaited(ref.read(adminGroupsProvider.notifier).refresh());
@@ -188,7 +197,7 @@ class HouseholdManagementScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final p = ref.watch(userPermissionsProvider);
     final mayHousehold = p.admin || p.canManageHousehold;
@@ -239,7 +248,7 @@ class HouseholdManagementScreen extends ConsumerWidget {
               height: 38,
               decoration: BoxDecoration(
                 gradient: AppTokens.accentGradient,
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(AppTokens.rXs),
               ),
               child: Icon(icon, color: Colors.white, size: 20),
             ),
@@ -249,25 +258,32 @@ class HouseholdManagementScreen extends ConsumerWidget {
             subtitle: subtitle == null
                 ? null
                 : Text(subtitle,
-                    style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                    style: TextStyle(color: context.appFgSub, fontSize: 13)),
             trailing:
                 Icon(Icons.chevron_right_rounded, color: context.appFgTertiary),
           ),
         );
 
     Widget asyncList(AsyncValue<List<Map<String, dynamic>>> a,
-            Widget Function(Map<String, dynamic>) item) =>
+            Widget Function(Map<String, dynamic>) item,
+            {required VoidCallback onRetry}) =>
         a.when(
           loading: () => const Padding(
             padding: EdgeInsets.all(16),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (e, _) => Text(userErrorMessage(e),
-              style: TextStyle(color: context.appFgSub)),
+          error: (e, _) => ErrorRetryView(error: e, onRetry: onRetry),
           data: (list) => Column(children: [for (final m in list) item(m)]),
         );
 
     final me = ref.watch(currentUserProvider);
+    // Sprung aus der globalen Suche: eigener Haushalt oder (Admin) ein
+    // Haushalt der Liste.
+    handleSearchJump(context, [
+      if (mayHousehold) 'own',
+      for (final h in households?.valueOrNull ?? const <Map<String, dynamic>>[])
+        h['id']?.toString() ?? '',
+    ]);
     return Scaffold(
       backgroundColor: context.appBg,
       appBar: AppBar(title: Text(l.householdManagementTitle)),
@@ -275,16 +291,19 @@ class HouseholdManagementScreen extends ConsumerWidget {
         child: SafeArea(
           top: false,
           child: ListView(
+            controller: searchScroll,
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
             children: [
               if (mayHousehold) ...[
                 header(l.myHouseholdSection),
-                card(
-                  icon: Icons.home_rounded,
-                  title: l.householdPreferencesTitle,
-                  subtitle: me?['household']?.toString(),
-                  onTap: () => _openOwnHouseholdPrefs(context, ref),
-                ),
+                searchHighlight(
+                    'own',
+                    card(
+                      icon: Icons.home_rounded,
+                      title: l.householdPreferencesTitle,
+                      subtitle: me?['household']?.toString(),
+                      onTap: () => _openOwnHouseholdPrefs(context, ref),
+                    )),
               ],
               if (mayGroup) ...[
                 header(l.myGroupSection),
@@ -302,16 +321,19 @@ class HouseholdManagementScreen extends ConsumerWidget {
                         context, ref, groups.valueOrNull ?? const [])),
                 asyncList(
                   households,
-                  (h) => card(
-                    icon: Icons.house_rounded,
-                    title: h['name']?.toString() ?? '',
-                    subtitle: [
-                      if ((h['group'] ?? '').toString().isNotEmpty)
-                        h['group'].toString(),
-                      l.usersCount((h['users'] as List?)?.length ?? 0),
-                    ].join(' · '),
-                    onTap: () => _openHousehold(context, ref, h),
-                  ),
+                  (h) => searchHighlight(
+                      h['id']?.toString() ?? '',
+                      card(
+                        icon: Icons.house_rounded,
+                        title: h['name']?.toString() ?? '',
+                        subtitle: [
+                          if ((h['group'] ?? '').toString().isNotEmpty)
+                            h['group'].toString(),
+                          l.usersCount((h['users'] as List?)?.length ?? 0),
+                        ].join(' · '),
+                        onTap: () => _openHousehold(context, ref, h),
+                      )),
+                  onRetry: () => ref.invalidate(adminHouseholdsProvider),
                 ),
                 header(l.groupsTitle,
                     addTooltip: l.createGroupTitle,
@@ -324,6 +346,7 @@ class HouseholdManagementScreen extends ConsumerWidget {
                     subtitle: l.usersCount((g['users'] as List?)?.length ?? 0),
                     onTap: () => _openGroup(context, ref, g),
                   ),
+                  onRetry: () => ref.invalidate(adminGroupsProvider),
                 ),
               ],
             ],
@@ -430,7 +453,6 @@ Future<void> _openPrefsSheet(
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: context.appCard,
       builder: (_) => _PrefsSheet(
           title: title,
           cacheKey: cacheKey,
@@ -633,7 +655,7 @@ class _AdminEntitySheetState extends ConsumerState<_AdminEntitySheet> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),

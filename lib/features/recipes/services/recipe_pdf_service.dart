@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../../shared/theme/app_colors.dart';
 import 'dart:typed_data';
 import 'dart:ui' show Rect;
 
@@ -6,6 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/api/api_service.dart';
@@ -78,6 +80,51 @@ class RecipePdfService {
     // ohne das lehnt share_plus die Freigabe mit einer PlatformException ab
     // ("sharePositionOrigin must be set"), nicht nur auf dem iPad.
     Rect? sharePositionOrigin,
+  }) async {
+    final bytes = await buildPdf(
+        recipe: recipe,
+        api: api,
+        multiplier: multiplier,
+        includeImage: includeImage,
+        labels: labels);
+    final dir = await getTemporaryDirectory();
+    final fileName = _sanitizeFileName(
+        recipe.name.trim().isEmpty ? 'Rezept' : recipe.name.trim());
+    final file = File('${dir.path}/$fileName.pdf');
+    await file.writeAsBytes(bytes, flush: true);
+
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path, mimeType: 'application/pdf')],
+      subject: recipe.name,
+      sharePositionOrigin: sharePositionOrigin,
+    ));
+  }
+
+  /// Desktop: dasselbe PDF direkt im System-Druckdialog.
+  static Future<void> printRecipe({
+    required RecipeDetail recipe,
+    required ApiService api,
+    required double multiplier,
+    required bool includeImage,
+    required RecipePdfLabels labels,
+  }) =>
+      Printing.layoutPdf(
+        name: recipe.name,
+        onLayout: (_) => buildPdf(
+            recipe: recipe,
+            api: api,
+            multiplier: multiplier,
+            includeImage: includeImage,
+            labels: labels),
+      );
+
+  /// Baut das Rezept-PDF (Bytes) — für Teilen und Drucken.
+  static Future<Uint8List> buildPdf({
+    required RecipeDetail recipe,
+    required ApiService api,
+    required double multiplier,
+    required bool includeImage,
+    required RecipePdfLabels labels,
   }) async {
     Uint8List? imageBytes;
     if (includeImage) {
@@ -164,18 +211,7 @@ class RecipePdfService {
       ),
     ));
 
-    final bytes = await doc.save();
-    final dir = await getTemporaryDirectory();
-    final fileName = _sanitizeFileName(
-        recipe.name.trim().isEmpty ? 'Rezept' : recipe.name.trim());
-    final file = File('${dir.path}/$fileName.pdf');
-    await file.writeAsBytes(bytes, flush: true);
-
-    await SharePlus.instance.share(ShareParams(
-      files: [XFile(file.path, mimeType: 'application/pdf')],
-      subject: recipe.name,
-      sharePositionOrigin: sharePositionOrigin,
-    ));
+    return doc.save();
   }
 
   static List<pw.Widget> _buildContent({
@@ -211,11 +247,12 @@ class RecipePdfService {
                       const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: const pw.BoxDecoration(
                     color: PdfColor.fromInt(0xFFFFF1E0),
-                    borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
+                    borderRadius:
+                        pw.BorderRadius.all(pw.Radius.circular(AppTokens.rXs)),
                   ),
                   child: pw.Text(c,
                       style: pw.TextStyle(
-                          font: baseFont, fontSize: 8.5, color: _accentDeep)),
+                          font: baseFont, fontSize: 9, color: _accentDeep)),
                 ))
             .toList(),
       ));
@@ -231,7 +268,7 @@ class RecipePdfService {
         margin: const pw.EdgeInsets.only(bottom: 14),
         decoration: pw.BoxDecoration(
           color: PdfColors.grey200,
-          borderRadius: pw.BorderRadius.circular(10),
+          borderRadius: pw.BorderRadius.circular(AppTokens.rXs),
         ),
         child: pw.ClipRRect(
           horizontalRadius: 10,
@@ -268,9 +305,7 @@ class RecipePdfService {
                             font: baseFont, fontSize: 8, color: _textSub)),
                     pw.Text(m.$2,
                         style: pw.TextStyle(
-                            font: headingFont,
-                            fontSize: 12.5,
-                            color: _textDark)),
+                            font: headingFont, fontSize: 13, color: _textDark)),
                   ],
                 ))
             .toList(),
@@ -283,10 +318,7 @@ class RecipePdfService {
     if (desc.isNotEmpty) {
       widgets.add(pw.Text(desc,
           style: pw.TextStyle(
-              font: baseFont,
-              fontSize: 10.5,
-              color: _textSub,
-              lineSpacing: 2)));
+              font: baseFont, fontSize: 11, color: _textSub, lineSpacing: 2)));
       widgets.add(pw.SizedBox(height: 18));
     }
 
@@ -327,12 +359,12 @@ class RecipePdfService {
                           text: '$amount  ',
                           style: pw.TextStyle(
                               font: headingFont,
-                              fontSize: 10.5,
+                              fontSize: 11,
                               color: _accentDeep)),
                     pw.TextSpan(
                         text: name,
                         style: pw.TextStyle(
-                            font: baseFont, fontSize: 10.5, color: _textDark)),
+                            font: baseFont, fontSize: 11, color: _textDark)),
                   ]),
                 ),
               ),
@@ -375,7 +407,7 @@ class RecipePdfService {
                 child: pw.Text('${i + 1}',
                     style: pw.TextStyle(
                         font: headingFont,
-                        fontSize: 9.5,
+                        fontSize: 10,
                         color: PdfColors.white)),
               ),
               pw.SizedBox(width: 10),
@@ -389,14 +421,14 @@ class RecipePdfService {
                         child: pw.Text(step.heading!,
                             style: pw.TextStyle(
                                 font: headingFont,
-                                fontSize: 10.5,
+                                fontSize: 11,
                                 color: _textDark)),
                       ),
                     if (text.isNotEmpty)
                       pw.Text(text,
                           style: pw.TextStyle(
                               font: baseFont,
-                              fontSize: 10.5,
+                              fontSize: 11,
                               color: _textDark,
                               lineSpacing: 2)),
                     for (final img
@@ -432,7 +464,7 @@ class RecipePdfService {
         if (n.title.isNotEmpty) {
           widgets.add(pw.Text(n.title,
               style: pw.TextStyle(
-                  font: headingFont, fontSize: 10.5, color: _textDark)));
+                  font: headingFont, fontSize: 11, color: _textDark)));
           widgets.add(pw.SizedBox(height: 2));
         }
         final noteText = _stripMarkdown(stripEmbeddedImages(n.text));
@@ -474,7 +506,7 @@ class RecipePdfService {
       children: [
         pw.Text(label,
             style: pw.TextStyle(
-                font: headingFont, fontSize: 13.5, color: _accentDeep)),
+                font: headingFont, fontSize: 14, color: _accentDeep)),
         pw.SizedBox(height: 4),
         pw.Container(height: 1.2, width: 36, color: _accent),
       ],

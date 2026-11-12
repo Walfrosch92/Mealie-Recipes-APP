@@ -440,8 +440,10 @@ class RecipeImageStore {
     } catch (_) {
       return _DownloadResult.failed;
     } finally {
-      _contentInFlight.remove(key);
+      // Erst aufräumen, dann „fertig" melden — der Kontowechsel wartet auf
+      // leere In-Flight-Mengen, bevor er den Ordner verschiebt.
       if (tmp != null) await _deleteQuietly(tmp);
+      _contentInFlight.remove(key);
     }
   }
 
@@ -503,8 +505,8 @@ class RecipeImageStore {
       LogManager.shared.log('⚠️ Rezeptbild $id nicht gespeichert: $e');
       return _DownloadResult.failed;
     } finally {
-      _inFlight.remove(id);
       if (tmp != null) await _deleteQuietly(tmp);
+      _inFlight.remove(id);
     }
   }
 
@@ -514,6 +516,41 @@ class RecipeImageStore {
     _missing.remove(recipeId);
     if (stored == null) return;
     await _deleteQuietly(stored.file);
+    _publishStats();
+  }
+
+  /// Kontowechsel, Schritt 1 (VOR dem Verschieben des Ordners): laufende
+  /// Abgleiche/Downloads abbrechen und warten, bis keiner mehr in den Ordner
+  /// schreibt. Ihre Anfragen scheitern ohnehin (ApiService-Epoche), das
+  /// Warten deckt nur den Rest nach dem letzten await ab.
+  Future<void> quiesceForAccountSwitch() async {
+    _generation++;
+    _pending = null;
+    final deadline = DateTime.now().add(const Duration(seconds: 8));
+    while ((_running != null ||
+            _inFlight.isNotEmpty ||
+            _contentInFlight.isNotEmpty) &&
+        DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+  }
+
+  /// Kontowechsel, Schritt 2 (NACH dem Umräumen): alles vergessen; der
+  /// nächste [init] liest den Ordner des neuen Kontos ein.
+  void resetForAccountSwitch() {
+    _generation++;
+    _pending = null;
+    _index.clear();
+    _missing.clear();
+    _inFlight.clear();
+    _contentIndex.clear();
+    _contentBytes.clear();
+    _contentInFlight.clear();
+    _contentMissing.clear();
+    _incomplete = false;
+    _total = 0;
+    _dirFuture = null;
+    _initFuture = null;
     _publishStats();
   }
 

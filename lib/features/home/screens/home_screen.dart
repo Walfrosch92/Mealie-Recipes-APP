@@ -1,8 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart' show kLongPressTimeout;
+import '../../../core/desktop/desktop_sidebar.dart';
+import '../../../core/desktop/sidebar_pins.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/mealie_version.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 import '../../settings/services/shopping_reminder_location_service.dart';
@@ -27,16 +31,20 @@ import '../../../shared/widgets/recipe_image.dart';
 import '../../shopping_list/providers/shopping_lists_provider.dart';
 import '../../../core/providers/permissions_provider.dart';
 import '../../whats_new/whats_new.dart';
+import '../../cooking_mode/providers/cooking_session_provider.dart';
+import '../../recipe_match/providers/recipe_match_provider.dart';
 import '../../webapp_tools/screens/update_screen.dart';
 import '../../webapp_tools/services/app_updater.dart';
 import '../../../core/utils/meal_types.dart';
 
 /// Ein „Heute kochen"-Eintrag: das Rezept + ein Pillen-Label (geplante
-/// Mahlzeit-Art bzw. „Vorschlag").
+/// Mahlzeit-Art bzw. „Vorschlag"). [session] = im Kochmodus angefangen →
+/// die Karte zeigt den Fortschritt und führt direkt dorthin zurück.
 class _Featured {
   final RecipeDetail recipe;
   final String label;
-  const _Featured(this.recipe, this.label);
+  final CookingSession? session;
+  const _Featured(this.recipe, this.label, [this.session]);
 }
 
 /// Entfernt ein führendes Emoji/Symbol (+ Leerzeichen) aus Labels wie
@@ -82,16 +90,18 @@ class HomeScreen extends ConsumerWidget {
     // geplant, ein deterministisches „Rezept des Tages".
     final mealplan = ref.watch(mealplanProvider).valueOrNull ?? const {};
     final todaysEntries = mealplan[startOfDay(DateTime.now())] ?? const [];
-    final featured = _buildFeatured(recipes, todaysEntries, l);
+    final featured = _withSessions(_buildFeatured(recipes, todaysEntries, l),
+        ref.watch(cookingSessionsProvider), l);
 
     return Scaffold(
       backgroundColor: context.appBg,
       extendBody: true,
       // GlassTabBar liegt jetzt fix in der _TabShell (app.dart) — so bleibt
       // sie von Seiten-Übergängen unberührt. Die Padding-Konvention
-      // (GlassTabBar.height + …) bleibt unverändert gültig.
+      // (GlassTabBar.heightOf(context) + …) bleibt unverändert gültig.
       body: WithCookingModeFAB(
-        bottomInset: GlassTabBar.height + 24,
+        fullWidth: true,
+        bottomInset: GlassTabBar.heightOf(context) + 24,
         child: SafeArea(
           bottom: false,
           child: ListView(
@@ -99,8 +109,13 @@ class HomeScreen extends ConsumerWidget {
             // 3-Button-Leiste) wird NICHT konsumiert und muss additiv ins
             // Bottom-Padding, sonst verdeckt die schwebende GlassTabBar auf
             // Geräten mit fester Buttonleiste das Listen-Ende.
-            padding: EdgeInsets.fromLTRB(18, 8, 18,
-                GlassTabBar.height + 44 + MediaQuery.paddingOf(context).bottom),
+            padding: EdgeInsets.fromLTRB(
+                18,
+                8,
+                18,
+                GlassTabBar.heightOf(context) +
+                    44 +
+                    MediaQuery.paddingOf(context).bottom),
             children: [
               // „Was ist neu" einmal pro Start, solange für diesen Build
               // nicht abbestellt (unsichtbar, löst nur den Dialog aus).
@@ -138,6 +153,10 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 18),
+
+              // ── Globale Suche (Rezepte, Inhalte UND App-Funktionen) ──
+              const _HomeSearchField(),
               const SizedBox(height: 22),
 
               // ── Heute kochen (Hero-Karussell) ─────────────────────────
@@ -150,7 +169,9 @@ class HomeScreen extends ConsumerWidget {
                     items: featured,
                     baseUrl: settings?.serverUrl ?? '',
                     token: settings?.apiToken ?? '',
-                    onOpen: (r) => context.push('/recipes/${r.id}'),
+                    onOpen: (f) => context.push(f.session != null
+                        ? '/cooking/${f.session!.slug}'
+                        : '/recipes/${f.recipe.id}'),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -184,11 +205,14 @@ class HomeScreen extends ConsumerWidget {
   }) {
     // Angepinnte Kacheln aus dem Gesamt-Katalog + immer „Weiteres".
     final perms = ref.watch(userPermissionsProvider);
-    final homeKeys =
-        effectiveHomeTiles(settings, allowed: (k) => tileAllowed(k, perms));
+    final v330 = ref.watch(mealie330Provider);
+    final homeKeys = effectiveHomeTiles(settings,
+        allowed: (k) => tileAllowed(k, perms, mealie330: v330));
     final catalog = _allTiles(context, l,
+        v330: v330,
         perms: perms,
         updateCount: _pendingUpdates(ref),
+        matchCount: ref.watch(recipeMatchProvider.select((s) => s.tray.length)),
         recipeCount: recipeCount,
         shoppingCount: shoppingCount,
         // Kachel heißt wie die aktive Liste („Liste 1").
@@ -235,6 +259,23 @@ class HomeScreen extends ConsumerWidget {
   /// Reihenfolge), aufgelöst auf das volle RecipeDetail aus [recipes]. Ist
   /// nichts geplant (oder nichts auflösbar), genau ein deterministisches
   /// „Rezept des Tages".
+  /// Laufende Kochsitzungen: passende Einträge bekommen ihren Fortschritt,
+  /// angefangene Rezepte, die heute nicht dran sind, kommen vorne dazu
+  /// („Weiterkochen").
+  List<_Featured> _withSessions(List<_Featured> featured,
+      List<CookingSession> sessions, AppLocalizations l) {
+    if (sessions.isEmpty) return featured;
+    final byRecipe = {for (final s in sessions) s.recipe.id: s};
+    final shown = {for (final f in featured) f.recipe.id};
+    return [
+      for (final s in sessions)
+        if (!shown.contains(s.recipe.id))
+          _Featured(s.recipe, l.homeContinueCooking, s),
+      for (final f in featured)
+        _Featured(f.recipe, f.label, byRecipe[f.recipe.id]),
+    ];
+  }
+
   List<_Featured> _buildFeatured(
     List<RecipeDetail> recipes,
     List<MealplanEntry> todaysEntries,
@@ -311,7 +352,7 @@ class _HeroCarousel extends StatefulWidget {
   final List<_Featured> items;
   final String baseUrl;
   final String token;
-  final void Function(RecipeDetail) onOpen;
+  final void Function(_Featured) onOpen;
 
   const _HeroCarousel({
     required this.items,
@@ -387,9 +428,10 @@ class _HeroCarouselState extends State<_HeroCarousel> {
               return _HeroCard(
                 recipe: f.recipe,
                 label: f.label,
+                session: f.session,
                 baseUrl: widget.baseUrl,
                 token: widget.token,
-                onTap: () => widget.onOpen(f.recipe),
+                onTap: () => widget.onOpen(f),
               );
             },
           ),
@@ -426,6 +468,7 @@ class _HeroCarouselState extends State<_HeroCarousel> {
 class _HeroCard extends StatelessWidget {
   final RecipeDetail recipe;
   final String label;
+  final CookingSession? session;
   final String baseUrl;
   final String token;
   final VoidCallback onTap;
@@ -436,6 +479,7 @@ class _HeroCard extends StatelessWidget {
     required this.baseUrl,
     required this.token,
     required this.onTap,
+    this.session,
   });
 
   String get _imageUrl =>
@@ -462,7 +506,6 @@ class _HeroCard extends StatelessWidget {
                 child: RecipeImage(
                   recipeId: recipe.id,
                   imageUrl: _imageUrl,
-                  httpHeaders: {'Authorization': 'Bearer $token'},
                   placeholder: (_) => _gradPlaceholder(),
                 ),
               ),
@@ -493,7 +536,7 @@ class _HeroCard extends StatelessWidget {
                     label,
                     style: TextStyle(
                       color: context.isDark ? Colors.white : context.appFg,
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -511,8 +554,12 @@ class _HeroCard extends StatelessWidget {
                     gradient: AppTokens.accentGradient,
                     boxShadow: context.appAccentGlow,
                   ),
-                  child: const Icon(Icons.play_arrow_rounded,
-                      color: Colors.white, size: 24),
+                  child: Icon(
+                      session != null
+                          ? Icons.skip_next_rounded
+                          : Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 24),
                 ),
               ),
               // Titel + Meta
@@ -540,7 +587,10 @@ class _HeroCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 7),
-                    _HeroMeta(recipe: recipe),
+                    if (session != null)
+                      _CookingProgress(session: session!)
+                    else
+                      _HeroMeta(recipe: recipe),
                   ],
                 ),
               ),
@@ -564,6 +614,55 @@ class _HeroCard extends StatelessWidget {
               Icon(Icons.restaurant_rounded, color: Colors.white54, size: 44),
         ),
       );
+}
+
+/// Fortschritt einer angefangenen Kochsitzung auf der Hero-Karte:
+/// „Schritt 3 von 7 · weiter" + dünner Balken über alle Seiten.
+class _CookingProgress extends StatelessWidget {
+  final CookingSession session;
+  const _CookingProgress({required this.session});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final page = session.currentInstructionIndex;
+    final steps = session.recipe.recipeInstructions.length;
+    final step = page - session.firstStepPage + 1;
+    final String text;
+    if (page < session.firstStepPage || steps == 0) {
+      text = l.homeCookingPrep;
+    } else if (step > steps) {
+      text = l.homeCookingAlmostDone;
+    } else {
+      text = l.homeCookingStep(step, steps);
+    }
+    final progress = session.pageCount <= 1
+        ? 0.0
+        : (page / (session.pageCount - 1)).clamp(0.0, 1.0);
+    const white = Colors.white;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$text · ${l.homeCookingContinue}',
+            style: const TextStyle(
+                color: white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                shadows: [Shadow(color: Color(0x66000000), blurRadius: 6)])),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 5,
+            backgroundColor: white.withValues(alpha: 0.3),
+            valueColor: const AlwaysStoppedAnimation(AppTokens.accentLight),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _HeroMeta extends StatelessWidget {
@@ -602,7 +701,7 @@ class _HeroMeta extends StatelessWidget {
           Text(label,
               style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600)),
         ],
       );
@@ -714,7 +813,7 @@ class _Tile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -730,7 +829,7 @@ class _Tile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: context.appFg,
-                    fontSize: 14.5,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.1,
                   ),
@@ -774,7 +873,7 @@ class _Tile extends StatelessWidget {
 }
 
 // Grid-Kachel mit Long-Press-Drag zum Umsortieren
-class _DraggableTile extends StatelessWidget {
+class _DraggableTile extends ConsumerWidget {
   final int index;
   final _QuickItem item;
   final void Function(int from, int to) onReorder;
@@ -789,7 +888,18 @@ class _DraggableTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Desktop mit Seitenleiste: dieselbe Kachel lässt sich auch auf die
+    // Seitenleiste ziehen (dort erscheinen währenddessen graue Positionen).
+    final toSidebar =
+        LargeScreen.isDesktop && DesktopSidebarScope.isActive(context);
+    void dragging(bool on) {
+      if (toSidebar) ref.read(sidebarDraggingProvider.notifier).state = on;
+    }
+
+    final cols = LargeScreen.tileColumns(context);
+    final feedbackWidth =
+        (MediaQuery.sizeOf(context).width - 36 - 12 * (cols - 1)) / cols;
     final tile = _Tile(
       icon: item.icon,
       color: item.color,
@@ -799,26 +909,32 @@ class _DraggableTile extends StatelessWidget {
       hasOverlay: overlay != null,
     );
 
-    return DragTarget<int>(
-      onWillAcceptWithDetails: (d) => d.data != index,
-      onAcceptWithDetails: (d) => onReorder(d.data, index),
+    return DragTarget<TileDrag>(
+      onWillAcceptWithDetails: (d) => d.data.index != index,
+      onAcceptWithDetails: (d) => onReorder(d.data.index, index),
       builder: (ctx, candidate, rejected) {
         final hovering = candidate.isNotEmpty;
-        return LongPressDraggable<int>(
-          data: index,
-          onDragStarted: () => HapticFeedback.mediumImpact(),
-          feedback: Builder(builder: (c) {
-            final cols = LargeScreen.tileColumns(c);
-            final w =
-                (MediaQuery.sizeOf(c).width - 36 - 12 * (cols - 1)) / cols;
-            return Material(
-              color: Colors.transparent,
-              child: SizedBox(
-                width: w,
-                child: Transform.scale(scale: 1.04, child: tile),
-              ),
-            );
-          }),
+        return LongPressDraggable<TileDrag>(
+          data: TileDrag(index, item.key),
+          // Über dem ganzen Fenster zeichnen (auch über der Seitenleiste).
+          rootOverlay: true,
+          // Mit der Maus soll das Ziehen fast sofort losgehen.
+          delay:
+              toSidebar ? const Duration(milliseconds: 180) : kLongPressTimeout,
+          onDragStarted: () {
+            HapticFeedback.mediumImpact();
+            dragging(true);
+          },
+          onDragEnd: (_) => dragging(false),
+          onDraggableCanceled: (_, __) => dragging(false),
+          onDragCompleted: () => dragging(false),
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: toSidebar ? 220 : feedbackWidth,
+              child: Transform.scale(scale: 1.04, child: tile),
+            ),
+          ),
           childWhenDragging: Opacity(opacity: 0.25, child: tile),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
@@ -907,13 +1023,25 @@ class _SectionHeader extends StatelessWidget {
 /// per Recht schützt, werden ausgeblendet — Benutzerverwaltung (Admin/
 /// Verwalten/Einladen) und Kategorien/Schlagworte/Lebensmittel (Recht
 /// „Organisieren"). Alles andere prüft Mealie nicht → für alle sichtbar.
-bool tileAllowed(String key, UserPermissions p) => switch (key) {
+bool tileAllowed(String key, UserPermissions p, {bool mealie330 = false}) =>
+    switch (key) {
       // Jeder sieht die Benutzerverwaltung — normale Benutzer nur das
       // eigene Konto.
       'users' => p.known,
       'households' =>
         p.known && (p.admin || p.canManageHousehold || p.canManage),
       'categories' || 'tags' || 'foods' => p.mayOrganize,
+      // Ab Mealie 3.30 verlangt der Server auch hierfür „Organisieren“ …
+      'units' ||
+      'tools' ||
+      'labels' ||
+      'recipeactions' =>
+        !mealie330 || p.mayOrganize,
+      // … und für Webhooks/Benachrichtigungen „Haushalt verwalten“ (auch
+      // schon zum Ansehen).
+      'webhooks' ||
+      'notifiers' =>
+        !mealie330 || !p.known || p.admin || p.canManageHousehold,
       // Mealie-Administration (Sicherungen, Wartung, Website) nur für Admins.
       'admin' => p.known && p.admin,
       // KI-Anbieter: Mealie verlangt das Recht „Verwalten" (can_manage).
@@ -934,23 +1062,27 @@ int? _pendingUpdates(WidgetRef ref) {
 
 List<_QuickItem> _allTiles(BuildContext context, AppLocalizations l,
         {required UserPermissions perms,
+        bool v330 = false,
         int? recipeCount,
         int? shoppingCount,
         String? shoppingTitle,
-        int? updateCount}) =>
+        int? updateCount,
+        int? matchCount}) =>
     _allTilesUnfiltered(context, l,
             recipeCount: recipeCount,
             shoppingCount: shoppingCount,
             shoppingTitle: shoppingTitle,
-            updateCount: updateCount)
-        .where((q) => tileAllowed(q.key, perms))
+            updateCount: updateCount,
+            matchCount: matchCount)
+        .where((q) => tileAllowed(q.key, perms, mealie330: v330))
         .toList();
 
 List<_QuickItem> _allTilesUnfiltered(BuildContext context, AppLocalizations l,
         {int? recipeCount,
         int? shoppingCount,
         String? shoppingTitle,
-        int? updateCount}) =>
+        int? updateCount,
+        int? matchCount}) =>
     <_QuickItem>[
       _QuickItem('recipes', Icons.restaurant_menu_rounded, _TileColor.orange,
           l.recipes, recipeCount, () => context.go('/recipes')),
@@ -973,6 +1105,11 @@ List<_QuickItem> _allTilesUnfiltered(BuildContext context, AppLocalizations l,
           l.favoritesTitle, null, () => context.push('/favorites')),
       _QuickItem('recent', Icons.history_rounded, _TileColor.green,
           l.recentlyViewedTitle, null, () => context.push('/recent')),
+      // Zahl = Rezepte auf dem Tablett.
+      _QuickItem('recipematch', Icons.style_rounded, _TileColor.orange,
+          l.recipeMatchTitle, matchCount, () => context.push('/recipe-match')),
+      _QuickItem('weekplanner', Icons.auto_fix_high_rounded, _TileColor.blue,
+          l.weekPlannerTitle, null, () => context.push('/week-planner')),
       _QuickItem('leftovers', Icons.search_rounded, _TileColor.purple,
           _clean(l.resteverwertung), null, () => context.push('/leftovers')),
       _QuickItem('cookbooks', Icons.menu_book_rounded, _TileColor.purple,
@@ -997,6 +1134,9 @@ List<_QuickItem> _allTilesUnfiltered(BuildContext context, AppLocalizations l,
           l.userManagementTitle, null, () => context.push('/users')),
       _QuickItem('households', Icons.house_rounded, _TileColor.green,
           l.householdManagementTitle, null, () => context.push('/households')),
+      // KI-Anbieter + KI-Prompts — auch auf Handy/Tablet (Recht „Verwalten“).
+      _QuickItem('aiproviders', Icons.auto_awesome_rounded, _TileColor.purple,
+          l.aiProvidersTitle, null, () => context.push('/ai-providers')),
       // Webapp-Werkzeuge — nur in den Desktop-Apps (Windows/macOS).
       if (PlatformFeatures.webAppTools) ...[
         _QuickItem('bulkimport', Icons.playlist_add_rounded, _TileColor.orange,
@@ -1018,8 +1158,6 @@ List<_QuickItem> _allTilesUnfiltered(BuildContext context, AppLocalizations l,
             () => context.push('/notifiers')),
         _QuickItem('updates', Icons.system_update_rounded, _TileColor.blue,
             l.updateTitle, updateCount, () => context.push('/updates')),
-        _QuickItem('aiproviders', Icons.auto_awesome_rounded, _TileColor.purple,
-            l.aiProvidersTitle, null, () => context.push('/ai-providers')),
         _QuickItem('debug', Icons.bug_report_rounded, _TileColor.green,
             l.debugTitle, null, () => context.push('/debug')),
         _QuickItem(
@@ -1031,6 +1169,62 @@ List<_QuickItem> _allTilesUnfiltered(BuildContext context, AppLocalizations l,
             () => context.push('/admin')),
       ],
     ];
+
+/// Für die globale Suche: alle Kacheln, die der Nutzer sehen darf (ohne
+/// „Weiteres"). [onTap] navigiert über den übergebenen [context].
+List<({String key, IconData icon, String label, VoidCallback onTap})>
+    searchableHomeTiles(BuildContext context, WidgetRef ref) {
+  final l = AppLocalizations.of(context)!;
+  return [
+    for (final q in _allTiles(context, l,
+        v330: ref.read(mealie330Provider),
+        perms: ref.read(userPermissionsProvider),
+        shoppingTitle: ref.read(activeShoppingListNameProvider)))
+      (key: q.key, icon: q.icon, label: q.label, onTap: q.onTap),
+  ];
+}
+
+/// Suchfeld auf dem Startbildschirm — öffnet die Suchseite (dort wird
+/// getippt). Lupe links, wie ein Eingabefeld gestaltet.
+class _HomeSearchField extends StatelessWidget {
+  const _HomeSearchField();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Semantics(
+      button: true,
+      label: l.globalSearchHint,
+      child: Material(
+        color: context.appCard,
+        borderRadius: BorderRadius.circular(AppTokens.rMd),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppTokens.rMd),
+          onTap: () => context.push('/search'),
+          child: Container(
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTokens.rMd),
+              border: Border.all(color: context.appSeparator),
+            ),
+            child: Row(children: [
+              Icon(Icons.search_rounded, color: context.appFgSub, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(l.globalSearchHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        TextStyle(color: context.appFgTertiary, fontSize: 15)),
+              ),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 _QuickItem _moreTile(BuildContext context, AppLocalizations l, {int? count}) =>
     _QuickItem('manage', Icons.apps_rounded, _TileColor.purple,
@@ -1122,11 +1316,12 @@ class _ManagementScreenState extends ConsumerState<ManagementScreen> {
     final l = AppLocalizations.of(context)!;
     final s = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
     final perms = ref.read(userPermissionsProvider);
+    final v330 = ref.read(mealie330Provider);
     // Gespeicherte Liste behält auch gerade versteckte Kacheln; die
     // Obergrenze zählt nur sichtbare.
     final stored = _storedHomeTiles(s);
-    final visible =
-        effectiveHomeTiles(s, allowed: (k) => tileAllowed(k, perms));
+    final visible = effectiveHomeTiles(s,
+        allowed: (k) => tileAllowed(k, perms, mealie330: v330));
     if (visible.contains(key)) {
       stored.remove(key);
     } else {
@@ -1148,12 +1343,16 @@ class _ManagementScreenState extends ConsumerState<ManagementScreen> {
     final l = AppLocalizations.of(context)!;
     final settings = ref.watch(settingsProvider).valueOrNull;
     final perms = ref.watch(userPermissionsProvider);
-    final home =
-        effectiveHomeTiles(settings, allowed: (k) => tileAllowed(k, perms));
+    final v330 = ref.watch(mealie330Provider);
+    final home = effectiveHomeTiles(settings,
+        allowed: (k) => tileAllowed(k, perms, mealie330: v330));
     final ordered = _orderBy(
         _allTiles(context, l,
+            v330: v330,
             perms: perms,
             updateCount: _pendingUpdates(ref),
+            matchCount:
+                ref.watch(recipeMatchProvider.select((s) => s.tray.length)),
             shoppingTitle: ref.watch(activeShoppingListNameProvider)),
         settings?.moreTilesOrder ?? const []);
 
@@ -1205,12 +1404,29 @@ class _ManagementScreenState extends ConsumerState<ManagementScreen> {
       backgroundColor: context.appBg,
       appBar: AppBar(title: Text(l.managementTitle)),
       body: WithCookingModeFAB(
+        fullWidth: true,
         child: SafeArea(
           top: false,
           child: ListView(
             controller: _scroll,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
+              // Desktop: Hinweis aufs Anheften an die Seitenleiste.
+              if (LargeScreen.isDesktop &&
+                  DesktopSidebarScope.isActive(context))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+                  child: Row(children: [
+                    Icon(Icons.push_pin_outlined,
+                        size: 16, color: context.appFgTertiary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(l.sidebarPinHint,
+                          style:
+                              TextStyle(color: context.appFgSub, fontSize: 13)),
+                    ),
+                  ]),
+                ),
               _tileGrid(LargeScreen.tileColumns(context), ordered.length, tile),
             ],
           ),
@@ -1278,7 +1494,8 @@ class _ShoppingReminderHealthCheckState
       // (persist = action != null) — erst ein Neustart räumte sie weg.
       persist: false,
       content: Text(l.shoppingReminderInactiveHint),
-      duration: const Duration(seconds: 8),
+      // Einheitlich 5 s für alle Banner mit Aktion.
+      duration: const Duration(seconds: 5),
       action: SnackBarAction(
           label: l.openSettings, onPressed: service.openAppSettings),
     ));

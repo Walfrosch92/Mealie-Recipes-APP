@@ -27,7 +27,7 @@ class ReadOnlyBanner extends StatelessWidget {
           Expanded(
             child: Text(text,
                 style: TextStyle(
-                    color: context.appFgSub, fontSize: 12.5, height: 1.35)),
+                    color: context.appFgSub, fontSize: 13, height: 1.35)),
           ),
         ],
       ),

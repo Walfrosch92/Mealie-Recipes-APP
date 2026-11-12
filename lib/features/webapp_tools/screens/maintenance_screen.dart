@@ -55,6 +55,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
         confirmLabel: l.maintenanceRun)) {
       return;
     }
+    if (!mounted) return;
     setState(() => _busy = true);
     try {
       // Server-Meldung ist nur Englisch → eigene, übersetzte Bestätigung.
@@ -132,7 +133,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                     style: TextStyle(
                         color: context.appFg, fontWeight: FontWeight.w700)),
                 subtitle: Text(desc,
-                    style: TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                    style: TextStyle(color: context.appFgSub, fontSize: 13)),
                 trailing: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                       foregroundColor: AppTokens.accentDeep),

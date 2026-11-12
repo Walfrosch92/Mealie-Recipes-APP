@@ -132,6 +132,7 @@ class BounceTap extends StatefulWidget {
 
 class _BounceTapState extends State<BounceTap> {
   bool _down = false;
+  bool _hover = false;
 
   bool get _enabled => widget.onTap != null || widget.onLongPress != null;
 
@@ -146,18 +147,30 @@ class _BounceTapState extends State<BounceTap> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: widget.behavior,
-      onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
-      onTapDown: _enabled ? (_) => _press() : null,
-      onTapUp: _enabled ? (_) => _release() : null,
-      onTapCancel: _enabled ? _release : null,
-      child: AnimatedScale(
-        scale: _down ? widget.scale : 1.0,
-        duration: const Duration(milliseconds: 110),
-        curve: Curves.easeOut,
-        child: widget.child,
+    // Maus (Windows/macOS): Hand-Zeiger + leichtes Anheben beim Überfahren.
+    return MouseRegion(
+      cursor: _enabled ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: _enabled ? (_) => setState(() => _hover = true) : null,
+      onExit: (_) {
+        if (_hover) setState(() => _hover = false);
+      },
+      child: GestureDetector(
+        behavior: widget.behavior,
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        onTapDown: _enabled ? (_) => _press() : null,
+        onTapUp: _enabled ? (_) => _release() : null,
+        onTapCancel: _enabled ? _release : null,
+        child: AnimatedScale(
+          scale: _down
+              ? widget.scale
+              : _hover
+                  ? 1.015
+                  : 1.0,
+          duration: const Duration(milliseconds: 110),
+          curve: Curves.easeOut,
+          child: widget.child,
+        ),
       ),
     );
   }

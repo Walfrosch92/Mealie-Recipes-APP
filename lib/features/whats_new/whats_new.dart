@@ -103,7 +103,6 @@ Future<void> showWhatsNew(BuildContext context,
     useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: context.appCard,
     builder: (_) => _WhatsNewSheet(
       sections: parseChangelog(raw),
       info: info,
@@ -188,7 +187,7 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                     height: 44,
                     decoration: BoxDecoration(
                       gradient: AppTokens.accentGradient,
-                      borderRadius: BorderRadius.circular(13),
+                      borderRadius: BorderRadius.circular(AppTokens.rSm),
                     ),
                     child: const Icon(Icons.history_edu_rounded,
                         color: Colors.white),
@@ -202,7 +201,7 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                             style: TextStyle(
                                 fontFamily: 'PlusJakartaSans',
                                 color: context.appFg,
-                                fontSize: 21,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w800)),
                         Text('${l.appVersion} ${widget.info.version}',
                             style: TextStyle(
@@ -218,7 +217,7 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                     child: Text(l.changelogEnglishHint,
                         style: TextStyle(
                             color: context.appFgSub,
-                            fontSize: 12.5,
+                            fontSize: 13,
                             height: 1.35)),
                   ),
                 if (widget.sections.isEmpty)

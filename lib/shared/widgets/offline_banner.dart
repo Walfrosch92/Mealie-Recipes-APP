@@ -124,7 +124,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                     color: fg,
-                                    fontSize: 12.5,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w700)),
                           ),
                           const SizedBox(width: 10),

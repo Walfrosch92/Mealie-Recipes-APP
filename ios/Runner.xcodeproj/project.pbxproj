@@ -670,7 +670,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.MealieTimerWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -754,7 +754,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -839,7 +839,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.watchkitapp;
@@ -889,7 +889,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -936,7 +936,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -982,7 +982,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.MealieTimerWidget;
@@ -1021,7 +1021,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.ShareExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1061,7 +1061,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.MealieTimerWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1206,7 +1206,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -1235,7 +1235,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -1268,7 +1268,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.ShareExtension;
@@ -1307,7 +1307,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.27.12;
+				MARKETING_VERSION = 1.27.14;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = Walfrosch92.MealieRecipes.ShareExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";

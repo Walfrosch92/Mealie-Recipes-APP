@@ -132,8 +132,7 @@ class _WebhooksScreenState extends ConsumerState<WebhooksScreen> {
                       '${h['url'] ?? ''}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(color: context.appFgSub, fontSize: 12.5)),
+                      style: TextStyle(color: context.appFgSub, fontSize: 13)),
                   onTap: () => _edit(h),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -248,7 +247,7 @@ class _WebhookDialogState extends State<_WebhookDialog> {
               onTap: () async {
                 final t =
                     await showTimePicker(context: context, initialTime: _time);
-                if (t != null) setState(() => _time = t);
+                if (t != null && mounted) setState(() => _time = t);
               },
             ),
             if (_error != null)

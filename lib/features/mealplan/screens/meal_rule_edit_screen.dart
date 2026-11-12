@@ -114,7 +114,7 @@ class _MealRuleEditScreenState extends ConsumerState<MealRuleEditScreen> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -192,8 +192,7 @@ class _MealRuleEditScreenState extends ConsumerState<MealRuleEditScreen> {
             ),
             const SizedBox(height: 24),
             if (_error != null) ...[
-              Text(_error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(_error!, style: TextStyle(color: AppTokens.danger)),
               const SizedBox(height: 16),
             ],
             AsyncActionButton(expand: true, label: l.save, onPressed: _save),

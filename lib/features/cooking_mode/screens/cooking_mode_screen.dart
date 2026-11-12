@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,7 @@ import '../../../core/utils/ingredient_display.dart'
     show formatQuantity, ingredientDisplayParts;
 import '../../../core/utils/yield_format.dart';
 import '../../../core/utils/cooking_step_utils.dart';
+import '../../../core/utils/platform_features.dart';
 import '../../../core/utils/markdown_parse.dart';
 import '../../../shared/widgets/markdown_text.dart' show openMarkdownLink;
 import '../../../core/services/log_manager.dart';
@@ -199,7 +201,29 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
     // auf seinem Server nicht.
     final canSyncLastMade = hasOwnServer && !isGuest;
 
-    return Scaffold(
+    // Desktop-Kürzel: ← / → blättern, Leertaste startet den ersten
+    // Timer-Vorschlag des aktuellen Schritts.
+    void goPage(int p) {
+      if (p < 0 || p >= pageCount) return;
+      ref
+          .read(cookingSessionsProvider.notifier)
+          .setInstructionIndex(widget.slug, p);
+    }
+
+    void startStepTimer() {
+      final stepIndex = page - firstStepPage;
+      if (stepIndex < 0 || stepIndex >= stepCount) return;
+      final timers = timersForStep(steps[stepIndex]);
+      if (timers.isEmpty) return;
+      final l = AppLocalizations.of(context)!;
+      ref.read(timerProvider.notifier).addTimer(
+            name: '${l.timer} ${timers.first.labelFor(l.minutesShort)}',
+            recipeName: session.recipe.name,
+            minutes: timers.first.minutes,
+          );
+    }
+
+    final scaffold = Scaffold(
       backgroundColor: context.appBg,
       appBar: AppBar(
         backgroundColor: context.appBg,
@@ -405,6 +429,26 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
         onEnd: () => _finishRecipe(session, canSyncLastMade),
       ),
     );
+    if (!PlatformFeatures.webAppTools) return scaffold;
+    return Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.arrowRight): _CookKeyIntent(1),
+        SingleActivator(LogicalKeyboardKey.arrowLeft): _CookKeyIntent(-1),
+        SingleActivator(LogicalKeyboardKey.space): _CookKeyIntent(0),
+      },
+      child: Actions(
+        actions: {
+          _CookKeyIntent: _CookKeyAction((i) {
+            if (i.delta == 0) {
+              startStepTimer();
+            } else {
+              goPage(page + i.delta);
+            }
+          }),
+        },
+        child: Focus(autofocus: true, child: scaffold),
+      ),
+    );
   }
 
   // Abschluss über die „Guten Appetit"-Seite: je nach Toggle erst „Zuletzt
@@ -504,14 +548,13 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
     final ok = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: context.appCard,
-            title:
-                Text(l.endCookingMode, style: TextStyle(color: context.appFg)),
+            backgroundColor: ctx.appCard,
+            title: Text(l.endCookingMode, style: TextStyle(color: ctx.appFg)),
             content: Text(
                 count > 1
                     ? l.endCookingModeConfirmAll(count)
                     : l.endCookingModeConfirm,
-                style: TextStyle(color: context.appFgSub)),
+                style: TextStyle(color: ctx.appFgSub)),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
@@ -613,9 +656,9 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: context.appCard,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTokens.rXl)),
       ),
       builder: (_) => _IngredientsSheet(slug: session.slug),
     );
@@ -629,9 +672,9 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: context.appCard,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTokens.rXl)),
       ),
       builder: (_) => _NotesSheet(recipe: session.recipe, editable: editable),
     );
@@ -853,7 +896,8 @@ class _AddRecipeSheetState extends ConsumerState<_AddRecipeSheet> {
       builder: (ctx, scrollController) => Container(
         decoration: BoxDecoration(
           color: context.appBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(AppTokens.rMd)),
         ),
         child: Column(
           children: [
@@ -922,7 +966,7 @@ class _AddRecipeSheetState extends ConsumerState<_AddRecipeSheet> {
                     title: Text(r.name, style: TextStyle(color: context.appFg)),
                     subtitle: r.description == null || r.description!.isEmpty
                         ? null
-                        : Text(r.description!,
+                        : Text(markdownToPlainText(r.description!),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(color: context.appFgSub)),
@@ -1056,7 +1100,7 @@ class _TimerOverlayBarState extends ConsumerState<_TimerOverlayBar> {
                 .map((t) => _TimerChip(key: ValueKey(t.id), timer: t)),
 
             // Add timer button (+ Timer pill)
-            GestureDetector(
+            TapArea(
               onTap: () => _showAddTimer(context),
               child: Container(
                 margin: const EdgeInsets.only(left: 8),
@@ -1064,7 +1108,7 @@ class _TimerOverlayBarState extends ConsumerState<_TimerOverlayBar> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
                   color: AppTokens.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppTokens.rLg),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1105,12 +1149,11 @@ void showAddTimerSheet(
   showModalBottomSheet(
     useSafeArea: true,
     context: context,
-    backgroundColor: context.appCard,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppTokens.rXl)),
     ),
-    builder: (_) => StatefulBuilder(
+    builder: (dctx) => StatefulBuilder(
       builder: (ctx, setS) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(ctx).bottom +
@@ -1130,23 +1173,22 @@ void showAddTimerSheet(
             Text(l.newTimer,
                 style: TextStyle(
                     fontFamily: 'PlusJakartaSans',
-                    color: context.appFg,
+                    color: dctx.appFg,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.3)),
             const SizedBox(height: 14),
             TextField(
               controller: nameCtrl,
-              style: TextStyle(color: context.appFg),
+              style: TextStyle(color: dctx.appFg),
               decoration: InputDecoration(
                 hintText: l.timerNamePlaceholder,
-                hintStyle: TextStyle(color: context.appFgTertiary),
+                hintStyle: TextStyle(color: dctx.appFgTertiary),
                 filled: true,
-                fillColor: context.appSurface2,
+                fillColor: dctx.appSurface2,
                 enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTokens.rSm),
-                    borderSide:
-                        BorderSide(color: context.appSeparator, width: 1)),
+                    borderSide: BorderSide(color: dctx.appSeparator, width: 1)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTokens.rSm),
                     borderSide:
@@ -1158,7 +1200,7 @@ void showAddTimerSheet(
               children: [
                 Text(l.durationLabel,
                     style: TextStyle(
-                        color: context.appFgSub, fontWeight: FontWeight.w600)),
+                        color: dctx.appFgSub, fontWeight: FontWeight.w600)),
                 const Spacer(),
                 IconButton(
                   tooltip: AppLocalizations.of(context)!.a11yDecrease,
@@ -1170,7 +1212,7 @@ void showAddTimerSheet(
                 Text('${minutes.round()} ${l.minAbbreviation}',
                     style: TextStyle(
                         fontFamily: 'PlusJakartaSans',
-                        color: context.appFg,
+                        color: dctx.appFg,
                         fontSize: 18,
                         fontWeight: FontWeight.w800)),
                 IconButton(
@@ -1249,7 +1291,7 @@ class _ExtendButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: GestureDetector(
+      child: TapArea(
         behavior: HitTestBehavior.opaque,
         onTap: () {
           HapticFeedback.selectionClick();
@@ -1262,8 +1304,8 @@ class _ExtendButton extends StatelessWidget {
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(18),
+              color: AppTokens.success,
+              borderRadius: BorderRadius.circular(AppTokens.rMd),
             ),
             child: Text(label,
                 style: const TextStyle(
@@ -1329,12 +1371,12 @@ class _TimerChipState extends ConsumerState<_TimerChip>
     final l = AppLocalizations.of(context)!;
     final isExpiring = timer.remainingSeconds < 60 && !timer.isFinished;
     final chipColor = timer.isFinished
-        ? Colors.green.withValues(alpha: 0.15)
+        ? AppTokens.success.withValues(alpha: 0.15)
         : isExpiring
             ? Colors.red.withValues(alpha: 0.15)
             : context.appSurface2;
     final borderColor = timer.isFinished
-        ? Colors.green
+        ? AppTokens.success
         : isExpiring
             ? Colors.red
             : context.appSeparator;
@@ -1346,7 +1388,7 @@ class _TimerChipState extends ConsumerState<_TimerChip>
       padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
       decoration: BoxDecoration(
         color: chipColor,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppTokens.rXl),
         border: Border.all(color: borderColor, width: 1.2),
       ),
       child: Row(
@@ -1388,7 +1430,7 @@ class _TimerChipState extends ConsumerState<_TimerChip>
             const Padding(
               padding: EdgeInsets.all(6),
               child: Icon(Icons.notifications_off_rounded,
-                  color: Colors.green, size: 26),
+                  color: AppTokens.success, size: 26),
             ),
           ] else ...[
             _ChipButton(
@@ -1432,7 +1474,7 @@ class _TimerChipState extends ConsumerState<_TimerChip>
     if (!timer.isFinished) return chip;
 
     // Fertiger Timer: ganzes Chip wackelt/hüpft und beendet bei Tap den Ton.
-    return GestureDetector(
+    return TapArea(
       behavior: HitTestBehavior.opaque,
       onTap: () => ref.read(timerProvider.notifier).removeTimer(timer.id),
       child: AnimatedBuilder(
@@ -1522,7 +1564,7 @@ class _IngredientRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1576,7 +1618,7 @@ class _LinkedRecipeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return TapArea(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Padding(
@@ -1586,7 +1628,7 @@ class _LinkedRecipeButton extends StatelessWidget {
           height: 34,
           decoration: BoxDecoration(
             gradient: AppTokens.accentGradient,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTokens.rXs),
           ),
           child: const Icon(Icons.menu_book_rounded,
               color: Colors.white, size: 18),
@@ -1706,7 +1748,7 @@ class _RecipeSwitcher extends ConsumerWidget {
             final fg = sel ? Colors.white : context.appFgSub;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
+              child: TapArea(
                 onTap: sel ? null : () => context.go('/cooking/${s.slug}'),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -1730,7 +1772,9 @@ class _RecipeSwitcher extends ConsumerWidget {
                       ),
                       if (canEnd) ...[
                         const SizedBox(width: 4),
-                        GestureDetector(
+                        TapArea(
+                          semanticLabel:
+                              AppLocalizations.of(context)!.a11yRemove,
                           onTap: () => onEndRecipe(s.slug),
                           behavior: HitTestBehavior.opaque,
                           child: Padding(
@@ -1828,7 +1872,7 @@ class _DonePage extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: context.appCard,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTokens.rMd),
                   border: Border.all(color: context.appSeparator, width: 1),
                 ),
                 child: Row(
@@ -1873,7 +1917,7 @@ class _DonePage extends StatelessWidget {
                 Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppTokens.rMd),
                       child: Image.file(photo!,
                           height: 160,
                           width: double.infinity,
@@ -1917,11 +1961,11 @@ class _DonePage extends StatelessWidget {
                   filled: true,
                   fillColor: context.appCard,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTokens.rMd),
                     borderSide: BorderSide(color: context.appSeparator),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppTokens.rMd),
                     borderSide: BorderSide(color: context.appSeparator),
                   ),
                 ),
@@ -1986,7 +2030,7 @@ class _StepView extends ConsumerWidget {
         ? _sharedImageBytes(ref, recipe.id)
         : null;
     final displayText = stripMarkdownImages(step.text);
-    final timers = extractStepTimers(step.text);
+    final timers = timersForStep(step);
     final section = instructionSectionAt(steps, stepIndex);
 
     Widget image;
@@ -2007,7 +2051,7 @@ class _StepView extends ConsumerWidget {
     } else {
       // Rezept-Hauptbild → Offline-Kopie, falls gespeichert. Antippen öffnet
       // es groß wie in der Detailansicht.
-      image = GestureDetector(
+      image = TapArea(
         onTap: () => showRecipeImageViewer(context,
             recipeId: recipe.id,
             imageUrl: mainUrl,
@@ -2124,7 +2168,8 @@ class _StepView extends ConsumerWidget {
           // Große, gut lesbare Anweisung — erkannte Zutaten orange + antippbar.
           _StepText(
             text: displayText.isEmpty ? '—' : displayText,
-            ingredients: recipe.recipeIngredient,
+            ingredients: stepIngredientPriority(
+                recipe.recipeIngredient, step.ingredientRefs, section),
             multiplier: session.quantityMultiplier,
             dimmed: done,
             serverUrl: serverUrl,
@@ -2263,7 +2308,7 @@ class _StepTimerChips extends ConsumerWidget {
           onTap: () {
             HapticFeedback.lightImpact();
             ref.read(timerProvider.notifier).addTimer(
-                  name: '${l.timer} ${t.label}',
+                  name: '${l.timer} ${t.labelFor(l.minutesShort)}',
                   recipeName: recipeName,
                   minutes: t.minutes,
                 );
@@ -2273,14 +2318,14 @@ class _StepTimerChips extends ConsumerWidget {
           onLongPress: () {
             HapticFeedback.mediumImpact();
             showAddTimerSheet(context, ref, recipeName, l,
-                initialName: '${l.timer} ${t.label}',
+                initialName: '${l.timer} ${t.labelFor(l.minutesShort)}',
                 initialMinutes: t.minutes);
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
               gradient: AppTokens.accentGradient,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTokens.rSm),
               boxShadow: const [
                 BoxShadow(
                     color: Color(0x40FF7800),
@@ -2293,7 +2338,7 @@ class _StepTimerChips extends ConsumerWidget {
               children: [
                 const Icon(Icons.timer_outlined, color: Colors.white, size: 18),
                 const SizedBox(width: 7),
-                Text('${l.timer} ${t.label}',
+                Text('${l.timer} ${t.labelFor(l.minutesShort)}',
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -2395,7 +2440,7 @@ class _StepNavBar extends ConsumerWidget {
                 child: Semantics(
                   button: true,
                   label: centerLabel,
-                  child: GestureDetector(
+                  child: TapArea(
                     onTap: centerOnTap,
                     child: Container(
                       height: 58,
@@ -2409,11 +2454,14 @@ class _StepNavBar extends ConsumerWidget {
                         children: [
                           Icon(centerIcon, color: Colors.white, size: 26),
                           const SizedBox(width: 9),
-                          Text(centerLabel,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800)),
+                          Flexible(
+                              child: Text(centerLabel,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis)),
                         ],
                       ),
                     ),
@@ -2453,7 +2501,7 @@ class _NavSquare extends StatelessWidget {
       button: true,
       enabled: enabled,
       label: semantic,
-      child: GestureDetector(
+      child: TapArea(
         onTap: enabled ? onTap : null,
         child: Container(
           width: 58,
@@ -2735,7 +2783,7 @@ class _ToolsView extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
                   gradient: AppTokens.accentGradient,
                   boxShadow: context.appAccentGlow,
                 ),
@@ -2748,7 +2796,7 @@ class _ToolsView extends ConsumerWidget {
                     style: TextStyle(
                         fontFamily: 'PlusJakartaSans',
                         color: context.appFg,
-                        fontSize: 21,
+                        fontSize: 22,
                         height: 1.2,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3)),
@@ -2814,7 +2862,7 @@ class _PrepView extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(AppTokens.rSm),
                   gradient: AppTokens.accentGradient,
                   boxShadow: context.appAccentGlow,
                 ),
@@ -2829,7 +2877,7 @@ class _PrepView extends ConsumerWidget {
                     style: TextStyle(
                         fontFamily: 'PlusJakartaSans',
                         color: context.appFg,
-                        fontSize: 21,
+                        fontSize: 22,
                         height: 1.2,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3)),
@@ -2898,7 +2946,7 @@ class _ExpandableHintState extends State<_ExpandableHint> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
+        TapArea(
           onTap: () => setState(() => _expanded = !_expanded),
           child: SizedBox(
             width: double.infinity,
@@ -2916,7 +2964,7 @@ class _ExpandableHintState extends State<_ExpandableHint> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(11),
+                      borderRadius: BorderRadius.circular(AppTokens.rXs),
                       gradient: AppTokens.accentGradient,
                       boxShadow: context.appAccentGlow,
                     ),
@@ -3106,6 +3154,35 @@ class _NotesSheet extends StatelessWidget {
   }
 }
 
+/// Zutaten in der Reihenfolge, in der `_StepText` sie für ein Wort auflösen
+/// soll (erster Treffer gewinnt): erst die mit dem Schritt verknüpften
+/// (`ingredientReferences`), dann die aus dem gleichen Abschnitt, dann alle
+/// übrigen. Sonst zeigt „Butter" im Abschnitt „Cookie dough" die Butter aus
+/// „Brownie dough", nur weil die weiter oben steht (#46).
+@visibleForTesting
+List<Ingredient> stepIngredientPriority(
+    List<Ingredient> all, List<String> refs, String? stepSection) {
+  final refSet = refs.toSet();
+  final section = stepSection?.trim().toLowerCase();
+  final linked = <Ingredient>[];
+  final sameSection = <Ingredient>[];
+  final rest = <Ingredient>[];
+  // Zutaten-Abschnittstitel gilt (wie in Mealie) bis zum nächsten Titel.
+  String? current;
+  for (final ing in all) {
+    final t = ing.sectionTitle;
+    if (t != null) current = t.toLowerCase();
+    if (ing.referenceId != null && refSet.contains(ing.referenceId)) {
+      linked.add(ing);
+    } else if (section != null && current == section) {
+      sameSection.add(ing);
+    } else {
+      rest.add(ing);
+    }
+  }
+  return [...linked, ...sameSection, ...rest];
+}
+
 // Schritt-Text mit hervorgehobenen, antippbaren Zutaten-Wörtern.
 // Erkannte Zutaten werden orange dargestellt; ein Tap zeigt die (skalierte)
 // Zutat (z. B. „400 g Erdäpfel") als Snackbar.
@@ -3151,7 +3228,7 @@ class _StepTextState extends State<_StepText> {
 
     final base = TextStyle(
       color: widget.dimmed ? context.appFgSub : context.appFg,
-      fontSize: 21,
+      fontSize: 22,
       height: 1.5,
       fontWeight: FontWeight.w500,
     );
@@ -3319,7 +3396,7 @@ class _StepTextState extends State<_StepText> {
 // Anzahl. Antippen öffnet die Vollbild-Galerie beim aktuellen Bild. Token
 // nur an den eigenen Server (vorher ging er an jede Bildadresse im Text).
 
-class _StepImageCarousel extends StatefulWidget {
+class _StepImageCarousel extends ConsumerStatefulWidget {
   final List<String> urls;
   final String serverUrl;
   final String token;
@@ -3333,14 +3410,17 @@ class _StepImageCarousel extends StatefulWidget {
   });
 
   @override
-  State<_StepImageCarousel> createState() => _StepImageCarouselState();
+  ConsumerState<_StepImageCarousel> createState() => _StepImageCarouselState();
 }
 
-class _StepImageCarouselState extends State<_StepImageCarousel> {
+class _StepImageCarouselState extends ConsumerState<_StepImageCarousel> {
   int _index = 0;
 
-  Map<String, String>? _headers(String url) =>
-      authHeadersFor(url, widget.serverUrl, widget.token);
+  // Token + optionale Zusatz-Header, nur für den eigenen Server (#38).
+  Map<String, String>? _headers(String url) => authHeadersFor(
+      url, widget.serverUrl, widget.token,
+      extra:
+          ref.read(settingsProvider).valueOrNull?.optionalHeaders ?? const {});
 
   @override
   void didUpdateWidget(covariant _StepImageCarousel old) {
@@ -3358,7 +3438,7 @@ class _StepImageCarouselState extends State<_StepImageCarousel> {
           key: ValueKey(widget.urls.join('|')),
           itemCount: widget.urls.length,
           onPageChanged: (i) => setState(() => _index = i),
-          itemBuilder: (_, i) => GestureDetector(
+          itemBuilder: (_, i) => TapArea(
             onTap: () => showImageGalleryViewer(context,
                 urls: widget.urls, initialIndex: i, headersFor: _headers),
             // Offline-Kopie zuerst (Rezeptbilder offline speichern).
@@ -3412,4 +3492,28 @@ class _StepImageCarouselState extends State<_StepImageCarousel> {
       ],
     );
   }
+}
+
+/// Desktop-Kürzel im Kochmodus: -1/+1 = blättern, 0 = Timer starten.
+class _CookKeyIntent extends Intent {
+  final int delta;
+  const _CookKeyIntent(this.delta);
+}
+
+/// Ruht, solange ein Textfeld den Fokus hat (z. B. der Kommentar auf der
+/// Abschlussseite) — sonst kämen Leerzeichen/Pfeile dort nicht mehr an.
+class _CookKeyAction extends Action<_CookKeyIntent> {
+  final void Function(_CookKeyIntent) onKey;
+  _CookKeyAction(this.onKey);
+
+  @override
+  bool isEnabled(_CookKeyIntent intent) {
+    final ctx = FocusManager.instance.primaryFocus?.context;
+    if (ctx == null) return true;
+    return ctx.widget is! EditableText &&
+        ctx.findAncestorWidgetOfExactType<EditableText>() == null;
+  }
+
+  @override
+  void invoke(_CookKeyIntent intent) => onKey(intent);
 }

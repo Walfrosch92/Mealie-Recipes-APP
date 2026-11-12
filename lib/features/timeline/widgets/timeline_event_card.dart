@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/tap_area.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -9,6 +10,8 @@ import '../../../core/models/recipe_detail.dart';
 import '../../../core/models/timeline_event.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/media_urls.dart';
+import '../../../core/utils/mealie_version.dart';
+import '../../../shared/widgets/photo_source_sheet.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/recipe_image_viewer.dart';
 import '../../../shared/widgets/section_header.dart';
@@ -91,7 +94,7 @@ class TimelineEventCard extends ConsumerWidget {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                style: AppTokens.dangerButton,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(l.delete),
               ),
@@ -110,6 +113,25 @@ class TimelineEventCard extends ConsumerWidget {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(l.deleteFailed)));
       }
+    }
+  }
+
+  Future<void> _photo(BuildContext context, WidgetRef ref,
+      {required bool remove}) async {
+    final l = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final notifier = ref.read(recipeTimelineProvider(event.recipeId).notifier);
+    try {
+      if (remove) {
+        await notifier.removeImage(event);
+      } else {
+        final photo = await pickPhotoWithSource(context);
+        if (photo == null) return;
+        await notifier.setImage(event, photo);
+      }
+    } catch (e) {
+      messenger.showSnackBar(
+          SnackBar(content: Text(mealieErrorMessage(e) ?? l.saveFailed)));
     }
   }
 
@@ -145,7 +167,7 @@ class TimelineEventCard extends ConsumerWidget {
                 child: Row(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTokens.rXs),
                       child: SizedBox(
                         width: 36,
                         height: 36,
@@ -216,7 +238,7 @@ class TimelineEventCard extends ConsumerWidget {
                           style: TextStyle(
                               fontFamily: 'PlusJakartaSans',
                               color: context.appFg,
-                              fontSize: 14.5,
+                              fontSize: 15,
                               fontWeight: FontWeight.w700)),
                       if (event.message.trim().isNotEmpty) ...[
                         const SizedBox(height: 4),
@@ -234,9 +256,12 @@ class TimelineEventCard extends ConsumerWidget {
                     icon: Icon(Icons.more_vert_rounded,
                         size: 20, color: context.appFgTertiary),
                     color: context.appCard,
-                    onSelected: (v) => v == 'edit'
-                        ? _edit(context, ref)
-                        : _delete(context, ref),
+                    onSelected: (v) => switch (v) {
+                      'edit' => _edit(context, ref),
+                      'photo' => _photo(context, ref, remove: false),
+                      'removePhoto' => _photo(context, ref, remove: true),
+                      _ => _delete(context, ref),
+                    },
                     itemBuilder: (_) => [
                       PopupMenuItem(
                         value: 'edit',
@@ -247,6 +272,29 @@ class TimelineEventCard extends ConsumerWidget {
                           Text(l.timelineEditNote),
                         ]),
                       ),
+                      // Foto hinzufügen/ersetzen; entfernen erst ab Mealie
+                      // 3.30 (vorher ließ der Server das Bild stehen).
+                      PopupMenuItem(
+                        value: 'photo',
+                        child: Row(children: [
+                          Icon(Icons.add_a_photo_outlined,
+                              size: 19, color: context.appFg),
+                          const SizedBox(width: 10),
+                          Text(event.hasImage
+                              ? l.timelineReplacePhoto
+                              : l.timelineAddPhoto),
+                        ]),
+                      ),
+                      if (event.hasImage && ref.watch(mealie330Provider))
+                        PopupMenuItem(
+                          value: 'removePhoto',
+                          child: Row(children: [
+                            Icon(Icons.hide_image_outlined,
+                                size: 19, color: context.appFg),
+                            const SizedBox(width: 10),
+                            Text(l.timelineRemovePhoto),
+                          ]),
+                        ),
                       PopupMenuItem(
                         value: 'delete',
                         child: Row(children: [
@@ -263,7 +311,7 @@ class TimelineEventCard extends ConsumerWidget {
             ),
           ),
           if (event.hasImage && server.isNotEmpty)
-            GestureDetector(
+            TapArea(
               onTap: () => showRecipeImageViewer(
                 context,
                 recipeId: event.recipeId,

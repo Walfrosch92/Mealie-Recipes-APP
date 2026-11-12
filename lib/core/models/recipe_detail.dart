@@ -26,7 +26,8 @@ part 'recipe_detail.g.dart';
 ///  11 = Ursprüngliche URL (`orgURL`)
 ///  12 = Einheiten-Anzeige (`useAbbreviation`, `fraction`,
 ///       `pluralAbbreviation`)
-const int kRecipeCacheSchema = 12;
+///  13 = Dauer pro Schritt (`Instruction.durationSeconds`, Mealie 3.30)
+const int kRecipeCacheSchema = 13;
 
 // Disable factory generation — we write our own robust fromJson below.
 @JsonSerializable(explicitToJson: true, createFactory: false)
@@ -538,6 +539,10 @@ List<Instruction> _parseInstructions(dynamic raw) {
             summary: summary,
             title: (title == null || title.isEmpty) ? pendingTitle : title,
             ingredientRefs: _parseIngredientRefs(m['ingredientReferences']),
+            durationSeconds: switch (m['durationSeconds']) {
+              final num n when n > 0 => n.toInt(),
+              _ => null,
+            },
           ));
           pendingTitle = null;
         } else if (title != null && title.isNotEmpty) {
@@ -708,8 +713,8 @@ class RecipeAsset {
   bool get isText => const {'txt', 'md', 'csv', 'json'}.contains(extension);
 
   /// Video/Audio (Mealie ≥ 3.29) — wird vom Server gestreamt abgespielt.
-  bool get isMedia => const {'mp4', 'mov', 'm4v', 'webm', 'mp3', 'm4a'}
-      .contains(extension);
+  bool get isMedia =>
+      const {'mp4', 'mov', 'm4v', 'webm', 'mp3', 'm4a'}.contains(extension);
 
   bool get isVideo => const {'mp4', 'mov', 'm4v', 'webm'}.contains(extension);
 
@@ -893,6 +898,11 @@ class Instruction {
   @JsonKey(includeFromJson: false, includeToJson: false)
   final bool isCompleted;
 
+  /// Mealie ≥ 3.30: Dauer dieses Schritts in Sekunden (`durationSeconds`).
+  /// Muss im Cache mitlaufen, sonst löschte ein offline bearbeitetes und
+  /// gespeichertes Rezept die Dauer aller Schritte.
+  final int? durationSeconds;
+
   const Instruction({
     this.id,
     required this.text,
@@ -900,6 +910,7 @@ class Instruction {
     this.summary,
     this.ingredientRefs = const [],
     this.isCompleted = false,
+    this.durationSeconds,
   });
 
   factory Instruction.fromJson(Map<String, dynamic> json) =>
@@ -914,6 +925,7 @@ class Instruction {
         summary: summary,
         ingredientRefs: ingredientRefs,
         isCompleted: isCompleted ?? this.isCompleted,
+        durationSeconds: durationSeconds,
       );
 
   /// Getrimmte Schritt-Überschrift, `null` wenn keine.

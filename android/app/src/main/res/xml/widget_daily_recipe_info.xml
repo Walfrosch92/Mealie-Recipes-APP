@@ -13,5 +13,5 @@
     android:previewImage="@drawable/ic_widget_sparkles"
     android:previewLayout="@layout/widget_daily_recipe_preview"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="0"
+    android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />

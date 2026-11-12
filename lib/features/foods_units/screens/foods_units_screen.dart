@@ -2,8 +2,18 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/swipe_context_menu.dart';
+import '../../../shared/widgets/app_search_field.dart';
+import '../../../shared/widgets/app_snack.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../leftovers/providers/leftover_finder_provider.dart'
+    show FinderItem;
+import '../../leftovers/screens/leftover_finder_screen.dart'
+    show recipeFinderFoodRoute;
+import '../../../core/utils/mealie_locale.dart';
+import '../../../core/utils/mealie_version.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +25,7 @@ import '../../../core/models/shopping_item.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/search_match.dart';
 import '../../../shared/theme/app_colors.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/keyboard_aware_sheet.dart';
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/apple_icon.dart';
@@ -28,6 +39,8 @@ import '../../shopping_list/screens/shopping_list_screen.dart'
     show shoppingCategoryColor;
 import '../providers/foods_units_admin_provider.dart';
 import '../widgets/food_unit_edit_sheet.dart';
+import '../../../shared/widgets/search_jump.dart';
+import '../../../shared/widgets/empty_state_view.dart';
 
 // ---------------------------------------------------------------------------
 // Lebensmittel / Einheiten verwalten — wie „Daten verwalten" der Mealie-
@@ -54,19 +67,7 @@ extension FoodUnitKindUi on FoodUnitKind {
 }
 
 /// Mealie-Seeder-Sprachen (validate_locale) je App-Sprache.
-const _kSeedLocales = {
-  'de': 'de-DE',
-  'en': 'en-US',
-  'es': 'es-ES',
-  'fr': 'fr-FR',
-  'fr_CA': 'fr-CA',
-  'hu': 'hu-HU',
-  'nb': 'no-NO',
-  'nl': 'nl-NL',
-  'pl': 'pl-PL',
-  'pt': 'pt-BR',
-  'sl': 'sl-SI',
-};
+const _kSeedLocales = kMealieLocales;
 
 /// Sprachnamen bewusst nicht übersetzt (wie überall in der App).
 const _kSeedLanguageNames = {
@@ -113,7 +114,8 @@ class FoodsUnitsScreen extends ConsumerStatefulWidget {
   ConsumerState<FoodsUnitsScreen> createState() => _FoodsUnitsScreenState();
 }
 
-class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
+class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen>
+    with SearchJumpMixin {
   String _query = '';
   bool _selecting = false;
   final Set<String> _selected = {};
@@ -127,9 +129,7 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
 
   void _error(String fallback, Object e) {
     if (!mounted) return;
-    final detail = mealieErrorMessage(e);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(detail == null ? fallback : '$fallback: $detail')));
+    showErrorSnack(context, fallback, e);
   }
 
   void _endSelection() => setState(() {
@@ -163,9 +163,7 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
                   onPressed: () => Navigator.pop(ctx, false),
                   child: Text(l.cancel)),
               FilledButton(
-                style: danger
-                    ? FilledButton.styleFrom(backgroundColor: Colors.red)
-                    : null,
+                style: danger ? AppTokens.dangerButton : null,
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(confirm ?? l.delete),
               ),
@@ -220,6 +218,7 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
     final items = _selectedItems;
     if (items.isEmpty) return;
     if (!await _confirm(l.deleteSelectedConfirm(items.length))) return;
+    if (!mounted) return;
     setState(() => _busy = true);
     Object? failure;
     for (final m in items) {
@@ -246,7 +245,6 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
       useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: context.appCard,
       builder: (ctx) => ConstrainedBox(
         constraints:
             BoxConstraints(maxHeight: MediaQuery.sizeOf(ctx).height * 0.75),
@@ -408,10 +406,11 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
     final labels = ref.watch(shoppingLabelsProvider).valueOrNull ??
         const <ShoppingLabel>[];
     final labelById = {for (final lb in labels) lb.id: lb};
-    // Lebensmittel ändern braucht in Mealie `can_organize`; Einheiten
-    // prüft der Server nicht.
-    final mayEdit = kind == FoodUnitKind.unit ||
-        ref.watch(userPermissionsProvider).mayOrganize;
+    // Lebensmittel ändern braucht in Mealie `can_organize`; Einheiten erst
+    // ab 3.30 (vorher prüfte der Server sie nicht).
+    final mayEdit =
+        (kind == FoodUnitKind.unit && !ref.watch(mealie330Provider)) ||
+            ref.watch(userPermissionsProvider).mayOrganize;
 
     final appBar = _selecting
         ? AppBar(
@@ -489,70 +488,43 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
                   child: async.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(userErrorMessage(e),
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: context.appFgSub)),
-                            const SizedBox(height: 12),
-                            FilledButton(
-                              onPressed: () =>
-                                  ref.invalidate(foodsUnitsAdminProvider(kind)),
-                              child: Text(l.retry),
-                            ),
-                          ],
-                        ),
-                      ),
+                    error: (e, _) => ErrorRetryView(
+                      error: e,
+                      onRetry: () =>
+                          ref.invalidate(foodsUnitsAdminProvider(kind)),
                     ),
                     data: (items) {
                       final terms = searchTerms(_query);
-                      final shown =
-                          items.where((m) => _matches(m, terms)).toList();
+                      // Genaue/vorne passende Treffer zuerst („Sal“ → Salz).
+                      final shown = rankBySearch(
+                          items.where((m) => _matches(m, terms)),
+                          terms,
+                          (m) => m['name'] as String? ?? '');
+                      // Sprung aus der globalen Suche (?highlight=<id>).
+                      handleSearchJump(context, [
+                        for (final m in shown) m['id'] as String? ?? '',
+                      ]);
                       return Column(
                         children: [
                           if (!mayEdit)
                             ReadOnlyBanner(text: l.organizeReadOnlyHint),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                            child: TextField(
+                            child: AppSearchField(
                               onChanged: (v) => setState(() => _query = v),
-                              onTapOutside: (_) =>
-                                  FocusScope.of(context).unfocus(),
-                              style: TextStyle(color: context.appFg),
-                              decoration: InputDecoration(
-                                hintText: l.search,
-                                prefixIcon: Icon(Icons.search_rounded,
-                                    color: context.appFgSub),
-                                filled: true,
-                                fillColor: context.appCard,
-                                isDense: true,
-                                border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppTokens.rSm),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
                             ),
                           ),
                           Expanded(
                             child: RefreshIndicator(
                               onRefresh: _notifier.refresh,
                               child: items.isEmpty
-                                  ? ListView(children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(32),
-                                        child: Text(l.foodsUnitsEmpty,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                                color: context.appFgSub,
-                                                fontSize: 15)),
-                                      ),
-                                    ])
+                                  ? EmptyStateView(
+                                      icon: kind == FoodUnitKind.food
+                                          ? kAppleIcon
+                                          : kMeasuringCupIcon,
+                                      message: l.foodsUnitsEmpty)
                                   : ListView.builder(
+                                      controller: searchScroll,
                                       padding: const EdgeInsets.fromLTRB(
                                           16, 8, 16, 24),
                                       itemCount: shown.length,
@@ -565,25 +537,32 @@ class _FoodsUnitsScreenState extends ConsumerState<FoodsUnitsScreen> {
                                           child: Padding(
                                             padding: const EdgeInsets.only(
                                                 bottom: 10),
-                                            child: _FoodUnitCard(
-                                              kind: kind,
-                                              item: m,
-                                              label: labelById[m['labelId']],
-                                              usage: kind.usage(recipes, id),
-                                              selecting: _selecting,
-                                              selected: _selected.contains(id),
-                                              onTap: _selecting
-                                                  ? () => setState(() =>
-                                                      _selected.contains(id)
-                                                          ? _selected.remove(id)
-                                                          : _selected.add(id))
-                                                  : (mayEdit
-                                                      ? () => _edit(m)
-                                                      : () {}),
-                                              readOnly: !mayEdit,
-                                              onMerge: () => _merge(m),
-                                              onDelete: () => _delete(m),
-                                            ),
+                                            child: searchHighlight(
+                                                id,
+                                                _FoodUnitCard(
+                                                  kind: kind,
+                                                  item: m,
+                                                  label:
+                                                      labelById[m['labelId']],
+                                                  usage:
+                                                      kind.usage(recipes, id),
+                                                  selecting: _selecting,
+                                                  selected:
+                                                      _selected.contains(id),
+                                                  onTap: _selecting
+                                                      ? () => setState(() =>
+                                                          _selected.contains(id)
+                                                              ? _selected
+                                                                  .remove(id)
+                                                              : _selected
+                                                                  .add(id))
+                                                      : (mayEdit
+                                                          ? () => _edit(m)
+                                                          : () {}),
+                                                  readOnly: !mayEdit,
+                                                  onMerge: () => _merge(m),
+                                                  onDelete: () => _delete(m),
+                                                )),
                                           ),
                                         );
                                       },
@@ -667,7 +646,7 @@ class _FoodUnitCard extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
                   gradient: AppTokens.accentGradient,
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: BorderRadius.circular(AppTokens.rXs),
                 ),
                 child: Center(
                   child: iconOrApple(kind.icon, color: Colors.white, size: 20),
@@ -677,11 +656,20 @@ class _FoodUnitCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(foodUnitName(item),
-                      style: TextStyle(
-                          color: context.appFg,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700)),
+                  // Mealie erlaubt Einträge ohne Namen — statt einer leeren
+                  // Zeile einen erkennbaren Platzhalter zeigen.
+                  foodUnitName(item).isEmpty
+                      ? Text(l.unnamedEntry,
+                          style: TextStyle(
+                              color: context.appFgTertiary,
+                              fontSize: 15,
+                              fontStyle: FontStyle.italic,
+                              fontWeight: FontWeight.w600))
+                      : Text(foodUnitName(item),
+                          style: TextStyle(
+                              color: context.appFg,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700)),
                   const SizedBox(height: 2),
                   Text(
                       [if (sub.isNotEmpty) sub, l.organizerRecipeCount(usage)]
@@ -709,37 +697,50 @@ class _FoodUnitCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (!selecting && !readOnly)
+            // Lebensmittel: Pfeil zeigt alle Rezepte damit (Tippen auf die
+            // Karte bearbeitet weiterhin).
+            if (!selecting && kind == FoodUnitKind.food && usage > 0)
+              IconButton(
+                tooltip: l.organizerShowRecipes,
+                icon: const Icon(Icons.manage_search_rounded,
+                    color: AppTokens.accentDeep),
+                // Kachel „Rezept-Suche“ mit dieser Zutat statt Rezeptliste.
+                onPressed: () => context.push(recipeFinderFoodRoute(
+                    item['id'] as String? ?? '',
+                    FinderItem.food(item)?.name ?? foodUnitName(item))),
+              )
+            else if (!selecting && !readOnly)
               Icon(Icons.chevron_right_rounded, color: context.appFgTertiary),
           ],
         ),
       ),
     );
     if (selecting || readOnly) return card;
-    return Slidable(
+    return SwipeContextMenu(
+        child: Slidable(
       key: ValueKey(item['id']),
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
-        extentRatio: 0.55,
+        extentRatio: AppTokens.swipeExtent(2),
         children: [
           SlidableAction(
             onPressed: (_) => onMerge(),
-            backgroundColor: const Color(0xFF0A84FF),
+            backgroundColor: AppTokens.swipeSecondary,
             foregroundColor: Colors.white,
             icon: Icons.call_merge_rounded,
             label: l.mergeAction,
           ),
           SlidableAction(
             onPressed: (_) => onDelete(),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTokens.swipeDelete,
             foregroundColor: Colors.white,
-            icon: Icons.delete,
+            icon: Icons.delete_outline_rounded,
             label: l.delete,
           ),
         ],
       ),
       child: card,
-    );
+    ));
   }
 }
 
@@ -758,9 +759,9 @@ class _MergeTargetSheetState extends State<_MergeTargetSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
     final terms = searchTerms(_query);
-    final shown = widget.items.where((m) => _matches(m, terms)).toList();
+    final shown = rankBySearch(widget.items.where((m) => _matches(m, terms)),
+        terms, (m) => m['name'] as String? ?? '');
     // KeyboardAwareSheet: bleibt mit Tastatur auf dem Bildschirm (vorher
     // feste 75 % + Tastatur-Polster → oben abgeschnitten).
     return Padding(
@@ -777,15 +778,9 @@ class _MergeTargetSheetState extends State<_MergeTargetSheet> {
                     fontSize: 18,
                     fontWeight: FontWeight.w800)),
             const SizedBox(height: 12),
-            TextField(
+            AppSearchField(
               autofocus: true,
               onChanged: (v) => setState(() => _query = v),
-              decoration: InputDecoration(
-                hintText: l.search,
-                prefixIcon: const Icon(Icons.search_rounded),
-                isDense: true,
-                border: const OutlineInputBorder(),
-              ),
             ),
             const SizedBox(height: 8),
             Expanded(

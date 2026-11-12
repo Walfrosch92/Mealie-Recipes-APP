@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
 import '../models/shopping_reminder_location.dart';
 import '../services/log_manager.dart';
+import '../services/wifi_name.dart';
 import '../utils/meal_types.dart';
 
 // ---------------------------------------------------------------------------
@@ -14,12 +18,20 @@ import '../utils/meal_types.dart';
 // ---------------------------------------------------------------------------
 
 const _kServerUrl = 'serverUrl';
+const _kWifiServerUrl = 'wifiServerUrl';
+const _kWifiSsid = 'wifiSsid';
 const _kHouseholdId = 'householdId';
 const _kShoppingListId = 'shoppingListId';
 const _kApiVersion = 'apiVersion';
 const _kSelectedLanguage = 'selectedLanguage';
 const _kImportLanguage = 'importLanguage';
+const _kImportTranslate = 'importTranslate';
+const _kImportOrganizers = 'importOrganizers';
+const _kImportStreamPhotos = 'importStreamPhotos';
+const _kImportVideoAi = 'importVideoAi';
+const _kImportPreset = 'importPreset';
 const _kShowRecipeImages = 'showRecipeImages';
+const _kTabletSidebar = 'tabletSidebar';
 const _kEnableLogging = 'enableLogging';
 const _kBiometricLock = 'isBiometricLockEnabled';
 const _kCriticalAlerts = 'enableCriticalAlerts';
@@ -57,6 +69,12 @@ const _kApiToken = 'apiToken';
 // Provider
 // ---------------------------------------------------------------------------
 
+/// Gespeichertes Farbschema ('system'/'light'/'dark'), in main.dart VOR dem
+/// ersten Frame gelesen. Ohne das zeigt die App bis zum async Settings-Load
+/// das System-Schema — Sheets, die in diesen ersten Frames aufgehen
+/// („Was ist neu“), bekamen dann z. B. hellen Hintergrund bei dunkler App.
+final initialThemeModeProvider = Provider<String>((ref) => 'system');
+
 final settingsProvider =
     AsyncNotifierProvider<SettingsNotifier, AppSettings>(SettingsNotifier.new);
 
@@ -83,7 +101,76 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     // by the zone hook before settings load don't get recorded behind the
     // user's back.
     LogManager.shared.enabled = loaded.enableLogging;
-    return loaded;
+    ref.onDispose(_stopWifiWatch);
+    if (loaded.hasWifiServer) {
+      // VOR dem ersten API-Aufruf wissen, welches WLAN — sonst ginge der
+      // Start-Abgleich erst an die falsche Adresse. Kurz begrenzt, damit ein
+      // hängender Plattformaufruf den App-Start nicht aufhält.
+      _ssid = await readWifiName()
+          .timeout(const Duration(milliseconds: 1500), onTimeout: () => null);
+      _startWifiWatch();
+    }
+    return _route(loaded);
+  }
+
+  // ── WLAN-Umschaltung ──────────────────────────────────────────────────
+  // Ist eine WLAN-Adresse eingerichtet, beobachtet der Notifier Netzwechsel
+  // (und das Zurückkehren in die App) und setzt `serverUrl` auf die passende
+  // Adresse. apiServiceProvider hängt an `serverUrl` → alle Aufrufe gehen
+  // danach an die neue Adresse.
+
+  String? _ssid;
+  StreamSubscription<List<ConnectivityResult>>? _connSub;
+  AppLifecycleListener? _lifecycle;
+
+  /// Zuletzt gelesener WLAN-Name (`null` = kein WLAN / nicht lesbar).
+  String? get currentWifiName => _ssid;
+
+  AppSettings _route(AppSettings s) {
+    final url = s.serverUrlForSsid(_ssid);
+    if (url == s.serverUrl) return s;
+    return s.copyWith(serverUrl: url, standardServerUrl: s.primaryServerUrl);
+  }
+
+  void _startWifiWatch() {
+    if (_connSub != null) return;
+    try {
+      _connSub = Connectivity()
+          .onConnectivityChanged
+          .listen((_) => recheckWifi(), onError: (_) {});
+      _lifecycle = AppLifecycleListener(onResume: recheckWifi);
+    } catch (_) {
+      // Plattform ohne Plugin (Tests) → keine automatische Umschaltung.
+    }
+  }
+
+  void _stopWifiWatch() {
+    _connSub?.cancel();
+    _connSub = null;
+    _lifecycle?.dispose();
+    _lifecycle = null;
+  }
+
+  /// WLAN-Namen neu lesen und ggf. die Adresse umschalten. Direkt nach dem
+  /// Verbinden meldet Android den Namen manchmal noch nicht → einmal kurz
+  /// später nachsehen.
+  Future<void> recheckWifi() async {
+    final cur = state.valueOrNull;
+    if (cur == null || !cur.hasWifiServer) return;
+    var ssid = await readWifiName();
+    if (ssid == null) {
+      await Future<void>.delayed(const Duration(seconds: 2));
+      ssid = await readWifiName();
+    }
+    _ssid = ssid;
+    final latest = state.valueOrNull;
+    if (latest == null) return;
+    final routed = _route(latest);
+    if (routed.serverUrl != latest.serverUrl) {
+      LogManager.shared.log('📶 WLAN ${ssid ?? '–'} → Server-Adresse '
+          '${routed.usingWifiServer ? 'WLAN' : 'Standard'}');
+      state = AsyncData(routed);
+    }
   }
 
   AppSettings _load() {
@@ -93,6 +180,10 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       serverUrl: (_prefs.getString(_kServerUrl) ?? '')
           .trim()
           .replaceAll(RegExp(r'/+$'), ''),
+      wifiServerUrl: (_prefs.getString(_kWifiServerUrl) ?? '')
+          .trim()
+          .replaceAll(RegExp(r'/+$'), ''),
+      wifiSsid: _prefs.getString(_kWifiSsid) ?? '',
       apiToken: token,
       householdId: _prefs.getString(_kHouseholdId) ?? '',
       shoppingListId: _prefs.getString(_kShoppingListId) ?? '',
@@ -105,7 +196,19 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
         'no' => 'nb',
         final v => v,
       },
+      importTranslate: _prefs.getBool(_kImportTranslate) ?? true,
+      importStreamPhotos: _prefs.getBool(_kImportStreamPhotos) ?? true,
+      importVideoAi: _prefs.getBool(_kImportVideoAi) ?? true,
+      importPreset: switch (_prefs.getString(_kImportPreset)) {
+        final v? when const ['fast', 'thorough', 'custom'].contains(v) => v,
+        _ => 'thorough',
+      },
+      importOrganizers: switch (_prefs.getString(_kImportOrganizers)) {
+        final v? when const ['create', 'existing', 'none'].contains(v) => v,
+        _ => 'create',
+      },
       showRecipeImages: _prefs.getBool(_kShowRecipeImages) ?? true,
+      tabletSidebar: _prefs.getBool(_kTabletSidebar) ?? true,
       enableLogging: _prefs.getBool(_kEnableLogging) ?? false,
       isBiometricLockEnabled: _prefs.getBool(_kBiometricLock) ?? false,
       enableCriticalAlerts: _prefs.getBool(_kCriticalAlerts) ?? false,
@@ -159,6 +262,26 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
+  /// Entfernt aus der Würfel-Auswahl (alle Mahlzeiten) Einträge mit [prefix]
+  /// (`c:` / `t:`), deren ID nicht mehr in [validIds] steht — sonst bleiben
+  /// gelöschte Kategorien/Schlagworte als unsichtbare „Geister" gewählt
+  /// (Zähler „(1)", aber kein Chip zum Abwählen; TestFlight-Feedback).
+  Future<void> pruneMealDiceFilters(String prefix, Set<String> validIds) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    var changed = false;
+    final next = {
+      for (final e in current.mealDiceFilters.entries)
+        e.key: e.value.where((k) {
+          final keep = !k.startsWith(prefix) ||
+              validIds.contains(k.substring(prefix.length));
+          if (!keep) changed = true;
+          return keep;
+        }).toList(),
+    };
+    if (changed) await save(current.copyWith(mealDiceFilters: next));
+  }
+
   Future<void> save(AppSettings next) async {
     // Secure storage NUR schreiben, wenn sich das Token wirklich geändert
     // hat — der Keychain- (iOS) bzw. Keystore-Zugriff
@@ -182,14 +305,23 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     // sich bei JEDER Änderung zu spürbarer Latenz. `Future.wait` wartet auf
     // alle, bevor der State aktualisiert wird — Konsistenz bleibt erhalten.
     await Future.wait([
-      _prefs.setString(_kServerUrl, next.serverUrl),
+      // Immer die eingetragene Adresse — nie die gerade aktive WLAN-Adresse.
+      _prefs.setString(_kServerUrl, next.primaryServerUrl),
+      _prefs.setString(_kWifiServerUrl, next.wifiServerUrl),
+      _prefs.setString(_kWifiSsid, next.wifiSsid),
       _prefs.setString(_kApiToken, next.apiToken),
       _prefs.setString(_kHouseholdId, next.householdId),
       _prefs.setString(_kShoppingListId, next.shoppingListId),
       _prefs.setString(_kApiVersion, next.apiVersion),
       _prefs.setString(_kSelectedLanguage, next.selectedLanguage),
       _prefs.setString(_kImportLanguage, next.importLanguage),
+      _prefs.setBool(_kImportTranslate, next.importTranslate),
+      _prefs.setString(_kImportOrganizers, next.importOrganizers),
+      _prefs.setBool(_kImportStreamPhotos, next.importStreamPhotos),
+      _prefs.setBool(_kImportVideoAi, next.importVideoAi),
+      _prefs.setString(_kImportPreset, next.importPreset),
       _prefs.setBool(_kShowRecipeImages, next.showRecipeImages),
+      _prefs.setBool(_kTabletSidebar, next.tabletSidebar),
       _prefs.setBool(_kEnableLogging, next.enableLogging),
       _prefs.setBool(_kBiometricLock, next.isBiometricLockEnabled),
       _prefs.setBool(_kCriticalAlerts, next.enableCriticalAlerts),
@@ -231,26 +363,28 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     ]);
 
     LogManager.shared.enabled = next.enableLogging;
-    state = AsyncData(next);
+    if (next.hasWifiServer) {
+      final wasWatching = _connSub != null;
+      _startWifiWatch();
+      // Gerade eingerichtet/geändert → WLAN jetzt lesen statt erst beim
+      // nächsten Netzwechsel.
+      if (!wasWatching ||
+          next.wifiSsid != state.valueOrNull?.wifiSsid ||
+          next.wifiServerUrl != state.valueOrNull?.wifiServerUrl) {
+        _ssid = await readWifiName();
+      }
+    } else {
+      _stopWifiWatch();
+    }
+    state = AsyncData(_route(next));
   }
 
   Future<void> reset() async {
+    _stopWifiWatch();
     await _prefs.clear();
     try {
       await _secure.deleteAll();
     } catch (_) {}
     state = const AsyncData(AppSettings());
-  }
-
-  Future<void> toggleCollapsedCategory(String categoryId) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final list = List<String>.from(current.collapsedShoppingCategories);
-    if (list.contains(categoryId)) {
-      list.remove(categoryId);
-    } else {
-      list.add(categoryId);
-    }
-    await save(current.copyWith(collapsedShoppingCategories: list));
   }
 }

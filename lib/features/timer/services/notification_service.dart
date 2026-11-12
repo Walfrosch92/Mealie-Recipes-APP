@@ -181,38 +181,6 @@ class NotificationService {
     );
   }
 
-  // -------------------------------------------------------------------------
-  // Cooking foreground notification (Android ongoing)
-  // -------------------------------------------------------------------------
-
-  static Future<void> showCookingOngoing({
-    required String text,
-  }) async {
-    // Windows/Desktop: keine Benachrichtigungen (siehe PlatformFeatures).
-    if (!PlatformFeatures.notifications) return;
-    const androidDetails = AndroidNotificationDetails(
-      _cookingChannelId,
-      _cookingChannelName,
-      channelDescription: _cookingChannelDesc,
-      importance: Importance.low,
-      priority: Priority.low,
-      ongoing: true,
-      autoCancel: false,
-    );
-    const details = NotificationDetails(android: androidDetails);
-    await _plugin.show(
-        id: 9999,
-        title: 'Mealie Recipes',
-        body: text,
-        notificationDetails: details);
-  }
-
-  static Future<void> cancelCookingOngoing() async {
-    // Windows/Desktop: keine Benachrichtigungen (siehe PlatformFeatures).
-    if (!PlatformFeatures.notifications) return;
-    await _plugin.cancel(id: 9999);
-  }
-
   static Future<void> cancel(int id) async {
     // Windows/Desktop: keine Benachrichtigungen (siehe PlatformFeatures).
     if (!PlatformFeatures.notifications) return;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/platform_features.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
@@ -331,10 +332,17 @@ class WithCookingModeFAB extends ConsumerWidget {
   /// hier die Bar-Höhe übergeben, damit der FAB nicht über der Navigation klebt.
   final double bottomInset;
 
+  /// Breite Fenster (Windows/macOS): Inhalt auf die Lesespalte
+  /// ([LargeScreen.readableWidth]) zentrieren, damit Listen und Formulare
+  /// sich nicht über die ganze Fensterbreite ziehen. `true` für Seiten, die
+  /// die Breite selbst nutzen (Kacheln, Zwei-Spalten-Ansicht, Wochenplan).
+  final bool fullWidth;
+
   const WithCookingModeFAB({
     super.key,
     required this.child,
     this.bottomInset = 20,
+    this.fullWidth = false,
   });
 
   @override
@@ -342,7 +350,18 @@ class WithCookingModeFAB extends ConsumerWidget {
     final offset = ref.watch(cookingFabOffsetProvider);
     return Stack(
       children: [
-        Positioned.fill(child: child),
+        Positioned.fill(
+          child: fullWidth || !LargeScreen.isWide(context)
+              ? child
+              : Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: LargeScreen.readableWidth,
+                    height: double.infinity,
+                    child: child,
+                  ),
+                ),
+        ),
         // Der FAB ist per Drag frei beweglich (Standard: unten rechts).
         DraggableOverlay(
           offset: offset,
