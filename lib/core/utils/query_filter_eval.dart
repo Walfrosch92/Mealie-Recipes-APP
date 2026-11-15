@@ -26,6 +26,18 @@ bool recipeMatchesQueryRows(
 
 bool _matchesRow(RecipeDetail r, CookbookFilterRow row,
     Map<String, String> foodLabelIds, DateTime now) {
+  if (row.isDate) {
+    final day = row.date;
+    if (day == null) return true; // leere Zeile wird auch nicht gesendet
+    // Der Cache kennt nur dateAdded/dateUpdated — bei Mealie decken sie sich
+    // mit created_at/updated_at (Tag bzw. Zeitstempel).
+    final raw = row.field == CookbookFilterField.createdAt
+        ? r.dateAdded
+        : r.dateUpdated;
+    final have = parseMealieTime(raw) ?? DateTime.tryParse(raw ?? '');
+    if (have == null) return false;
+    return _compare(have.compareTo(day), row.op);
+  }
   if (row.isScalar) {
     final n = row.number;
     if (n == null) return true; // leere Zeile wird auch nicht gesendet

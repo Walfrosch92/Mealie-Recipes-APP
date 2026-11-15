@@ -1111,6 +1111,8 @@
   "updateRestartNow": "Telepítés és újraindítás",
   "updateAutoTitle": "Frissítések keresése indításkor",
   "updateAutoDescription": "Csak ellenőriz és szól – a telepítést mindig te indítod.",
+  "updateBetaTitle": "Béta verziók fogadása",
+  "updateBetaDescription": "Tesztelésre szánt előzetes verziókat is felajánl. Ezek még tartalmazhatnak hibákat.",
   "updateNoNotes": "Nincsenek kiadási megjegyzések.",
   "updateSourceHint": "A frissítések a Mealie Recipes GitHub-kiadásaiból érkeznek, és csak a fejlesztő által aláírva települnek (macOS).",
   "errorNoConnection": "A Mealie-szerver nem érhető el. Ellenőrizd az internetkapcsolatot és a szerver címét.",
@@ -1458,5 +1460,9 @@
   "sidebarUnpin": "Eltávolítás az oldalsávról",
   "sidebarFull": "Az oldalsáv megtelt – legfeljebb {count} saját elem.",
   "tabletSidebar": "Oldalsáv fekvő módban",
-  "tabletSidebarSubtitle": "A navigációt bal oldalon mutatja alul helyett, ha a táblagép fekvő helyzetben van"
+  "tabletSidebarSubtitle": "A navigációt bal oldalon mutatja alul helyett, ha a táblagép fekvő helyzetben van",
+  "filterDateCreated": "Létrehozás dátuma",
+  "filterDateUpdated": "Frissítés dátuma",
+  "errorUploadTooLarge": "A fájl túl nagy ehhez a Mealie-szerverhez. A szerver feltöltési korlátja a MAX_UPLOAD_SIZE_MB beállítással növelhető.",
+  "recipeDownloadPdfMealie": "PDF letöltése (Mealie-elrendezés)"
 }

@@ -29,6 +29,9 @@ enum CookbookFilterField {
   lastMade,
   rating,
   totalTime,
+  // Datumsfelder mit festem Tag (Mealie-Typ „date").
+  createdAt,
+  updatedAt,
 }
 
 enum CookbookFilterOp {
@@ -44,16 +47,23 @@ enum CookbookFilterOp {
   lte,
 }
 
-/// Felder von Kochbuch und Mahlzeitenplan-Regeln. Gesamtzeit gibt es dort
+/// Felder von Kochbuch und Mahlzeitenplan-Regeln — seit Mealie 3.31 EINE
+/// gemeinsame Liste für Kochbuch, Regeln und Rezept-Suche
+/// (use-recipe-filter-fields.ts), gleiche Reihenfolge. Gesamtzeit gibt es
 /// erst ab Mealie 3.29 (QueryFilterEditor blendet sie sonst aus).
 const List<CookbookFilterField> kOrganizerFilterFields = [
   CookbookFilterField.category,
   CookbookFilterField.tag,
   CookbookFilterField.food,
+  CookbookFilterField.foodLabel,
   CookbookFilterField.tool,
   CookbookFilterField.household,
   CookbookFilterField.user,
+  CookbookFilterField.rating,
   CookbookFilterField.totalTime,
+  CookbookFilterField.lastMade,
+  CookbookFilterField.createdAt,
+  CookbookFilterField.updatedAt,
 ];
 
 /// Felder, die der Server erst ab Mealie 3.29 kennt (`total_time_seconds`
@@ -62,7 +72,8 @@ const Set<CookbookFilterField> kMealie329FilterFields = {
   CookbookFilterField.totalTime,
 };
 
-/// Felder der Mealie-Rezept-Suche („Andere Filter", finder/index.vue).
+/// Felder der Mealie-Rezept-Suche („Andere Filter", finder/index.vue) —
+/// dieselbe Liste ohne Utensilien (die Suche hat dafür eine eigene Auswahl).
 const List<CookbookFilterField> kFinderFilterFields = [
   CookbookFilterField.category,
   CookbookFilterField.tag,
@@ -73,13 +84,23 @@ const List<CookbookFilterField> kFinderFilterFields = [
   CookbookFilterField.lastMade,
   CookbookFilterField.rating,
   CookbookFilterField.totalTime,
+  CookbookFilterField.createdAt,
+  CookbookFilterField.updatedAt,
 ];
 
-/// Felder mit einem Zahlenwert statt einer Auswahl.
+/// Felder mit einem Einzelwert (Zahl oder Datum) statt einer Auswahl.
 const Set<CookbookFilterField> kScalarFields = {
   CookbookFilterField.lastMade,
   CookbookFilterField.rating,
   CookbookFilterField.totalTime,
+  CookbookFilterField.createdAt,
+  CookbookFilterField.updatedAt,
+};
+
+/// Felder mit einem festen Kalendertag als Wert (`"JJJJ-MM-TT"`).
+const Set<CookbookFilterField> kDateFields = {
+  CookbookFilterField.createdAt,
+  CookbookFilterField.updatedAt,
 };
 
 /// Operatoren je Feld — wie Mealies use-query-filter-builder.ts.
@@ -102,6 +123,16 @@ List<CookbookFilterOp> opsForField(CookbookFilterField f) => switch (f) {
           CookbookFilterOp.lt,
           CookbookFilterOp.gt,
         ],
+      // Dieselben sechs Vergleiche wie Mealie; „ab dem Tag" zuerst, weil
+      // „=" bei einem Zeitstempel praktisch nie trifft.
+      CookbookFilterField.createdAt || CookbookFilterField.updatedAt => const [
+          CookbookFilterOp.gte,
+          CookbookFilterOp.lte,
+          CookbookFilterOp.gt,
+          CookbookFilterOp.lt,
+          CookbookFilterOp.eq,
+          CookbookFilterOp.ne,
+        ],
       _ => kMultiValueFields.contains(f)
           ? const [
               CookbookFilterOp.isOneOf,
@@ -122,6 +153,8 @@ const Map<CookbookFilterField, String> kFieldAttribute = {
   CookbookFilterField.lastMade: 'last_made',
   CookbookFilterField.rating: 'rating',
   CookbookFilterField.totalTime: 'total_time_seconds',
+  CookbookFilterField.createdAt: 'created_at',
+  CookbookFilterField.updatedAt: 'updated_at',
 };
 
 const Map<CookbookFilterOp, String> kOpKeyword = {
@@ -156,14 +189,20 @@ class CookbookFilterRow {
   /// (zuletzt gemacht) bzw. Minuten (Gesamtzeit; Mealie rechnet in Sekunden).
   int? number;
 
+  /// Kalendertag der Datumsfelder (erstellt/aktualisiert am).
+  DateTime? date;
+
   CookbookFilterRow({
     this.field = CookbookFilterField.category,
     this.op = CookbookFilterOp.isOneOf,
     List<String>? valueIds,
     this.number,
+    this.date,
   }) : valueIds = valueIds ?? [];
 
   bool get isScalar => kScalarFields.contains(field);
+
+  bool get isDate => kDateFields.contains(field);
 
   /// Feld wechseln: Wert leeren, Operator + Standardwert wie Mealie
   /// (zuletzt gemacht: 30 Tage).
@@ -177,12 +216,27 @@ class CookbookFilterRow {
       CookbookFilterField.totalTime => 30,
       _ => null,
     };
+    if (kDateFields.contains(f)) {
+      final now = DateTime.now();
+      date = DateTime(now.year, now.month, now.day);
+    } else {
+      date = null;
+    }
   }
 }
+
+/// Kalendertag als `JJJJ-MM-TT` — so speichert ihn auch die Webapp.
+String formatFilterDate(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-'
+    '${d.month.toString().padLeft(2, '0')}-'
+    '${d.day.toString().padLeft(2, '0')}';
 
 String _scalarValue(CookbookFilterRow r) => switch (r.field) {
       CookbookFilterField.lastMade => '\$NOW-${r.number}d',
       CookbookFilterField.totalTime => '${r.number! * 60}',
+      CookbookFilterField.createdAt ||
+      CookbookFilterField.updatedAt =>
+        '"${formatFilterDate(r.date!)}"',
       _ => '${r.number}',
     };
 
@@ -191,7 +245,7 @@ String composeCookbookQueryFilter(List<CookbookFilterRow> rows) {
   final parts = <String>[];
   for (final r in rows) {
     if (r.isScalar) {
-      if (r.number == null) continue;
+      if (r.isDate ? r.date == null : r.number == null) continue;
       parts.add(
           '${kFieldAttribute[r.field]} ${kOpKeyword[r.op]} ${_scalarValue(r)}');
       continue;
@@ -222,6 +276,15 @@ CookbookFilterRow? _parseScalar(String seg) {
       .firstOrNull;
   if (op == null || !opsForField(field).contains(op)) return null;
   final raw = m.group(3)!;
+  if (kDateFields.contains(field)) {
+    // Nur ein reiner Kalendertag ist im Baukasten darstellbar.
+    final d = RegExp(r'^"?(\d{4})-(\d{2})-(\d{2})"?$').firstMatch(raw);
+    if (d == null) return null;
+    final date = DateTime(
+        int.parse(d.group(1)!), int.parse(d.group(2)!), int.parse(d.group(3)!));
+    if (formatFilterDate(date) != raw.replaceAll('"', '')) return null;
+    return CookbookFilterRow(field: field, op: op, date: date);
+  }
   int? number;
   switch (field) {
     case CookbookFilterField.lastMade:

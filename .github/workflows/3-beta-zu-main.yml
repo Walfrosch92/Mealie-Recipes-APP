@@ -1,0 +1,105 @@
+# =====================================================================
+# Mealie Recipes · 3 · Beta zu Main heben
+# ---------------------------------------------------------------------
+# Starten: GitHub → „Actions“ → „3 · Beta zu Main heben“ → „Run workflow“.
+# Nimmt die aktuelle Beta (Tag „<version>-beta“) und macht sie zum regulären Release:
+#   1. prüft, dass die Beta genau dem aktuellen Stand von „beta“ entspricht
+#      (sonst zuerst „1 · Beta …“ neu laufen lassen),
+#   2. schiebt „main“ auf diesen Stand (nur Fast-Forward – hat main eigene Commits, bricht er ab),
+#   3. veröffentlicht die GETESTETEN Beta-Dateien unverändert als Release „<version>“
+#      (kein Neubau) und entfernt danach die Beta-Vorabversion samt Tag.
+# Läuft auf dem eigenen Mac (Runner „mealie-mac“): main wird mit der GitHub-Anmeldung des Macs
+# verschoben (gh auth), damit auch Änderungen an .github/workflows/ mitgehen dürfen –
+# ohne Secret im Repo.
+# =====================================================================
+name: 3 · Beta zu Main heben
+
+on:
+  workflow_dispatch:
+    inputs:
+      neu:
+        description: 'Was ist neu? (optional – leer = Notizen der Beta übernehmen)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  heben:
+    runs-on: [self-hosted, mealie-mac]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: beta
+          fetch-depth: 0
+          clean: true
+          # Kein Workflow-Schlüssel in .git/config → git push nutzt die Anmeldung des Macs.
+          persist-credentials: false
+
+      - name: Beta prüfen
+        id: pruefen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([^+[:space:]]+).*/\1/')"
+          tag="$v-beta"
+          head="$(git rev-parse HEAD)"
+          if gh release view "$v" >/dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$v" >/dev/null; then
+            echo "::error::Release/Tag $v gibt es schon – nichts zu heben."; exit 1
+          fi
+          if ! gh release view "$tag" --json isPrerelease --jq .isPrerelease >/dev/null 2>&1; then
+            echo "::error::Keine Beta $tag gefunden. Zuerst „1 · Beta bauen und veröffentlichen“ laufen lassen."; exit 1
+          fi
+          beta_sha="$(git rev-list -n 1 "refs/tags/$tag" 2>/dev/null || true)"
+          if [ "$beta_sha" != "$head" ]; then
+            echo "::error::Die Beta $tag wurde aus ${beta_sha:-?} gebaut, beta steht aber auf $head. Zuerst die Beta neu bauen (1 · Beta …), damit genau der getestete Stand veröffentlicht wird."; exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$head" >> "$GITHUB_OUTPUT"
+          echo "Hebe Beta $tag ($head) zu $v"
+
+      - name: main auf beta vorspulen
+        env:
+          SHA: ${{ steps.pruefen.outputs.sha }}
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor origin/main "$SHA"; then
+            echo "::error::main enthält Commits, die nicht in beta sind. Bitte erst main in beta zusammenführen."; exit 1
+          fi
+          if ! git push origin "$SHA:refs/heads/main"; then
+            echo "::error::main konnte nicht verschoben werden. Ist der Mac bei GitHub angemeldet (gh auth status, Recht „workflow“)?"; exit 1
+          fi
+
+      - name: Beta-Dateien als Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEU: ${{ inputs.neu }}
+          VERSION: ${{ steps.pruefen.outputs.version }}
+          TAG: ${{ steps.pruefen.outputs.tag }}
+          SHA: ${{ steps.pruefen.outputs.sha }}
+        run: |
+          rm -rf dateien && mkdir dateien
+          gh release download "$TAG" --dir dateien
+          ls -la dateien
+          for muster in "MealieRecipes-$VERSION.apk" "MealieRecipes-$VERSION-windows-setup.exe" "MealieRecipes-$VERSION-arm64.dmg"; do
+            test -f "dateien/$muster" || { echo "::error::In der Beta fehlt $muster"; exit 1; }
+          done
+          if [ -n "$NEU" ]; then
+            seit="$(gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json publishedAt --jq '.[0].publishedAt // empty')"
+            [ -n "$seit" ] || seit="2000-01-01T00:00:00Z"
+            gh issue list --state closed --limit 100 --search "closed:>$seit reason:completed" --json number,title > issues.json
+            python3 .github/scripts/release_notes.py assets/changelog/changelog.json issues.json notizen.md
+          else
+            gh release view "$TAG" --json body --jq .body > notizen.md
+          fi
+          gh release create "$VERSION" dateien/* --target "$SHA" --latest \
+            --title "Mealie Recipes $VERSION" --notes-file notizen.md
+          gh release delete "$TAG" --cleanup-tag --yes
+          echo "Fertig: Release $VERSION veröffentlicht, Beta $TAG entfernt."

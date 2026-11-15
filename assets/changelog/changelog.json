@@ -1,101 +1,28 @@
 {
   "sections": [
     {
-      "title": "iPad & Android tablets",
-      "icon": "home",
-      "items": [
-        "New tablet layout in landscape: a sidebar on the left replaces the tab bar at the bottom, with your profile picture, Home, Recipes, Shopping, Meal plan, More, Search, Import and Settings. It stays visible on every page.",
-        "Prefer the tab bar? Turn the sidebar off under Settings → \"Sidebar in landscape\". In portrait the app keeps the familiar tab bar either way.",
-        "Tablets in landscape now also use the wide layouts that were previously only available on Windows and macOS: more tile columns on Home and under \"More\", the recipe list with the recipe next to it, and lists and forms in a comfortable reading column instead of stretched across the whole screen."
-      ]
-    },
-    {
-      "title": "Recipe import",
-      "icon": "import",
-      "items": [
-        "New ⚙️ import options (gear icon in the top right of the import screen) with three modes: \"Fast\" (as few AI steps as possible: video links with a single AI request, no translation, only existing categories & tags), \"Thorough\" (Mealie's full AI import with translation and new categories & tags – as before) and \"Custom\" (set translation, categories & tags, video links and photo streaming yourself). Fewer AI steps mean faster imports and lower AI costs on your server.",
-        "Imports now show their progress right in the box you started them from: a progress bar, the elapsed time and every step Mealie reports — e.g. \"Downloading video\" ✓, \"Transcribing audio\" ✓, \"Creating recipe…\".",
-        "Photo and PDF imports now show these live steps too and keep the connection open while the AI works, so long multi-page imports are no longer cut off by reverse proxies. If your proxy doesn't support this, switch back to the previous upload in the import options.",
-        "The import language moved from Settings into the import options (gear icon), next to the translation switch."
-      ]
-    },
-    {
-      "title": "Sync & account",
-      "icon": "users",
-      "items": [
-        "New \"Sync now\" in the account menu (tap your profile picture on the Home tab twice) and in the ⋮ menu of the recipe list: reloads every recipe, the recipe images, meal plan, favorites and shopping list straight from your server — no more revoking tokens or signing in again to see changes made in the Mealie web app.",
-        "Recipes now have \"Reload from server\" in their ⋮ menu to refresh just that one recipe, image included.",
-        "When a recipe gets a new photo in Mealie, the app now notices and shows the new one instead of the old cached picture.",
-        "\"Sign out and remove\" in the account menu removes the current account and all its data from this device; your app settings, server address and extra headers stay, so signing in again only needs your credentials.",
-        "Pulling down the recipe list no longer reloads your whole library; that often happened by accident and caused a lot of server traffic. Use \"Sync now\" in the ⋮ menu instead.",
-        "Home Wi-Fi address: in Settings → Connection you can store a second address of your server (e.g. the local IP at home, while the server URL points to ZeroTier, Tailscale or a domain). On that Wi-Fi the app switches to it automatically, everywhere else it uses the server URL. \"Use current Wi-Fi\" fills in the network name for you.",
-        "Multiple accounts: \"Switch user\" keeps your account on this device – with all recipes, lists, cooking sessions and changes not yet synced. Each account has its own separate data; nothing is shared or mixed between them.",
-        "Switch back in seconds: saved accounts appear with their profile picture on the sign-in page and in the account menu. Unlock with your password – or, if you allow it for that account, with Face ID, fingerprint or device PIN.",
-        "Account menu: the Home tab now shows your profile picture. Tap it to go Home, tap again for user management (admins) or your own account, your saved accounts, \"Add another account\" and \"Sign out and remove\".",
-        "Works across servers too – e.g. a home server and a friend's server – and signing in again to a saved account brings back its data instead of starting from scratch.",
-        "The profile picture in the tab bar is slightly larger, and pressing and holding it now opens the account menu from any tab, not just from Home.",
-        "The account menu now shows your profile picture next to your name and email address."
-      ]
-    },
-    {
-      "title": "Meal plan",
-      "icon": "mealplan",
-      "items": [
-        "Add a note to any meal plan entry — recipes included — e.g. \"double portion, guests coming\". It's shown right below the entry and syncs with Mealie.",
-        "Meal plan entries can now be edited: change the title and note of custom meals, or the note of a recipe. Find \"Edit\" in the ⋮ menu or by swiping left; tapping a custom meal opens it directly.",
-        "No recipe found while planning? Besides adding it as a custom meal, you can now create a new recipe with that name on the spot — it's planned right away and opens in the editor.",
-        "Week planner: with \"Mealie rules\" selected in the meal plan settings, planning the whole week now follows your household's Mealie rules too — just like the dice for a single day. Before, it only used the selection made in the app."
-      ]
-    },
-    {
-      "title": "Recipes",
       "icon": "recipe",
+      "title": "Ready for Mealie 3.31",
       "items": [
-        "\"Add all ingredients\" now lets you choose: all ingredients are listed and checked, while foods your household has on hand are shown unchecked instead of being skipped silently — tick them with one tap when you need them this time.",
-        "Recipe descriptions now render Markdown — headings, bold, lists and separators look just like in the Mealie web app.",
-        "Your household's Recipe Actions are now available on iPhone and Android: find \"Recipe actions\" in the recipe's ⋮ menu to send the recipe to another service or open a linked tool, using the servings you've selected."
+        "Export a whole cookbook as a PDF with cover page and table of contents – tap the PDF button in a cookbook (requires Mealie 3.31).",
+        "Cookbook descriptions now show Markdown formatting such as bold text, lists and links.",
+        "Recipe actions support the new temporary share link placeholder, so other services can open private recipes too."
       ]
     },
     {
-      "title": "Consistent look & feel",
-      "icon": "design",
+      "icon": "search",
+      "title": "More filters",
       "items": [
-        "Swipe actions now look and behave the same in every list: same button width, same icons, grey for Edit/Rename, orange for Move/Merge, red for Delete.",
-        "Checked-off shopping items no longer disappear when you swipe all the way across; swiping now reveals a \"Delete\" button, just like for open items.",
-        "Archived purchases: swiping one away now asks before deleting, as \"Delete all\" already did; an archived purchase can't be restored.",
-        "Editors share one header style: \"Cancel\" is no longer red (red is reserved for deleting), \"Save\" is highlighted in orange. The recipe editor's button is now simply called \"Save\", as in the Mealie web app.",
-        "When a list can't be loaded, every screen now shows the same error view with the reason and a \"Retry\" button; this now includes tags, categories, tools, foods, units, users, households, groups, the timeline and list management.",
-        "Search fields are the same everywhere and all have a ✕ button to clear the text.",
-        "Labels: \"Select\" moved into the ⋮ menu, as for foods and units.",
-        "One back arrow in every screen, and one icon style (rounded) throughout the app.",
-        "Messages at the bottom of the screen appear in the same place and style everywhere, and error messages use one wording: the reason reported by your server, otherwise a short \"… failed\".",
-        "Error texts in forms are now the same clear red in dark mode instead of a pale pink on some screens.",
-        "Opening a recipe shows the usual loading spinner instead of a line of text.",
-        "Signing in works with password managers: the server address, username and password fields are now recognised by iCloud Keychain, Google Password Manager, 1Password, Bitwarden and others, both on the sign-in page and when renewing a token, and they offer to save your credentials after a successful sign-in.",
-        "Accessibility: tappable areas throughout the app (cooking mode, recipe view, shopping list, settings and more) are now announced as buttons by VoiceOver and TalkBack, and icon-only buttons such as \"Remove\", \"Send\" or \"Show password\" have spoken labels. Small ✕ and eye icons in Settings got a larger touch area.",
-        "All bottom sheets share one header: the same grip at the top and the same title style; sheets that had no grip now have one.",
-        "Tidier typography and shapes: corner radii and font sizes now follow one fixed scale (no more half-pixel sizes), so cards, chips, fields and labels look more even from screen to screen.",
-        "One green for \"done\", \"connected\" and \"valid\" everywhere, and the two blue buttons in the recipe view now use the app's orange.",
-        "Long labels on tiles and tab names now end with \"…\" instead of being cut off when a larger system font is used.",
-        "While the meal plan, shopping list, cookbooks or a cookbook's recipes load for the first time, you now see shimmering placeholder rows instead of a spinner on an empty page.",
-        "New \"View licenses\" link in Settings (below the changelog) with the licenses of the fonts and software libraries the app uses."
+        "Cookbooks and meal plan rules can now also filter by label, rating, last made, date created and date updated.",
+        "The recipe finder can filter by date created and date updated."
       ]
     },
     {
-      "title": "Fixes",
       "icon": "fix",
+      "title": "Fixes",
       "items": [
-        "Cooking mode: a recipe that is already open in cooking mode now picks up changes made elsewhere (e.g. step text edited on the PC) after the next sync — your checked-off steps and ingredients are kept.",
-        "Cooking mode: when the same ingredient appears in several sections (e.g. butter in both the brownie and the cookie dough), tapping it in a step now shows the amount from that step's own section instead of the first one in the recipe.",
-        "Import screen: the loading indicator no longer appears in the photo section while a link, pasted recipe or ZIP file is being imported.",
-        "Shopping list offline: reopening the app without a connection no longer shows an empty list with \"Shopping Completed\" — your last synced items are there, ready for the store.",
-        "Each shopping list now keeps its own offline copy, so switching lists while offline no longer shows the items of the previous list.",
-        "If a list has never been loaded on this device and you're offline, the app now says so instead of claiming your shopping is done.",
-        "Optional HTTP headers (e.g. for Cloudflare Access) are now sent with every image too — recipe photos, full-screen view, step images, cooking mode, leftovers and more no longer stay grey behind a reverse proxy. Like the login token, they only ever go to your own Mealie server.",
-        "Video and audio attachments behind a reverse proxy with optional headers are now downloaded with those headers instead of opening the proxy's login page in the browser.",
-        "Windows and macOS: in the two-column recipe view, the \"Start cooking\" button no longer sits half behind the tab bar.",
-        "Android: self-hosted servers with your own certificate authority now work — CA certificates you've installed in Android's settings are trusted automatically, and a certificate problem is now reported as such instead of \"no connection\".",
-        "Fixed possible errors when a date, time or selection dialog was still open while its screen was closed (e.g. meal plan, calendar feed, webhooks, labels, foods)."
+        "The cook time is shown in the recipe list again.",
+        "A clear message appears when a file is too large for the server's upload limit."
       ]
     }
   ]

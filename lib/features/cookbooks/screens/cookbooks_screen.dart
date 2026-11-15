@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/models/cookbook_summary.dart';
+import '../../../core/utils/markdown_parse.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/animations.dart';
 import '../../cooking_mode/widgets/cooking_mode_fab.dart';
@@ -119,7 +120,9 @@ class _CookbookCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
-    final description = cookbook.description?.trim() ?? '';
+    // Mealie ≥ 3.31 erlaubt Markdown in der Beschreibung — die Karte zeigt
+    // sie als Klartext, die Kochbuch-Ansicht formatiert.
+    final description = markdownToPlainText(cookbook.description ?? '');
     return SwipeContextMenu(
         child: Slidable(
       key: ValueKey(cookbook.id),

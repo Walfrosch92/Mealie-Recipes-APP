@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/utils/mealie_version.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/gradient_button.dart' show SheetHandle;
 import '../../recipes/providers/recipes_provider.dart';
@@ -76,6 +77,14 @@ Future<void> showRecipeWebToolsSheet(BuildContext context, WidgetRef ref,
               Navigator.pop(sheetCtx);
               _export(context, ref, recipe, 'zip', 'zip');
             }),
+            // PDF im Mealie-Layout, vom Server gerendert (≥ 3.31) — neben
+            // dem eigenen PDF der App („Als PDF exportieren"/Drucken).
+            if (ref.read(mealie331Provider))
+              tile(Icons.picture_as_pdf_rounded, l.recipeDownloadPdfMealie,
+                  () {
+                Navigator.pop(sheetCtx);
+                _export(context, ref, recipe, 'pdf', 'pdf');
+              }),
             FutureBuilder<List<Map<String, dynamic>>>(
               future: actions,
               builder: (_, snap) {
@@ -218,9 +227,10 @@ Future<void> _export(BuildContext context, WidgetRef ref, RecipeDetail recipe,
     String template, String ext) async {
   final l = AppLocalizations.of(context)!;
   try {
-    final bytes = await ref
-        .read(apiServiceProvider)
-        .exportRecipeFile(recipe.slug, template);
+    final api = ref.read(apiServiceProvider);
+    final bytes = template == 'pdf'
+        ? await api.exportRecipePdf(recipe.slug)
+        : await api.exportRecipeFile(recipe.slug, template);
     if (await saveBytesWithDialog(bytes, '${recipe.slug}.$ext') &&
         context.mounted) {
       showToolMessage(context, l.fileSaved);
@@ -229,6 +239,8 @@ Future<void> _export(BuildContext context, WidgetRef ref, RecipeDetail recipe,
     if (context.mounted) showToolError(context, l.downloadFailed, e);
   }
 }
+
+final _shareLinkField = RegExp(r'\$\{share-link-expires-seconds-(\d+)\}');
 
 /// Wie `execute` der Webapp: Link → URL mit Platzhaltern öffnen,
 /// Post → Server sendet das Rezept.
@@ -249,7 +261,27 @@ Future<void> runRecipeAction(BuildContext context, WidgetRef ref,
       return d == d.roundToDouble() ? d.toInt().toString() : d.toString();
     }
 
-    final url = (action['url']?.toString() ?? '')
+    // Mealie ≥ 3.31: `${share-link-expires-seconds-<x>}` → befristeter
+    // Freigabe-Link, damit der Zieldienst auch ein privates Rezept lesen
+    // kann. Wie die Webapp: je Platzhalter EIN Link (auch bei mehrfachem
+    // Vorkommen), 0 Sekunden bleibt unersetzt, und scheitert das Anlegen,
+    // wird die Aktion abgebrochen statt eine kaputte URL zu öffnen.
+    var template = action['url']?.toString() ?? '';
+    final shareFields = <String, int>{
+      for (final m in _shareLinkField.allMatches(template))
+        if ((int.tryParse(m.group(1)!) ?? 0) > 0)
+          m.group(0)!: int.parse(m.group(1)!),
+    };
+    for (final MapEntry(key: field, value: seconds) in shareFields.entries) {
+      final token = await api.createShareToken(
+          recipe.id, DateTime.now().add(Duration(seconds: seconds)));
+      final tokenId = token['id']?.toString() ?? '';
+      if (tokenId.isEmpty) throw StateError('Share token without id');
+      template =
+          template.replaceAll(field, '${_webBase(ref)}/shared/r/$tokenId');
+    }
+
+    final url = template
         .replaceAll(r'${url}', '${_webBase(ref)}/r/${recipe.slug}')
         .replaceAll(r'${id}', recipe.id)
         .replaceAll(r'${slug}', recipe.slug)

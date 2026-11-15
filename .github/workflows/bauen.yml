@@ -1,0 +1,176 @@
+# =====================================================================
+# Mealie Recipes · Gemeinsamer Bau-Ablauf (wird von „1 · Beta“ und „2 · Main“ aufgerufen,
+# nicht direkt starten).
+# Baut aus dem angegebenen Branch:
+#   - Android:  MealieRecipes-<x.y.z>.apk                (eigener Mac, signiert – Obtainium / Issue #47)
+#   - macOS:    MealieRecipes-<x.y.z>-arm64.dmg          (eigener Mac, Developer ID + notarisiert)
+#   - Windows:  MealieRecipes-<x.y.z>-windows-setup.exe  (GitHub-Cloud, braucht keine Schlüssel)
+# und legt alles als Artifacts „release-*“ ab. Veröffentlichen macht der aufrufende Workflow.
+#
+# KEINE Secrets im Repo: Signier-Schlüssel bleiben auf dem eigenen Mac (selbst gehosteter
+# Runner mit Label „mealie-mac“). Dort einmalig in ~/actions-runner/.env:
+#   MEALIE_KEY_PROPERTIES=<Pfad zur lokalen android/key.properties>
+# Zertifikat „Developer ID Application (Q84VVPH7B3)“ im Anmelde-Schlüsselbund,
+# Notarisierungsprofil „mealie-notary“ (xcrun notarytool store-credentials).
+# =====================================================================
+name: Bauen (intern)
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Branch, aus dem gebaut wird'
+        type: string
+        required: true
+    outputs:
+      version:
+        value: ${{ jobs.version.outputs.version }}
+      sha:
+        value: ${{ jobs.version.outputs.sha }}
+
+env:
+  APPLE_TEAM_ID: 'Q84VVPH7B3'
+
+jobs:
+  version:
+    runs-on: [self-hosted, mealie-mac]
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      sha: ${{ steps.v.outputs.sha }}
+      flutter: ${{ steps.v.outputs.flutter }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - name: Version aus pubspec.yaml + Flutter-Version des Macs
+        id: v
+        run: |
+          v="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([^+[:space:]]+).*/\1/')"
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version in pubspec.yaml ist nicht x.y.z: '$v'"; exit 1
+          fi
+          fv="$(flutter --version --machine 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin)["frameworkVersion"])')"
+          [ -n "$fv" ] || { echo "::error::flutter auf dem Mac nicht gefunden (PATH des Runners prüfen)"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "flutter=$fv" >> "$GITHUB_OUTPUT"
+          echo "Version $v aus ${{ inputs.ref }} ($(git rev-parse --short HEAD)), Flutter $fv"
+
+  android:
+    needs: version
+    runs-on: [self-hosted, mealie-mac]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+          persist-credentials: false
+          clean: true
+      - name: Signier-Daten vom Mac übernehmen
+        run: |
+          if [ -z "${MEALIE_KEY_PROPERTIES:-}" ] || [ ! -f "$MEALIE_KEY_PROPERTIES" ]; then
+            echo "::error::MEALIE_KEY_PROPERTIES ist in ~/actions-runner/.env nicht (richtig) gesetzt."; exit 1
+          fi
+          cp "$MEALIE_KEY_PROPERTIES" android/key.properties
+      - name: APK bauen
+        run: flutter build apk --release
+      - name: APK umbenennen + Signatur prüfen
+        run: |
+          v="${{ needs.version.outputs.version }}"
+          rm -rf out && mkdir -p out
+          cp build/app/outputs/flutter-apk/app-release.apk "out/MealieRecipes-$v.apk"
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
+          apksigner="$(ls -d "$sdk"/build-tools/*/ | sort -V | tail -1)apksigner"
+          certs="$("$apksigner" verify --print-certs "out/MealieRecipes-$v.apk")"
+          echo "$certs" | grep -E 'Signer #1 certificate (DN|SHA-256)' || true
+          if echo "$certs" | grep -q 'CN=Android Debug'; then
+            echo "::error::APK ist nur mit dem Debug-Schlüssel signiert"; exit 1
+          fi
+      - name: Signier-Daten wieder entfernen
+        if: always()
+        run: rm -f android/key.properties
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: out/*.apk
+          retention-days: 14
+          if-no-files-found: error
+
+  macos:
+    # Läuft nach android, damit sich beide Builds auf dem einen Mac nicht ins Gehege kommen.
+    needs: [version, android]
+    runs-on: [self-hosted, mealie-mac]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+          persist-credentials: false
+          clean: true
+      - name: Signier-Zertifikat im Schlüsselbund finden
+        run: |
+          ID="$(security find-identity -v -p codesigning | grep "Developer ID Application" | grep "($APPLE_TEAM_ID)" | head -1 | awk '{print $2}')"
+          if [ -z "$ID" ]; then echo "::error::Kein „Developer ID Application ($APPLE_TEAM_ID)“-Zertifikat im Schlüsselbund des Macs"; exit 1; fi
+          echo "MAC_SIGN_IDENTITY=$ID" >> "$GITHUB_ENV"
+          echo "MAC_NOTARY_PROFILE=mealie-notary" >> "$GITHUB_ENV"
+      - name: App + DMG bauen, signieren, notarisieren
+        run: bash macos/packaging/build_dmg.sh
+      - name: DMG prüfen
+        run: |
+          f="build/macos/dmg/MealieRecipes-${{ needs.version.outputs.version }}-arm64.dmg"
+          test -f "$f" || { echo "::error::$f fehlt"; exit 1; }
+          xcrun stapler validate "$f"
+          spctl -a -t open --context context:primary-signature -v "$f"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: build/macos/dmg/*.dmg
+          retention-days: 14
+          if-no-files-found: error
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # gleiche Flutter-Version wie auf dem Mac
+          flutter-version: ${{ needs.version.outputs.flutter }}
+          cache: true
+      - name: Inno Setup bereitstellen
+        shell: pwsh
+        run: |
+          $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { choco install innosetup -y --no-progress; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
+      - name: Visual-C++-Laufzeit für den Installer suchen
+        shell: pwsh
+        run: |
+          # Legt msvcp140/vcruntime140 neben die exe → läuft auch auf PCs ohne VC++ Redistributable.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -property installationPath
+          $crt = Get-ChildItem "$vs\VC\Redist\MSVC" -Directory -ErrorAction SilentlyContinue |
+                 ForEach-Object { Get-ChildItem "$($_.FullName)\x64" -Directory -Filter 'Microsoft.VC*.CRT' -ErrorAction SilentlyContinue } |
+                 Sort-Object FullName | Select-Object -Last 1
+          if ($crt) { "VCREDIST_DIR=$($crt.FullName)" >> $env:GITHUB_ENV; Write-Host "VC-Laufzeit: $($crt.FullName)" }
+          else { Write-Host "::warning::Keine VC-Laufzeit gefunden – Installer ohne mitgelieferte DLLs" }
+      - name: Programm + Installer bauen
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File windows\packaging\build_installer.ps1
+      - name: Installer prüfen
+        shell: pwsh
+        run: |
+          $f = "build\windows\installer\MealieRecipes-${{ needs.version.outputs.version }}-windows-setup.exe"
+          if (-not (Test-Path $f)) { Write-Host "::error::$f fehlt"; exit 1 }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: build/windows/installer/*.exe
+          retention-days: 14
+          if-no-files-found: error

@@ -16,7 +16,10 @@ RecipeSummary _$RecipeSummaryFromJson(Map<String, dynamic> json) =>
       dateAdded: json['dateAdded'] as String?,
       dateUpdated: json['dateUpdated'] as String?,
       prepTime: parseDuration(json['prepTime']),
-      cookTime: parseDuration(json['cookTime']),
+      // Von Hand: Mealie v3 führt die Kochzeit als `performTime`; `cookTime`
+      // war dort leer und fehlt ab 3.31 ganz (der eigene Cache schreibt
+      // weiterhin `cookTime`).
+      cookTime: parseDuration(json['performTime'] ?? json['cookTime']),
       totalTime: parseDuration(json['totalTime']),
       rating: _parseRating(json['rating']),
       recipeCategory: (json['recipeCategory'] as List<dynamic>?)

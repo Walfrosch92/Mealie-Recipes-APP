@@ -205,6 +205,8 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
         CookbookFilterField.lastMade => l.lastCooked,
         CookbookFilterField.rating => l.rating,
         CookbookFilterField.totalTime => l.totalTimeLabel,
+        CookbookFilterField.createdAt => l.filterDateCreated,
+        CookbookFilterField.updatedAt => l.filterDateUpdated,
       };
 
   String _opLabel(
@@ -351,6 +353,7 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
                           setState(() => _rows[i].setField(f)),
                       onNumberChanged: (v) =>
                           setState(() => _rows[i].number = v),
+                      onDateChanged: (d) => setState(() => _rows[i].date = d),
                       onOpChanged: (op) => setState(() => _rows[i].op = op),
                       onValueTap: () => _pickValues(_rows[i]),
                       onDelete: () => _removeRow(i),
@@ -379,6 +382,7 @@ class _FilterRowCard extends StatelessWidget {
   final AppLocalizations l;
   final List<CookbookFilterField> fields;
   final ValueChanged<int> onNumberChanged;
+  final ValueChanged<DateTime> onDateChanged;
   final String Function(CookbookFilterField) fieldLabel;
   final String Function(CookbookFilterOp) opLabel;
   final String valueSummary;
@@ -393,6 +397,7 @@ class _FilterRowCard extends StatelessWidget {
     required this.l,
     required this.fields,
     required this.onNumberChanged,
+    required this.onDateChanged,
     required this.fieldLabel,
     required this.opLabel,
     required this.valueSummary,
@@ -461,7 +466,9 @@ class _FilterRowCard extends StatelessWidget {
             },
           ),
           const SizedBox(height: 8),
-          if (row.isScalar)
+          if (row.isDate)
+            _DateValue(row: row, onChanged: onDateChanged)
+          else if (row.isScalar)
             _NumberValue(row: row, l: l, onChanged: onNumberChanged)
           else
             TapSurface(
@@ -490,6 +497,47 @@ class _FilterRowCard extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Kalendertag einer Zeile (erstellt/aktualisiert am) — Systemkalender.
+// ---------------------------------------------------------------------------
+
+class _DateValue extends StatelessWidget {
+  final CookbookFilterRow row;
+  final ValueChanged<DateTime> onChanged;
+  const _DateValue({required this.row, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final date = row.date ?? DateTime.now();
+    return TapSurface(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(DateTime.now().year + 5, 12, 31),
+        );
+        if (picked != null) onChanged(picked);
+      },
+      color: context.appSurface2,
+      borderRadius: BorderRadius.circular(AppTokens.rXs),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              MaterialLocalizations.of(context).formatMediumDate(date),
+              style: TextStyle(color: context.appFg),
+            ),
+          ),
+          Icon(Icons.calendar_today_rounded,
+              size: 18, color: context.appFgSub),
         ],
       ),
     );

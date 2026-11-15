@@ -34,3 +34,10 @@ final mealie329Provider = Provider<bool>(
 /// „Organisieren“, Webhooks/Benachrichtigungen → „Haushalt verwalten“).
 final mealie330Provider = Provider<bool>(
     (ref) => mealieVersionAtLeast(ref.watch(serverVersionProvider), 3, 30));
+
+/// Mealie ≥ 3.31: PDF-Export vom Server (Rezept und ganzes Kochbuch),
+/// befristeter Freigabe-Link als Platzhalter in Rezept-Aktionen, Markdown in
+/// Kochbuch-Beschreibungen, Upload-Limit (HTTP 413); `cookTime` entfällt aus
+/// den Rezept-Antworten (nur noch `performTime`).
+final mealie331Provider = Provider<bool>(
+    (ref) => mealieVersionAtLeast(ref.watch(serverVersionProvider), 3, 31));

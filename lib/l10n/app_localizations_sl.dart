@@ -3807,6 +3807,13 @@ class AppLocalizationsSl extends AppLocalizations {
       'Samo preveri in obvesti – namestitev vedno zaženeš sam.';
 
   @override
+  String get updateBetaTitle => 'Prejemaj beta različice';
+
+  @override
+  String get updateBetaDescription =>
+      'Ponudi tudi predizdaje za testiranje. Te lahko še vsebujejo napake.';
+
+  @override
   String get updateNoNotes => 'Ni opomb ob izdaji.';
 
   @override
@@ -5116,4 +5123,17 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get tabletSidebarSubtitle =>
       'Navigacijo prikaže levo namesto spodaj, ko je tablica obrnjena ležeče';
+
+  @override
+  String get filterDateCreated => 'Datum nastanka';
+
+  @override
+  String get filterDateUpdated => 'Datum posodobitve';
+
+  @override
+  String get errorUploadTooLarge =>
+      'Datoteka je prevelika za ta strežnik Mealie. Omejitev nalaganja strežnika je mogoče povečati z MAX_UPLOAD_SIZE_MB.';
+
+  @override
+  String get recipeDownloadPdfMealie => 'Prenesi PDF (postavitev Mealie)';
 }

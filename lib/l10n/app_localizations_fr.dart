@@ -3797,6 +3797,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vérifie et vous prévient uniquement — vous lancez toujours l’installation vous-même.';
 
   @override
+  String get updateBetaTitle => 'Recevoir les versions bêta';
+
+  @override
+  String get updateBetaDescription =>
+      'Propose aussi des préversions à tester. Elles peuvent encore contenir des bugs.';
+
+  @override
   String get updateNoNotes => 'Aucune note de version.';
 
   @override
@@ -5097,6 +5104,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tabletSidebarSubtitle =>
       'Affiche la navigation à gauche plutôt qu’en bas lorsque la tablette est tenue à l’horizontale';
+
+  @override
+  String get filterDateCreated => 'Date de création';
+
+  @override
+  String get filterDateUpdated => 'Date de mise à jour';
+
+  @override
+  String get errorUploadTooLarge =>
+      'Le fichier est trop volumineux pour ce serveur Mealie. La limite d\'envoi du serveur peut être augmentée avec MAX_UPLOAD_SIZE_MB.';
+
+  @override
+  String get recipeDownloadPdfMealie =>
+      'Télécharger le PDF (mise en page Mealie)';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).

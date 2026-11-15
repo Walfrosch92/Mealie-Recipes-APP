@@ -24,6 +24,7 @@ class UpdateScreen extends ConsumerWidget {
     final st = ref.watch(appUpdateProvider);
     final notifier = ref.read(appUpdateProvider.notifier);
     final auto = ref.watch(autoUpdateEnabledProvider).valueOrNull ?? true;
+    final beta = ref.watch(betaUpdatesEnabledProvider).valueOrNull ?? false;
     final rel = st.release;
     final busy = st.status == UpdateStatus.checking ||
         st.status == UpdateStatus.downloading ||
@@ -108,6 +109,20 @@ class UpdateScreen extends ConsumerWidget {
               title: Text(l.updateAutoTitle,
                   style: TextStyle(color: context.appFg)),
               subtitle: Text(l.updateAutoDescription,
+                  style: TextStyle(color: context.appFgSub, fontSize: 13)),
+            ),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: beta,
+              onChanged: (v) async {
+                await ref.read(betaUpdatesEnabledProvider.notifier).set(v);
+                // Kanal gewechselt → sofort neu prüfen (außer mitten im
+                // Herunterladen/Installieren).
+                if (!busy) await notifier.check();
+              },
+              title: Text(l.updateBetaTitle,
+                  style: TextStyle(color: context.appFg)),
+              subtitle: Text(l.updateBetaDescription,
                   style: TextStyle(color: context.appFgSub, fontSize: 13)),
             ),
           ],

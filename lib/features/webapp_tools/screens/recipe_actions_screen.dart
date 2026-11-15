@@ -4,13 +4,15 @@ import 'package:mealie_recipes/l10n/app_localizations.dart';
 
 import '../../../core/api/api_service.dart';
 import '../../../core/providers/cached_json_list.dart';
+import '../../../core/utils/mealie_version.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../widgets/tool_widgets.dart';
 
 // ---------------------------------------------------------------------------
 // Rezept-Aktionen (Mealie /group/data/recipe-actions): eigene Menüpunkte im
 // Rezept. „Link" öffnet die URL (Platzhalter ${id} ${slug} ${servings}
-// ${yieldQuantity} ${yieldText} ${url}), „Post" lässt den Server das Rezept
+// ${yieldQuantity} ${yieldText} ${url}, ab Mealie 3.31 auch
+// ${share-link-expires-seconds-<x>}), „Post" lässt den Server das Rezept
 // an die URL senden. Mealie erlaubt nur http(s)-URLs.
 // ---------------------------------------------------------------------------
 
@@ -139,15 +141,15 @@ class _RecipeActionsScreenState extends ConsumerState<RecipeActionsScreen> {
   }
 }
 
-class _ActionDialog extends StatefulWidget {
+class _ActionDialog extends ConsumerStatefulWidget {
   final Map<String, dynamic>? action;
   const _ActionDialog({this.action});
 
   @override
-  State<_ActionDialog> createState() => _ActionDialogState();
+  ConsumerState<_ActionDialog> createState() => _ActionDialogState();
 }
 
-class _ActionDialogState extends State<_ActionDialog> {
+class _ActionDialogState extends ConsumerState<_ActionDialog> {
   late final _title =
       TextEditingController(text: widget.action?['title']?.toString() ?? '');
   late final _url =
@@ -192,7 +194,10 @@ class _ActionDialogState extends State<_ActionDialog> {
                 // Platzhalter-Namen sind Mealie-Syntax → nicht übersetzt.
                 helperText: '${l.recipeActionUrlHint}: '
                     r'${id} ${slug} ${servings} ${yieldQuantity} '
-                    r'${yieldText} ${url}',
+                    r'${yieldText} ${url}'
+                    // Befristeter Freigabe-Link (Mealie ≥ 3.31), z. B. für
+                    // Dienste, die ein privates Rezept abrufen sollen.
+                    '${ref.watch(mealie331Provider) ? r' ${share-link-expires-seconds-600}' : ''}',
                 helperMaxLines: 3,
               ),
             ),

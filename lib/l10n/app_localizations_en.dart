@@ -3758,6 +3758,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only checks and notifies you — you always start the installation yourself.';
 
   @override
+  String get updateBetaTitle => 'Receive beta versions';
+
+  @override
+  String get updateBetaDescription =>
+      'Also offers pre-release versions for testing. They may still contain bugs.';
+
+  @override
   String get updateNoNotes => 'No release notes.';
 
   @override
@@ -5045,4 +5052,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tabletSidebarSubtitle =>
       'Shows the navigation on the left instead of at the bottom when the tablet is held sideways';
+
+  @override
+  String get filterDateCreated => 'Date Created';
+
+  @override
+  String get filterDateUpdated => 'Date Updated';
+
+  @override
+  String get errorUploadTooLarge =>
+      'The file is too large for this Mealie server. The server\'s upload limit can be raised with MAX_UPLOAD_SIZE_MB.';
+
+  @override
+  String get recipeDownloadPdfMealie => 'Download PDF (Mealie layout)';
 }

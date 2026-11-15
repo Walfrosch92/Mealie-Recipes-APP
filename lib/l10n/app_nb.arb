@@ -1111,6 +1111,8 @@
   "updateRestartNow": "Installer og start på nytt",
   "updateAutoTitle": "Se etter oppdateringer ved oppstart",
   "updateAutoDescription": "Sjekker bare og gir beskjed – installeringen starter du alltid selv.",
+  "updateBetaTitle": "Motta betaversjoner",
+  "updateBetaDescription": "Tilbyr også forhåndsversjoner for testing. De kan fortsatt inneholde feil.",
   "updateNoNotes": "Ingen versjonsmerknader.",
   "updateSourceHint": "Oppdateringer kommer fra GitHub-utgivelsene til Mealie Recipes og installeres bare hvis de er signert av utvikleren (macOS).",
   "errorNoConnection": "Får ikke kontakt med Mealie-serveren. Sjekk internettforbindelsen og serveradressen.",
@@ -1458,5 +1460,9 @@
   "sidebarUnpin": "Fjern fra sidepanelet",
   "sidebarFull": "Sidepanelet er fullt – maks {count} egne oppføringer.",
   "tabletSidebar": "Sidepanel i liggende format",
-  "tabletSidebarSubtitle": "Viser navigasjonen til venstre i stedet for nederst når nettbrettet holdes liggende"
+  "tabletSidebarSubtitle": "Viser navigasjonen til venstre i stedet for nederst når nettbrettet holdes liggende",
+  "filterDateCreated": "Opprettelsesdato",
+  "filterDateUpdated": "Oppdateringsdato",
+  "errorUploadTooLarge": "Filen er for stor for denne Mealie-serveren. Serverens opplastingsgrense kan økes med MAX_UPLOAD_SIZE_MB.",
+  "recipeDownloadPdfMealie": "Last ned PDF (Mealie-oppsett)"
 }

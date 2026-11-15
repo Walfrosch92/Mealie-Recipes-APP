@@ -1123,6 +1123,8 @@
   "updateRestartNow": "Installieren & neu starten",
   "updateAutoTitle": "Beim Start nach Updates suchen",
   "updateAutoDescription": "Prüft nur und gibt Bescheid – die Installation startest immer du.",
+  "updateBetaTitle": "Beta-Versionen erhalten",
+  "updateBetaDescription": "Bietet auch Vorab-Versionen zum Testen an. Sie können noch Fehler enthalten.",
   "updateNoNotes": "Keine Versionshinweise.",
   "updateSourceHint": "Updates kommen aus den GitHub-Releases von Mealie Recipes und werden nur installiert, wenn sie vom Entwickler signiert sind (macOS).",
   "errorNoConnection": "Dein Mealie-Server ist nicht erreichbar. Prüfe die Internetverbindung und die Server-Adresse.",
@@ -1470,5 +1472,9 @@
   "sidebarUnpin": "Aus Seitenleiste entfernen",
   "sidebarFull": "Die Seitenleiste ist voll – höchstens {count} eigene Einträge.",
   "tabletSidebar": "Seitenleiste im Querformat",
-  "tabletSidebarSubtitle": "Zeigt die Navigation links statt unten, wenn das Tablet quer gehalten wird"
+  "tabletSidebarSubtitle": "Zeigt die Navigation links statt unten, wenn das Tablet quer gehalten wird",
+  "filterDateCreated": "Erstellungsdatum",
+  "filterDateUpdated": "Aktualisiert am",
+  "errorUploadTooLarge": "Die Datei ist zu groß für diesen Mealie-Server. Das Upload-Limit des Servers lässt sich mit MAX_UPLOAD_SIZE_MB erhöhen.",
+  "recipeDownloadPdfMealie": "PDF herunterladen (Mealie-Layout)"
 }

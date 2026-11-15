@@ -2351,6 +2351,35 @@ class ApiService {
     return resp.data ?? const [];
   }
 
+  /// GET /api/recipes/{slug}/exports/pdf — fertiges PDF vom Server
+  /// (Mealie ≥ 3.31, in der Sprache des Accept-Language-Headers).
+  Future<List<int>> exportRecipePdf(String slug,
+      {bool includeImages = true}) async {
+    final resp = await _dio.get<List<int>>(
+      _path('/api/recipes/$slug/exports/pdf'),
+      queryParameters: {'include_images': includeImages},
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return resp.data ?? const [];
+  }
+
+  /// GET /api/households/cookbooks/{id}/pdf — ganzes Kochbuch als PDF mit
+  /// Deckblatt und Inhaltsverzeichnis (Mealie ≥ 3.31). Der Server rendert
+  /// synchron; ein großes Kochbuch braucht deutlich länger als die üblichen
+  /// Zeitlimits, deshalb ein eigenes, großzügiges Empfangs-Limit.
+  Future<List<int>> exportCookbookPdf(String cookbookId,
+      {bool includeImages = true}) async {
+    final resp = await _dio.get<List<int>>(
+      _path('/api/households/cookbooks/$cookbookId/pdf'),
+      queryParameters: {'include_images': includeImages},
+      options: Options(
+        responseType: ResponseType.bytes,
+        receiveTimeout: const Duration(minutes: 5),
+      ),
+    );
+    return resp.data ?? const [];
+  }
+
   Future<List<Map<String, dynamic>>> fetchShareTokens(String recipeId) async =>
       _items((await _dio.get(_path('/api/shared/recipes'),
               queryParameters: {'recipe_id': recipeId}))
@@ -2651,6 +2680,10 @@ String? mealieErrorMessage(Object error) {
   // 401 = Token ungültig/abgelaufen — Mealies Text („Not authenticated")
   // hilft niemandem weiter.
   if (status == 401 && l != null) return l.errorUnauthorized;
+  // 413 = Anfrage größer als das Upload-Limit (Mealie ≥ 3.31:
+  // MAX_UPLOAD_SIZE_MB, sonst der Reverse-Proxy) — die englische Server-
+  // bzw. Proxy-Meldung hilft niemandem weiter.
+  if (status == 413 && l != null) return l.errorUploadTooLarge;
   final data = error.response?.data;
   // 403 = Mealie verweigert die Aktion (Rechte) — statt der englischen
   // Server-Meldung einen übersetzten, erklärenden Text liefern.

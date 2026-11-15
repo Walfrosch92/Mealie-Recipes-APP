@@ -3814,6 +3814,13 @@ class AppLocalizationsPl extends AppLocalizations {
       'Tylko sprawdza i powiadamia — instalację zawsze uruchamiasz sam.';
 
   @override
+  String get updateBetaTitle => 'Otrzymuj wersje beta';
+
+  @override
+  String get updateBetaDescription =>
+      'Oferuje też wersje przedpremierowe do testów. Mogą jeszcze zawierać błędy.';
+
+  @override
   String get updateNoNotes => 'Brak informacji o wydaniu.';
 
   @override
@@ -5125,4 +5132,17 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get tabletSidebarSubtitle =>
       'Pokazuje nawigację po lewej zamiast na dole, gdy tablet jest trzymany poziomo';
+
+  @override
+  String get filterDateCreated => 'Data utworzenia';
+
+  @override
+  String get filterDateUpdated => 'Data aktualizacji';
+
+  @override
+  String get errorUploadTooLarge =>
+      'Plik jest za duży dla tego serwera Mealie. Limit przesyłania serwera można zwiększyć za pomocą MAX_UPLOAD_SIZE_MB.';
+
+  @override
+  String get recipeDownloadPdfMealie => 'Pobierz PDF (układ Mealie)';
 }

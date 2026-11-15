@@ -43,8 +43,8 @@ android {
         // Versionszug wieder bei 1 starten darf (pubspec-Build-Nummer
         // daher klein). Bei jedem Play-Upload hier hochzählen — der Wert darf
         // nie kleiner oder gleich einem bereits hochgeladenen sein.
-        versionCode = 56
-        // versionName kommt aus der pubspec-Version (aktuell 1.27.14).
+        versionCode = 57
+        // versionName kommt aus der pubspec-Version (aktuell 1.27.15).
         versionName = flutter.versionName
         multiDexEnabled = true
     }

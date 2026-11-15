@@ -1111,6 +1111,8 @@
   "updateRestartNow": "Namesti in znova zaženi",
   "updateAutoTitle": "Ob zagonu preveri posodobitve",
   "updateAutoDescription": "Samo preveri in obvesti – namestitev vedno zaženeš sam.",
+  "updateBetaTitle": "Prejemaj beta različice",
+  "updateBetaDescription": "Ponudi tudi predizdaje za testiranje. Te lahko še vsebujejo napake.",
   "updateNoNotes": "Ni opomb ob izdaji.",
   "updateSourceHint": "Posodobitve prihajajo iz izdaj Mealie Recipes na GitHubu in se namestijo le, če jih je podpisal razvijalec (macOS).",
   "errorNoConnection": "Strežnik Mealie ni dosegljiv. Preveri internetno povezavo in naslov strežnika.",
@@ -1458,5 +1460,9 @@
   "sidebarUnpin": "Odstrani iz stranske vrstice",
   "sidebarFull": "Stranska vrstica je polna – največ {count} lastnih vnosov.",
   "tabletSidebar": "Stranska vrstica v ležečem načinu",
-  "tabletSidebarSubtitle": "Navigacijo prikaže levo namesto spodaj, ko je tablica obrnjena ležeče"
+  "tabletSidebarSubtitle": "Navigacijo prikaže levo namesto spodaj, ko je tablica obrnjena ležeče",
+  "filterDateCreated": "Datum nastanka",
+  "filterDateUpdated": "Datum posodobitve",
+  "errorUploadTooLarge": "Datoteka je prevelika za ta strežnik Mealie. Omejitev nalaganja strežnika je mogoče povečati z MAX_UPLOAD_SIZE_MB.",
+  "recipeDownloadPdfMealie": "Prenesi PDF (postavitev Mealie)"
 }

@@ -6781,6 +6781,18 @@ abstract class AppLocalizations {
   /// **'Only checks and notifies you — you always start the installation yourself.'**
   String get updateAutoDescription;
 
+  /// No description provided for @updateBetaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive beta versions'**
+  String get updateBetaTitle;
+
+  /// No description provided for @updateBetaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Also offers pre-release versions for testing. They may still contain bugs.'**
+  String get updateBetaDescription;
+
   /// Update-Prüfer (Desktop)
   ///
   /// In en, this message translates to:
@@ -8868,6 +8880,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shows the navigation on the left instead of at the bottom when the tablet is held sideways'**
   String get tabletSidebarSubtitle;
+
+  /// No description provided for @filterDateCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Created'**
+  String get filterDateCreated;
+
+  /// No description provided for @filterDateUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Updated'**
+  String get filterDateUpdated;
+
+  /// No description provided for @errorUploadTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is too large for this Mealie server. The server\'s upload limit can be raised with MAX_UPLOAD_SIZE_MB.'**
+  String get errorUploadTooLarge;
+
+  /// No description provided for @recipeDownloadPdfMealie.
+  ///
+  /// In en, this message translates to:
+  /// **'Download PDF (Mealie layout)'**
+  String get recipeDownloadPdfMealie;
 }
 
 class _AppLocalizationsDelegate

@@ -3773,6 +3773,13 @@ class AppLocalizationsHu extends AppLocalizations {
       'Csak ellenőriz és szól – a telepítést mindig te indítod.';
 
   @override
+  String get updateBetaTitle => 'Béta verziók fogadása';
+
+  @override
+  String get updateBetaDescription =>
+      'Tesztelésre szánt előzetes verziókat is felajánl. Ezek még tartalmazhatnak hibákat.';
+
+  @override
   String get updateNoNotes => 'Nincsenek kiadási megjegyzések.';
 
   @override
@@ -5061,4 +5068,17 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get tabletSidebarSubtitle =>
       'A navigációt bal oldalon mutatja alul helyett, ha a táblagép fekvő helyzetben van';
+
+  @override
+  String get filterDateCreated => 'Létrehozás dátuma';
+
+  @override
+  String get filterDateUpdated => 'Frissítés dátuma';
+
+  @override
+  String get errorUploadTooLarge =>
+      'A fájl túl nagy ehhez a Mealie-szerverhez. A szerver feltöltési korlátja a MAX_UPLOAD_SIZE_MB beállítással növelhető.';
+
+  @override
+  String get recipeDownloadPdfMealie => 'PDF letöltése (Mealie-elrendezés)';
 }

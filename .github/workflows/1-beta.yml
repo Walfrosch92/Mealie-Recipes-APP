@@ -1,0 +1,95 @@
+# =====================================================================
+# Mealie Recipes · 1 · Beta bauen und veröffentlichen
+# ---------------------------------------------------------------------
+# Startet AUTOMATISCH bei jedem Push auf den Branch „beta“ (main bleibt dabei unberührt).
+# Sobald die Workflows auch auf main liegen (nach dem ersten Heben), zusätzlich per Hand:
+#   GitHub → „Actions“ → „1 · Beta bauen und veröffentlichen“ → „Run workflow“.
+# APK + DMG baut der eigene Mac (Runner „mealie-mac“, muss eingeschaltet sein), das Windows-Setup
+# die GitHub-Cloud. Keine Secrets im Repo.
+# Baut aus dem Branch „beta“ APK + Windows-Setup + macOS-DMG und veröffentlicht sie als
+# Vorab-Release (Pre-release) mit dem Tag „<version>-beta“ (Version aus pubspec.yaml).
+#   - Desktop-Apps sehen die Beta nur mit dem Schalter „Beta-Versionen erhalten“ (Updates-Kachel).
+#   - Obtainium: „Include prereleases“ einschalten, um Betas zu bekommen.
+# Gibt es zu dieser Version schon eine Beta, wird sie ersetzt. Achtung: installierte Apps
+# erkennen nur eine HÖHERE Version – für eine neue Beta, die Tester bekommen sollen, Version erhöhen.
+# Ist die Version schon regulär veröffentlicht, bricht der Workflow ab (erst Version erhöhen).
+# =====================================================================
+name: 1 · Beta bauen und veröffentlichen
+
+on:
+  push:
+    branches: [beta]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+    inputs:
+      neu:
+        description: 'Was ist neu? (optional, erscheint oben in den Release-Notizen)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  vorpruefung:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: beta
+      - name: Version noch nicht regulär veröffentlicht?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([^+[:space:]]+).*/\1/')"
+          if gh release view "$v" >/dev/null 2>&1; then
+            echo "::error::Version $v ist bereits regulär veröffentlicht. Bitte in pubspec.yaml (Branch beta) erhöhen."; exit 1
+          fi
+          echo "Beta $v wird gebaut"
+
+  bauen:
+    needs: vorpruefung
+    uses: ./.github/workflows/bauen.yml
+    with:
+      ref: beta
+
+  veroeffentlichen:
+    needs: bauen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bauen.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dateien
+          merge-multiple: true
+      - name: Pre-release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEU: ${{ inputs.neu }}
+          VERSION: ${{ needs.bauen.outputs.version }}
+          SHA: ${{ needs.bauen.outputs.sha }}
+        run: |
+          tag="$VERSION-beta"
+          ls -la dateien
+          # Issues seit dem letzten Release (egal welcher Kanal), nur als „erledigt“ geschlossene.
+          # (eine zu ersetzende Beta derselben Version zählt nicht – sonst fehlen deren Issues)
+          seit="$(gh release list --limit 30 --exclude-drafts --json tagName,publishedAt \
+            --jq "[.[] | select(.tagName != \"$tag\")][0].publishedAt // empty")"
+          [ -n "$seit" ] || seit="2000-01-01T00:00:00Z"
+          gh issue list --state closed --limit 100 --search "closed:>$seit reason:completed" --json number,title > issues.json
+          python3 .github/scripts/release_notes.py assets/changelog/changelog.json issues.json notizen.md
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Ersetze vorhandene Beta $tag"
+            gh release delete "$tag" --cleanup-tag --yes
+          fi
+          gh release create "$tag" dateien/* --prerelease --target "$SHA" \
+            --title "Mealie Recipes $VERSION Beta" --notes-file notizen.md

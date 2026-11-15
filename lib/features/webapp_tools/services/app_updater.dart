@@ -18,7 +18,9 @@ import '../../../core/utils/platform_features.dart';
 // Paketier-Skripte erzeugen:
 //   macOS:   MealieRecipes-<x.y.z>-arm64.dmg            (macos/packaging)
 //   Windows: MealieRecipes-<x.y.z>-windows-setup.exe    (windows/packaging)
-// Entwürfe und Vorab-Releases werden ignoriert.
+// Entwürfe werden immer ignoriert, Vorab-Releases (Beta-Kanal, Workflow
+// „Beta bauen“) nur mit dem Schalter „Beta-Versionen erhalten“. Bei gleicher
+// Version gewinnt das reguläre Release.
 //
 // Installation:
 // - Windows: Inno-Setup-Installer still (/VERYSILENT) starten, App beendet
@@ -34,6 +36,7 @@ import '../../../core/utils/platform_features.dart';
 const _repo = 'Walfrosch92/Mealie-Recipes-APP';
 const _teamId = 'Q84VVPH7B3';
 const _kAutoUpdate = 'desktopAutoUpdate';
+const _kBetaUpdates = 'desktopBetaUpdates';
 const _kPendingPath = 'desktopPendingUpdatePath';
 const _kPendingVersion = 'desktopPendingUpdateVersion';
 const _kLastCheck = 'desktopLastUpdateCheck';
@@ -51,6 +54,7 @@ class AppRelease {
   final String assetName;
   final String assetUrl;
   final int assetSize;
+  final bool prerelease;
 
   const AppRelease({
     required this.version,
@@ -61,6 +65,7 @@ class AppRelease {
     required this.assetName,
     required this.assetUrl,
     required this.assetSize,
+    this.prerelease = false,
   });
 }
 
@@ -146,6 +151,21 @@ class AutoUpdateSetting extends AsyncNotifier<bool> {
   }
 }
 
+/// Auch Vorab-Versionen (Beta-Kanal) anbieten (Standard aus).
+final betaUpdatesEnabledProvider =
+    AsyncNotifierProvider<BetaUpdateSetting, bool>(BetaUpdateSetting.new);
+
+class BetaUpdateSetting extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async =>
+      (await SharedPreferences.getInstance()).getBool(_kBetaUpdates) ?? false;
+
+  Future<void> set(bool value) async {
+    await (await SharedPreferences.getInstance()).setBool(_kBetaUpdates, value);
+    state = AsyncData(value);
+  }
+}
+
 class AppUpdateNotifier extends Notifier<UpdateState> {
   final _dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 15),
@@ -180,9 +200,12 @@ class AppUpdateNotifier extends Notifier<UpdateState> {
   Future<AppRelease?> _fetchLatest() async {
     final resp = await _dio.get('https://api.github.com/repos/$_repo/releases',
         queryParameters: {'per_page': 20});
+    final beta = await ref.read(betaUpdatesEnabledProvider.future);
     AppRelease? best;
     for (final r in (resp.data as List? ?? const [])) {
-      if (r is! Map || r['draft'] == true || r['prerelease'] == true) continue;
+      if (r is! Map || r['draft'] == true) continue;
+      final pre = r['prerelease'] == true;
+      if (pre && !beta) continue;
       for (final a in (r['assets'] as List? ?? const [])) {
         if (a is! Map) continue;
         final m = _assetPattern.firstMatch(a['name']?.toString() ?? '');
@@ -198,8 +221,11 @@ class AppUpdateNotifier extends Notifier<UpdateState> {
           assetName: a['name'].toString(),
           assetUrl: a['browser_download_url'].toString(),
           assetSize: (a['size'] as num?)?.toInt() ?? 0,
+          prerelease: pre,
         );
-        if (best == null || compareVersions(rel.version, best.version) > 0) {
+        final cmp = best == null ? 1 : compareVersions(rel.version, best.version);
+        // Gleiche Version: reguläres Release vor Beta.
+        if (cmp > 0 || (cmp == 0 && best!.prerelease && !pre)) {
           best = rel;
         }
       }

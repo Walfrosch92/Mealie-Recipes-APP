@@ -31,7 +31,12 @@ $iscc = @(
 if (-not $iscc) { throw "Inno Setup 6 (ISCC.exe) nicht gefunden" }
 
 Write-Host "> Installer erstellen …"
-& $iscc "/DAppVersion=$version" "windows\packaging\installer.iss"
+$isccArgs = @("/DAppVersion=$version")
+# Optional (GitHub-Workflow setzt es): VC++-Laufzeit-DLLs mit einpacken.
+if ($env:VCREDIST_DIR -and (Test-Path $env:VCREDIST_DIR)) {
+  $isccArgs += "/DVCRedistDir=$env:VCREDIST_DIR"
+}
+& $iscc @isccArgs "windows\packaging\installer.iss"
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup fehlgeschlagen" }
 
 Write-Host "OK - Fertig: build\windows\installer\MealieRecipes-$version-windows-setup.exe"

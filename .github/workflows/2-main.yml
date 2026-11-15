@@ -1,0 +1,81 @@
+# =====================================================================
+# Mealie Recipes · 2 · Main bauen und veröffentlichen
+# ---------------------------------------------------------------------
+# Starten: GitHub → „Actions“ → „2 · Main bauen und veröffentlichen“ → „Run workflow“.
+# Baut aus dem Branch „main“ APK + Windows-Setup + macOS-DMG NEU und veröffentlicht sie als
+# reguläres Release mit dem Tag „<version>“ (Version aus pubspec.yaml, z. B. 1.27.15).
+# Normalfall ist „3 · Beta zu Main heben“ (veröffentlicht die getesteten Beta-Dateien);
+# diesen Workflow nur nutzen, wenn main direkt (ohne Beta) veröffentlicht werden soll.
+# Die installierten Desktop-Apps erkennen das Release am Dateinamen und bieten das Update an;
+# Obtainium findet die APK.
+# APK + DMG baut der eigene Mac (Runner „mealie-mac“, muss eingeschaltet sein), das Windows-Setup
+# die GitHub-Cloud. Keine Secrets im Repo.
+# =====================================================================
+name: 2 · Main bauen und veröffentlichen
+
+on:
+  workflow_dispatch:
+    inputs:
+      neu:
+        description: 'Was ist neu? (optional, erscheint oben in den Release-Notizen)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  vorpruefung:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Version noch frei?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([^+[:space:]]+).*/\1/')"
+          if gh release view "$v" >/dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$v" >/dev/null; then
+            echo "::error::Release/Tag $v gibt es schon. Bitte Version in pubspec.yaml (Branch main) erhöhen."; exit 1
+          fi
+          echo "Release $v wird gebaut"
+
+  bauen:
+    needs: vorpruefung
+    uses: ./.github/workflows/bauen.yml
+    with:
+      ref: main
+
+  veroeffentlichen:
+    needs: bauen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bauen.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dateien
+          merge-multiple: true
+      - name: Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEU: ${{ inputs.neu }}
+          VERSION: ${{ needs.bauen.outputs.version }}
+          SHA: ${{ needs.bauen.outputs.sha }}
+        run: |
+          ls -la dateien
+          # Issues seit dem letzten regulären Release, nur als „erledigt“ geschlossene.
+          seit="$(gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json publishedAt --jq '.[0].publishedAt // empty')"
+          [ -n "$seit" ] || seit="2000-01-01T00:00:00Z"
+          gh issue list --state closed --limit 100 --search "closed:>$seit reason:completed" --json number,title > issues.json
+          python3 .github/scripts/release_notes.py assets/changelog/changelog.json issues.json notizen.md
+          gh release create "$VERSION" dateien/* --target "$SHA" --latest \
+            --title "Mealie Recipes $VERSION" --notes-file notizen.md

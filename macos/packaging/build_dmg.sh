@@ -117,7 +117,11 @@ if [ -n "$SIGN_ID" ]; then
   codesign --force --timestamp -s "$SIGN_ID" "$DMG"
   if [ -n "${MAC_NOTARY_PROFILE:-}" ]; then
     echo "▸ Notarisieren (kann einige Minuten dauern) …"
-    xcrun notarytool submit "$DMG" --keychain-profile "$MAC_NOTARY_PROFILE" --wait
+    # MAC_NOTARY_KEYCHAIN: eigener Schlüsselbund (GitHub-Workflow), sonst Standard.
+    NOTARY_KC=()
+    [ -n "${MAC_NOTARY_KEYCHAIN:-}" ] && NOTARY_KC=(--keychain "$MAC_NOTARY_KEYCHAIN")
+    xcrun notarytool submit "$DMG" --keychain-profile "$MAC_NOTARY_PROFILE" \
+      ${NOTARY_KC[@]+"${NOTARY_KC[@]}"} --wait
     xcrun stapler staple "$DMG"
   fi
 fi
