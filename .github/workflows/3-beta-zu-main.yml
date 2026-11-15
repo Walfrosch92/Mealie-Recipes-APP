@@ -34,7 +34,7 @@ jobs:
   heben:
     runs-on: [self-hosted, mealie-mac]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: beta
           fetch-depth: 0

@@ -39,7 +39,7 @@ jobs:
       sha: ${{ steps.v.outputs.sha }}
       flutter: ${{ steps.v.outputs.flutter }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.ref }}
           persist-credentials: false
@@ -62,7 +62,7 @@ jobs:
     runs-on: [self-hosted, mealie-mac]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.version.outputs.sha }}
           persist-credentials: false
@@ -80,6 +80,13 @@ jobs:
           v="${{ needs.version.outputs.version }}"
           rm -rf out && mkdir -p out
           cp build/app/outputs/flutter-apk/app-release.apk "out/MealieRecipes-$v.apk"
+          # apksigner braucht Java; Flutter nimmt das JDK von Android Studio, das nicht im PATH liegt.
+          if ! java -version >/dev/null 2>&1; then
+            for j in "${JAVA_HOME:-}" "/Applications/Android Studio.app/Contents/jbr/Contents/Home" "$(/usr/libexec/java_home 2>/dev/null || true)"; do
+              if [ -n "$j" ] && [ -x "$j/bin/java" ]; then export JAVA_HOME="$j" PATH="$j/bin:$PATH"; break; fi
+            done
+          fi
+          java -version >/dev/null 2>&1 || { echo "::error::Kein Java für apksigner gefunden (Android Studio installiert?)"; exit 1; }
           sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
           apksigner="$(ls -d "$sdk"/build-tools/*/ | sort -V | tail -1)apksigner"
           certs="$("$apksigner" verify --print-certs "out/MealieRecipes-$v.apk")"
@@ -103,7 +110,7 @@ jobs:
     runs-on: [self-hosted, mealie-mac]
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.version.outputs.sha }}
           persist-credentials: false
@@ -134,7 +141,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.version.outputs.sha }}
           persist-credentials: false

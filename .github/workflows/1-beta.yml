@@ -40,7 +40,7 @@ jobs:
   vorpruefung:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: beta
       - name: Version noch nicht regulär veröffentlicht?
@@ -63,7 +63,7 @@ jobs:
     needs: bauen
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.bauen.outputs.sha }}
       - uses: actions/download-artifact@v4
