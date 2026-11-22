@@ -1,8 +1,10 @@
+import 'app_l10n.dart';
 import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart' show TextInputType;
 
 import '../models/recipe_detail.dart';
+import 'unit_conversion.dart';
 
 // ---------------------------------------------------------------------------
 // Skalierte Zutaten-Anzeige — extrahiert aus RecipeDetailScreen
@@ -273,7 +275,14 @@ typedef IngredientDisplay = ({String amount, String name});
 
 /// Baut die zweigeteilte Anzeige einer Zutat (hervorgehobene Menge + Name),
 /// skaliert mit [multiplier]. 1:1 zur Logik in RecipeDetailScreen.
-IngredientDisplay ingredientDisplayParts(Ingredient ing, double multiplier) {
+/// [unitSystem]: Einheiten-Umrechnung wie Mealie-Web (nur Anzeige; `null` =
+/// wie angegeben).
+IngredientDisplay ingredientDisplayParts(Ingredient ing, double multiplier,
+    {UnitSystem? unitSystem}) {
+  if (unitSystem != null) {
+    ing = convertIngredient(ing, unitSystem,
+        scale: multiplier, lang: currentAppL10n?.localeName ?? 'en');
+  }
   final hasQty = (ing.quantity ?? 0) > 0;
   final hasUnit = ing.unit?.name?.isNotEmpty == true;
   final hasFood = ing.food?.name?.isNotEmpty == true;
@@ -285,7 +294,9 @@ IngredientDisplay ingredientDisplayParts(Ingredient ing, double multiplier) {
     // Chargen des Unterrezepts, skaliert wie jede andere Menge).
     final a = <String>[
       if (hasQty) formatIngredientQuantity(scaledQty, ing.unit),
-      if (hasUnit) ing.unit!.displayName(plural: shouldPluralize(scaledQty)),
+      // Wie Mealie: Einheit nur zusammen mit einer Menge.
+      if (hasQty && hasUnit)
+        ing.unit!.displayName(plural: shouldPluralize(scaledQty)),
     ];
     final n = <String>[linked];
     if (ing.note?.isNotEmpty == true) n.add('(${ing.note})');
@@ -302,16 +313,42 @@ IngredientDisplay ingredientDisplayParts(Ingredient ing, double multiplier) {
 
   final a = <String>[];
   if (hasQty) a.add(formatIngredientQuantity(scaledQty, ing.unit));
-  if (hasUnit) a.add(ing.unit!.displayName(plural: usePlural));
+  // Wie Mealie (use-recipe-ingredients.ts): Einheit nur mit Menge — ohne
+  // Menge zeigte die App z. B. „Prise Salz", die Webapp nur „Salz".
+  if (hasQty && hasUnit) a.add(ing.unit!.displayName(plural: usePlural));
   final amount = a.join(' ');
 
   final n = <String>[];
   if (hasFood) {
     final food = ing.food!;
-    n.add(pluralize(food.name!, food.pluralName, usePlural));
+    n.add(pluralize(food.name!, food.pluralName,
+        usePlural && _pluralFoodWith(hasUnit: hasQty && hasUnit)));
     if (ing.note?.isNotEmpty == true) n.add('(${ing.note})');
   } else if (ing.note?.isNotEmpty == true) {
     n.add(ing.note!);
   }
   return (amount: amount, name: n.join(' '));
+}
+
+/// Mealies Plural-Regel für Lebensmittel je Sprache (mealie/lang/
+/// locale_config.py): Englisch „without-unit" („2 cups flour", aber
+/// „2 eggs"), alle anderen App-Sprachen „always". Maßgeblich ist die
+/// App-Sprache (wie in der Webapp die Oberflächensprache).
+bool _pluralFoodWith({required bool hasUnit}) {
+  final lang = currentAppL10n?.localeName ?? '';
+  if (lang.startsWith('en')) return !hasUnit;
+  // Mealie „never": Japanisch, Koreanisch, Türkisch, Chinesisch.
+  if (const ['ja', 'ko', 'tr', 'zh'].any(lang.startsWith)) return false;
+  return true;
+}
+
+/// Plural des Lebensmittels einer Zeile (skaliert) — dieselbe Regel wie in
+/// [ingredientDisplayParts]. Ersatzzutaten werden genauso gebeugt (Webapp:
+/// „2 Zwiebeln" → Ersatz „Schalotten").
+bool ingredientFoodPlural(Ingredient ing, double multiplier) {
+  final hasQty = (ing.quantity ?? 0) > 0;
+  final hasUnit = ing.unit?.name?.isNotEmpty == true;
+  final scaledQty = (ing.quantity ?? 0) * multiplier;
+  return shouldPluralize(scaledQty) &&
+      _pluralFoodWith(hasUnit: hasQty && hasUnit);
 }

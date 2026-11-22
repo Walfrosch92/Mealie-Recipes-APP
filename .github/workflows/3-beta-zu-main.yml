@@ -24,7 +24,6 @@ on:
 
 permissions:
   contents: write
-  issues: read
 
 concurrency:
   group: release
@@ -92,10 +91,7 @@ jobs:
             test -f "dateien/$muster" || { echo "::error::In der Beta fehlt $muster"; exit 1; }
           done
           if [ -n "$NEU" ]; then
-            seit="$(gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json publishedAt --jq '.[0].publishedAt // empty')"
-            [ -n "$seit" ] || seit="2000-01-01T00:00:00Z"
-            gh issue list --state closed --limit 100 --search "closed:>$seit reason:completed" --json number,title > issues.json
-            python3 .github/scripts/release_notes.py assets/changelog/changelog.json issues.json notizen.md
+            python3 .github/scripts/release_notes.py assets/changelog/changelog.json notizen.md
           else
             gh release view "$TAG" --json body --jq .body > notizen.md
           fi

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mealie_recipes/l10n/app_localizations.dart';
 
+import '../../../shared/widgets/markdown_text.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../shared/theme/app_colors.dart';
@@ -298,9 +300,17 @@ class _CommentCard extends StatelessWidget {
                             color: context.appFgTertiary, fontSize: 12)),
                   ),
                 const SizedBox(height: 6),
-                Text(comment.text,
+                // Wie die Webapp (RecipePageComments.vue): Markdown.
+                Consumer(builder: (context, ref, _) {
+                  final settings = ref.watch(settingsProvider).valueOrNull;
+                  return MarkdownText(
+                    text: comment.text,
+                    serverUrl: settings?.serverUrl,
+                    apiToken: settings?.apiToken,
                     style: TextStyle(
-                        color: context.appFgSub, fontSize: 14, height: 1.45)),
+                        color: context.appFgSub, fontSize: 14, height: 1.45),
+                  );
+                }),
               ],
             ),
           ),

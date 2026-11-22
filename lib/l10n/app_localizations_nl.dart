@@ -5086,4 +5086,117 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get recipeDownloadPdfMealie => 'PDF downloaden (Mealie-opmaak)';
+
+  @override
+  String get mealplanNoteMore => 'Meer tonen…';
+
+  @override
+  String get mealplanNoteLess => 'Minder tonen';
+
+  @override
+  String get ingredientCommonlySubstitutedWith => 'Vaak vervangen door';
+
+  @override
+  String requiresMealieVersion(String version) {
+    return 'Vereist Mealie $version of nieuwer.';
+  }
+
+  @override
+  String get apiTokensTitle => 'API-tokens';
+
+  @override
+  String get apiTokensDescription =>
+      'Beheer je API-tokens voor toegang vanuit externe applicaties.';
+
+  @override
+  String get apiTokenNameLabel => 'Tokennaam';
+
+  @override
+  String get apiTokenGenerate => 'Genereer';
+
+  @override
+  String get apiTokensActive => 'ACTIEVE TOKENS';
+
+  @override
+  String get apiTokenCopyWarning =>
+      'Kopieer dit token voor gebruik met een externe toepassing. Dit token wordt nu eenmalig getoond.';
+
+  @override
+  String get apiTokenThisApp => 'Gebruikt door deze app';
+
+  @override
+  String get apiTokenThisAppHint =>
+      'Met dit token is de app ingelogd; het kan hier niet worden verwijderd.';
+
+  @override
+  String apiTokenDeleteConfirm(String name) {
+    return 'Token “$name” verwijderen? Apps die het gebruiken verliezen meteen de toegang.';
+  }
+
+  @override
+  String get apiTokensEmpty => 'Nog geen tokens.';
+
+  @override
+  String apiTokenCreatedOn(String date) {
+    return 'Aangemaakt op $date';
+  }
+
+  @override
+  String get apiTokenCopied => 'Token gekopieerd';
+
+  @override
+  String get qfOpHasNoValue => 'heeft geen waarde';
+
+  @override
+  String get qfOpHasValue => 'heeft een waarde';
+
+  @override
+  String get ratingHouseholdAverage => 'gem. huishouden';
+
+  @override
+  String get stepLinkedNotes => 'Gekoppelde notities';
+
+  @override
+  String get noteFallbackTitle => 'Notitie';
+
+  @override
+  String get aiPromptTitleEnrichInstructions => 'Stapdetails toevoegen';
+
+  @override
+  String get aiPromptDescEnrichInstructions =>
+      'Koppelt elke stap van een geïmporteerd recept aan de ingrediënten en notities die hij gebruikt, en haalt de duur en de kop eruit.';
+
+  @override
+  String get loginAccountLocked =>
+      'Account geblokkeerd. Probeer het later opnieuw';
+
+  @override
+  String get loginPasswordDisabled =>
+      'Inloggen met wachtwoord is op deze server uitgeschakeld. Gebruik een API-token.';
+
+  @override
+  String get unitSystemTitle => 'Eenheden';
+
+  @override
+  String get unitSystemAsWritten => 'Zoals geschreven';
+
+  @override
+  String get unitSystemMetric => 'Waarde';
+
+  @override
+  String get unitSystemMetricHint => 'Metrisch (g, ml)';
+
+  @override
+  String get unitSystemImperial => 'Imperiaal';
+
+  @override
+  String get unitSystemImperialHint => 'Imperiaal (kopjes, oz)';
+
+  @override
+  String get unitSystemHint =>
+      'Alleen de weergave – het recept zelf blijft ongewijzigd. Net als in de Mealie-webapp geldt de keuze voor alle recepten op dit apparaat.';
+
+  @override
+  String get unitSystemUnavailable =>
+      'Geen enkele eenheid van dit recept kan worden omgerekend. Daarvoor heeft de eenheid in Mealie een standaardisatie nodig (Levensmiddelen en eenheden → eenheid → Standaardisatie).';
 }

@@ -1,3 +1,4 @@
+import '../../../core/utils/mealie_version.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_search_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -226,9 +227,12 @@ class _RecipeDataScreenState extends ConsumerState<RecipeDataScreen> {
   Future<void> _download(Map<String, dynamic> export) async {
     final l = AppLocalizations.of(context)!;
     await _run(l.downloadFailed, () async {
-      final bytes = await ref
-          .read(apiServiceProvider)
-          .downloadRecipeExport(export['id'].toString());
+      final v = ref.read(serverVersionProvider);
+      final legacy =
+          parseMealieVersion(v) != null && !mealieVersionAtLeast(v, 3, 8);
+      final bytes = await ref.read(apiServiceProvider).downloadRecipeExport(
+          export['id'].toString(),
+          legacyPath: legacy ? export['path']?.toString() : null);
       final name = export['filename']?.toString().isNotEmpty == true
           ? export['filename'].toString()
           : 'mealie-export.zip';

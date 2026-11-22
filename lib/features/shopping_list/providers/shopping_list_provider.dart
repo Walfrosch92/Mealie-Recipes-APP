@@ -435,6 +435,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
         try {
           final created = await api.addShoppingItem(ShoppingItemCreate(
             shoppingListId: targetListId,
+            position: _nextPosition(targetListId),
             note: add.note,
             quantity: add.quantity,
             labelId: add.labelId,
@@ -447,7 +448,13 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
             state.whenData((list) {
               final idx = list.indexWhere((i) => i.id == add.id);
               final next = List<ShoppingItem>.of(list);
-              if (idx >= 0) {
+              // Von Mealie mit einem offenen Artikel zusammengeführt: der
+              // steht schon in der Liste → dort ersetzen, Dummy entfernen.
+              final mergedIdx = list.indexWhere((i) => i.id == created.id);
+              if (mergedIdx >= 0) {
+                next[mergedIdx] = created;
+                if (idx >= 0) next.removeAt(idx);
+              } else if (idx >= 0) {
                 // Label des Dummies behalten, falls der Server es (noch)
                 // nicht aufgelöst zurückliefert.
                 next[idx] = created.copyWith(label: next[idx].label);
@@ -548,6 +555,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     try {
       final item = await api.addShoppingItem(ShoppingItemCreate(
         shoppingListId: listId,
+        position: _nextPosition(listId),
         note: asFood ? extra : itemText,
         isFood: asFood ? true : null,
         quantity: quantity,
@@ -1133,6 +1141,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
         final asFood = ingredient.food?.id != null && name == food;
         await api.addShoppingItem(ShoppingItemCreate(
           shoppingListId: shoppingListId,
+          position: _nextPosition(shoppingListId),
           note: asFood ? '' : name,
           isFood: asFood ? true : null,
           quantity: quantity, // 1x — bzw. exakte Rezeptmenge im Exakt-Modus
@@ -1226,11 +1235,17 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
   // mirrors iOS toggleIngredientCompletion(_:)
   // Optimistic update bleibt sichtbar; bei Netzwerkfehler → PendingCheck.
   Future<void> toggleChecked(ShoppingItem item) async {
-    final updated = item.copyWith(checked: !item.checked);
+    // Zeitstempel sofort setzen wie die Webapp — abgehakte Artikel sind nach
+    // updatedAt sortiert (zuletzt abgehakt oben).
+    final updated = item.copyWith(
+        checked: !item.checked,
+        updatedAt: DateTime.now().toUtc().toIso8601String());
     _updateLocal(updated);
     await _persistLocalCache();
     try {
-      await ref.read(apiServiceProvider).updateShoppingItem(updated);
+      _applyServerChanges(
+          await ref.read(apiServiceProvider).updateShoppingItem(updated),
+          updated.id);
     } catch (e) {
       if (!isNetworkError(e)) {
         _updateLocal(item); // server/decode error → revert
@@ -1254,7 +1269,9 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     await _persistLocalCache();
     _scheduleWatchResync(); // Uhr nach dem Tap-Burst sauber nachziehen
     try {
-      await ref.read(apiServiceProvider).updateShoppingItem(updated);
+      _applyServerChanges(
+          await ref.read(apiServiceProvider).updateShoppingItem(updated),
+          updated.id);
     } catch (e) {
       if (!isNetworkError(e)) {
         _updateLocal(item);
@@ -1275,7 +1292,9 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     _updateLocal(updated);
     await _persistLocalCache();
     try {
-      await ref.read(apiServiceProvider).updateShoppingItem(updated);
+      _applyServerChanges(
+          await ref.read(apiServiceProvider).updateShoppingItem(updated),
+          updated.id);
     } catch (e) {
       if (!isNetworkError(e)) {
         _updateLocal(item);
@@ -1351,7 +1370,9 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     await _persistLocalCache();
     _scheduleWatchResync(); // Uhr nach dem Edit sauber nachziehen
     try {
-      await ref.read(apiServiceProvider).updateShoppingItem(updated);
+      _applyServerChanges(
+          await ref.read(apiServiceProvider).updateShoppingItem(updated),
+          updated.id);
     } catch (e) {
       if (!isNetworkError(e)) {
         _updateLocal(item);
@@ -1465,7 +1486,71 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
   }
 
   void _appendLocal(ShoppingItem item) {
-    state.whenData((list) => state = AsyncData([...list, item]));
+    _recentLocalAdds[item.id] = DateTime.now();
+    state.whenData((list) {
+      // Mealie führt ein Add mit einem offenen gleichen Artikel zusammen und
+      // liefert dann DESSEN id zurück → Zeile ersetzen statt doppeln.
+      final idx = list.indexWhere((i) => i.id == item.id);
+      if (idx < 0) {
+        state = AsyncData([...list, item]);
+      } else {
+        state = AsyncData(List<ShoppingItem>.of(list)..[idx] = item);
+      }
+    });
+  }
+
+  /// Lokal angefügte Artikel, die der Server evtl. noch nicht zurückliefert
+  /// (Mealie direkt nach dem POST) — nur diese und offline vorgemerkte Adds
+  /// überleben einen stillen Abgleich, auch wenn der Server sie nicht kennt.
+  final Map<String, DateTime> _recentLocalAdds = {};
+  static const _recentAddWindow = Duration(seconds: 30);
+
+  /// Antwort eines Artikel-PUT spiegeln (Mealie führt beim Speichern
+  /// zusammen und löscht dabei Artikel): gelöschte entfernen, ANDERE
+  /// aktualisierte Artikel (Ziel einer Zusammenführung) übernehmen. Den
+  /// gesendeten Artikel selbst nicht überschreiben — bei schnellen
+  /// +/−-Taps wäre die Antwort eines älteren PUT sonst ein Rücksprung.
+  void _applyServerChanges(Map<String, dynamic>? resp, String sentId) {
+    if (resp == null) return;
+    final deleted = <String>{
+      for (final d in (resp['deletedItems'] as List?) ?? const [])
+        if (d is Map && d['id'] != null) d['id'].toString(),
+    };
+    final updated = <String, ShoppingItem>{};
+    for (final u in (resp['updatedItems'] as List?) ?? const []) {
+      if (u is! Map) continue;
+      try {
+        final item = ShoppingItem.fromJson(Map<String, dynamic>.from(u));
+        if (item.id != sentId) updated[item.id] = item;
+      } catch (_) {}
+    }
+    if (deleted.isEmpty && updated.isEmpty) return;
+    state.whenData((list) {
+      final next = <ShoppingItem>[
+        for (final i in list)
+          if (!deleted.contains(i.id)) updated.remove(i.id) ?? i,
+      ];
+      next.addAll(updated.values.where((u) => !deleted.contains(u.id)));
+      state = AsyncData(next);
+    });
+    _persistLocalCache();
+  }
+
+  /// Position für einen neuen Artikel wie die Webapp: höchste + 1 (ans
+  /// Ende). Nur für die angezeigte Liste bekannt — sonst null (Server: 0).
+  int? _lastAssignedPosition;
+  int? _nextPosition(String listId) {
+    final current = ref.read(apiServiceProvider).settings.shoppingListId;
+    if (listId.isEmpty || listId != current) return null;
+    var maxPos = -1;
+    for (final i in state.valueOrNull ?? const <ShoppingItem>[]) {
+      final p = i.position ?? 0;
+      if (p > maxPos) maxPos = p;
+    }
+    final last = _lastAssignedPosition;
+    if (last != null && last > maxPos) maxPos = last;
+    _lastAssignedPosition = maxPos + 1;
+    return maxPos + 1;
   }
 
   // Hintergrund-Refresh ohne Loading-State-Flip.
@@ -1510,16 +1595,32 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     // Offline-Banner zu setzen.
     if (currentListId.isEmpty) return;
     try {
-      final items = await api.fetchShoppingItems();
+      final fetched = await api.fetchShoppingItems();
       final localCurrent = state.valueOrNull ?? const <ShoppingItem>[];
-      final serverIds = items.map((i) => i.id).toSet();
+      final pending = ref.read(pendingShoppingChangesProvider);
+      // Offline gelöschte Artikel nicht vom Server zurückholen.
+      final pendingDeletes = pending.deletes.map((d) => d.itemId).toSet();
+      final items =
+          fetched.where((i) => !pendingDeletes.contains(i.id)).toList();
+      final serverIds = fetched.map((i) => i.id).toSet();
+      final pendingAddIds = pending.adds.map((a) => a.id).toSet();
+      final now = DateTime.now();
+      _recentLocalAdds.removeWhere((id, at) =>
+          serverIds.contains(id) || now.difference(at) > _recentAddWindow);
       // Nur Items der AKTUELL aktiven Liste als „vom Server noch nicht
       // bestätigt" behandeln. Ohne diesen Filter überleben Artikel einer
       // vorher aktiven Liste (z. B. nach einem Listenwechsel in den
       // Settings, während dieser Fetch schon lief) fälschlich den Merge und
       // tauchen dann auf der neu ausgewählten Liste mit auf.
+      // NUR noch nicht hochgeladene (offline vorgemerkt) bzw. gerade erst
+      // angelegte Artikel behalten. Vorher überlebte JEDER Artikel, den der
+      // Server nicht mehr kennt — in der Webapp / auf anderem Gerät
+      // gelöschte oder von Mealie zusammengeführte Artikel blieben so bis
+      // zum Pull-to-Refresh als Geisterzeilen stehen.
       final stillPendingLocal = localCurrent.where((i) =>
-          !serverIds.contains(i.id) && i.shoppingListId == currentListId);
+          !serverIds.contains(i.id) &&
+          i.shoppingListId == currentListId &&
+          (pendingAddIds.contains(i.id) || _recentLocalAdds.containsKey(i.id)));
       final merged = [...items, ...stillPendingLocal];
       await LocalCache.saveShoppingItems(api.settings.shoppingListId, merged);
       ref.read(shoppingCacheMissingProvider.notifier).state = false;
@@ -1551,6 +1652,9 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     final dummy = ShoppingItem(
       id: localId,
       shoppingListId: listId,
+      // Lokal ans Ende (wie die Webapp); hochgeladen vergibt der Sync neu.
+      position: _nextPosition(listId),
+      createdAt: DateTime.now().toUtc().toIso8601String(),
       checked: false,
       note: note,
       label: label,
@@ -1620,6 +1724,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
       try {
         await api.addShoppingItem(ShoppingItemCreate(
           shoppingListId: target,
+          position: _nextPosition(target),
           note: c.note,
           quantity: c.quantity,
           labelId: c.labelId,
@@ -1694,7 +1799,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
         merged = merged.copyWith(label: resolved, clearLabel: resolved == null);
       }
       try {
-        await api.updateShoppingItem(merged);
+        _applyServerChanges(await api.updateShoppingItem(merged), merged.id);
       } catch (e) {
         if (isNetworkError(e)) failedItemIds.add(itemId);
       }

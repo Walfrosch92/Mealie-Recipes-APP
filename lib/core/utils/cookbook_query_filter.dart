@@ -45,7 +45,17 @@ enum CookbookFilterOp {
   gte,
   lt,
   lte,
+  // „Hat keinen Wert" / „Hat einen Wert" (Mealie `IS NULL` / `IS NOT NULL`)
+  // — z. B. „nie gekocht" (`last_made IS NULL`), „ohne Bewertung".
+  isNull,
+  isNotNull,
 }
+
+/// Operatoren ohne Wert (`IS NULL` / `IS NOT NULL`).
+const Set<CookbookFilterOp> kNullOps = {
+  CookbookFilterOp.isNull,
+  CookbookFilterOp.isNotNull,
+};
 
 /// Felder von Kochbuch und Mahlzeitenplan-Regeln — seit Mealie 3.31 EINE
 /// gemeinsame Liste für Kochbuch, Regeln und Rezept-Suche
@@ -105,6 +115,11 @@ const Set<CookbookFilterField> kDateFields = {
 
 /// Operatoren je Feld — wie Mealies use-query-filter-builder.ts.
 List<CookbookFilterOp> opsForField(CookbookFilterField f) => switch (f) {
+      // Wie use-query-filter-builder.ts haben Zahl und Dauer zusätzlich
+      // „hat (keinen) Wert"; feste Datumsfelder nicht. „Zuletzt gekocht"
+      // bewusst OHNE: Mealie ≥ 3.29 rechnet last_made pro Haushalt mit
+      // coalesce(…, 1900-01-01) — nie leer, `IS NULL` träfe nie (die Webapp
+      // bietet es trotzdem an). „Nie gekocht" zählt dort als „älter als".
       CookbookFilterField.lastMade => const [
           CookbookFilterOp.lte, // „ist älter als" (häufigster zuerst)
           CookbookFilterOp.gte, // „ist neuer als"
@@ -116,12 +131,16 @@ List<CookbookFilterOp> opsForField(CookbookFilterField f) => switch (f) {
           CookbookFilterOp.gte,
           CookbookFilterOp.lt,
           CookbookFilterOp.lte,
+          CookbookFilterOp.isNull,
+          CookbookFilterOp.isNotNull,
         ],
       CookbookFilterField.totalTime => const [
           CookbookFilterOp.lte,
           CookbookFilterOp.gte,
           CookbookFilterOp.lt,
           CookbookFilterOp.gt,
+          CookbookFilterOp.isNull,
+          CookbookFilterOp.isNotNull,
         ],
       // Dieselben sechs Vergleiche wie Mealie; „ab dem Tag" zuerst, weil
       // „=" bei einem Zeitstempel praktisch nie trifft.
@@ -167,6 +186,8 @@ const Map<CookbookFilterOp, String> kOpKeyword = {
   CookbookFilterOp.gte: '>=',
   CookbookFilterOp.lt: '<',
   CookbookFilterOp.lte: '<=',
+  CookbookFilterOp.isNull: 'IS',
+  CookbookFilterOp.isNotNull: 'IS NOT',
 };
 
 /// „Enthält alle" ergibt nur bei Mehrfach-Dimensionen Sinn (ein Rezept kann
@@ -203,6 +224,9 @@ class CookbookFilterRow {
   bool get isScalar => kScalarFields.contains(field);
 
   bool get isDate => kDateFields.contains(field);
+
+  /// „Hat (keinen) Wert" — die Zeile braucht keinen Wert.
+  bool get isNullCheck => kNullOps.contains(op);
 
   /// Feld wechseln: Wert leeren, Operator + Standardwert wie Mealie
   /// (zuletzt gemacht: 30 Tage).
@@ -244,6 +268,10 @@ String _scalarValue(CookbookFilterRow r) => switch (r.field) {
 String composeCookbookQueryFilter(List<CookbookFilterRow> rows) {
   final parts = <String>[];
   for (final r in rows) {
+    if (r.isScalar && r.isNullCheck) {
+      parts.add('${kFieldAttribute[r.field]} ${kOpKeyword[r.op]} NULL');
+      continue;
+    }
     if (r.isScalar) {
       if (r.isDate ? r.date == null : r.number == null) continue;
       parts.add(
@@ -261,6 +289,27 @@ final RegExp _kRowPattern =
     RegExp(r'^([\w.]+)\s+(IN|NOT IN|CONTAINS ALL)\s+\[([^\]]*)\]$');
 
 final RegExp _kScalarPattern = RegExp(r'^([\w.]+)\s*(<=|>=|<>|=|<|>)\s*(\S+)$');
+
+final RegExp _kNullPattern =
+    RegExp(r'^([\w.]+)\s+(IS NOT|IS)\s+NULL$', caseSensitive: false);
+
+CookbookFilterRow? _parseNullCheck(String seg) {
+  final m = _kNullPattern.firstMatch(seg);
+  if (m == null) return null;
+  final field = kFieldAttribute.entries
+      .where((e) => e.value == m.group(1) && kScalarFields.contains(e.key))
+      .map((e) => e.key)
+      .firstOrNull;
+  if (field == null) return null;
+  final op = m.group(2)!.toUpperCase() == 'IS'
+      ? CookbookFilterOp.isNull
+      : CookbookFilterOp.isNotNull;
+  if (!opsForField(field).contains(op)) return null;
+  // Standardwert behalten, falls der Nutzer danach auf einen Vergleich
+  // umschaltet.
+  final row = CookbookFilterRow()..setField(field);
+  return row..op = op;
+}
 
 CookbookFilterRow? _parseScalar(String seg) {
   final m = _kScalarPattern.firstMatch(seg);
@@ -310,6 +359,11 @@ List<CookbookFilterRow>? tryParseCookbookQueryFilter(String q) {
     final segments = trimmed.split(RegExp(r'\s+AND\s+'));
     final rows = <CookbookFilterRow>[];
     for (final seg in segments) {
+      final nullCheck = _parseNullCheck(seg.trim());
+      if (nullCheck != null) {
+        rows.add(nullCheck);
+        continue;
+      }
       final scalar = _parseScalar(seg.trim());
       if (scalar != null) {
         rows.add(scalar);

@@ -1,3 +1,4 @@
+import '../../recipes/providers/user_ratings_provider.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -408,13 +409,16 @@ class RecipeFinderNotifier extends Notifier<RecipeFinderState> {
           if (t.householdsWithTool.contains(slug)) t.id,
     };
 
+    final ownRatings =
+        ref.read(userRatingsProvider).valueOrNull ?? const <String, double>{};
     final foodLabelIds = {
       for (final f in foodsCatalog)
         if (f.id != null && (f.labelId ?? '').isNotEmpty) f.id!: f.labelId!,
     };
     final scored = <(RecipeDetail, int, int, int, FinderSuggestion)>[];
     for (final r in recipes) {
-      if (!recipeMatchesQueryRows(r, filterRows, foodLabelIds: foodLabelIds)) {
+      if (!recipeMatchesQueryRows(r, filterRows,
+          foodLabelIds: foodLabelIds, ownRatings: ownRatings)) {
         continue;
       }
       final missingTools = <FinderItem>[];

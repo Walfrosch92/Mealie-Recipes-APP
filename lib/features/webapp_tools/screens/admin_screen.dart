@@ -146,6 +146,15 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                   check['oidcDisabled'],
                   'OIDC_AUTH_ENABLED'
                 ),
+                // Neuere Mealie-Versionen (wie site-settings.vue) — nur,
+                // wenn der Server das Feld liefert.
+                if (check.containsKey('reverseProxyAuthReady'))
+                  (
+                    'Reverse Proxy',
+                    check['reverseProxyAuthReady'],
+                    check['reverseProxyAuthDisabled'],
+                    'REVERSE_PROXY_AUTH_ENABLED'
+                  ),
               ])
                 ToolStatusRow(
                   ok: ready == true,

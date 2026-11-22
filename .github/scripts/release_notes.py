@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Release-Notizen für GitHub-Releases bauen.
 
-Aufbau (Markdown, Englisch wie der In-App-Changelog):
+Aufbau (Markdown, Englisch wie der In-App-Changelog „What's new“):
   1. optionaler Freitext aus dem Workflow-Feld „Was ist neu?“ (env NEU)
-  2. alle Abschnitte aus assets/changelog/changelog.json
-  3. geschlossene Issues seit dem letzten Release (JSON-Datei von `gh issue list`)
+  2. alle Abschnitte aus assets/changelog/changelog.json – sonst nichts.
+Bewusst KEINE automatische Issue-Liste: Issues werden oft erst nach der
+Beta-Testphase geschlossen und gehören dann zu einer älteren Version.
 
-Aufruf: release_notes.py <changelog.json> <issues.json> <ausgabe.md>
+Aufruf: release_notes.py <changelog.json> <ausgabe.md>
 """
 import json
 import os
@@ -14,7 +15,7 @@ import sys
 
 
 def main() -> None:
-    changelog_path, issues_path, out_path = sys.argv[1:4]
+    changelog_path, out_path = sys.argv[1:3]
     parts: list[str] = []
 
     neu = os.environ.get("NEU", "").strip()
@@ -35,17 +36,6 @@ def main() -> None:
     except (OSError, ValueError) as e:
         # Kaputter Changelog darf das Release nicht verhindern – aber laut melden.
         print(f"::warning::changelog.json nicht lesbar: {e}")
-
-    try:
-        with open(issues_path, encoding="utf-8") as f:
-            issues = json.load(f)
-    except (OSError, ValueError):
-        issues = []
-    if issues:
-        lines = ["### Closed issues"]
-        for i in sorted(issues, key=lambda x: x.get("number", 0)):
-            lines.append(f"- #{i.get('number')} {str(i.get('title', '')).strip()}")
-        parts.append("\n".join(lines))
 
     text = "\n\n".join(parts).strip() or "Improvements and bug fixes."
     with open(out_path, "w", encoding="utf-8") as f:

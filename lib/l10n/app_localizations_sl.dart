@@ -5136,4 +5136,117 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get recipeDownloadPdfMealie => 'Prenesi PDF (postavitev Mealie)';
+
+  @override
+  String get mealplanNoteMore => 'Pokaži več…';
+
+  @override
+  String get mealplanNoteLess => 'Pokaži manj';
+
+  @override
+  String get ingredientCommonlySubstitutedWith => 'Pogosto nadomeščeno z';
+
+  @override
+  String requiresMealieVersion(String version) {
+    return 'Zahteva Mealie $version ali novejšo različico.';
+  }
+
+  @override
+  String get apiTokensTitle => 'API žetoni';
+
+  @override
+  String get apiTokensDescription =>
+      'Urejaj svoje API žetone za dostop iz zunanjih aplikacij.';
+
+  @override
+  String get apiTokenNameLabel => 'Ime žetona';
+
+  @override
+  String get apiTokenGenerate => 'Generiraj';
+
+  @override
+  String get apiTokensActive => 'AKTIVNI ŽETONI';
+
+  @override
+  String get apiTokenCopyWarning =>
+      'Kopiraj žeton za uporabo v zunanji aplikaciji. Ta žeton kasneje ne bo več viden.';
+
+  @override
+  String get apiTokenThisApp => 'Uporablja ga ta aplikacija';
+
+  @override
+  String get apiTokenThisAppHint =>
+      'S tem žetonom je aplikacija prijavljena, zato ga tu ni mogoče izbrisati.';
+
+  @override
+  String apiTokenDeleteConfirm(String name) {
+    return 'Izbrišem žeton »$name«? Aplikacije, ki ga uporabljajo, takoj izgubijo dostop.';
+  }
+
+  @override
+  String get apiTokensEmpty => 'Še ni žetonov.';
+
+  @override
+  String apiTokenCreatedOn(String date) {
+    return 'Ustvarjeno $date';
+  }
+
+  @override
+  String get apiTokenCopied => 'Žeton kopiran';
+
+  @override
+  String get qfOpHasNoValue => 'nima vrednosti';
+
+  @override
+  String get qfOpHasValue => 'ima vrednost';
+
+  @override
+  String get ratingHouseholdAverage => 'povprečje gospodinjstva';
+
+  @override
+  String get stepLinkedNotes => 'Povezane opombe';
+
+  @override
+  String get noteFallbackTitle => 'Zapisek';
+
+  @override
+  String get aiPromptTitleEnrichInstructions => 'Dodaj podrobnosti koraka';
+
+  @override
+  String get aiPromptDescEnrichInstructions =>
+      'Vsak korak uvoženega recepta poveže s sestavinami in opombami, ki jih ta uporablja, ter izlušči njegovo trajanje in naslov.';
+
+  @override
+  String get loginAccountLocked =>
+      'Račun zaklenjen. Ponovno lahko poskusiš kasneje';
+
+  @override
+  String get loginPasswordDisabled =>
+      'Prijava z geslom je na tem strežniku izklopljena. Uporabi žeton API.';
+
+  @override
+  String get unitSystemTitle => 'Enote';
+
+  @override
+  String get unitSystemAsWritten => 'Kot je zapisano';
+
+  @override
+  String get unitSystemMetric => 'Metrični';
+
+  @override
+  String get unitSystemMetricHint => 'Metrične enote (g, ml)';
+
+  @override
+  String get unitSystemImperial => 'Imperialni';
+
+  @override
+  String get unitSystemImperialHint => 'Imperialne enote (skodelice, unče)';
+
+  @override
+  String get unitSystemHint =>
+      'Samo prikaz – sam recept ostane nespremenjen. Kot v spletni aplikaciji Mealie izbira velja za vse recepte v tej napravi.';
+
+  @override
+  String get unitSystemUnavailable =>
+      'Nobene enote tega recepta ni mogoče pretvoriti. Za to potrebuje enota v Mealie standardizacijo (Živila in enote → enota → Standardizacija).';
 }

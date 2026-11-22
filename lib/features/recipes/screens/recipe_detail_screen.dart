@@ -1,3 +1,7 @@
+import '../../../shared/widgets/step_linked_notes.dart';
+import '../providers/user_ratings_provider.dart';
+import '../../organizers/providers/organizers_provider.dart';
+import '../../../core/models/organizer_item.dart';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -29,6 +33,7 @@ import '../../../shared/widgets/liquid_glass.dart' show GlassTabBar;
 import '../../../shared/widgets/animations.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/ingredient_section_header.dart';
+import '../../../shared/widgets/ingredient_substitutions_button.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/markdown_text.dart';
 import '../../../shared/widgets/send_fly_animation.dart';
@@ -54,6 +59,8 @@ import '../../../core/utils/server_time.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../mealplan/widgets/meal_type_chip_row.dart';
 import '../widgets/recipe_share_link_dialog.dart';
+import '../widgets/unit_system_sheet.dart';
+import '../../../core/utils/unit_conversion.dart' show UnitSystem;
 import '../../../core/desktop/desktop_file_drop.dart';
 
 class RecipeDetailScreen extends ConsumerStatefulWidget {
@@ -209,6 +216,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   Widget _buildDetail(
       BuildContext context, RecipeDetail recipe, AppSettings? settings) {
     final l = AppLocalizations.of(context)!;
+    final unitSystem = ref.watch(unitSystemProvider);
 
     // Eingebettet (Desktop-Zweispalter in der Rezeptliste) liegt die Ansicht
     // in der Tab-Shell — die schwebende Tab-Leiste deckt dann den unteren
@@ -306,6 +314,9 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                       horizontal: 16),
                                   child: _RatingRow(
                                     recipe: recipe,
+                                    own: ref
+                                        .watch(userRatingsProvider)
+                                        .valueOrNull?[recipe.id],
                                     onRate: (v) => _setRating(recipe, v),
                                   ),
                                 ),
@@ -393,16 +404,27 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16),
                                     child: _PortionStepper(
-                                      recipeYield: recipe.recipeYield,
+                                      base: recipe.scaleBase,
                                       multiplier: _multiplier,
                                       onChanged: (v) =>
                                           setState(() => _multiplier = v),
                                     ),
                                   ),
                                   const SizedBox(height: 6),
+                                  // Einheiten-Umrechnung aktiv (Issue #50):
+                                  // kleiner Hinweis, damit klar ist, dass die
+                                  // Mengen nicht „wie angegeben" sind.
+                                  if (unitSystem != null &&
+                                      recipeHasConvertibleIngredients(recipe))
+                                    _UnitSystemChip(
+                                      label: unitSystemLabel(l, unitSystem),
+                                      onTap: () => showUnitSystemSheet(
+                                          context, ref, recipe),
+                                    ),
                                   _IngredientsContent(
                                     recipe: recipe,
                                     multiplier: _multiplier,
+                                    unitSystem: unitSystem,
                                     checked: _checkedIngredients,
                                     onToggleCheck: (i) {
                                       setState(() {
@@ -633,11 +655,16 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   // Set the recipe rating via the dedicated ratings endpoint (no full PATCH).
   // Uses recipe.slug (the ratings endpoint expects the slug, not the id).
   Future<void> _setRating(RecipeDetail recipe, double rating) async {
-    final newRating =
-        recipe.rating == rating ? 0.0 : rating; // tap again = clear
+    // Wie die Webapp: verglichen wird mit der EIGENEN Bewertung, nicht mit
+    // dem Haushalts-Durchschnitt (`recipe.rating`). Nochmal tippen = entfernen.
+    final own = ref.read(userRatingsProvider).valueOrNull?[recipe.id] ?? 0;
+    final newRating = own.round() == rating.round() ? 0.0 : rating;
     HapticFeedback.selectionClick();
     try {
       await ref.read(apiServiceProvider).setRating(recipe.slug, newRating);
+      await ref
+          .read(userRatingsProvider.notifier)
+          .setLocal(recipe.id, newRating);
       // Nur das EINE Rezept neu holen: das invalidate lässt den Detail-
       // Provider rebuilden (1 Request) und der synct die Liste über
       // upsertOne. Der frühere Voll-`refresh()` der Rezeptliste lud für
@@ -653,9 +680,11 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           '→ ${newRating.round()}): $e — verifiziere Server-Stand');
       var saved = false;
       try {
-        final fresh =
-            await ref.read(apiServiceProvider).fetchRecipeDetail(widget.slug);
-        saved = (fresh.rating ?? 0).round() == newRating.round();
+        // Eigene Bewertung prüfen — der Durchschnitt weicht im Mehrbenutzer-
+        // Haushalt ab und meldete sonst „fehlgeschlagen", obwohl gespeichert.
+        final mine =
+            await ref.read(userRatingsProvider.notifier).fetchOwn(recipe.id);
+        saved = (mine ?? 0).round() == newRating.round();
       } catch (_) {/* Server nicht erreichbar → als echten Fehler melden */}
       if (!mounted) return;
       if (saved) {
@@ -747,6 +776,35 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 _reloadFromServer();
               },
             ),
+            // Einheiten wie Mealie-Web (Issue #50): wie angegeben / metrisch
+            // / imperial. Ohne standardisierte Einheiten ausgegraut.
+            Builder(builder: (_) {
+              final convertible = recipeHasConvertibleIngredients(recipe);
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppTokens.rSm),
+                    color: AppTokens.accent.withValues(alpha: 0.12),
+                  ),
+                  child: const Icon(Icons.straighten_rounded,
+                      color: AppTokens.accentDeep, size: 20),
+                ),
+                title: Text(l.unitSystemTitle,
+                    style: TextStyle(
+                        color: convertible
+                            ? sheetCtx.appFg
+                            : sheetCtx.appFgTertiary,
+                        fontWeight: FontWeight.w600)),
+                subtitle: Text(unitSystemLabel(l, ref.read(unitSystemProvider)),
+                    style: TextStyle(color: sheetCtx.appFgSub)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  showUnitSystemSheet(context, ref, recipe);
+                },
+              );
+            }),
             // Builder liefert einen eigenen Button-Context fürs Popover —
             // dessen RenderBox verankert das Share-Sheet (nötig, sonst
             // lehnt share_plus mit „sharePositionOrigin must be set" ab).
@@ -950,6 +1008,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
       ingredients: l.ingredients,
       instructions: l.instructions,
       notes: l.notes,
+      substitutions: l.recipeSubstitutionsTitle,
       generatedBy: 'Mealie Recipes',
     );
     try {
@@ -958,6 +1017,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
             recipe: recipe,
             api: api,
             multiplier: _multiplier,
+            unitSystem: ref.read(unitSystemProvider),
             includeImage: true,
             labels: labels);
       } else {
@@ -965,6 +1025,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           recipe: recipe,
           api: api,
           multiplier: _multiplier,
+          unitSystem: ref.read(unitSystemProvider),
           includeImage: true,
           labels: labels,
           sharePositionOrigin: sharePositionOrigin,
@@ -1238,11 +1299,13 @@ class _SegmentControl extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _PortionStepper extends StatelessWidget {
-  final String? recipeYield;
+  /// Basis wie Mealie (RecipeDetail.scaleBase): Portionen, sonst Ergibt-
+  /// Menge, sonst Zahl im Ergibt-Text.
+  final double? base;
   final double multiplier;
   final ValueChanged<double> onChanged;
   const _PortionStepper({
-    required this.recipeYield,
+    required this.base,
     required this.multiplier,
     required this.onChanged,
   });
@@ -1260,17 +1323,6 @@ class _PortionStepper extends StatelessWidget {
     return c == c.truncateToDouble()
         ? c.truncate().toString()
         : ingdisp.formatQuantityInput(c);
-  }
-
-  // Erste Zahl im UNSKALIERTEN Yield-Text — die Basis, auf die sich eine
-  // eingegebene/gesteppte Zielportionenzahl bezieht (z. B. „6" aus
-  // „6 Portionen"). `null` bei Freitext ohne Zahl.
-  double? _baseServings() {
-    final y = recipeYield;
-    if (y == null) return null;
-    final m = RegExp(r'\d+([.,]\d+)?').firstMatch(y);
-    if (m == null) return null;
-    return double.tryParse(m.group(0)!.replaceAll(',', '.'));
   }
 
   Future<void> _promptExactServings(
@@ -1312,7 +1364,7 @@ class _PortionStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final base = _baseServings();
+    final base = this.base;
     // Gereinigter aktueller Zielwert — Basis für Anzeige UND beide Stepper-
     // Buttons, damit wiederholtes Antippen nicht winzige Float-Reste aufbaut.
     final current = base != null ? _clean(base * multiplier) : null;
@@ -1408,12 +1460,14 @@ class _PortionStepper extends StatelessWidget {
 class _IngredientsContent extends StatelessWidget {
   final RecipeDetail recipe;
   final double multiplier;
+  final UnitSystem? unitSystem;
   final Set<int> checked;
   final ValueChanged<int> onToggleCheck;
 
   const _IngredientsContent({
     required this.recipe,
     required this.multiplier,
+    this.unitSystem,
     required this.checked,
     required this.onToggleCheck,
   });
@@ -1430,8 +1484,8 @@ class _IngredientsContent extends StatelessWidget {
           final ing = entry.value;
           final isChecked = checked.contains(i);
           // Menge (hervorgehoben) vom Namen trennen — wie im Mockup.
-          final (:amount, :name) =
-              ingdisp.ingredientDisplayParts(ing, multiplier);
+          final (:amount, :name) = ingdisp
+              .ingredientDisplayParts(ing, multiplier, unitSystem: unitSystem);
           // Mealie-Abschnitt („Knusperboden", „Füllung" …) beginnt an dieser
           // Zutat. Reine Überschriftzeilen ohne Inhalt zeigen nur den Titel.
           final section = ing.sectionTitle;
@@ -1487,7 +1541,8 @@ class _IngredientsContent extends StatelessWidget {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                            TextSpan(text: name),
+                            // Wie die Webapp: Markdown in der Zeile (fett …).
+                            ...inlineMarkdownSpans(context, name),
                           ]),
                           // Angehakt = für die Einkaufsliste ausgewählt — der
                           // Haken vorne reicht. Durchstreichen/Ausgrauen
@@ -1498,6 +1553,12 @@ class _IngredientsContent extends StatelessWidget {
                             height: 1.3,
                           ),
                         ),
+                      ),
+                      // Ersatzzutaten (Mealie 3.28) — ⇄ wie in der Webapp.
+                      IngredientSubstitutionsButton(
+                        ingredient: ing,
+                        multiplier: multiplier,
+                        lineText: '$amount $name'.trim(),
                       ),
                       // Verlinktes Rezept (Mealie „Rezept als Zutat"): öffnen.
                       if (ing.referencedRecipe != null &&
@@ -1645,6 +1706,9 @@ class _InstructionsContent extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // Verknüpfte Notizen (Mealie 3.28) — wie die Webapp ein
+                  // Notiz-Knopf am Schritt.
+                  StepLinkedNotesButton(notes: step.linkedNotes(recipe.notes)),
                 ],
               ),
             ),
@@ -1674,6 +1738,38 @@ class _ToolsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
     final expanded = isDetailSectionExpanded(ref, DetailSection.tools);
+    // Wie die Webapp (RecipePageIngredientToolsView.vue): das Kästchen heißt
+    // „im eigenen Haushalt vorhanden" und wird am Utensil gespeichert
+    // (`householdsWithTool`). Vorher nur ein lokaler Haken, der beim
+    // Schließen verschwand. Ohne Recht/Slug/Server-Eintrag bleibt es lokal.
+    final slug = ref.watch(ownHouseholdSlugProvider).valueOrNull;
+    final mayEdit = !ref.watch(mealie330Provider) ||
+        ref.watch(userPermissionsProvider).mayOrganize;
+    final serverTools = {
+      for (final t
+          in ref.watch(organizersProvider(OrganizerKind.tool)).valueOrNull ??
+              const <OrganizerItem>[])
+        t.id: t
+    };
+    OrganizerItem? persisted(int i) =>
+        (slug == null || !mayEdit) ? null : serverTools[tools[i].id];
+    bool? onHandOf(int i) => persisted(i)?.householdsWithTool.contains(slug);
+    Future<void> tap(int i) async {
+      final item = persisted(i);
+      if (item == null) return onToggle(i);
+      HapticFeedback.selectionClick();
+      try {
+        await ref
+            .read(organizersProvider(OrganizerKind.tool).notifier)
+            .setOnHand(item, slug!, !item.householdsWithTool.contains(slug));
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(userErrorMessage(e, l.saveFailed))));
+        }
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1695,8 +1791,8 @@ class _ToolsSection extends ConsumerWidget {
               for (var i = 0; i < tools.length; i++)
                 _ToolRow(
                   name: tools[i].name,
-                  isChecked: checked.contains(i),
-                  onTap: () => onToggle(i),
+                  isChecked: onHandOf(i) ?? checked.contains(i),
+                  onTap: () => tap(i),
                 ),
             ],
           ),
@@ -2480,9 +2576,10 @@ class _HeroMetaRow extends ConsumerWidget {
     final items = <Widget>[];
     final t = recipe.totalTime ?? recipe.prepTime ?? recipe.cookTime;
     if ((t ?? 0) > 0) items.add(_item(Icons.schedule_rounded, fmt(t!)));
-    if ((recipe.recipeYield ?? '').trim().isNotEmpty) {
-      items.add(_item(Icons.restaurant_rounded,
-          scaleYield(recipe.recipeYield!, multiplier)));
+    // Portionen und Ergibt getrennt wie die Webapp.
+    for (final part in recipeYieldParts(
+        recipe, multiplier, AppLocalizations.of(context)!.servings)) {
+      items.add(_item(Icons.restaurant_rounded, part));
     }
     if ((recipe.rating ?? 0) > 0) {
       items.add(_item(Icons.star_rounded, recipe.rating!.toStringAsFixed(1)));
@@ -2599,18 +2696,24 @@ class _GlassCircleButton extends StatelessWidget {
 
 class _RatingRow extends StatelessWidget {
   final RecipeDetail recipe;
+
+  /// Eigene Bewertung (null/0 = noch nicht bewertet).
+  final double? own;
   final void Function(double rating) onRate;
-  const _RatingRow({required this.recipe, required this.onRate});
+  const _RatingRow({required this.recipe, this.own, required this.onRate});
 
   @override
   Widget build(BuildContext context) {
+    // Wie die Webapp die EIGENE Bewertung; ohne eigene blass der Haushalts-
+    // Durchschnitt mit Hinweis (ein Tipp setzt die eigene).
+    final mine = own ?? 0;
+    final showAverage = mine <= 0 && (recipe.rating ?? 0) > 0;
+    final value = showAverage ? recipe.rating! : mine;
     return Row(
       children: [
         ...List.generate(5, (i) {
-          final filled = (recipe.rating ?? 0) >= i + 1;
-          final half = !filled &&
-              (recipe.rating ?? 0) > i &&
-              (recipe.rating ?? 0) < i + 1;
+          final filled = value >= i + 1;
+          final half = !filled && value > i && value < i + 1;
           return TapArea(
             onTap: () => onRate((i + 1).toDouble()),
             behavior: HitTestBehavior.opaque,
@@ -2629,16 +2732,22 @@ class _RatingRow extends StatelessWidget {
                       : (filled
                           ? Icons.star_rounded
                           : Icons.star_outline_rounded),
-                  color: AppTokens.star,
+                  color: showAverage
+                      ? AppTokens.star.withValues(alpha: 0.4)
+                      : AppTokens.star,
                   size: 24,
                 ),
               ),
             ),
           );
         }),
-        if ((recipe.rating ?? 0) > 0) ...[
+        if (value > 0) ...[
           const SizedBox(width: 6),
-          Text(recipe.rating!.toStringAsFixed(1),
+          Text(
+              showAverage
+                  ? '${value.toStringAsFixed(1)} · '
+                      '${AppLocalizations.of(context)!.ratingHouseholdAverage}'
+                  : value.toStringAsFixed(1),
               style: TextStyle(
                   color: context.appFgSub,
                   fontSize: 13,
@@ -2794,6 +2903,47 @@ class _OriginalUrlButton extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Hinweis-Chip über der Zutatenliste, solange umgerechnet wird — Gegenstück
+/// zur Einheiten-Schaltfläche neben dem Portionsregler in Mealie-Web.
+class _UnitSystemChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _UnitSystemChip({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: TapArea(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppTokens.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTokens.rLg),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.straighten_rounded,
+                  size: 15, color: AppTokens.accentDeep),
+              const SizedBox(width: 6),
+              Text(label,
+                  style: const TextStyle(
+                      color: AppTokens.accentDeep,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700)),
+              const SizedBox(width: 2),
+              const Icon(Icons.expand_more_rounded,
+                  size: 16, color: AppTokens.accentDeep),
+            ]),
           ),
         ),
       ),

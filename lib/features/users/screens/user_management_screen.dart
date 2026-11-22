@@ -1193,6 +1193,42 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
   String? _token;
   bool _busy = false;
 
+  // Admins wählen wie in der Webapp Gruppe + Haushalt der Einladung
+  // (Standard: der eigene). Alle anderen laden in den eigenen Haushalt ein.
+  List<Map<String, dynamic>> _groups = const [];
+  List<Map<String, dynamic>> _households = const [];
+  String? _groupId;
+  String? _householdId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (ref.read(userPermissionsProvider).admin) _loadTargets();
+  }
+
+  Future<void> _loadTargets() async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      final results =
+          await Future.wait([api.fetchAdminGroups(), api.fetchAdminHouseholds()]);
+      if (!mounted) return;
+      final own = ref.read(userPermissionsProvider).householdId;
+      final ownHh =
+          results[1].where((h) => h['id']?.toString() == own).firstOrNull;
+      setState(() {
+        _groups = results[0];
+        _households = results[1];
+        _householdId = ownHh?['id']?.toString();
+        _groupId = ownHh?['groupId']?.toString() ??
+            (_groups.isNotEmpty ? _groups.first['id']?.toString() : null);
+      });
+    } catch (_) {/* ohne Liste: eigener Haushalt wie bisher */}
+  }
+
+  List<Map<String, dynamic>> get _householdsOfGroup => _households
+      .where((h) => h['groupId']?.toString() == _groupId)
+      .toList();
+
   @override
   void dispose() {
     _uses.dispose();
@@ -1208,7 +1244,10 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
       final uses = int.tryParse(_uses.text.trim()) ?? 1;
       final token = await ref
           .read(apiServiceProvider)
-          .createInviteToken(uses: uses < 1 ? 1 : uses);
+          .createInviteToken(
+              uses: uses < 1 ? 1 : uses,
+              groupId: _groups.isEmpty ? null : _groupId,
+              householdId: _groups.isEmpty ? null : _householdId);
       final server = ref.read(settingsProvider).valueOrNull?.serverUrl ?? '';
       if (!mounted) return;
       setState(() {
@@ -1255,6 +1294,50 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
           children: [
             _sheetTitle(context, l.inviteAction),
             if (_link == null) ...[
+              if (_groups.length > 1) ...[
+                DropdownButtonFormField<String>(
+                  initialValue: _groupId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l.groupLabel,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTokens.rSm)),
+                  ),
+                  items: [
+                    for (final g in _groups)
+                      DropdownMenuItem(
+                          value: g['id']?.toString(),
+                          child: Text(g['name']?.toString() ?? '')),
+                  ],
+                  onChanged: (v) => setState(() {
+                    _groupId = v;
+                    final hh = _householdsOfGroup;
+                    _householdId =
+                        hh.isEmpty ? null : hh.first['id']?.toString();
+                  }),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (_householdsOfGroup.length > 1 || _groups.length > 1) ...[
+                DropdownButtonFormField<String>(
+                  key: ValueKey(_groupId),
+                  initialValue: _householdId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l.householdLabel,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTokens.rSm)),
+                  ),
+                  items: [
+                    for (final h in _householdsOfGroup)
+                      DropdownMenuItem(
+                          value: h['id']?.toString(),
+                          child: Text(h['name']?.toString() ?? '')),
+                  ],
+                  onChanged: (v) => setState(() => _householdId = v),
+                ),
+                const SizedBox(height: 12),
+              ],
               TextField(
                 controller: _uses,
                 keyboardType: TextInputType.number,
@@ -1269,7 +1352,9 @@ class _InviteSheetState extends ConsumerState<_InviteSheet> {
                 style: FilledButton.styleFrom(
                     backgroundColor: AppTokens.accent,
                     padding: const EdgeInsets.symmetric(vertical: 14)),
-                onPressed: _busy ? null : _create,
+                onPressed: _busy || (_groups.isNotEmpty && _householdId == null)
+                    ? null
+                    : _create,
                 icon: const Icon(Icons.link_rounded),
                 label: Text(l.inviteLinkTitle),
               ),

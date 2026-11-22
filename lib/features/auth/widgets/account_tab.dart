@@ -174,6 +174,13 @@ Future<void> showAccountMenu(BuildContext anchor, WidgetRef ref,
             : PopupMenuItem(
                 value: 'self',
                 child: row(const Icon(Icons.person_rounded), l.myAccountTitle)),
+      // API-Token wie in der Webapp nur mit „Erweiterte Funktionen“
+      // (Mealie-Middleware advanced-only); verwaltet werden nur eigene.
+      if (configured && user?['advanced'] == true)
+        PopupMenuItem(
+          value: 'apitokens',
+          child: row(const Icon(Icons.key_rounded), l.apiTokensTitle),
+        ),
       if (configured)
         PopupMenuItem(
           value: 'sync',
@@ -207,6 +214,8 @@ Future<void> showAccountMenu(BuildContext anchor, WidgetRef ref,
       anchor.push('/users');
     case 'self':
       anchor.push('/users?self=1');
+    case 'apitokens':
+      anchor.push('/api-tokens');
     case 'sync':
       await syncEverythingNow(anchor, ref);
     case 'add':

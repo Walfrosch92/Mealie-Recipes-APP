@@ -5065,4 +5065,116 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeDownloadPdfMealie => 'Download PDF (Mealie layout)';
+
+  @override
+  String get mealplanNoteMore => 'Show more…';
+
+  @override
+  String get mealplanNoteLess => 'Show less';
+
+  @override
+  String get ingredientCommonlySubstitutedWith => 'Commonly substituted with';
+
+  @override
+  String requiresMealieVersion(String version) {
+    return 'Requires Mealie $version or newer.';
+  }
+
+  @override
+  String get apiTokensTitle => 'API Tokens';
+
+  @override
+  String get apiTokensDescription =>
+      'Manage your API Tokens for access from external applications.';
+
+  @override
+  String get apiTokenNameLabel => 'Token Name';
+
+  @override
+  String get apiTokenGenerate => 'Generate';
+
+  @override
+  String get apiTokensActive => 'ACTIVE TOKENS';
+
+  @override
+  String get apiTokenCopyWarning =>
+      'Copy this token for use with an external application. This token will not be viewable again.';
+
+  @override
+  String get apiTokenThisApp => 'Used by this app';
+
+  @override
+  String get apiTokenThisAppHint =>
+      'This token keeps the app signed in and can’t be deleted here.';
+
+  @override
+  String apiTokenDeleteConfirm(String name) {
+    return 'Delete token “$name”? Apps using it lose access immediately.';
+  }
+
+  @override
+  String get apiTokensEmpty => 'No tokens yet.';
+
+  @override
+  String apiTokenCreatedOn(String date) {
+    return 'Created on $date';
+  }
+
+  @override
+  String get apiTokenCopied => 'Token copied';
+
+  @override
+  String get qfOpHasNoValue => 'has no value';
+
+  @override
+  String get qfOpHasValue => 'has a value';
+
+  @override
+  String get ratingHouseholdAverage => 'household avg.';
+
+  @override
+  String get stepLinkedNotes => 'Linked notes';
+
+  @override
+  String get noteFallbackTitle => 'Note';
+
+  @override
+  String get aiPromptTitleEnrichInstructions => 'Add Step Details';
+
+  @override
+  String get aiPromptDescEnrichInstructions =>
+      'Links each step of an imported recipe to the ingredients and notes it uses, and picks out its duration and heading.';
+
+  @override
+  String get loginAccountLocked => 'Account Locked. Please try again later';
+
+  @override
+  String get loginPasswordDisabled =>
+      'Password login is disabled on this server. Use an API token instead.';
+
+  @override
+  String get unitSystemTitle => 'Units';
+
+  @override
+  String get unitSystemAsWritten => 'As written';
+
+  @override
+  String get unitSystemMetric => 'Metric';
+
+  @override
+  String get unitSystemMetricHint => 'Metric (g, ml)';
+
+  @override
+  String get unitSystemImperial => 'Imperial';
+
+  @override
+  String get unitSystemImperialHint => 'Imperial (cups, oz)';
+
+  @override
+  String get unitSystemHint =>
+      'Display only – the recipe itself stays unchanged. Like the Mealie web app, the choice applies to all recipes on this device.';
+
+  @override
+  String get unitSystemUnavailable =>
+      'None of this recipe\'s units can be converted. Conversion needs a standardization on the unit in Mealie (Foods & Units → unit → Standardization).';
 }

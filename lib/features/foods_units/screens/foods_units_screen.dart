@@ -1,3 +1,4 @@
+import '../../../core/utils/app_languages.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -70,18 +71,8 @@ extension FoodUnitKindUi on FoodUnitKind {
 const _kSeedLocales = kMealieLocales;
 
 /// Sprachnamen bewusst nicht übersetzt (wie überall in der App).
-const _kSeedLanguageNames = {
-  'de': 'Deutsch',
-  'en': 'English',
-  'es': 'Español',
-  'fr': 'Français',
-  'fr_CA': 'Français (Canada)',
-  'hu': 'Magyar',
-  'nb': 'Norsk (bokmål)',
-  'nl': 'Nederlands',
-  'pl': 'Polski',
-  'pt': 'Português (Brasil)',
-  'sl': 'Slovenščina',
+final _kSeedLanguageNames = {
+  for (final l in kAppLanguages) l.code: l.name,
 };
 
 /// Suchbegriffe gegen Name, Plural, Abkürzungen und Aliase.

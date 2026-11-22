@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">식단표</string>
+    <string name="widget_shopping_label">장보기 목록</string>
+    <string name="widget_daily_recipe_label">오늘의 레시피</string>
+    <string name="widget_mealplan_description">오늘과 내일의 식단을 보여줍니다.</string>
+    <string name="widget_shopping_description">장보기 목록에서 남은 항목을 보여줍니다.</string>
+    <string name="widget_daily_recipe_description">매일 새로운 무작위 레시피를 보여줍니다.</string>
+</resources>

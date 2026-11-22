@@ -908,7 +908,12 @@ class RecipeDraft {
           }
       ],
       'notes': [
-        for (final n in r.notes) {'title': n.title, 'text': n.text}
+        for (final n in r.notes)
+          {
+            'title': n.title,
+            'text': n.text,
+            if (n.referenceId != null) 'referenceId': n.referenceId,
+          }
       ],
       'recipeCategory': [for (final c in r.recipeCategory) c.toJson()],
       'tags': [for (final t in r.tags) t.toJson()],

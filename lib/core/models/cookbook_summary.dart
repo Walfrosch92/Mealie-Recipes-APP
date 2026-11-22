@@ -19,6 +19,15 @@ class CookbookSummary {
   final int position;
   final bool public;
 
+  /// Haushalt, dem das Kochbuch gehört. Mealie listet die Kochbücher der
+  /// ganzen Gruppe, ändern/löschen lassen sich aber nur die des eigenen
+  /// Haushalts (sonst 404). `null` = alter Cache/Server → nicht bekannt.
+  final String? householdId;
+
+  /// Name dieses Haushalts (Mealie `household.name`) — Überschrift der
+  /// Gruppe, wie die Webapp die Kochbücher anderer Haushalte gliedert.
+  final String? householdName;
+
   const CookbookSummary({
     required this.id,
     required this.name,
@@ -27,6 +36,8 @@ class CookbookSummary {
     this.queryFilterString = '',
     this.position = 0,
     this.public = false,
+    this.householdId,
+    this.householdName,
   });
 
   factory CookbookSummary.fromJson(Map<String, dynamic> json) {
@@ -38,6 +49,11 @@ class CookbookSummary {
       queryFilterString: json['queryFilterString'] as String? ?? '',
       position: (json['position'] as num?)?.toInt() ?? 0,
       public: json['public'] as bool? ?? false,
+      householdId: json['householdId']?.toString(),
+      householdName: (json['household'] is Map
+              ? (json['household'] as Map)['name']
+              : json['householdName'])
+          ?.toString(),
     );
   }
 
@@ -49,6 +65,8 @@ class CookbookSummary {
         'queryFilterString': queryFilterString,
         'position': position,
         'public': public,
+        'householdId': householdId,
+        'householdName': householdName,
       };
 
   CookbookSummary copyWith({
@@ -65,6 +83,8 @@ class CookbookSummary {
       queryFilterString: queryFilterString ?? this.queryFilterString,
       position: position,
       public: public ?? this.public,
+      householdId: householdId,
+      householdName: householdName,
     );
   }
 }

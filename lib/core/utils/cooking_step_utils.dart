@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Hilfen für den Schritt-fokussierten Kochmodus:
 //   • extractStepTimers — erkennt ALLE Zeitangaben in einem Schritt-Text
-//     (mehrsprachig de/en/es/fr/nl) → Liste von Minuten, in Text-Reihenfolge.
+//     (alle 23 App-Sprachen) → Liste von Minuten, in Text-Reihenfolge.
 //   • stepImageUrl — Schrittbild aus einem eingebetteten Bild im Schritt-Text
 //     (Mealie hat KEIN dediziertes Step-Image-Feld; Bilder stecken als
 //     `![](…)`, `<img>` oder nackte URL-Zeile im `text`). Liefert null →
@@ -39,19 +39,74 @@ class StepTimer {
   }
 }
 
-// Einheit-Wörter (alle 5 Sprachen). Längere Varianten zuerst (Regex-Alternation
-// ist geordnet), damit z. B. „minutes" nicht vorzeitig bei „min" abbricht.
-const _hourWords =
-    r'stunden|stunde|hours|hour|heures|heure|horas|hora|uren|uur|timer|timen|time|std|hrs|hr|h';
-const _minWords =
-    r'minutter|minutt|minuten|minute|minutes|minutos|minuto|minuut|minuti|mins|min|mn';
-// Verbindungswörter zwischen Stunden und Minuten („1 Stunde und 30 Minuten").
-const _join = r'(?:\s*(?:und|and|et|y|en|og)?\s*)';
+// Einheit-Wörter aller 23 App-Sprachen (inkl. gängiger Beugungen: „10
+// minut", „po 10 minutách", „10 percig", „2 часа"). Längere Varianten zuerst
+// (Regex-Alternation ist geordnet), damit z. B. „minutes" nicht vorzeitig bei
+// „min" abbricht. Buchstaben-Wörter brauchen danach eine Wortgrenze (sonst
+// träfe „5 mince" auf „min"); `\b` kennt in Dart nur ASCII, daher die
+// Unicode-Lookahead-Variante [_wordEnd]. CJK-Einheiten stehen ohne Leerzeichen
+// direkt im Fließtext („煮10分钟后") und bekommen deshalb keine Grenze.
+const _hourAlpha = [
+  // de, en, fr, es/pt, nl, it
+  'stunden', 'stunde', 'hours', 'hour', 'heures', 'heure', 'horas', 'hora',
+  'uren', 'uur', 'ore', 'ora',
+  // nb/da/sv
+  'timmar', 'timme', 'timer', 'timen', 'time', 'tim',
+  // fi, hu, tr
+  'tuntia', 'tunnin', 'tunti', 'óráig', 'órán', 'órát', 'órás', 'óra',
+  'saatte', 'saat',
+  // pl, cs, sl
+  'godzinach', 'godziny', 'godzinę', 'godzina', 'godzin', 'godz',
+  'hodinách', 'hodinami', 'hodiny', 'hodinu', 'hodina', 'hodin', 'hod',
+  'urah', 'uri', 'ure', 'uro', 'ura', 'ur',
+  // ru, uk
+  // kein „ч“: „1 ч. л.“ ist ein Teelöffel, kein Stunden-Timer
+  'часов', 'часа', 'час',
+  'годин', 'години', 'година', 'годину', 'год',
+  // Abkürzungen
+  'std', 'hrs', 'hr', 'h',
+];
+const _minAlpha = [
+  // nb/da/sv, de/nl, en, es/pt, it, fr
+  'minutter', 'minutt', 'minuter', 'minuten', 'minuut', 'minutes', 'minute',
+  'minutos', 'minuto', 'minuti',
+  // fi, hu, tr
+  'minuuttia', 'minuutin', 'minuutti', 'percig', 'percen', 'percet', 'perces',
+  'perc', 'dakikada', 'dakika', 'dk',
+  // pl, cs, sl (minute/minuto/minuti/minut s. o. bzw. hier)
+  'minutach', 'minutami', 'minutách', 'minutah', 'minuty', 'minutę', 'minutu',
+  'minut', 'minuta',
+  // ru, uk
+  'минутами', 'минуты', 'минуту', 'минута', 'минут', 'мин',
+  'хвилинами', 'хвилини', 'хвилину', 'хвилина', 'хвилин', 'хв',
+  // Abkürzungen
+  'mins', 'min', 'mn',
+];
+// ja (時間/分間/分), zh-Hans (小时/分钟), zh-Hant (小時/分鐘), ko (시간/분간/분).
+const _hourCjk = ['小时', '小時', '時間', '时间', '시간'];
+const _minCjk = ['分钟', '分鐘', '分間', '분간', '分', '분'];
+
+const _wordEnd = r'(?![\p{L}\p{M}])';
+
+String _alt(List<String> words) => words.join('|');
+
+/// Einheiten-Teil eines Musters: Buchstaben-Wort mit Wortgrenze ODER
+/// CJK-Einheit, optional mit Abkürzungspunkt.
+String _unit(List<String> alpha, List<String> cjk) =>
+    '(?:(?:${_alt(alpha)})$_wordEnd|(?:${_alt(cjk)}))\\.?';
+
+final _hourUnit = _unit(_hourAlpha, _hourCjk);
+final _minUnit = _unit(_minAlpha, _minCjk);
+
+// Verbindungswörter zwischen Stunden und Minuten („1 Stunde und 30 Minuten",
+// „1 час 30 минут", „1時間30分").
+const _join = r'(?:\s*(?:und|and|et|y|en|og|och|e|i|in|a|és|ja|ve|и|і|та)?\s*)';
 // Zahl mit optionaler Dezimalstelle (Punkt ODER Komma), z. B. „1", „1.5",
 // „1,5". Die Dezimalgruppe greift NUR mit Ziffer NACH dem Trennzeichen, damit
 // ein Satzpunkt/Komma hinter der Zahl („koche 20, dann …") nicht mitgezogen
-// wird.
-const _number = r'(\d+(?:[.,]\d+)?)';
+// wird. Davor keine Ziffer und kein lateinischer/kyrillischer Buchstabe
+// („A4" zählt nicht) — CJK-Zeichen dürfen direkt davor stehen („煮10分钟").
+const _number = r'(?<![0-9A-Za-z\u00C0-\u024F\u0400-\u04FF])(\d+(?:[.,]\d+)?)';
 
 /// Parst eine erkannte Zahl (Punkt oder Komma als Dezimaltrennzeichen) zu
 /// double — für „1,5 Stunden" → 1.5 → 90 Min statt fälschlich 5 Stunden.
@@ -79,16 +134,9 @@ List<StepTimer> extractStepTimers(String text) {
 
   // 1) Kombiniert: „X <Stunde> Y <Minute>" → eine Dauer.
   final combined = RegExp(
-    _number +
-        r'\s*(?:' +
-        _hourWords +
-        r')\.?' +
-        _join +
-        _number +
-        r'\s*(?:' +
-        _minWords +
-        r')\.?',
+    '$_number\\s*$_hourUnit$_join$_number\\s*$_minUnit',
     caseSensitive: false,
+    unicode: true,
   );
   for (final m in combined.allMatches(text)) {
     final mins = (_parseNum(m.group(1)!) * 60 + _parseNum(m.group(2)!)).round();
@@ -98,8 +146,9 @@ List<StepTimer> extractStepTimers(String text) {
 
   // 2) Eigenständige Stunden.
   final hours = RegExp(
-    _number + r'\s*(?:' + _hourWords + r')\b\.?',
+    '$_number\\s*$_hourUnit',
     caseSensitive: false,
+    unicode: true,
   );
   for (final m in hours.allMatches(text)) {
     if (overlaps(m.start, m.end)) continue;
@@ -109,8 +158,9 @@ List<StepTimer> extractStepTimers(String text) {
 
   // 3) Eigenständige Minuten.
   final mins = RegExp(
-    _number + r'\s*(?:' + _minWords + r')\b\.?',
+    '$_number\\s*$_minUnit',
     caseSensitive: false,
+    unicode: true,
   );
   for (final m in mins.allMatches(text)) {
     if (overlaps(m.start, m.end)) continue;

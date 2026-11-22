@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Öğün planı</string>
+    <string name="widget_shopping_label">Alışveriş Listesi</string>
+    <string name="widget_daily_recipe_label">Günün tarifi</string>
+    <string name="widget_mealplan_description">Bugünün ve yarının öğün planını gösterir.</string>
+    <string name="widget_shopping_description">Alışveriş listesindeki açık ürünleri gösterir.</string>
+    <string name="widget_daily_recipe_description">Her gün yeni bir rastgele tarif gösterir.</string>
+</resources>

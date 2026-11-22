@@ -34,7 +34,15 @@ class _AiProvidersScreenState extends ConsumerState<AiProvidersScreen> {
     _load();
   }
 
+  /// KI-Anbieter gibt es erst ab Mealie 3.19 — vorher lief die Seite in
+  /// einen Ladefehler. Unbekannte Version: versuchen.
+  bool get _supported {
+    final v = ref.read(serverVersionProvider);
+    return parseMealieVersion(v) == null || mealieVersionAtLeast(v, 3, 19);
+  }
+
   Future<void> _load() async {
+    if (!_supported) return;
     try {
       final s = await ref.read(apiServiceProvider).fetchAiProviderSettings();
       if (!mounted) return;
@@ -77,6 +85,7 @@ class _AiProvidersScreenState extends ConsumerState<AiProvidersScreen> {
                 defaultId: v('defaultProviderId'),
                 audioId: v('audioProviderId'),
                 imageId: v('imageProviderId'),
+                current: _settings,
               );
       if (mounted) setState(() => _settings = updated);
     });
@@ -166,7 +175,9 @@ class _AiProvidersScreenState extends ConsumerState<AiProvidersScreen> {
         ),
       ],
       children: [
-        if (s == null)
+        if (!_supported)
+          ToolEmpty(l.requiresMealieVersion('3.19'))
+        else if (s == null)
           ToolEmpty(
               _error == null
                   ? ''

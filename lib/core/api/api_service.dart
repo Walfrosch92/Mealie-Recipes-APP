@@ -1,3 +1,4 @@
+import '../utils/mealie_locale.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -164,6 +165,12 @@ class ApiService {
           settings.optionalHeaders.forEach((k, v) {
             options.headers[k] = v;
           });
+          // Sprache der Server-Texte (übersetzte Zeitleisten-Betreffe,
+          // Server-PDFs, Fehlermeldungen, Plural-Regeln der Anzeige) — wie
+          // die Webapp (api-client.ts) bei JEDER Anfrage. Mealie nimmt nur
+          // exakte Codes wie „de-DE", sonst Englisch (lang/providers.py).
+          options.headers.putIfAbsent('Accept-Language',
+              () => mealieLocaleFor(settings.selectedLanguage));
         }
         options.headers['Content-Type'] = 'application/json';
         LogManager.shared.log('🌐 ${options.method} ${options.uri}');
@@ -293,6 +300,32 @@ class ApiService {
     return (id, token);
   }
 
+  /// Eigene API-Token (Mealie liefert sie in `/users/self` → `tokens`:
+  /// `{id, name, createdAt}`, nie den Token selbst).
+  Future<List<Map<String, dynamic>>> fetchOwnApiTokens() async {
+    final me = await fetchCurrentUser();
+    return [
+      for (final t in (me['tokens'] as List? ?? const []))
+        if (t is Map) Map<String, dynamic>.from(t)
+    ];
+  }
+
+  /// Neues eigenes API-Token (Profil → API-Token der Webapp). Den Token
+  /// liefert Mealie NUR in dieser Antwort.
+  Future<(String id, String token)> createApiToken(String name) async {
+    final resp =
+        await _dio.post(_path('/api/users/api-tokens'), data: {'name': name});
+    final data = resp.data;
+    if (data is! Map) {
+      throw const FormatException('Unerwartete Antwort beim Token-Erzeugen');
+    }
+    final token = (data['token'] as String?)?.trim() ?? '';
+    if (token.isEmpty) {
+      throw const FormatException('Kein Token in der Erzeugen-Antwort');
+    }
+    return (data['id']?.toString() ?? '', token);
+  }
+
   /// DELETE /api/users/api-tokens/{id} — räumt ein von der App generiertes
   /// Token auf (z. B. bei App-Reset), damit sich im Mealie-Profil nicht bei
   /// jedem Reset+Neu-Login ein weiteres Token ansammelt. Best-effort: der
@@ -343,6 +376,11 @@ class ApiService {
         'perPage': perPage,
         'orderBy': 'date_updated',
         'orderDirection': 'desc',
+        // PostgreSQL sortiert NULL bei „desc" nach VORNE — Rezepte ohne
+        // Änderungsdatum (Alt-/Migrationsbestände) verdrängten sonst die
+        // wirklich geänderten aus dieser einen Seite. Ältere Server
+        // ignorieren den Parameter.
+        'orderByNullPosition': 'last',
       },
     );
     final data = resp.data as Map<String, dynamic>;
@@ -512,7 +550,15 @@ class ApiService {
   // andere Felder bleiben unangetastet).
   Future<void> updateRecipeNotes(String id, List<RecipeNote> notes) async {
     await updateRecipe(id, {
-      'notes': notes.map((n) => {'title': n.title, 'text': n.text}).toList(),
+      // referenceId mitschicken — sonst vergibt Mealie allen Notizen neue
+      // und die Notiz-Verweise der Schritte gehen verloren.
+      'notes': notes
+          .map((n) => {
+                'title': n.title,
+                'text': n.text,
+                if (n.referenceId != null) 'referenceId': n.referenceId,
+              })
+          .toList(),
     });
   }
 
@@ -562,7 +608,10 @@ class ApiService {
   // ALLEN von der App unterstützten Versionen die User-Ratings-Endpoints,
   // NICHT ein PATCH des Rezepts:
   //   • Setzen:   POST   /api/users/{userId}/ratings/{slug}  Body {"rating": <int>}
-  //   • Löschen:  DELETE /api/users/{userId}/ratings/{slug}
+  //   • Entfernen: derselbe POST mit {"rating": 0} — wie die Webapp
+  //     (RecipeRating.vue). Eine DELETE-Route für Bewertungen gibt es in
+  //     KEINER Mealie-Version (nur für Favoriten); der frühere DELETE-Aufruf
+  //     scheiterte daher immer.
   //
   // Wichtig:
   //   • `rating` MUSS ein Integer sein — das UserRatingUpdate-Schema lehnt
@@ -570,27 +619,16 @@ class ApiService {
   //   • Der Pfad wird NICHT durch `_path()` umgeschrieben — Rating- und
   //     /self-Endpoints bleiben unter /api/users (Swift macht denselben
   //     Ausschluss); nur die User-Verwaltung wandert in v3 nach /api/admin.
-  //   • rating <= 0 → Bewertung entfernen (DELETE) statt 0 zu POSTen.
+  //   • Favorit bleibt unberührt (isFavorite wird nicht mitgeschickt).
   Future<void> setRating(String slug, double rating) async {
     final userId = await _currentUserId();
     if (userId == null) {
       throw StateError('Aktuelle User-ID nicht verfügbar — Rating abgebrochen');
     }
     final r = rating.round();
-    if (r <= 0) {
-      try {
-        await _dio.delete('/api/users/$userId/ratings/$slug');
-      } on DioException catch (e) {
-        // 404 = es gab serverseitig gar keinen User-Rating-Datensatz (die
-        // angezeigte Bewertung kam z. B. aus dem Gruppen-Durchschnitt).
-        // Ziel „keine Bewertung" ist damit erreicht — kein Fehler.
-        if (e.response?.statusCode != 404) rethrow;
-      }
-      return;
-    }
     await _dio.post(
       '/api/users/$userId/ratings/$slug',
-      data: {'rating': r},
+      data: {'rating': r <= 0 ? 0 : r},
     );
   }
 
@@ -602,6 +640,25 @@ class ApiService {
   // Wie bei setRating: KEIN `_path()`-Rewrite (self/ratings/favorites bleiben
   // unter /api/users), und der Pfad-Parameter ist der ECHTE Rezept-Slug
   // (nicht die UUID — siehe Slug-vs-id-Falle).
+
+  /// EIGENE Bewertungen des aktuellen Benutzers (recipeId → Sterne, nur > 0).
+  /// Mealie speichert sie pro Benutzer; `recipe.rating` ist der Durchschnitt
+  /// aller (Webapp RecipeRating.vue zeigt beim Bewerten die eigene).
+  Future<Map<String, double>> fetchSelfRatings() async {
+    final resp = await _dio.get('/api/users/self/ratings');
+    final data = resp.data;
+    final List list = data is Map
+        ? (data['ratings'] as List? ?? const [])
+        : (data as List? ?? const []);
+    return {
+      for (final e in list)
+        if (e is Map &&
+            e['recipeId'] is String &&
+            (e['rating'] is num) &&
+            (e['rating'] as num) > 0)
+          e['recipeId'] as String: (e['rating'] as num).toDouble(),
+    };
+  }
 
   /// IDs (UUID) der vom aktuellen User favorisierten Rezepte.
   Future<Set<String>> fetchFavoriteRecipeIds() async {
@@ -832,7 +889,11 @@ class ApiService {
     }
     final resp = await _dio.post(
       _path('/api/recipes/create/html-or-json'),
-      data: {'data': jsonEncode(scraped), 'url': url},
+      data: {
+        'data': jsonEncode(scraped),
+        'url': url,
+        ..._scrapeOrganizerFlags,
+      },
       options: Options(receiveTimeout: const Duration(minutes: 2)),
     );
     final slug = (resp.data as String? ?? '').replaceAll('"', '').trim();
@@ -845,7 +906,7 @@ class ApiService {
   Future<String> importRecipeFromHtmlOrJson(String data) async {
     final resp = await _dio.post(
       _path('/api/recipes/create/html-or-json'),
-      data: {'data': data},
+      data: {'data': data, ..._scrapeOrganizerFlags},
       options: Options(receiveTimeout: const Duration(minutes: 2)),
     );
     final slug = (resp.data as String? ?? '').replaceAll('"', '').trim();
@@ -870,7 +931,7 @@ class ApiService {
   Future<RecipeDetail> importRecipeFromUrl(String url) async {
     final resp = await _dio.post(
       _path('/api/recipes/create/url'),
-      data: {'url': url},
+      data: {'url': url, ..._scrapeOrganizerFlags},
       // Seit Mealie 3.13 transkribiert auch dieser Endpunkt Rezeptvideos bzw.
       // fällt bei unlesbaren Seiten auf KI zurück — das dauert weit länger
       // als die üblichen 30 s (vorher: Timeout, obwohl der Server weiterlief
@@ -948,11 +1009,21 @@ class ApiService {
           responseType: ResponseType.stream,
           headers: {
             'Accept': 'text/event-stream',
-            'Accept-Language': settings.selectedLanguage.replaceAll('_', '-'),
+            'Accept-Language': mealieLocaleFor(settings.selectedLanguage),
           },
           receiveTimeout: const Duration(minutes: 15),
         ),
       );
+
+  /// Nicht-KI-Import (Webseite/HTML/JSON): Schlagworte bzw. Kategorien der
+  /// Quelle übernehmen (Mealie `includeTags`/`includeCategories`, in der
+  /// Webapp zwei Häkchen, Standard aus). Folgt der Import-Einstellung
+  /// „Kategorien & Tags": nur „neue anlegen" übernimmt sie — die Übernahme
+  /// legt fehlende an, „nur vorhandene" lässt sich hier nicht abbilden.
+  Map<String, bool> get _scrapeOrganizerFlags {
+    final on = settings.useImportOrganizers == 'create';
+    return {'includeTags': on, 'includeCategories': on};
+  }
 
   String get _createNewOrganizers =>
       settings.useImportOrganizers == 'create' ? 'true' : 'false';
@@ -1368,7 +1439,14 @@ class ApiService {
   // displayName fiel unsichtbar auf food zurück) — mit „exakten Mengen"
   // steckt die Einheit in der note („g Butter") und ging so beim ersten
   // +/− verloren. Create setzt die note ebenfalls immer.
-  Future<void> updateShoppingItem(ShoppingItem item) async {
+  ///
+  /// Rückgabe: Mealies Antwort ({createdItems, updatedItems, deletedItems}).
+  /// Auch ein einzelnes PUT läuft serverseitig durch das Zusammenführen —
+  /// wird z. B. „Milch" wieder aufgehakt, während eine offene „Milch"
+  /// existiert, verschmilzt Mealie beide und LÖSCHT eine. Der Aufrufer
+  /// spiegelt das lokal (wie die Webapp per Neuladen). null = alter Server
+  /// ohne Sammelantwort.
+  Future<Map<String, dynamic>?> updateShoppingItem(ShoppingItem item) async {
     final payload = <String, dynamic>{
       'id': item.id,
       'shoppingListId': item.shoppingListId ?? settings.shoppingListId,
@@ -1392,10 +1470,16 @@ class ApiService {
       if (item.position != null) 'position': item.position,
       if (item.extras != null) 'extras': item.extras,
     };
-    await _dio.put(
+    final resp = await _dio.put(
       _path('/api/households/shopping/items/${item.id}'),
       data: payload,
     );
+    final data = resp.data;
+    if (data is Map &&
+        (data.containsKey('updatedItems') || data.containsKey('deletedItems'))) {
+      return Map<String, dynamic>.from(data);
+    }
+    return null;
   }
 
   Future<void> deleteShoppingItem(String itemId) async {
@@ -1728,9 +1812,17 @@ class ApiService {
   }
 
   /// Einladungs-Token (Webapp: {server}/register?token=…).
-  Future<String> createInviteToken({int uses = 1}) async {
-    final resp = await _dio
-        .post(_path('/api/households/invitations'), data: {'uses': uses});
+  /// [groupId]/[householdId]: nur Admins dürfen in andere Gruppen bzw.
+  /// Haushalte einladen (Webapp UserInviteDialog); leer = eigener.
+  Future<String> createInviteToken(
+      {int uses = 1, String? groupId, String? householdId}) async {
+    final resp =
+        await _dio.post(_path('/api/households/invitations'), data: {
+      'uses': uses,
+      if (groupId != null && groupId.isNotEmpty) 'groupId': groupId,
+      if (householdId != null && householdId.isNotEmpty)
+        'householdId': householdId,
+    });
     return (resp.data as Map)['token'].toString();
   }
 
@@ -2312,9 +2404,15 @@ class ApiService {
       _dio.delete(_path('/api/recipes/bulk-actions/export/purge'));
 
   /// Datei eines Gruppen-Exports laden (Token → /api/utils/download).
-  Future<List<int>> downloadRecipeExport(String exportId) async {
-    final resp = await _dio
-        .get(_path('/api/recipes/bulk-actions/export/$exportId/download'));
+  /// [legacyPath]: Mealie < 3.8 kannte nur `/export/download?path=…`
+  /// (Pfad aus dem Export-Eintrag) — dann diese Route.
+  Future<List<int>> downloadRecipeExport(String exportId,
+      {String? legacyPath}) async {
+    final resp = legacyPath != null && legacyPath.isNotEmpty
+        ? await _dio.get(_path('/api/recipes/bulk-actions/export/download'),
+            queryParameters: {'path': legacyPath})
+        : await _dio
+            .get(_path('/api/recipes/bulk-actions/export/$exportId/download'));
     return _downloadFileToken(_map(resp.data)['fileToken']?.toString() ?? '');
   }
 
@@ -2538,9 +2636,19 @@ class ApiService {
   Future<Map<String, dynamic>> fetchAiProviderSettings() async =>
       _map((await _dio.get(_path('/api/groups/ai-providers/settings'))).data);
 
+  /// PUT ersetzt ALLE Einstellungen. [current] = bisheriger Server-Stand:
+  /// unbekannte/neuere Felder (z. B. `enrichNonAiImports`, Mealie nach 3.31)
+  /// gehen unverändert mit — sonst setzte Mealie sie auf den Standard zurück.
   Future<Map<String, dynamic>> updateAiProviderSettings(
-          {String? defaultId, String? audioId, String? imageId}) async =>
+          {String? defaultId,
+          String? audioId,
+          String? imageId,
+          Map<String, dynamic>? current}) async =>
       _map((await _dio.put(_path('/api/groups/ai-providers/settings'), data: {
+        if (current != null)
+          for (final e in current.entries)
+            if (e.key != 'providers' && e.key != 'id' && e.key != 'groupId')
+              e.key: e.value,
         'defaultProviderId': defaultId,
         'audioProviderId': audioId,
         'imageProviderId': imageId,

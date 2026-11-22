@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">献立表</string>
+    <string name="widget_shopping_label">買い物リスト</string>
+    <string name="widget_daily_recipe_label">今日のレシピ</string>
+    <string name="widget_mealplan_description">今日と明日の献立を表示します。</string>
+    <string name="widget_shopping_description">買い物リストの未完了アイテムを表示します。</string>
+    <string name="widget_daily_recipe_description">毎日新しいランダムなレシピを表示します。</string>
+</resources>

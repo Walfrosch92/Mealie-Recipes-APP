@@ -3252,19 +3252,91 @@
   "sidebarPinHint": "Tip: press and hold a tile and drag it onto the sidebar to pin it there.",
   "sidebarDropHere": "Drop here",
   "sidebarShortcutTitle": "Shortcut for “{name}”",
-  "@sidebarShortcutTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@sidebarShortcutTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "sidebarShortcutPrompt": "Now press the key combination you want, including {modifier}.",
-  "@sidebarShortcutPrompt": {"placeholders": {"modifier": {"type": "String"}}},
+  "@sidebarShortcutPrompt": {
+    "placeholders": {
+      "modifier": {
+        "type": "String"
+      }
+    }
+  },
   "sidebarShortcutTaken": "This combination is already in use.",
   "sidebarShortcutNone": "No shortcut",
   "sidebarShortcutChange": "Change shortcut",
   "sidebarUnpin": "Remove from sidebar",
   "sidebarFull": "The sidebar is full – at most {count} entries of your own.",
-  "@sidebarFull": {"placeholders": {"count": {"type": "int"}}},
+  "@sidebarFull": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tabletSidebar": "Sidebar in landscape",
   "tabletSidebarSubtitle": "Shows the navigation on the left instead of at the bottom when the tablet is held sideways",
   "filterDateCreated": "Date Created",
   "filterDateUpdated": "Date Updated",
   "errorUploadTooLarge": "The file is too large for this Mealie server. The server's upload limit can be raised with MAX_UPLOAD_SIZE_MB.",
-  "recipeDownloadPdfMealie": "Download PDF (Mealie layout)"
+  "recipeDownloadPdfMealie": "Download PDF (Mealie layout)",
+  "mealplanNoteMore": "Show more…",
+  "mealplanNoteLess": "Show less",
+  "ingredientCommonlySubstitutedWith": "Commonly substituted with",
+  "requiresMealieVersion": "Requires Mealie {version} or newer.",
+  "@requiresMealieVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "apiTokensTitle": "API Tokens",
+  "apiTokensDescription": "Manage your API Tokens for access from external applications.",
+  "apiTokenNameLabel": "Token Name",
+  "apiTokenGenerate": "Generate",
+  "apiTokensActive": "ACTIVE TOKENS",
+  "apiTokenCopyWarning": "Copy this token for use with an external application. This token will not be viewable again.",
+  "apiTokenThisApp": "Used by this app",
+  "apiTokenThisAppHint": "This token keeps the app signed in and can’t be deleted here.",
+  "apiTokenDeleteConfirm": "Delete token “{name}”? Apps using it lose access immediately.",
+  "apiTokensEmpty": "No tokens yet.",
+  "apiTokenCreatedOn": "Created on {date}",
+  "apiTokenCopied": "Token copied",
+  "@apiTokenDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@apiTokenCreatedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "qfOpHasNoValue": "has no value",
+  "qfOpHasValue": "has a value",
+  "ratingHouseholdAverage": "household avg.",
+  "stepLinkedNotes": "Linked notes",
+  "noteFallbackTitle": "Note",
+  "aiPromptTitleEnrichInstructions": "Add Step Details",
+  "aiPromptDescEnrichInstructions": "Links each step of an imported recipe to the ingredients and notes it uses, and picks out its duration and heading.",
+  "loginAccountLocked": "Account Locked. Please try again later",
+  "loginPasswordDisabled": "Password login is disabled on this server. Use an API token instead.",
+  "unitSystemTitle": "Units",
+  "unitSystemAsWritten": "As written",
+  "unitSystemMetric": "Metric",
+  "unitSystemMetricHint": "Metric (g, ml)",
+  "unitSystemImperial": "Imperial",
+  "unitSystemImperialHint": "Imperial (cups, oz)",
+  "unitSystemHint": "Display only – the recipe itself stays unchanged. Like the Mealie web app, the choice applies to all recipes on this device.",
+  "unitSystemUnavailable": "None of this recipe's units can be converted. Conversion needs a standardization on the unit in Mealie (Foods & Units → unit → Standardization)."
 }

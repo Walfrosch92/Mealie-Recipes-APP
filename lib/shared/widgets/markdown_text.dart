@@ -313,3 +313,40 @@ class _StepImage extends ConsumerWidget {
             Icon(Icons.image_rounded, color: context.appFgTertiary, size: 40),
       );
 }
+
+/// Einzeilige Inline-Formatierung (fett, kursiv, Code, Links nur optisch) —
+/// für Zutatenzeilen wie in der Webapp (RecipeIngredientListItem.vue rendert
+/// sie per SafeMarkdown). Links sind hier NICHT antippbar: die ganze Zeile
+/// hakt die Zutat ab, ein versteckter Link-Tap wäre eine Falle.
+List<InlineSpan> inlineMarkdownSpans(BuildContext context, String text) {
+  final segments = parseInlineMarkdown(text);
+  if (segments.every((s) => s.isPlain)) return [TextSpan(text: text)];
+  return [
+    for (final s in segments)
+      TextSpan(
+        text: s.text,
+        style: TextStyle(
+          fontWeight: s.linkUrl != null
+              ? (s.bold ? FontWeight.w800 : FontWeight.w600)
+              : (s.bold ? FontWeight.w700 : null),
+          fontStyle: s.italic ? FontStyle.italic : null,
+          fontFamily: s.code ? 'monospace' : null,
+          backgroundColor: s.code ? context.appSurface2 : null,
+          color: s.linkUrl != null ? AppTokens.accentDeep : null,
+          decoration: s.strike ? TextDecoration.lineThrough : null,
+        ),
+      ),
+  ];
+}
+
+/// Inline-Markdown als Ersatz für ein einfaches `Text` (Zutatenzeilen).
+class InlineMarkdownText extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+  const InlineMarkdownText(this.text, {super.key, this.style});
+
+  @override
+  Widget build(BuildContext context) =>
+      Text.rich(TextSpan(children: inlineMarkdownSpans(context, text)),
+          style: style);
+}

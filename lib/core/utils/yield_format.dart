@@ -1,3 +1,6 @@
+import '../models/recipe_detail.dart';
+import 'ingredient_display.dart' show formatQuantity;
+
 /// Skaliert eine Portions-/Yield-Angabe mit dem Multiplikator.
 /// `recipeYield` ist ein freier String (z. B. "4" oder "4 Portionen") — die
 /// erste enthaltene Zahl wird multipliziert, der restliche Text bleibt erhalten.
@@ -22,4 +25,41 @@ String scaleYield(String yield, double m) {
           .replaceAll(RegExp(r'0+$'), '')
           .replaceAll(RegExp(r'\.$'), '');
   return yield.replaceRange(match.start, match.end, str);
+}
+
+/// Portionen und Ergibt getrennt wie die Webapp (RecipeYield.vue +
+/// Portionen-Knopf): „4 Portionen" (skaliert) und „24 Kekse" (skalierte
+/// Ergibt-Menge + Text). Ältere Server ohne Ergibt-Menge: Zahl im Text
+/// skalieren. Doppelte Angaben (Text = Portionenzahl) fallen weg.
+List<String> recipeYieldParts(
+    RecipeDetail r, double m, String servingsLabel) {
+  String fmt(double v) {
+    final c = double.parse(v.toStringAsFixed(2));
+    return c == c.truncateToDouble()
+        ? c.truncate().toString()
+        : formatQuantity(c);
+  }
+
+  final parts = <String>[];
+  final servings = r.servings ?? 0;
+  if (servings > 0) parts.add('${fmt(servings * m)} $servingsLabel');
+  final text = (r.rawYield ?? '').trim();
+  final q = r.yieldQuantity ?? 0;
+  String? y;
+  if (q > 0) {
+    y = [fmt(q * m), if (text.isNotEmpty) text].join(' ');
+  } else if (text.isNotEmpty) {
+    y = scaleYield(text, m);
+  }
+  if (y != null && y.isNotEmpty) {
+    final dup = parts.isNotEmpty &&
+        (y.toLowerCase() == parts.first.toLowerCase() ||
+            double.tryParse(text.replaceAll(',', '.')) == servings);
+    if (!dup) parts.add(y);
+  }
+  // Ganz alte Server/Caches: nur der zusammengesetzte Anzeige-Wert.
+  if (parts.isEmpty && (r.recipeYield ?? '').trim().isNotEmpty) {
+    parts.add(scaleYield(r.recipeYield!.trim(), m));
+  }
+  return parts;
 }

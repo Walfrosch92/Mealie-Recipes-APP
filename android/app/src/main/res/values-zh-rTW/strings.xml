@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">用餐計畫</string>
+    <string name="widget_shopping_label">購物清單</string>
+    <string name="widget_daily_recipe_label">每日食譜</string>
+    <string name="widget_mealplan_description">顯示今天和明天的用餐計畫。</string>
+    <string name="widget_shopping_description">顯示購物清單中未完成的物品。</string>
+    <string name="widget_daily_recipe_description">每天顯示一個新的隨機食譜。</string>
+</resources>

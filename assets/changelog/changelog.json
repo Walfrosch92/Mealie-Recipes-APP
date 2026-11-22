@@ -1,6 +1,23 @@
 {
   "sections": [
     {
+      "icon": "language",
+      "title": "12 new languages",
+      "items": [
+        "Mealie Recipes now speaks Italian, Russian, Swedish, Danish, Czech, Finnish, Turkish, Ukrainian, Japanese, Korean and Chinese (Simplified and Traditional) – pick your language in the settings.",
+        "The new languages use Mealie's own terms wherever Mealie translates them, so the app matches the web app.",
+        "Widgets, watch apps and the shopping reminder speak the new languages too.",
+        "Cooking mode now recognizes times in steps in all app languages and suggests timers for them, and the meal plan dice recognizes meal categories in the new languages."
+      ]
+    },
+    {
+      "icon": "recipe",
+      "title": "Unit conversion",
+      "items": [
+        "Convert ingredient units like in the Mealie web app: show recipes as written, in metric (g, ml) or imperial (cups, oz) – choose under ⋮ → Units. Works in the recipe view, cooking mode and PDF export; the recipe itself stays unchanged."
+      ]
+    },
+    {
       "icon": "recipe",
       "title": "Ready for Mealie 3.31",
       "items": [
@@ -18,11 +35,46 @@
       ]
     },
     {
+      "icon": "recipe",
+      "title": "Ingredient substitutions",
+      "items": [
+        "Ingredients with substitutions now show a ⇄ button in the recipe view and cooking mode – tap it to see the alternatives from the recipe and the food's common substitutes, just like in Mealie's web app.",
+        "Recipe PDFs list the substitutions below each ingredient."
+      ]
+    },
+    {
+      "icon": "lock",
+      "title": "API tokens",
+      "items": [
+        "Manage your Mealie API tokens from the account menu: create tokens for other apps (e.g. Home Assistant), copy them once and delete them again – available with “advanced features” enabled in Mealie, just like in the web app."
+      ]
+    },
+    {
+      "icon": "mealplan",
+      "title": "Meal plan notes",
+      "items": [
+        "Long notes in the meal plan are limited to 3 lines – tap \"Show more…\" to expand the full note and \"Show less\" to collapse it again.",
+        "Meal plan notes now show Markdown formatting such as bold text, lists and links, just like in Mealie's web app."
+      ]
+    },
+    {
+      "icon": "cart",
+      "title": "Shopping list like Mealie",
+      "items": [
+        "Items are now sorted like in Mealie's web app: in the order they were added, with matching items grouped together, and the most recently checked items at the top of the completed section.",
+        "New items from the app now appear at the end of the list in Mealie's web app instead of at the top."
+      ]
+    },
+    {
       "icon": "fix",
       "title": "Fixes",
       "items": [
         "The cook time is shown in the recipe list again.",
-        "A clear message appears when a file is too large for the server's upload limit."
+        "A clear message appears when a file is too large for the server's upload limit.",
+        "Items deleted in the web app or on another device now disappear from the shopping list right away instead of staying until a manual refresh.",
+        "When Mealie merges two identical items (e.g. after unchecking one), the list now shows only the merged item instead of a duplicate line.",
+        "Editing a recipe note in the recipe view or cooking mode no longer breaks the links between steps and notes in Mealie.",
+        "Changing the AI provider no longer resets other AI settings on newer Mealie versions."
       ]
     }
   ]

@@ -5081,4 +5081,117 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get recipeDownloadPdfMealie => 'PDF letöltése (Mealie-elrendezés)';
+
+  @override
+  String get mealplanNoteMore => 'Több…';
+
+  @override
+  String get mealplanNoteLess => 'Kevesebb';
+
+  @override
+  String get ingredientCommonlySubstitutedWith =>
+      'Általában helyettesíthető ezzel';
+
+  @override
+  String requiresMealieVersion(String version) {
+    return 'Mealie $version vagy újabb szükséges.';
+  }
+
+  @override
+  String get apiTokensTitle => 'API tokenek';
+
+  @override
+  String get apiTokensDescription =>
+      'API tokenek kezelése külső alkalmazásokon keresztül történő hozzáféréshez.';
+
+  @override
+  String get apiTokenNameLabel => 'Token neve';
+
+  @override
+  String get apiTokenGenerate => 'Létrehozás';
+
+  @override
+  String get apiTokensActive => 'AKTÍV TOKENEK';
+
+  @override
+  String get apiTokenCopyWarning =>
+      'Másold ezt a tokent hogy a külső alkalmazásban használhasd. Ez a token többet nem jelenik meg.';
+
+  @override
+  String get apiTokenThisApp => 'Ez az alkalmazás használja';
+
+  @override
+  String get apiTokenThisAppHint =>
+      'Ezzel a tokennel van bejelentkezve az alkalmazás, itt nem törölhető.';
+
+  @override
+  String apiTokenDeleteConfirm(String name) {
+    return 'Törlöd a(z) „$name” tokent? Az ezt használó alkalmazások azonnal elveszítik a hozzáférést.';
+  }
+
+  @override
+  String get apiTokensEmpty => 'Még nincsenek tokenek.';
+
+  @override
+  String apiTokenCreatedOn(String date) {
+    return 'Létrehozva: $date';
+  }
+
+  @override
+  String get apiTokenCopied => 'Token másolva';
+
+  @override
+  String get qfOpHasNoValue => 'nincs értéke';
+
+  @override
+  String get qfOpHasValue => 'van értéke';
+
+  @override
+  String get ratingHouseholdAverage => 'háztartási átlag';
+
+  @override
+  String get stepLinkedNotes => 'Kapcsolódó jegyzetek';
+
+  @override
+  String get noteFallbackTitle => 'Megjegyzés';
+
+  @override
+  String get aiPromptTitleEnrichInstructions => 'Lépésrészletek hozzáadása';
+
+  @override
+  String get aiPromptDescEnrichInstructions =>
+      'Az importált recept minden lépését összekapcsolja a felhasznált hozzávalókkal és jegyzetekkel, és kiemeli az időtartamát és a címét.';
+
+  @override
+  String get loginAccountLocked => 'Fiók zárolva. Kérjük próbálja meg később';
+
+  @override
+  String get loginPasswordDisabled =>
+      'A jelszavas bejelentkezés ezen a szerveren ki van kapcsolva. Használj API tokent.';
+
+  @override
+  String get unitSystemTitle => 'Mennyiségi egységek';
+
+  @override
+  String get unitSystemAsWritten => 'Ahogy írva';
+
+  @override
+  String get unitSystemMetric => 'Metrikus';
+
+  @override
+  String get unitSystemMetricHint => 'Metrikus (g, ml)';
+
+  @override
+  String get unitSystemImperial => 'Angolszász';
+
+  @override
+  String get unitSystemImperialHint => 'Angolszász (bögre, uncia)';
+
+  @override
+  String get unitSystemHint =>
+      'Csak a megjelenítés – maga a recept nem változik. A Mealie webalkalmazáshoz hasonlóan a választás az eszköz összes receptjére érvényes.';
+
+  @override
+  String get unitSystemUnavailable =>
+      'A recept egyik egysége sem váltható át. Ehhez az egységnek szabványosítás kell a Mealie-ben (Élelmiszerek és egységek → egység → Szabványosítás).';
 }

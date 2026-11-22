@@ -27,7 +27,12 @@ part 'recipe_detail.g.dart';
 ///  12 = Einheiten-Anzeige (`useAbbreviation`, `fraction`,
 ///       `pluralAbbreviation`)
 ///  13 = Dauer pro Schritt (`Instruction.durationSeconds`, Mealie 3.30)
-const int kRecipeCacheSchema = 13;
+///  14 = Ersatzzutaten (`Ingredient.substitutions`, `IngredientFood.
+///       substitutions`, Mealie 3.28) + Notiz-`referenceId` + Notiz-
+///       Verknüpfungen der Schritte (`Instruction.noteRefs`)
+///  15 = Einheiten-Standardisierung (`standardUnit`, `standardQuantity`)
+///       für die Einheiten-Umrechnung metrisch/imperial (Issue #50)
+const int kRecipeCacheSchema = 15;
 
 // Disable factory generation — we write our own robust fromJson below.
 @JsonSerializable(explicitToJson: true, createFactory: false)
@@ -65,6 +70,32 @@ class RecipeDetail {
   /// Portionen auf 0 bzw. kopierte die Zahl ins Ergibt-Feld.
   final double? servings;
   final String? rawYield;
+
+  /// Mealie `recipeYieldQuantity` (Zahl zum Ergibt-Text, z. B. 12 zu
+  /// „Kekse"). Zweite Basis der Portionen-Umrechnung nach den Portionen.
+  final double? yieldQuantity;
+
+  /// Basis der Portionen-Umrechnung wie die Webapp (RecipePageScale.vue):
+  /// Portionen, sonst Ergibt-Menge; ältere Server ohne beide → erste Zahl im
+  /// Ergibt-Text. `null` = keine Zahl (Stepper zeigt den Faktor).
+  /// Basis für Essensplan-Portionen (use-mealplan-scale.ts): Portionen,
+  /// sonst Ergibt-Menge, sonst 1.
+  double get planServingsBase {
+    if ((servings ?? 0) > 0) return servings!;
+    if ((yieldQuantity ?? 0) > 0) return yieldQuantity!;
+    return 1;
+  }
+
+  double? get scaleBase {
+    if ((servings ?? 0) > 0) return servings;
+    if ((yieldQuantity ?? 0) > 0) return yieldQuantity;
+    final y = recipeYield;
+    if (y == null) return null;
+    final m = RegExp(r'\d+([.,]\d+)?').firstMatch(y);
+    final v = m == null ? null : double.tryParse(m.group(0)!.replaceAll(',', '.'));
+    return (v == null || v <= 0) ? null : v;
+  }
+
   final RecipeSettings? settings;
 
   final List<Ingredient> recipeIngredient;
@@ -117,6 +148,7 @@ class RecipeDetail {
     this.rating,
     this.recipeYield,
     this.servings,
+    this.yieldQuantity,
     this.rawYield,
     this.settings,
     this.recipeIngredient = const [],
@@ -161,6 +193,7 @@ class RecipeDetail {
       rating: _parseDouble(json['rating']),
       recipeYield: _yieldOrServings(json),
       servings: (json['recipeServings'] as num?)?.toDouble(),
+      yieldQuantity: (json['recipeYieldQuantity'] as num?)?.toDouble(),
       // Cache speichert den Rohwert extra (recipeYield dort = Anzeige-Wert).
       rawYield: json.containsKey('rawRecipeYield')
           ? _safeString(json['rawRecipeYield'])
@@ -220,6 +253,7 @@ class RecipeDetail {
       rating: rating ?? this.rating,
       recipeYield: recipeYield ?? this.recipeYield,
       servings: servings,
+      yieldQuantity: yieldQuantity,
       rawYield: rawYield,
       settings: settings ?? this.settings,
       recipeIngredient: recipeIngredient ?? this.recipeIngredient,
@@ -450,7 +484,8 @@ RecipeNote? _parseNote(dynamic e) {
   final title = _safeString(m['title']) ?? '';
   final text = _safeString(m['text']) ?? '';
   if (title.isEmpty && text.isEmpty) return null;
-  return RecipeNote(title: title, text: text);
+  return RecipeNote(
+      title: title, text: text, referenceId: _safeString(m['referenceId']));
 }
 
 CategorySummary? _parseCategory(dynamic e) {
@@ -539,6 +574,7 @@ List<Instruction> _parseInstructions(dynamic raw) {
             summary: summary,
             title: (title == null || title.isEmpty) ? pendingTitle : title,
             ingredientRefs: _parseIngredientRefs(m['ingredientReferences']),
+            noteRefs: _parseIngredientRefs(m['noteReferences']),
             durationSeconds: switch (m['durationSeconds']) {
               final num n when n > 0 => n.toInt(),
               _ => null,
@@ -611,6 +647,12 @@ class Ingredient {
   /// durchgereicht, damit Speichern im Editor ihn nicht löscht.
   final String? originalText;
 
+  /// Ersatzzutaten, die DIESES Rezept für die Zeile angibt (Mealie 3.28).
+  /// Die allgemeinen des Lebensmittels stehen an [IngredientFood.
+  /// substitutions].
+  @JsonKey(fromJson: _parseSubstitutes, toJson: _substitutesToJson)
+  final List<IngredientSubstitute> substitutions;
+
   // Completion state (local only — not from API)
   @JsonKey(includeFromJson: false, includeToJson: false)
   final bool isCompleted;
@@ -626,18 +668,26 @@ class Ingredient {
     this.title,
     this.referencedRecipe,
     this.originalText,
+    this.substitutions = const [],
     this.isCompleted = false,
   });
+
+  /// Wie die Webapp (useIngredientSubstitutions): erst die des Rezepts,
+  /// dann die allgemeinen des Lebensmittels.
+  bool get hasSubstitutions =>
+      substitutions.isNotEmpty || (food?.substitutions.isNotEmpty ?? false);
 
   factory Ingredient.fromJson(Map<String, dynamic> json) =>
       _$IngredientFromJson(json);
 
   Map<String, dynamic> toJson() => _$IngredientToJson(this);
 
-  Ingredient copyWith({bool? isCompleted}) => Ingredient(
+  Ingredient copyWith(
+          {bool? isCompleted, double? quantity, IngredientUnit? unit}) =>
+      Ingredient(
         referenceId: referenceId,
-        quantity: quantity,
-        unit: unit,
+        quantity: quantity ?? this.quantity,
+        unit: unit ?? this.unit,
         food: food,
         note: note,
         isFood: isFood,
@@ -645,6 +695,7 @@ class Ingredient {
         title: title,
         referencedRecipe: referencedRecipe,
         originalText: originalText,
+        substitutions: substitutions,
         isCompleted: isCompleted ?? this.isCompleted,
       );
 
@@ -817,6 +868,72 @@ IngredientFood? _parseIngredientFood(dynamic raw) {
 
 Map<String, dynamic>? _ingredientFoodToJson(IngredientFood? f) => f?.toJson();
 
+/// Eine Ersatzzutat (Mealie `RecipeIngredientSubstitution` /
+/// `IngredientFoodSubstitution`): anderes Lebensmittel, freie Notiz oder
+/// beides. Gespeichert in Server-Form, damit Cache und API gleich parsen.
+class IngredientSubstitute {
+  final String? foodId;
+  final String? foodName;
+  final String? foodPluralName;
+  final String? note;
+
+  const IngredientSubstitute(
+      {this.foodId, this.foodName, this.foodPluralName, this.note});
+
+  /// Name des Ersatz-Lebensmittels, gebeugt wie die Zeile, für die es steht
+  /// (Webapp substitutionFoodName: „2 Zwiebeln" → „Schalotten").
+  String? foodLabel({bool plural = false}) {
+    final n = foodName?.trim() ?? '';
+    if (n.isEmpty) return null;
+    final p = foodPluralName?.trim() ?? '';
+    return plural && p.isNotEmpty ? p : n;
+  }
+
+  Map<String, dynamic> toJson() => {
+        'substituteFoodId': foodId,
+        'note': note,
+        if (foodId != null && foodName != null)
+          'substituteFood': {
+            'id': foodId,
+            'name': foodName,
+            'pluralName': foodPluralName,
+          },
+      };
+
+  static IngredientSubstitute? tryParse(dynamic raw) {
+    if (raw is! Map) return null;
+    final food = raw['substituteFood'] ?? raw['substitute_food'];
+    final f = food is Map ? food : const {};
+    final foodId = _safeString(raw['substituteFoodId'] ??
+            raw['substitute_food_id'] ??
+            f['id'])
+        ?.trim();
+    final note = _safeString(raw['note'])?.trim();
+    final name = _safeString(f['name'])?.trim();
+    if ((foodId == null || foodId.isEmpty) &&
+        (note == null || note.isEmpty) &&
+        (name == null || name.isEmpty)) {
+      return null;
+    }
+    return IngredientSubstitute(
+      foodId: (foodId?.isEmpty ?? true) ? null : foodId,
+      foodName: (name?.isEmpty ?? true) ? null : name,
+      foodPluralName: _safeString(f['pluralName'] ?? f['plural_name']),
+      note: (note?.isEmpty ?? true) ? null : note,
+    );
+  }
+}
+
+List<IngredientSubstitute> _parseSubstitutes(dynamic raw) => raw is List
+    ? raw
+        .map(IngredientSubstitute.tryParse)
+        .whereType<IngredientSubstitute>()
+        .toList()
+    : const [];
+
+List<Map<String, dynamic>> _substitutesToJson(List<IngredientSubstitute> s) =>
+    [for (final e in s) e.toJson()];
+
 @JsonSerializable()
 class IngredientUnit {
   final String? id;
@@ -831,6 +948,13 @@ class IngredientUnit {
   /// Mealie „Als Bruch anzeigen" (Server-Default AN). AUS → Dezimalzahl.
   final bool? fraction;
 
+  /// Mealie „Standardisierung": 1 dieser Einheit = [standardQuantity]
+  /// [standardUnit] (z. B. 1 EL = 15 milliliter). Grundlage der
+  /// Einheiten-Umrechnung metrisch/imperial (unit_conversion.dart).
+  final String? standardUnit;
+  @JsonKey(fromJson: _parseDouble)
+  final double? standardQuantity;
+
   const IngredientUnit(
       {this.id,
       this.name,
@@ -838,7 +962,9 @@ class IngredientUnit {
       this.abbreviation,
       this.pluralAbbreviation,
       this.useAbbreviation,
-      this.fraction});
+      this.fraction,
+      this.standardUnit,
+      this.standardQuantity});
 
   /// Anzeigename wie Mealie-Web (`useUnitName`): bei „Abkürzung verwenden"
   /// die (Plural-)Abkürzung, sonst bzw. ohne Abkürzung der (Plural-)Name.
@@ -870,7 +996,13 @@ class IngredientFood {
   final String? name;
   final String? pluralName;
 
-  const IngredientFood({this.id, this.name, this.pluralName});
+  /// Allgemeine Ersatzzutaten des Lebensmittels (Mealie 3.28, „Kann ersetzt
+  /// werden durch") — gelten in jedem Rezept.
+  @JsonKey(fromJson: _parseSubstitutes, toJson: _substitutesToJson)
+  final List<IngredientSubstitute> substitutions;
+
+  const IngredientFood(
+      {this.id, this.name, this.pluralName, this.substitutions = const []});
 
   factory IngredientFood.fromJson(Map<String, dynamic> json) =>
       _$IngredientFoodFromJson(json);
@@ -895,6 +1027,12 @@ class Instruction {
   @JsonKey(name: 'ingredientReferences')
   final List<String> ingredientRefs;
 
+  /// Verknüpfte Notizen (Mealie 3.28 `noteReferences`) — `referenceId`s aus
+  /// [RecipeDetail.notes]. Webapp: Notiz-Knopf am Schritt bzw. im Kochmodus
+  /// neben dem Schritt.
+  @JsonKey(name: 'noteReferences')
+  final List<String> noteRefs;
+
   @JsonKey(includeFromJson: false, includeToJson: false)
   final bool isCompleted;
 
@@ -909,6 +1047,7 @@ class Instruction {
     this.title,
     this.summary,
     this.ingredientRefs = const [],
+    this.noteRefs = const [],
     this.isCompleted = false,
     this.durationSeconds,
   });
@@ -924,9 +1063,21 @@ class Instruction {
         title: title,
         summary: summary,
         ingredientRefs: ingredientRefs,
+        noteRefs: noteRefs,
         isCompleted: isCompleted ?? this.isCompleted,
         durationSeconds: durationSeconds,
       );
+
+  /// Die verknüpften Notizen dieses Schritts aus [notes] (in Notiz-
+  /// Reihenfolge, wie die Webapp linkedNotesForStep).
+  List<RecipeNote> linkedNotes(List<RecipeNote> notes) {
+    if (noteRefs.isEmpty) return const [];
+    final ids = noteRefs.toSet();
+    return [
+      for (final n in notes)
+        if (n.referenceId != null && ids.contains(n.referenceId)) n
+    ];
+  }
 
   /// Getrimmte Schritt-Überschrift, `null` wenn keine.
   String? get heading {
@@ -997,7 +1148,13 @@ class RecipeNote {
   final String title;
   final String text;
 
-  const RecipeNote({required this.title, required this.text});
+  /// Mealie `referenceId` der Notiz — Zubereitungsschritte verweisen darüber
+  /// auf sie (`noteReferences`, „Notiz-Links"). Muss beim Speichern mitgehen:
+  /// fehlt sie, vergibt Mealie JEDER Notiz eine neue und alle Verweise in den
+  /// Schritten zeigen ins Leere. null = neue Notiz (Server vergibt eine).
+  final String? referenceId;
+
+  const RecipeNote({required this.title, required this.text, this.referenceId});
 
   factory RecipeNote.fromJson(Map<String, dynamic> json) =>
       _$RecipeNoteFromJson(json);

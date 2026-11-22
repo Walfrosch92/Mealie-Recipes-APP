@@ -5084,4 +5084,116 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get recipeDownloadPdfMealie => 'Last ned PDF (Mealie-oppsett)';
+
+  @override
+  String get mealplanNoteMore => 'Vis mer…';
+
+  @override
+  String get mealplanNoteLess => 'Vis mindre';
+
+  @override
+  String get ingredientCommonlySubstitutedWith => 'Ofte erstattet med';
+
+  @override
+  String requiresMealieVersion(String version) {
+    return 'Krever Mealie $version eller nyere.';
+  }
+
+  @override
+  String get apiTokensTitle => 'API-tokener';
+
+  @override
+  String get apiTokensDescription =>
+      'Administrer dine API-tokens for tilgang fra eksterne programmer.';
+
+  @override
+  String get apiTokenNameLabel => 'Navn på token';
+
+  @override
+  String get apiTokenGenerate => 'Opprett';
+
+  @override
+  String get apiTokensActive => 'AKTIVE TOKENS';
+
+  @override
+  String get apiTokenCopyWarning =>
+      'Kopier dette tokenet til bruk med et eksternt program. Dette tokenet vil ikke kunne ses igjen.';
+
+  @override
+  String get apiTokenThisApp => 'Brukes av denne appen';
+
+  @override
+  String get apiTokenThisAppHint =>
+      'Dette tokenet holder appen pålogget og kan ikke slettes her.';
+
+  @override
+  String apiTokenDeleteConfirm(String name) {
+    return 'Slette tokenet «$name»? Apper som bruker det, mister tilgangen umiddelbart.';
+  }
+
+  @override
+  String get apiTokensEmpty => 'Ingen tokens ennå.';
+
+  @override
+  String apiTokenCreatedOn(String date) {
+    return 'Opprettet $date';
+  }
+
+  @override
+  String get apiTokenCopied => 'Token kopiert';
+
+  @override
+  String get qfOpHasNoValue => 'har ingen verdi';
+
+  @override
+  String get qfOpHasValue => 'har en verdi';
+
+  @override
+  String get ratingHouseholdAverage => 'snitt i husholdningen';
+
+  @override
+  String get stepLinkedNotes => 'Tilknyttede notater';
+
+  @override
+  String get noteFallbackTitle => 'Notat';
+
+  @override
+  String get aiPromptTitleEnrichInstructions => 'Legg til trinndetaljer';
+
+  @override
+  String get aiPromptDescEnrichInstructions =>
+      'Kobler hvert trinn i en importert oppskrift til ingrediensene og notatene det bruker, og henter ut varighet og overskrift.';
+
+  @override
+  String get loginAccountLocked => 'Kontoen er låst. Prøv igjen senere';
+
+  @override
+  String get loginPasswordDisabled =>
+      'Innlogging med passord er slått av på denne serveren. Bruk et API-token i stedet.';
+
+  @override
+  String get unitSystemTitle => 'Enheter';
+
+  @override
+  String get unitSystemAsWritten => 'Som skrevet';
+
+  @override
+  String get unitSystemMetric => 'Metrisk';
+
+  @override
+  String get unitSystemMetricHint => 'Metrisk (g, ml)';
+
+  @override
+  String get unitSystemImperial => 'Britiske måleenheter';
+
+  @override
+  String get unitSystemImperialHint => 'Imperial (kopper, oz)';
+
+  @override
+  String get unitSystemHint =>
+      'Kun visningen – selve oppskriften endres ikke. Som i Mealie-nettappen gjelder valget alle oppskrifter på denne enheten.';
+
+  @override
+  String get unitSystemUnavailable =>
+      'Ingen enheter i denne oppskriften kan regnes om. Det krever en standardisering av enheten i Mealie (Matvarer og enheter → enhet → Standardisering).';
 }

@@ -15,17 +15,25 @@ bool recipeMatchesQueryRows(
   RecipeDetail r,
   List<CookbookFilterRow> rows, {
   Map<String, String> foodLabelIds = const {},
+  Map<String, double> ownRatings = const {},
   DateTime? now,
 }) {
   final t = now ?? DateTime.now();
+  // Wie Mealie (_get_rating_col_alias): eigene Bewertung, sonst der
+  // Durchschnitt; 0 = keine.
+  final mine = ownRatings[r.id];
+  final avg = r.rating;
+  final rating = (mine != null && mine > 0)
+      ? mine
+      : ((avg == null || avg == 0) ? null : avg);
   for (final row in rows) {
-    if (!_matchesRow(r, row, foodLabelIds, t)) return false;
+    if (!_matchesRow(r, row, foodLabelIds, t, rating)) return false;
   }
   return true;
 }
 
 bool _matchesRow(RecipeDetail r, CookbookFilterRow row,
-    Map<String, String> foodLabelIds, DateTime now) {
+    Map<String, String> foodLabelIds, DateTime now, double? effRating) {
   if (row.isDate) {
     final day = row.date;
     if (day == null) return true; // leere Zeile wird auch nicht gesendet
@@ -38,17 +46,29 @@ bool _matchesRow(RecipeDetail r, CookbookFilterRow row,
     if (have == null) return false;
     return _compare(have.compareTo(day), row.op);
   }
+  if (row.isScalar && row.isNullCheck) {
+    final value = switch (row.field) {
+      CookbookFilterField.lastMade => parseMealieTime(r.lastMade),
+      CookbookFilterField.rating => effRating,
+      CookbookFilterField.totalTime => r.totalTime,
+      _ => null,
+    };
+    return (value == null) == (row.op == CookbookFilterOp.isNull);
+  }
   if (row.isScalar) {
     final n = row.number;
     if (n == null) return true; // leere Zeile wird auch nicht gesendet
     switch (row.field) {
       case CookbookFilterField.lastMade:
-        final lm = parseMealieTime(r.lastMade);
-        if (lm == null) return false;
+        // Wie Mealie ≥ 3.29 (repository_recipes._get_last_made_col_alias):
+        // nie gekocht = 1.1.1900 → zählt bei „älter als" mit, bei „neuer
+        // als" nicht. Vorher fiel es offline bei beiden heraus.
+        final lm =
+            parseMealieTime(r.lastMade) ?? DateTime.utc(1900, 1, 1);
         final threshold = now.subtract(Duration(days: n));
         return _compare(lm.compareTo(threshold), row.op);
       case CookbookFilterField.rating:
-        final rating = r.rating;
+        final rating = effRating;
         if (rating == null) return false;
         return _compare(rating.compareTo(n), row.op);
       case CookbookFilterField.totalTime:

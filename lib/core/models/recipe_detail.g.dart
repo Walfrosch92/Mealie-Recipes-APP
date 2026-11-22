@@ -22,6 +22,7 @@ Map<String, dynamic> _$RecipeDetailToJson(RecipeDetail instance) =>
       'rating': instance.rating,
       'recipeYield': instance.recipeYield,
       'recipeServings': instance.servings,
+      'recipeYieldQuantity': instance.yieldQuantity,
       'rawRecipeYield': instance.rawYield,
       'settings': instance.settings?.toJson(),
       'recipeIngredient':
@@ -52,6 +53,7 @@ Ingredient _$IngredientFromJson(Map<String, dynamic> json) => Ingredient(
       title: json['title'] as String?,
       referencedRecipe: _parseReferencedRecipe(json['referencedRecipe']),
       originalText: json['originalText'] as String?,
+      substitutions: _parseSubstitutes(json['substitutions']),
     );
 
 Map<String, dynamic> _$IngredientToJson(Ingredient instance) =>
@@ -66,6 +68,7 @@ Map<String, dynamic> _$IngredientToJson(Ingredient instance) =>
       'title': instance.title,
       'referencedRecipe': _referencedRecipeToJson(instance.referencedRecipe),
       'originalText': instance.originalText,
+      'substitutions': _substitutesToJson(instance.substitutions),
     };
 
 IngredientUnit _$IngredientUnitFromJson(Map<String, dynamic> json) =>
@@ -77,6 +80,8 @@ IngredientUnit _$IngredientUnitFromJson(Map<String, dynamic> json) =>
       pluralAbbreviation: json['pluralAbbreviation'] as String?,
       useAbbreviation: json['useAbbreviation'] as bool?,
       fraction: json['fraction'] as bool?,
+      standardUnit: json['standardUnit'] as String?,
+      standardQuantity: _parseDouble(json['standardQuantity']),
     );
 
 Map<String, dynamic> _$IngredientUnitToJson(IngredientUnit instance) =>
@@ -88,6 +93,8 @@ Map<String, dynamic> _$IngredientUnitToJson(IngredientUnit instance) =>
       'pluralAbbreviation': instance.pluralAbbreviation,
       'useAbbreviation': instance.useAbbreviation,
       'fraction': instance.fraction,
+      'standardUnit': instance.standardUnit,
+      'standardQuantity': instance.standardQuantity,
     };
 
 IngredientFood _$IngredientFoodFromJson(Map<String, dynamic> json) =>
@@ -95,6 +102,7 @@ IngredientFood _$IngredientFoodFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String?,
       name: json['name'] as String?,
       pluralName: json['pluralName'] as String?,
+      substitutions: _parseSubstitutes(json['substitutions']),
     );
 
 Map<String, dynamic> _$IngredientFoodToJson(IngredientFood instance) =>
@@ -102,6 +110,7 @@ Map<String, dynamic> _$IngredientFoodToJson(IngredientFood instance) =>
       'id': instance.id,
       'name': instance.name,
       'pluralName': instance.pluralName,
+      'substitutions': _substitutesToJson(instance.substitutions),
     };
 
 Instruction _$InstructionFromJson(Map<String, dynamic> json) => Instruction(
@@ -110,6 +119,10 @@ Instruction _$InstructionFromJson(Map<String, dynamic> json) => Instruction(
       title: json['title'] as String?,
       summary: json['summary'] as String?,
       ingredientRefs: (json['ingredientReferences'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      noteRefs: (json['noteReferences'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
@@ -123,6 +136,7 @@ Map<String, dynamic> _$InstructionToJson(Instruction instance) =>
       'title': instance.title,
       'summary': instance.summary,
       'ingredientReferences': instance.ingredientRefs,
+      'noteReferences': instance.noteRefs,
       'durationSeconds': instance.durationSeconds,
     };
 
@@ -151,12 +165,14 @@ Map<String, dynamic> _$RecipeSettingsToJson(RecipeSettings instance) =>
 RecipeNote _$RecipeNoteFromJson(Map<String, dynamic> json) => RecipeNote(
       title: json['title'] as String,
       text: json['text'] as String,
+      referenceId: json['referenceId'] as String?,
     );
 
 Map<String, dynamic> _$RecipeNoteToJson(RecipeNote instance) =>
     <String, dynamic>{
       'title': instance.title,
       'text': instance.text,
+      'referenceId': instance.referenceId,
     };
 
 RecipeTool _$RecipeToolFromJson(Map<String, dynamic> json) => RecipeTool(

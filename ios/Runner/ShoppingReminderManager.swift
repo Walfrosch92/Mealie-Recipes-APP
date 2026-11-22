@@ -281,6 +281,18 @@ enum ShoppingReminderL10n {
         "pl": "Czas na zakupy!",
         "pt": "Hora das compras!",
         "sl": "Čas za nakupovanje!",
+        "it": "È ora di fare la spesa!",
+        "ru": "Пора за покупками!",
+        "sv": "Dags att handla!",
+        "da": "Tid til at handle ind!",
+        "cs": "Čas jít nakoupit!",
+        "fi": "Ostosten aika!",
+        "tr": "Alışveriş zamanı!",
+        "uk": "Час за покупками!",
+        "ja": "買い物の時間です！",
+        "ko": "장보러 갈 시간이에요!",
+        "zh": "该去购物了！",
+        "zh_TW": "該去購物了！",
     ]
 
     private static let bodies: [String: String] = [
@@ -294,6 +306,18 @@ enum ShoppingReminderL10n {
         "pl": "Jesteś w pobliżu %@ — Twoja lista zakupów wciąż ma niezaznaczone produkty.",
         "pt": "Você está perto de %@ — sua lista de compras ainda tem itens pendentes.",
         "sl": "V bližini si: %@ — na nakupovalnem seznamu imaš še odprte artikle.",
+        "it": "Sei vicino a %@ — nella tua lista della spesa ci sono ancora articoli aperti.",
+        "ru": "Вы рядом с %@ — в вашем списке покупок ещё есть открытые позиции.",
+        "sv": "Du är nära %@ — din inköpslista har fortfarande öppna varor.",
+        "da": "Du er i nærheden af %@ — din indkøbsliste har stadig åbne varer.",
+        "cs": "Jste poblíž %@ — na nákupním seznamu máte ještě otevřené položky.",
+        "fi": "Olet lähellä kohdetta %@ — ostoslistallasi on vielä avoimia tuotteita.",
+        "tr": "%@ yakınındasınız — alışveriş listenizde hâlâ açık ürünler var.",
+        "uk": "Ви поруч із %@ — у вашому списку покупок ще є відкриті позиції.",
+        "ja": "%@ の近くにいます — 買い物リストにまだ未完了のアイテムがあります。",
+        "ko": "%@ 근처에 있어요 — 장보기 목록에 아직 남은 항목이 있습니다.",
+        "zh": "你在 %@ 附近 — 购物清单中还有未完成的物品。",
+        "zh_TW": "你在 %@ 附近 — 購物清單中還有未完成的物品。",
     ]
 
     static func title(lang: String) -> String {

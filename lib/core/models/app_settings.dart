@@ -46,6 +46,11 @@ class AppSettings {
   /// bleibt dagegen bestehen. Auflösung über [effectiveImportLanguage].
   final String importLanguage;
 
+  /// Einheiten der Rezeptanzeige (Issue #50, wie Mealie-Web „Einheiten"):
+  /// '' = wie angegeben (Default), 'metric' oder 'us' (= „Imperial").
+  /// Gerätelokal wie in Mealie (dort pro Browser, nicht am Konto).
+  final String unitSystem;
+
   /// KI-Import: Rezept in [effectiveImportLanguage] übersetzen lassen. Aus =
   /// `translateLanguage` wird nicht mitgeschickt, Mealie spart sich den
   /// Übersetzungs-KI-Aufruf (#45).
@@ -163,6 +168,7 @@ class AppSettings {
     this.apiVersion = 'v2',
     this.selectedLanguage = 'en',
     this.importLanguage = '',
+    this.unitSystem = '',
     this.importTranslate = true,
     this.importOrganizers = 'create',
     this.importStreamPhotos = true,
@@ -292,6 +298,7 @@ class AppSettings {
     String? apiVersion,
     String? selectedLanguage,
     String? importLanguage,
+    String? unitSystem,
     bool? importTranslate,
     String? importOrganizers,
     bool? importStreamPhotos,
@@ -338,6 +345,7 @@ class AppSettings {
       apiVersion: apiVersion ?? this.apiVersion,
       selectedLanguage: selectedLanguage ?? this.selectedLanguage,
       importLanguage: importLanguage ?? this.importLanguage,
+      unitSystem: unitSystem ?? this.unitSystem,
       importTranslate: importTranslate ?? this.importTranslate,
       importOrganizers: importOrganizers ?? this.importOrganizers,
       importStreamPhotos: importStreamPhotos ?? this.importStreamPhotos,

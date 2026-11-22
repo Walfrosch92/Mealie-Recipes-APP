@@ -5,16 +5,27 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_cs.dart';
+import 'app_localizations_da.dart';
 import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
+import 'app_localizations_fi.dart';
 import 'app_localizations_fr.dart';
 import 'app_localizations_hu.dart';
+import 'app_localizations_it.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_ko.dart';
 import 'app_localizations_nb.dart';
 import 'app_localizations_nl.dart';
 import 'app_localizations_pl.dart';
 import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
 import 'app_localizations_sl.dart';
+import 'app_localizations_sv.dart';
+import 'app_localizations_tr.dart';
+import 'app_localizations_uk.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -112,7 +123,19 @@ abstract class AppLocalizations {
     Locale('pl'),
     Locale('pt'),
     Locale('sl'),
-    Locale('fr', 'CA')
+    Locale('cs'),
+    Locale('da'),
+    Locale('fi'),
+    Locale('fr', 'CA'),
+    Locale('it'),
+    Locale('ja'),
+    Locale('ko'),
+    Locale('ru'),
+    Locale('sv'),
+    Locale('tr'),
+    Locale('uk'),
+    Locale('zh'),
+    Locale('zh', 'TW')
   ];
 
   /// No description provided for @endCookingMode.
@@ -8904,6 +8927,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download PDF (Mealie layout)'**
   String get recipeDownloadPdfMealie;
+
+  /// No description provided for @mealplanNoteMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more…'**
+  String get mealplanNoteMore;
+
+  /// No description provided for @mealplanNoteLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get mealplanNoteLess;
+
+  /// No description provided for @ingredientCommonlySubstitutedWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Commonly substituted with'**
+  String get ingredientCommonlySubstitutedWith;
+
+  /// No description provided for @requiresMealieVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires Mealie {version} or newer.'**
+  String requiresMealieVersion(String version);
+
+  /// No description provided for @apiTokensTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API Tokens'**
+  String get apiTokensTitle;
+
+  /// No description provided for @apiTokensDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your API Tokens for access from external applications.'**
+  String get apiTokensDescription;
+
+  /// No description provided for @apiTokenNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Token Name'**
+  String get apiTokenNameLabel;
+
+  /// No description provided for @apiTokenGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get apiTokenGenerate;
+
+  /// No description provided for @apiTokensActive.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE TOKENS'**
+  String get apiTokensActive;
+
+  /// No description provided for @apiTokenCopyWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this token for use with an external application. This token will not be viewable again.'**
+  String get apiTokenCopyWarning;
+
+  /// No description provided for @apiTokenThisApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by this app'**
+  String get apiTokenThisApp;
+
+  /// No description provided for @apiTokenThisAppHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This token keeps the app signed in and can’t be deleted here.'**
+  String get apiTokenThisAppHint;
+
+  /// No description provided for @apiTokenDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete token “{name}”? Apps using it lose access immediately.'**
+  String apiTokenDeleteConfirm(String name);
+
+  /// No description provided for @apiTokensEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tokens yet.'**
+  String get apiTokensEmpty;
+
+  /// No description provided for @apiTokenCreatedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Created on {date}'**
+  String apiTokenCreatedOn(String date);
+
+  /// No description provided for @apiTokenCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Token copied'**
+  String get apiTokenCopied;
+
+  /// No description provided for @qfOpHasNoValue.
+  ///
+  /// In en, this message translates to:
+  /// **'has no value'**
+  String get qfOpHasNoValue;
+
+  /// No description provided for @qfOpHasValue.
+  ///
+  /// In en, this message translates to:
+  /// **'has a value'**
+  String get qfOpHasValue;
+
+  /// No description provided for @ratingHouseholdAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'household avg.'**
+  String get ratingHouseholdAverage;
+
+  /// No description provided for @stepLinkedNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked notes'**
+  String get stepLinkedNotes;
+
+  /// No description provided for @noteFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get noteFallbackTitle;
+
+  /// No description provided for @aiPromptTitleEnrichInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Step Details'**
+  String get aiPromptTitleEnrichInstructions;
+
+  /// No description provided for @aiPromptDescEnrichInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Links each step of an imported recipe to the ingredients and notes it uses, and picks out its duration and heading.'**
+  String get aiPromptDescEnrichInstructions;
+
+  /// No description provided for @loginAccountLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Locked. Please try again later'**
+  String get loginAccountLocked;
+
+  /// No description provided for @loginPasswordDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Password login is disabled on this server. Use an API token instead.'**
+  String get loginPasswordDisabled;
+
+  /// No description provided for @unitSystemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Units'**
+  String get unitSystemTitle;
+
+  /// No description provided for @unitSystemAsWritten.
+  ///
+  /// In en, this message translates to:
+  /// **'As written'**
+  String get unitSystemAsWritten;
+
+  /// No description provided for @unitSystemMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get unitSystemMetric;
+
+  /// No description provided for @unitSystemMetricHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric (g, ml)'**
+  String get unitSystemMetricHint;
+
+  /// No description provided for @unitSystemImperial.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial'**
+  String get unitSystemImperial;
+
+  /// No description provided for @unitSystemImperialHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial (cups, oz)'**
+  String get unitSystemImperialHint;
+
+  /// No description provided for @unitSystemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Display only – the recipe itself stays unchanged. Like the Mealie web app, the choice applies to all recipes on this device.'**
+  String get unitSystemHint;
+
+  /// No description provided for @unitSystemUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'None of this recipe\'s units can be converted. Conversion needs a standardization on the unit in Mealie (Foods & Units → unit → Standardization).'**
+  String get unitSystemUnavailable;
 }
 
 class _AppLocalizationsDelegate
@@ -8917,16 +9138,27 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) => <String>[
+        'cs',
+        'da',
         'de',
         'en',
         'es',
+        'fi',
         'fr',
         'hu',
+        'it',
+        'ja',
+        'ko',
         'nb',
         'nl',
         'pl',
         'pt',
-        'sl'
+        'ru',
+        'sl',
+        'sv',
+        'tr',
+        'uk',
+        'zh'
       ].contains(locale.languageCode);
 
   @override
@@ -8944,20 +9176,40 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
         }
         break;
       }
+    case 'zh':
+      {
+        switch (locale.countryCode) {
+          case 'TW':
+            return AppLocalizationsZhTw();
+        }
+        break;
+      }
   }
 
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'cs':
+      return AppLocalizationsCs();
+    case 'da':
+      return AppLocalizationsDa();
     case 'de':
       return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
     case 'es':
       return AppLocalizationsEs();
+    case 'fi':
+      return AppLocalizationsFi();
     case 'fr':
       return AppLocalizationsFr();
     case 'hu':
       return AppLocalizationsHu();
+    case 'it':
+      return AppLocalizationsIt();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'ko':
+      return AppLocalizationsKo();
     case 'nb':
       return AppLocalizationsNb();
     case 'nl':
@@ -8966,8 +9218,18 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsPl();
     case 'pt':
       return AppLocalizationsPt();
+    case 'ru':
+      return AppLocalizationsRu();
     case 'sl':
       return AppLocalizationsSl();
+    case 'sv':
+      return AppLocalizationsSv();
+    case 'tr':
+      return AppLocalizationsTr();
+    case 'uk':
+      return AppLocalizationsUk();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

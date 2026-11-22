@@ -1,3 +1,4 @@
+import '../../../core/utils/app_languages.dart';
 import '../../../core/utils/platform_features.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
@@ -1475,19 +1476,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           fontSize: 17,
                           fontWeight: FontWeight.w600)),
                 ),
-                ...[
-                  'de',
-                  'en',
-                  'fr',
-                  'fr_CA',
-                  'es',
-                  'hu',
-                  'nl',
-                  'nb',
-                  'pl',
-                  'pt',
-                  'sl'
-                ].map((code) => ListTile(
+                ...kAppLanguageCodes.map((code) => ListTile(
                       leading: Text(_flagEmoji(code),
                           style: const TextStyle(fontSize: 22)),
                       title: Text(_langName(code),
@@ -1673,35 +1662,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  String _flagEmoji(String code) => switch (code) {
-        'de' => '🇩🇪',
-        'en' => '🇬🇧',
-        'fr' => '🇫🇷',
-        'fr_CA' => '🇨🇦',
-        'es' => '🇪🇸',
-        'hu' => '🇭🇺',
-        'nl' => '🇳🇱',
-        'nb' => '🇳🇴',
-        'pl' => '🇵🇱',
-        'pt' => '🇧🇷',
-        'sl' => '🇸🇮',
-        _ => '🌍',
-      };
+  String _flagEmoji(String code) => appLanguageFlag(code);
 
-  String _langName(String code) => switch (code) {
-        'de' => 'Deutsch',
-        'en' => 'English',
-        'fr' => 'Français',
-        'fr_CA' => 'Français (Canada)',
-        'es' => 'Español',
-        'hu' => 'Magyar',
-        'nl' => 'Nederlands',
-        'nb' => 'Norsk (bokmål)',
-        'pl' => 'Polski',
-        'pt' => 'Português (Brasil)',
-        'sl' => 'Slovenščina',
-        _ => code,
-      };
+  String _langName(String code) => appLanguageName(code);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

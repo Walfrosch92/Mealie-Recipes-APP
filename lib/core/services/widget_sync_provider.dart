@@ -1,3 +1,4 @@
+import '../utils/shopping_sort.dart';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -273,8 +274,15 @@ List<Map<String, dynamic>> _mapMealplan(
 }
 
 List<Map<String, dynamic>> _mapShopping(List<ShoppingItem> items, bool exact) {
+  // Reihenfolge wie Mealie selbst (Liste nach Position) bzw. die App-Liste —
+  // sonst wechselte das Widget je nach Quelle (App-Push in Abruf-Reihenfolge
+  // vs. Widget-Selbstabruf nach Position) die Sortierung.
+  final ordered = [
+    ...sortShoppingItemsLikeWebapp(items.where((i) => !i.checked).toList()),
+    ...(items.where((i) => i.checked).toList()..sort(compareCheckedLikeWebapp)),
+  ];
   return [
-    for (final i in items)
+    for (final i in ordered)
       {
         'id': i.id,
         'name': _shoppingItemText(i, exact),
@@ -334,16 +342,25 @@ List<Map<String, dynamic>> _mapShoppingForWatch(
     return idx == -1 ? (1 << 29) : idx;
   }
 
+  // Innerhalb der Kategorie wie die App-Liste (= Webapp): Position,
+  // gleiche Artikel zusammen; erledigte zuletzt abgehakt oben. Vorher
+  // alphabetisch — die Uhr wich seit der Webapp-Angleichung von der App ab.
+  final webOrder = {
+    for (final (i, item) in sortShoppingItemsLikeWebapp(
+            items.where((i) => !i.checked).toList())
+        .indexed)
+      item.id: i
+  };
   final unchecked = items.where((i) => !i.checked).toList()
     ..sort((a, b) {
       final r = catRank(cat(a)).compareTo(catRank(cat(b)));
       if (r != 0) return r;
       final c = cat(a).compareTo(cat(b));
       if (c != 0) return c;
-      return a.displayName.compareTo(b.displayName);
+      return (webOrder[a.id] ?? 0).compareTo(webOrder[b.id] ?? 0);
     });
   final checked = items.where((i) => i.checked).toList()
-    ..sort((a, b) => a.displayName.compareTo(b.displayName));
+    ..sort(compareCheckedLikeWebapp);
 
   Map<String, dynamic> enc(ShoppingItem i) => {
         'id': i.id,

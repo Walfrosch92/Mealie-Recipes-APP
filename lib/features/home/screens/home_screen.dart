@@ -1039,9 +1039,13 @@ bool tileAllowed(String key, UserPermissions p, {bool mealie330 = false}) =>
         !mealie330 || p.mayOrganize,
       // … und für Webhooks/Benachrichtigungen „Haushalt verwalten“ (auch
       // schon zum Ansehen).
+      // Webapp zeigt Webhooks/Benachrichtigungen/Migrationen außerdem nur mit
+      // „Erweiterte Funktionen“ (advanced-only).
       'webhooks' ||
       'notifiers' =>
-        !mealie330 || !p.known || p.admin || p.canManageHousehold,
+        !p.known ||
+            (p.advanced && (!mealie330 || p.admin || p.canManageHousehold)),
+      'migrations' => !p.known || p.advanced,
       // Mealie-Administration (Sicherungen, Wartung, Website) nur für Admins.
       'admin' => p.known && p.admin,
       // KI-Anbieter: Mealie verlangt das Recht „Verwalten" (can_manage).

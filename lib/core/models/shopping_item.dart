@@ -28,6 +28,12 @@ class ShoppingItem {
   /// setzt Mealie sie auf {}.
   final Map<String, dynamic>? extras;
 
+  /// Mealie-Zeitstempel (roh, Server-Format). Die Webapp sortiert offene
+  /// Artikel nach `position`, dann `createdAt`, abgehakte nach `updatedAt`
+  /// (zuletzt abgehakt oben) — die App macht es genauso.
+  final String? createdAt;
+  final String? updatedAt;
+
   const ShoppingItem({
     required this.id,
     this.shoppingListId,
@@ -42,6 +48,8 @@ class ShoppingItem {
     this.display,
     this.recipeReferences = const [],
     this.extras,
+    this.createdAt,
+    this.updatedAt,
   });
 
   /// IDs der Rezepte, aus denen der Artikel stammt.
@@ -64,6 +72,7 @@ class ShoppingItem {
     bool clearLabel = false,
     bool clearUnit = false,
     bool clearFood = false,
+    String? updatedAt,
   }) {
     return ShoppingItem(
       id: id,
@@ -83,6 +92,8 @@ class ShoppingItem {
       display: display,
       recipeReferences: recipeReferences,
       extras: extras,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -280,6 +291,10 @@ class ShoppingItemCreate {
   final String? labelId;
   final bool? checked;
 
+  /// Reihenfolge wie die Webapp: neue Artikel ans Ende (höchste Position + 1).
+  /// Ohne setzt Mealie 0 — App-Artikel stünden in der Webapp dann oben.
+  final int? position;
+
   /// Rezept-Verknüpfung wie bei Mealies „Zur Einkaufsliste" ({recipeId,
   /// recipeQuantity, recipeScale, recipeNote}).
   @JsonKey(includeFromJson: false)
@@ -294,6 +309,7 @@ class ShoppingItemCreate {
     this.unitId,
     this.labelId,
     this.checked,
+    this.position,
     this.recipeReferences,
   });
 

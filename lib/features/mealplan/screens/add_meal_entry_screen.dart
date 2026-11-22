@@ -1,3 +1,4 @@
+import '../../recipes/providers/user_ratings_provider.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -32,7 +33,7 @@ import '../../../shared/widgets/error_view.dart';
 // Essenstyp → Kategorie-Stichwörter (Issue: intelligente Würfel-Filterung).
 // Mealie-Kategorien sind komplett freier, haushaltseigener Text — es gibt
 // keinen festen Bezug zu Frühstück/Mittag/Abend. Enthält-Suche (case-
-// insensitive) gegen eine Stichwortliste über alle 10 App-Sprachen, damit
+// insensitive) gegen eine Stichwortliste über alle 23 App-Sprachen, damit
 // z. B. auch eine Kategorie "Kinder-Frühstück" als Frühstück zählt,
 // unabhängig davon in welcher Sprache der Haushalt seine Kategorien pflegt.
 // ---------------------------------------------------------------------------
@@ -52,6 +53,20 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'café da manhã',
     'zajtrk',
     'frokost',
+    'colazione',
+    'завтрак',
+    'frukost',
+    'morgenmad',
+    'snídaně',
+    'aamiainen',
+    'kahvaltı',
+    'сніданок',
+    '朝食',
+    '朝ごはん',
+    '아침',
+    '早餐',
+    '早饭',
+    '早飯',
   ],
   'lunch': [
     'mittagessen',
@@ -64,6 +79,19 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'almoço',
     'kosilo',
     'lunsj',
+    'pranzo',
+    'обед',
+    'oběd',
+    'lounas',
+    'öğle',
+    'обід',
+    '昼食',
+    '昼ごはん',
+    'ランチ',
+    '점심',
+    '午餐',
+    '午饭',
+    '午飯',
   ],
   'dinner': [
     'abendessen',
@@ -79,6 +107,20 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'večerja',
     'middag',
     'kveldsmat',
+    'ужин',
+    'aftensmad',
+    'večeře',
+    'illallinen',
+    'päivällinen',
+    'akşam yemeği',
+    'вечеря',
+    '夕食',
+    '晩ごはん',
+    'ディナー',
+    '저녁',
+    '晚餐',
+    '晚饭',
+    '晚飯',
   ],
   // Weitere Mealie-Mahlzeitentypen. Bewusst KEINE mehrdeutigen Teilwörter
   // („ital" = hu Getränk steckt in „Italienisch", „nasi" in „Nasi Goreng").
@@ -97,6 +139,16 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'acompanhamento',
     'priloga',
     'tilbehør',
+    'contorno',
+    'гарнир',
+    'tillbehör',
+    'příloha',
+    'lisuke',
+    'garnitür',
+    'гарнір',
+    '副菜',
+    '반찬',
+    '配菜',
   ],
   'snack': [
     'snack',
@@ -114,6 +166,20 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'petisco',
     'prigrizek',
     'mellommåltid',
+    'spuntino',
+    'merenda',
+    'закуск',
+    'перекус',
+    'mellanmål',
+    'mellemmåltid',
+    'svačina',
+    'välipala',
+    'atıştırmalık',
+    'おやつ',
+    '間食',
+    '간식',
+    '小吃',
+    '零食',
   ],
   'drink': [
     'getränk',
@@ -130,6 +196,22 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'drikke',
     'cocktail',
     'smoothie',
+    'bevand',
+    'напиток',
+    'напитк',
+    'dryck',
+    'nápoj',
+    'juoma',
+    'çecek', // „İçecek“: toLowerCase macht aus İ ein i + Punkt
+    'напій',
+    'напої',
+    '飲み物',
+    'ドリンク',
+    '음료',
+    '饮品',
+    '饮料',
+    '飲品',
+    '飲料',
   ],
   'dessert': [
     'dessert',
@@ -142,6 +224,17 @@ const Map<String, List<String>> _mealTypeCategoryKeywords = {
     'deser',
     'sobremesa',
     'sladic',
+    'dolci',
+    'десерт',
+    'efterrätt',
+    'efterret',
+    'dezert',
+    'jälkiruoka',
+    'tatlı',
+    'デザート',
+    '디저트',
+    '甜点',
+    '甜點',
   ],
 };
 
@@ -321,7 +414,8 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
     } catch (_) {
       rules = const [];
     }
-    final filter = combinedRuleFilter(rules, _selectedDate, _selectedSlot);
+    final filter = combinedRuleFilter(rules, _selectedDate, _selectedSlot,
+        weekEntry: _wholeWeek);
     var pool = allRecipes;
     var filtered = false;
     if (filter != null) {
@@ -784,7 +878,8 @@ class _AddMealEntryScreenState extends ConsumerState<AddMealEntryScreen> {
     final filtered = recipes
         .where((r) => recipeMatchesSearch(r, terms, includeDescription: false))
         .toList();
-    applyRecipeSort(filtered, _sort);
+    applyRecipeSort(filtered, _sort,
+        ownRatings: ref.watch(userRatingsProvider).valueOrNull ?? const {});
 
     return ListView(
       children: [

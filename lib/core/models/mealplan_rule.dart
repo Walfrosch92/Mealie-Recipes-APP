@@ -59,9 +59,14 @@ class MealPlanRule {
   /// Gilt diese Regel für [date] + Mahlzeit [entryType]? (wie
   /// RepositoryMealPlanRules.get_rules: passender Tag ODER unset, passende
   /// Mahlzeit ODER unset).
-  bool appliesTo(DateTime date, String entryType) {
-    final dayOk =
-        day == 'unset' || day.isEmpty || day == kRuleDays[date.weekday - 1];
+  ///
+  /// [weekEntry]: Eintrag für eine ganze Woche — wie Mealie
+  /// (`PlanRulesDay.unset`) gelten dann nur Regeln für alle Tage, nicht die
+  /// des Wochentags von [date].
+  bool appliesTo(DateTime date, String entryType, {bool weekEntry = false}) {
+    final dayOk = day == 'unset' ||
+        day.isEmpty ||
+        (!weekEntry && day == kRuleDays[date.weekday - 1]);
     final typeOk = this.entryType == 'unset' ||
         this.entryType.isEmpty ||
         this.entryType == entryType;
@@ -87,10 +92,12 @@ class MealPlanRule {
 /// Server beim Zufallsrezept: nicht-leere Filter in Klammern, mit AND
 /// verbunden. `null`, wenn keine Regel mit Filter greift.
 String? combinedRuleFilter(
-    List<MealPlanRule> rules, DateTime date, String entryType) {
+    List<MealPlanRule> rules, DateTime date, String entryType,
+    {bool weekEntry = false}) {
   final parts = [
     for (final r in rules)
-      if (r.appliesTo(date, entryType) && r.queryFilterString.trim().isNotEmpty)
+      if (r.appliesTo(date, entryType, weekEntry: weekEntry) &&
+          r.queryFilterString.trim().isNotEmpty)
         '(${r.queryFilterString.trim()})',
   ];
   return parts.isEmpty ? null : parts.join(' AND ');

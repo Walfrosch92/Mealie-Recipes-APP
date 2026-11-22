@@ -1,3 +1,4 @@
+import '../../features/recipes/providers/user_ratings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,7 @@ Future<void> syncEverythingNow(BuildContext context, WidgetRef ref) async {
   messenger.showSnackBar(SnackBar(content: Text(l.syncStarted)));
   ref.invalidate(mealplanProvider);
   ref.invalidate(favoritesProvider);
+  ref.invalidate(userRatingsProvider);
   ref.invalidate(shoppingListProvider);
   ref.invalidate(shoppingLabelsProvider);
   ref.invalidate(foodsCatalogProvider);

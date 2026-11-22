@@ -363,21 +363,30 @@ class _AiPromptsScreenState extends ConsumerState<AiPromptsScreen> {
       );
 }
 
-/// Titel eines Mealie-Prompts (`recipes.build-recipe` …); unbekannte Namen
-/// (neuere Mealie-Version) erscheinen roh.
+/// Titel eines Mealie-Prompts (`recipes.build-recipe` …) wie die Webapp
+/// (group.ai-prompts.prompt-titles). Unbekannte Namen (neuere Mealie-Version)
+/// lesbar statt roh: „recipes.enrich-instructions" → „Enrich instructions".
 String aiPromptTitle(AppLocalizations l, String name) => switch (name) {
       'recipes.build-recipe' => l.aiPromptTitleBuildRecipe,
+      'recipes.enrich-instructions' => l.aiPromptTitleEnrichInstructions,
       'recipes.parse-recipe-ingredients' => l.aiPromptTitleParseIngredients,
       'recipes.parse-recipe-video' => l.aiPromptTitleRecipeVideo,
       'recipes.resolve-organizers' => l.aiPromptTitleOrganizers,
       'recipes.translate-recipe' => l.aiPromptTitleTranslate,
       'system.compile-source' => l.aiPromptTitleCompileSource,
       'system.transcribe-audio' => l.aiPromptTitleTranscribe,
-      _ => name,
+      _ => _readablePromptName(name),
     };
+
+String _readablePromptName(String name) {
+  final words = name.split('.').last.replaceAll(RegExp(r'[-_]+'), ' ').trim();
+  if (words.isEmpty) return name;
+  return words[0].toUpperCase() + words.substring(1);
+}
 
 String? aiPromptDescription(AppLocalizations l, String name) => switch (name) {
       'recipes.build-recipe' => l.aiPromptDescBuildRecipe,
+      'recipes.enrich-instructions' => l.aiPromptDescEnrichInstructions,
       'recipes.parse-recipe-ingredients' => l.aiPromptDescParseIngredients,
       'recipes.parse-recipe-video' => l.aiPromptDescRecipeVideo,
       'recipes.resolve-organizers' => l.aiPromptDescOrganizers,

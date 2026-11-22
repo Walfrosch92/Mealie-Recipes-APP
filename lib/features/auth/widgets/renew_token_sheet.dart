@@ -157,16 +157,23 @@ class _RenewTokenSheetState extends State<RenewTokenSheet> {
         return;
       } catch (e) {
         lastError = e;
+        // Wie im Setup: abgelehnte Zugangsdaten / gesperrtes Konto nicht
+        // ein zweites Mal senden (zählt sonst doppelt als Fehlversuch).
+        if (e is DioException &&
+            (e.response?.statusCode == 401 || e.response?.statusCode == 423)) {
+          break;
+        }
       }
     }
     if (!mounted) return;
     final l = AppLocalizations.of(context)!;
     setState(() {
-      _error =
-          (lastError is DioException && lastError.response?.statusCode == 401)
-              ? (_mode == AuthMode.password
-                  ? l.loginInvalidCredentials
-                  : l.connectionFailedCheck)
+      final status =
+          lastError is DioException ? lastError.response?.statusCode : null;
+      _error = status == 423
+          ? l.loginAccountLocked
+          : (status == 401 && _mode == AuthMode.password)
+              ? l.loginInvalidCredentials
               : l.connectionFailedCheck;
     });
   }

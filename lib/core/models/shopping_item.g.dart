@@ -30,6 +30,8 @@ ShoppingItem _$ShoppingItemFromJson(Map<String, dynamic> json) => ShoppingItem(
               .toList() ??
           const [],
       extras: (json['extras'] as Map?)?.cast<String, dynamic>(),
+      createdAt: json['createdAt'] as String?,
+      updatedAt: json['updatedAt'] as String?,
     );
 
 Map<String, dynamic> _$ShoppingItemToJson(ShoppingItem instance) =>
@@ -47,6 +49,8 @@ Map<String, dynamic> _$ShoppingItemToJson(ShoppingItem instance) =>
       'display': instance.display,
       'recipeReferences': instance.recipeReferences,
       'extras': instance.extras,
+      'createdAt': instance.createdAt,
+      'updatedAt': instance.updatedAt,
     };
 
 ShoppingLabel _$ShoppingLabelFromJson(Map<String, dynamic> json) =>
@@ -112,6 +116,7 @@ ShoppingItemCreate _$ShoppingItemCreateFromJson(Map<String, dynamic> json) =>
       unitId: json['unitId'] as String?,
       labelId: json['labelId'] as String?,
       checked: json['checked'] as bool?,
+      position: (json['position'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$ShoppingItemCreateToJson(ShoppingItemCreate instance) =>
@@ -124,6 +129,7 @@ Map<String, dynamic> _$ShoppingItemCreateToJson(ShoppingItemCreate instance) =>
       if (instance.unitId case final value?) 'unitId': value,
       if (instance.labelId case final value?) 'labelId': value,
       if (instance.checked case final value?) 'checked': value,
+      if (instance.position case final value?) 'position': value,
       if (instance.recipeReferences case final value?)
         'recipeReferences': value,
     };

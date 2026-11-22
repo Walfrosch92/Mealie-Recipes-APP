@@ -25,6 +25,11 @@ class UserPermissions {
   final bool canManageHousehold;
   final bool canInvite;
 
+  /// Mealie „Erweiterte Funktionen anzeigen" (`advanced`) — die Webapp blendet
+  /// damit API-Token, Migrationen, Webhooks und Benachrichtigungen ein
+  /// (Middleware advanced-only); der Server prüft es nicht.
+  final bool advanced;
+
   /// false = Nutzer (noch) unbekannt (offline ohne Cache) → nichts sperren.
   final bool known;
 
@@ -41,6 +46,7 @@ class UserPermissions {
     this.canManage = false,
     this.canManageHousehold = false,
     this.canInvite = false,
+    this.advanced = false,
     this.known = false,
     this.householdLocksEdits,
   });
@@ -64,6 +70,7 @@ class UserPermissions {
       canManage: canManage,
       canManageHousehold: canManageHousehold,
       canInvite: canInvite,
+      advanced: advanced,
       known: known,
       householdLocksEdits: locks,
     );
@@ -80,6 +87,7 @@ class UserPermissions {
       canManage: b('canManage'),
       canManageHousehold: b('canManageHousehold'),
       canInvite: b('canInvite'),
+      advanced: b('advanced'),
       known: true,
     );
   }

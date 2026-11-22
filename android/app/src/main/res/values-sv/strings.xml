@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Måltidsplan</string>
+    <string name="widget_shopping_label">Inköpslista</string>
+    <string name="widget_daily_recipe_label">Dagens recept</string>
+    <string name="widget_mealplan_description">Visar måltidsplanen för idag och imorgon.</string>
+    <string name="widget_shopping_description">Visar öppna varor på inköpslistan.</string>
+    <string name="widget_daily_recipe_description">Visar ett nytt slumpat recept varje dag.</string>
+</resources>

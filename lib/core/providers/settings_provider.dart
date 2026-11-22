@@ -25,6 +25,7 @@ const _kShoppingListId = 'shoppingListId';
 const _kApiVersion = 'apiVersion';
 const _kSelectedLanguage = 'selectedLanguage';
 const _kImportLanguage = 'importLanguage';
+const _kUnitSystem = 'unitSystem';
 const _kImportTranslate = 'importTranslate';
 const _kImportOrganizers = 'importOrganizers';
 const _kImportStreamPhotos = 'importStreamPhotos';
@@ -196,6 +197,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
         'no' => 'nb',
         final v => v,
       },
+      unitSystem: _prefs.getString(_kUnitSystem) ?? '',
       importTranslate: _prefs.getBool(_kImportTranslate) ?? true,
       importStreamPhotos: _prefs.getBool(_kImportStreamPhotos) ?? true,
       importVideoAi: _prefs.getBool(_kImportVideoAi) ?? true,
@@ -315,6 +317,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       _prefs.setString(_kApiVersion, next.apiVersion),
       _prefs.setString(_kSelectedLanguage, next.selectedLanguage),
       _prefs.setString(_kImportLanguage, next.importLanguage),
+      _prefs.setString(_kUnitSystem, next.unitSystem),
       _prefs.setBool(_kImportTranslate, next.importTranslate),
       _prefs.setString(_kImportOrganizers, next.importOrganizers),
       _prefs.setBool(_kImportStreamPhotos, next.importStreamPhotos),

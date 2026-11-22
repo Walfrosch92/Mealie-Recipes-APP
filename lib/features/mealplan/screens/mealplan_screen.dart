@@ -38,6 +38,8 @@ import '../../timeline/providers/cooked_marks_provider.dart';
 import '../../recipe_match/screens/recipe_match_screen.dart'
     show RecipeMatchThumb;
 import '../../../core/utils/search_match.dart';
+import '../../../core/utils/markdown_parse.dart';
+import '../../../shared/widgets/markdown_text.dart';
 import '../../../core/desktop/two_pane.dart';
 import '../../../core/desktop/print_service.dart';
 
@@ -1896,16 +1898,100 @@ class _MealEntryCard extends ConsumerWidget {
                   size: 13, color: context.appFgSub),
             ),
             const SizedBox(width: 4),
-            Expanded(
-              child: Text(note,
-                  style: TextStyle(
-                      color: context.appFgSub, fontSize: 13, height: 1.3),
-                  maxLines: 3,
+            Expanded(child: _MealNoteText(note: note)),
+          ],
+        ),
+      );
+}
+
+// ---------------------------------------------------------------------------
+// Notiz im Plan (Issue #41): höchstens 3 Zeilen, darunter „Mehr …" zum
+// Aufklappen und „Weniger" zum Zuklappen. Wie die Mealie-Webapp (Planansicht
+// rendert den Text per SafeMarkdown) wird die Notiz als Markdown angezeigt;
+// eingeklappt als reiner Text, damit die 3-Zeilen-Grenze exakt greift.
+// ---------------------------------------------------------------------------
+
+class _MealNoteText extends ConsumerStatefulWidget {
+  final String note;
+  const _MealNoteText({required this.note});
+
+  @override
+  ConsumerState<_MealNoteText> createState() => _MealNoteTextState();
+}
+
+class _MealNoteTextState extends ConsumerState<_MealNoteText> {
+  static const _maxLines = 3;
+  bool _expanded = false;
+
+  /// Markdown → reiner Text, Zeilenumbrüche bleiben (anders als
+  /// [markdownToPlainText], das alles zu einer Zeile zusammenzieht).
+  String get _plain {
+    final flat = flattenMarkdownBlockMarkers(stripEmbeddedImages(widget.note));
+    return flat
+        .split('\n')
+        .map((line) =>
+            parseInlineMarkdown(line).map((s) => s.text).join().trimRight())
+        .join('\n')
+        .trim();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final style =
+        TextStyle(color: context.appFgSub, fontSize: 13, height: 1.3);
+    final settings = ref.watch(settingsProvider).valueOrNull;
+    final full = MarkdownText(
+      text: widget.note,
+      serverUrl: settings?.serverUrl,
+      apiToken: settings?.apiToken,
+      style: style,
+    );
+    final plain = _plain;
+    return LayoutBuilder(builder: (context, constraints) {
+      final painter = TextPainter(
+        text: TextSpan(text: plain, style: style),
+        maxLines: _maxLines,
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout(maxWidth: constraints.maxWidth);
+      final overflows = painter.didExceedMaxLines;
+      painter.dispose();
+      // Passt die Notiz in 3 Zeilen, gibt es nichts aufzuklappen.
+      if (!overflows) return full;
+      return AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        alignment: Alignment.topCenter,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_expanded)
+              full
+            else
+              Text(plain,
+                  style: style,
+                  maxLines: _maxLines,
                   overflow: TextOverflow.ellipsis),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2, bottom: 2, right: 12),
+                child: Text(
+                  _expanded ? l.mealplanNoteLess : l.mealplanNoteMore,
+                  style: const TextStyle(
+                      color: AppTokens.accentDeep,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ],
         ),
       );
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -2038,10 +2124,8 @@ class _ServingsPill extends ConsumerWidget {
   double _baseServings(WidgetRef ref) {
     final id = entry.recipe!.id;
     for (final r in ref.watch(recipesProvider).valueOrNull ?? const []) {
-      if (r.id == id) {
-        final s = r.servings ?? 0;
-        return s > 0 ? s : 1;
-      }
+      // Wie die Webapp: Portionen, sonst Ergibt-Menge, sonst 1.
+      if (r.id == id) return r.planServingsBase;
     }
     return 1;
   }

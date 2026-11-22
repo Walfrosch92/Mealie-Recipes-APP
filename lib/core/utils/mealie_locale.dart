@@ -12,6 +12,18 @@ const kMealieLocales = {
   'pl': 'pl-PL',
   'pt': 'pt-BR',
   'sl': 'sl-SI',
+  'it': 'it-IT',
+  'ru': 'ru-RU',
+  'sv': 'sv-SE',
+  'da': 'da-DK',
+  'cs': 'cs-CZ',
+  'fi': 'fi-FI',
+  'tr': 'tr-TR',
+  'uk': 'uk-UA',
+  'ja': 'ja-JP',
+  'ko': 'ko-KR',
+  'zh': 'zh-CN',
+  'zh_TW': 'zh-TW',
 };
 
 /// Mealie-Sprachcode zur App-Sprache, unbekannt → Englisch.

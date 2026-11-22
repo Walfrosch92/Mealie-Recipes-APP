@@ -90,7 +90,7 @@ jobs:
           sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
           apksigner="$(ls -d "$sdk"/build-tools/*/ | sort -V | tail -1)apksigner"
           certs="$("$apksigner" verify --print-certs "out/MealieRecipes-$v.apk")"
-          echo "$certs" | grep -E 'Signer #1 certificate (DN|SHA-256)' || true
+          # Bewusst KEIN Zertifikat-DN ins (öffentliche) Log – nur prüfen.
           if echo "$certs" | grep -q 'CN=Android Debug'; then
             echo "::error::APK ist nur mit dem Debug-Schlüssel signiert"; exit 1
           fi
@@ -128,7 +128,8 @@ jobs:
           f="build/macos/dmg/MealieRecipes-${{ needs.version.outputs.version }}-arm64.dmg"
           test -f "$f" || { echo "::error::$f fehlt"; exit 1; }
           xcrun stapler validate "$f"
-          spctl -a -t open --context context:primary-signature -v "$f"
+          # ohne -v: sonst steht der Zertifikatsname im öffentlichen Log
+          spctl -a -t open --context context:primary-signature "$f"
       - uses: actions/upload-artifact@v4
         with:
           name: release-macos

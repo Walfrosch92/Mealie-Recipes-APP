@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">План питания</string>
+    <string name="widget_shopping_label">Список покупок</string>
+    <string name="widget_daily_recipe_label">Рецепт дня</string>
+    <string name="widget_mealplan_description">Показывает план питания на сегодня и завтра.</string>
+    <string name="widget_shopping_description">Показывает открытые позиции списка покупок.</string>
+    <string name="widget_daily_recipe_description">Каждый день показывает новый случайный рецепт.</string>
+</resources>

@@ -224,6 +224,8 @@ class _QueryFilterEditorState extends ConsumerState<QueryFilterEditor> {
           f == CookbookFilterField.lastMade ? l.qfOpNewerThan : l.qfOpGreaterEq,
         CookbookFilterOp.lte =>
           f == CookbookFilterField.lastMade ? l.qfOpOlderThan : l.qfOpLessEq,
+        CookbookFilterOp.isNull => l.qfOpHasNoValue,
+        CookbookFilterOp.isNotNull => l.qfOpHasValue,
       };
 
   String _valueSummary(CookbookFilterRow row) {
@@ -466,7 +468,10 @@ class _FilterRowCard extends StatelessWidget {
             },
           ),
           const SizedBox(height: 8),
-          if (row.isDate)
+          // „Hat (keinen) Wert": keine Eingabe nötig.
+          if (row.isScalar && row.isNullCheck)
+            const SizedBox.shrink()
+          else if (row.isDate)
             _DateValue(row: row, onChanged: onDateChanged)
           else if (row.isScalar)
             _NumberValue(row: row, l: l, onChanged: onNumberChanged)

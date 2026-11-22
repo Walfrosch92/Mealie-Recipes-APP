@@ -1,3 +1,4 @@
+import '../../recipes/providers/user_ratings_provider.dart';
 import '../../../core/utils/platform_features.dart';
 import 'dart:async';
 import 'dart:io';
@@ -74,10 +75,22 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
   double? _rating;
   double? _initialRating;
 
+  /// Eigene Bewertung (wie die Webapp) — nicht der Haushalts-Durchschnitt
+  /// `recipe.rating`, sonst setzte ein Speichern ihn als eigene.
+  double? _ownRating(String recipeId) {
+    final r = ref.read(userRatingsProvider).valueOrNull?[recipeId];
+    return (r == null || r <= 0) ? null : r;
+  }
+
   // Bild: wird erst beim Speichern angewendet (Abbrechen verwirft es).
   File? _newImage;
   String? _newImageUrl;
   bool _removeImage = false;
+
+  bool get _serverCanDeleteImage {
+    final v = ref.read(serverVersionProvider);
+    return parseMealieVersion(v) == null || mealieVersionAtLeast(v, 3, 5);
+  }
 
   bool _saving = false;
   String? _error;
@@ -135,7 +148,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       if (!mounted) return;
       if (_draft == null) {
         _setDraft(RecipeDraft.fromCache(cached, serverVersion: version));
-        _rating = _initialRating = cached.rating;
+        _rating = _initialRating = _ownRating(cached.id);
       }
     } catch (_) {/* evtl. kommt der Server-Stand */}
 
@@ -146,7 +159,7 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       if (d == null || (!d.complete && !_touched && !d.isDirty)) {
         _setDraft(RecipeDraft.fromRaw(raw, serverVersion: version));
         if (d == null) {
-          _rating = _initialRating = (raw['rating'] as num?)?.toDouble();
+          _rating = _initialRating = _ownRating(raw['id']?.toString() ?? '');
         }
       }
     } else if (_draft == null) {
@@ -350,6 +363,9 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
       if (_rating != _initialRating) {
         try {
           await api.setRating(slug, _rating ?? 0);
+          await ref
+              .read(userRatingsProvider.notifier)
+              .setLocal(d.id, _rating ?? 0);
         } catch (_) {/* Bewertung blockiert das Speichern nicht */}
       }
 
@@ -486,7 +502,10 @@ class _RecipeEditScreenState extends ConsumerState<RecipeEditScreen> {
               title: Text(l.imageFromUrl, style: TextStyle(color: ctx.appFg)),
               onTap: () => Navigator.pop(ctx, _ImageChoice.url),
             ),
-            if (hasImage)
+            // DELETE /recipes/{slug}/image gibt es erst ab Mealie 3.5 —
+            // vorher scheiterte das Speichern am Ende mit einem Fehler.
+            // Unbekannte Version: anbieten (Fehler wird dann gemeldet).
+            if (hasImage && _serverCanDeleteImage)
               ListTile(
                 leading:
                     const Icon(Icons.delete_outline_rounded, color: Colors.red),

@@ -5118,6 +5118,120 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recipeDownloadPdfMealie =>
       'Télécharger le PDF (mise en page Mealie)';
+
+  @override
+  String get mealplanNoteMore => 'Afficher plus…';
+
+  @override
+  String get mealplanNoteLess => 'Afficher moins';
+
+  @override
+  String get ingredientCommonlySubstitutedWith => 'Souvent remplacé par';
+
+  @override
+  String requiresMealieVersion(String version) {
+    return 'Nécessite Mealie $version ou une version plus récente.';
+  }
+
+  @override
+  String get apiTokensTitle => 'Jetons de l’API';
+
+  @override
+  String get apiTokensDescription =>
+      'Gérez vos jetons API pour un accès à partir d\'applications externes.';
+
+  @override
+  String get apiTokenNameLabel => 'Nom du jeton';
+
+  @override
+  String get apiTokenGenerate => 'Générer';
+
+  @override
+  String get apiTokensActive => 'JETONS ACTIFS';
+
+  @override
+  String get apiTokenCopyWarning =>
+      'Copiez ce jeton pour l’utiliser avec une application externe. Ce jeton ne sera plus consultable.';
+
+  @override
+  String get apiTokenThisApp => 'Utilisé par cette app';
+
+  @override
+  String get apiTokenThisAppHint =>
+      'Ce jeton maintient la connexion de l’app et ne peut pas être supprimé ici.';
+
+  @override
+  String apiTokenDeleteConfirm(String name) {
+    return 'Supprimer le jeton « $name » ? Les apps qui l’utilisent perdent immédiatement l’accès.';
+  }
+
+  @override
+  String get apiTokensEmpty => 'Aucun jeton pour l’instant.';
+
+  @override
+  String apiTokenCreatedOn(String date) {
+    return 'Créé le $date';
+  }
+
+  @override
+  String get apiTokenCopied => 'Jeton copié';
+
+  @override
+  String get qfOpHasNoValue => 'n\'a pas de valeur';
+
+  @override
+  String get qfOpHasValue => 'a une valeur';
+
+  @override
+  String get ratingHouseholdAverage => 'moyenne du foyer';
+
+  @override
+  String get stepLinkedNotes => 'Notes liées';
+
+  @override
+  String get noteFallbackTitle => 'Remarque';
+
+  @override
+  String get aiPromptTitleEnrichInstructions =>
+      'Ajouter des détails sur l\'étape';
+
+  @override
+  String get aiPromptDescEnrichInstructions =>
+      'Lier chaque étape d’une recette importée aux ingrédients et aux notes qu’elle utilise, et en extraire la durée ainsi que le titre.';
+
+  @override
+  String get loginAccountLocked =>
+      'Compte verrouillé. Veuillez réessayer plus tard';
+
+  @override
+  String get loginPasswordDisabled =>
+      'La connexion par mot de passe est désactivée sur ce serveur. Utilisez plutôt un jeton d’API.';
+
+  @override
+  String get unitSystemTitle => 'Unités';
+
+  @override
+  String get unitSystemAsWritten => 'Tel qu\'écrit';
+
+  @override
+  String get unitSystemMetric => 'Métrique';
+
+  @override
+  String get unitSystemMetricHint => 'Métrique (g, ml)';
+
+  @override
+  String get unitSystemImperial => 'Impérial';
+
+  @override
+  String get unitSystemImperialHint => 'Impérial (tasses, oz)';
+
+  @override
+  String get unitSystemHint =>
+      'Affichage uniquement – la recette elle-même ne change pas. Comme dans l\'application web Mealie, le choix s\'applique à toutes les recettes de cet appareil.';
+
+  @override
+  String get unitSystemUnavailable =>
+      'Aucune unité de cette recette ne peut être convertie. Il faut pour cela une standardisation de l\'unité dans Mealie (Aliments et unités → unité → Standardisation).';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -5286,4 +5400,117 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String globalSearchAddToList(String text) {
     return 'Ajouter « $text » à la liste d\'épicerie';
   }
+
+  @override
+  String get mealplanNoteMore => 'Afficher plus…';
+
+  @override
+  String get mealplanNoteLess => 'Afficher moins';
+
+  @override
+  String get ingredientCommonlySubstitutedWith => 'Souvent remplacé par';
+
+  @override
+  String requiresMealieVersion(String version) {
+    return 'Nécessite Mealie $version ou une version plus récente.';
+  }
+
+  @override
+  String get apiTokensTitle => 'Jetons de l\'API';
+
+  @override
+  String get apiTokensDescription =>
+      'Gérez vos jetons d\'API pour accéder à partir d\'applications externes.';
+
+  @override
+  String get apiTokenNameLabel => 'Nom du jeton';
+
+  @override
+  String get apiTokenGenerate => 'Générer';
+
+  @override
+  String get apiTokensActive => 'JETONS ACTIFS';
+
+  @override
+  String get apiTokenCopyWarning =>
+      'Copiez ce jeton pour l\'utiliser avec une application externe. Ce jeton ne sera plus consultable.';
+
+  @override
+  String get apiTokenThisApp => 'Utilisé par cette app';
+
+  @override
+  String get apiTokenThisAppHint =>
+      'Ce jeton maintient la connexion de l’app et ne peut pas être supprimé ici.';
+
+  @override
+  String apiTokenDeleteConfirm(String name) {
+    return 'Supprimer le jeton « $name » ? Les apps qui l’utilisent perdent immédiatement l’accès.';
+  }
+
+  @override
+  String get apiTokensEmpty => 'Aucun jeton pour l’instant.';
+
+  @override
+  String apiTokenCreatedOn(String date) {
+    return 'Créé le $date';
+  }
+
+  @override
+  String get apiTokenCopied => 'Jeton copié';
+
+  @override
+  String get qfOpHasNoValue => 'n\'a pas de valeur';
+
+  @override
+  String get qfOpHasValue => 'a une valeur';
+
+  @override
+  String get ratingHouseholdAverage => 'moyenne du foyer';
+
+  @override
+  String get stepLinkedNotes => 'Notes liées';
+
+  @override
+  String get noteFallbackTitle => 'Remarque';
+
+  @override
+  String get aiPromptTitleEnrichInstructions => 'Ajout des détails de l\'étape';
+
+  @override
+  String get aiPromptDescEnrichInstructions =>
+      'Lier chaque étape d\'une recette importée aux ingrédients et notes qu\'elle utilise, et en choisir la durée et l\'en-tête.';
+
+  @override
+  String get loginAccountLocked =>
+      'Compte verrouillé. Veuillez réessayer plus tard';
+
+  @override
+  String get loginPasswordDisabled =>
+      'La connexion par mot de passe est désactivée sur ce serveur. Utilisez plutôt un jeton d’API.';
+
+  @override
+  String get unitSystemTitle => 'Unités';
+
+  @override
+  String get unitSystemAsWritten => 'Tel qu\'écrit';
+
+  @override
+  String get unitSystemMetric => 'Métrique';
+
+  @override
+  String get unitSystemMetricHint => 'Métrique (g, ml)';
+
+  @override
+  String get unitSystemImperial => 'Impérial';
+
+  @override
+  String get unitSystemImperialHint => 'Impérial (tasses, oz)';
+
+  @override
+  String get unitSystemHint =>
+      'Affichage seulement – la recette elle-même ne change pas. Comme dans l\'application web Mealie, le choix s\'applique à toutes les recettes de cet appareil.';
+
+  @override
+  String get unitSystemUnavailable =>
+      'Aucune unité de cette recette ne peut être convertie. Il faut pour cela une standardisation de l\'unité dans Mealie (Aliments et unités → unité → Standardisation).';
 }

@@ -1,3 +1,4 @@
+import '../../../core/utils/shopping_sort.dart';
 import '../../../core/utils/platform_features.dart';
 import 'dart:io';
 import 'dart:math';
@@ -859,8 +860,7 @@ class _ShoppingItemList extends StatelessWidget {
       });
 
     Widget buildSection(String category, int index) {
-      final groupItems = (groups[category] ?? [])
-        ..sort((a, b) => a.displayName.compareTo(b.displayName));
+      final groupItems = sortShoppingItemsLikeWebapp(groups[category] ?? []);
       final label = labels.firstWhere((l) => l.name == category, orElse: () {
         return const ShoppingLabel(id: '', name: '');
       });
@@ -894,8 +894,7 @@ class _ShoppingItemList extends StatelessWidget {
     if (checked.isNotEmpty) {
       final completedLabel = l.completedItems;
       final isCollapsed = collapsed.contains(completedLabel);
-      final sortedChecked = checked
-        ..sort((a, b) => a.displayName.compareTo(b.displayName));
+      final sortedChecked = checked..sort(compareCheckedLikeWebapp);
       completedFooter = _CompletedSection(
         items: sortedChecked,
         isCollapsed: isCollapsed,

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Ateriasuunnitelma</string>
+    <string name="widget_shopping_label">Ostoslista</string>
+    <string name="widget_daily_recipe_label">Päivän resepti</string>
+    <string name="widget_mealplan_description">Näyttää tämän päivän ja huomisen ateriasuunnitelman.</string>
+    <string name="widget_shopping_description">Näyttää ostoslistan avoimet tuotteet.</string>
+    <string name="widget_daily_recipe_description">Näyttää joka päivä uuden satunnaisen reseptin.</string>
+</resources>

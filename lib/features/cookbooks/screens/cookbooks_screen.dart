@@ -1,3 +1,4 @@
+import '../../../core/providers/permissions_provider.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/shimmer.dart';
 import '../../../shared/widgets/swipe_context_menu.dart';
@@ -61,18 +62,38 @@ class CookbooksScreen extends ConsumerWidget {
                 : RefreshIndicator(
                     onRefresh: () =>
                         ref.read(cookbooksProvider.notifier).reload(),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                      itemCount: books.length,
-                      itemBuilder: (ctx, i) => EntranceOnce(
-                        id: 'cookbook-${books[i].id}',
-                        index: i,
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _CookbookCard(cookbook: books[i]),
-                        ),
-                      ),
-                    ),
+                    child: Builder(builder: (context) {
+                      final rows = _grouped(
+                          books, ref.watch(userPermissionsProvider).householdId);
+                      return ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+                        itemCount: rows.length,
+                        itemBuilder: (ctx, i) {
+                          final row = rows[i];
+                          if (row is String) {
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                  top: i == 0 ? 0 : 8, bottom: 8, left: 4),
+                              child: Text(row.toUpperCase(),
+                                  style: TextStyle(
+                                      color: context.appFgTertiary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.8)),
+                            );
+                          }
+                          final book = row as CookbookSummary;
+                          return EntranceOnce(
+                            id: 'cookbook-${book.id}',
+                            index: i,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _CookbookCard(cookbook: book),
+                            ),
+                          );
+                        },
+                      );
+                    }),
                   ),
           ),
         ),
@@ -123,6 +144,14 @@ class _CookbookCard extends ConsumerWidget {
     // Mealie ≥ 3.31 erlaubt Markdown in der Beschreibung — die Karte zeigt
     // sie als Klartext, die Kochbuch-Ansicht formatiert.
     final description = markdownToPlainText(cookbook.description ?? '');
+    // Wie die Webapp (cookbooks/index.vue): bearbeiten/löschen nur bei
+    // Kochbüchern des eigenen Haushalts — Mealie ändert fremde nicht (404).
+    final own = ref.watch(userPermissionsProvider).householdId;
+    final mine = cookbook.householdId == null ||
+        own == null ||
+        cookbook.householdId == own;
+    final card = _card(context, description);
+    if (!mine) return card;
     return SwipeContextMenu(
         child: Slidable(
       key: ValueKey(cookbook.id),
@@ -146,7 +175,11 @@ class _CookbookCard extends ConsumerWidget {
           ),
         ],
       ),
-      child: BounceTap(
+      child: card,
+    ));
+  }
+
+  Widget _card(BuildContext context, String description) => BounceTap(
         onTap: () {
           HapticFeedback.selectionClick();
           context.push('/cookbooks/${cookbook.id}');
@@ -205,7 +238,30 @@ class _CookbookCard extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    ));
+      );
+}
+
+/// Webapp-Ordnung (DefaultLayout.vue): eigene Kochbücher zuerst, dann die
+/// anderen Haushalte alphabetisch, jeweils mit dem Haushaltsnamen als
+/// Überschrift; innerhalb nach Position (kommt schon sortiert). Ohne
+/// bekannten Haushalt bleibt die einfache Liste.
+List<Object> _grouped(List<CookbookSummary> books, String? ownHousehold) {
+  if (ownHousehold == null || books.every((b) => b.householdId == null)) {
+    return books;
   }
+  final own = <CookbookSummary>[];
+  final others = <String, List<CookbookSummary>>{};
+  for (final b in books) {
+    if (b.householdId == null || b.householdId == ownHousehold) {
+      own.add(b);
+    } else {
+      others.putIfAbsent(b.householdName ?? '', () => []).add(b);
+    }
+  }
+  final names = others.keys.toList()
+    ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  return [
+    ...own,
+    for (final n in names) ...[if (n.isNotEmpty) n, ...others[n]!],
+  ];
 }

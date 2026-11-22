@@ -1,3 +1,4 @@
+import 'user_ratings_provider.dart';
 import 'dart:convert';
 import 'dart:async';
 
@@ -434,6 +435,7 @@ class RecipesNotifier extends AsyncNotifier<List<RecipeDetail>> {
                         title: i.title,
                         referencedRecipe: i.referencedRecipe,
                         originalText: i.originalText,
+                        substitutions: i.substitutions,
                         isCompleted: i.isCompleted,
                       ))
                 .toList()));
@@ -1161,7 +1163,8 @@ final filteredRecipesProvider = Provider<List<RecipeDetail>>((ref) {
         list = list.where((r) => recipeMatchesFilter(r, filter)).toList();
       }
 
-      applyRecipeSort(list, filter.sort);
+      applyRecipeSort(list, filter.sort,
+          ownRatings: ref.watch(userRatingsProvider).valueOrNull ?? const {});
 
       // Textsuche: Name, Beschreibung, Schlagworte, Kategorien UND Zutaten
       // („Olivenöl“ findet Rezepte mit Olivenöl). Namenstreffer stehen vorn,
@@ -1179,7 +1182,12 @@ final filteredRecipesProvider = Provider<List<RecipeDetail>>((ref) {
 /// Rezeptliste (`filteredRecipesProvider`) UND die Rezeptsuche in der
 /// Mahlzeitenplanung (`add_meal_entry_screen.dart`), damit beide Stellen
 /// exakt dieselben Sortieroptionen anbieten.
-void applyRecipeSort(List<RecipeDetail> list, RecipeSort sort) {
+///
+/// [ownRatings]: eigene Bewertungen — „nach Bewertung" sortiert wie Mealie
+/// nach „eigene, sonst Durchschnitt".
+void applyRecipeSort(List<RecipeDetail> list, RecipeSort sort,
+    {Map<String, double> ownRatings = const {}}) {
+  double rating(RecipeDetail r) => effectiveRating(r, ownRatings) ?? 0;
   switch (sort) {
     case RecipeSort.nameAZ:
       list.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -1199,9 +1207,9 @@ void applyRecipeSort(List<RecipeDetail> list, RecipeSort sort) {
     case RecipeSort.totalTimeLong:
       list.sort((a, b) => (b.totalTime ?? -1).compareTo(a.totalTime ?? -1));
     case RecipeSort.ratingHighest:
-      list.sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
+      list.sort((a, b) => rating(b).compareTo(rating(a)));
     case RecipeSort.ratingLowest:
-      list.sort((a, b) => (a.rating ?? 0).compareTo(b.rating ?? 0));
+      list.sort((a, b) => rating(a).compareTo(rating(b)));
   }
 }
 

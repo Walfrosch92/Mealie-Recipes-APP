@@ -1,3 +1,4 @@
+import '../../../shared/widgets/step_linked_notes.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -17,16 +18,20 @@ import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/permissions_provider.dart';
 import '../../../core/utils/ingredient_display.dart'
     show formatQuantity, ingredientDisplayParts;
+import '../../../core/utils/unit_conversion.dart' show UnitSystem;
+import '../../recipes/widgets/unit_system_sheet.dart' show unitSystemProvider;
 import '../../../core/utils/yield_format.dart';
 import '../../../core/utils/cooking_step_utils.dart';
 import '../../../core/utils/platform_features.dart';
 import '../../../core/utils/markdown_parse.dart';
-import '../../../shared/widgets/markdown_text.dart' show openMarkdownLink;
+import '../../../shared/widgets/markdown_text.dart'
+    show InlineMarkdownText, openMarkdownLink;
 import '../../../core/services/log_manager.dart';
 import '../../../core/services/wake_lock.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/ingredient_section_header.dart';
+import '../../../shared/widgets/ingredient_substitutions_button.dart';
 import '../../../shared/widgets/photo_source_sheet.dart';
 import '../../timeline/providers/timeline_provider.dart';
 import '../../timeline/widgets/made_this_sheet.dart';
@@ -763,16 +768,18 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
   /// Rezepts auf dem eigenen Server.
   Map<String, dynamic> _ownServerPayload(
       RecipeDetail created, RecipeDetail src) {
+    // Zeiten in der App-Sprache wie der Rezept-Editor (vorher immer
+    // Deutsch — Mealie speichert den Text, wie er kommt).
+    final l = AppLocalizations.of(context)!;
     String minToStr(int? mins) {
       final m = mins ?? 0;
       if (m <= 0) return '';
       final h = m ~/ 60;
       final mm = m % 60;
-      if (h == 0) return mm == 1 ? '1 Minute' : '$mm Minuten';
-      if (mm == 0) return h == 1 ? '1 Stunde' : '$h Stunden';
-      final hp = h == 1 ? '1 Stunde' : '$h Stunden';
-      final mp = mm == 1 ? '1 Minute' : '$mm Minuten';
-      return '$hp $mp';
+      return [
+        if (h > 0) l.durationHours(h),
+        if (mm > 0) l.durationMinutes(mm),
+      ].join(' ');
     }
 
     String fmtQty(double q) =>
@@ -1554,12 +1561,16 @@ class _IngredientRow extends StatelessWidget {
   /// Verlinktes Rezept: Tap auf das Symbol holt es in den Kochmodus.
   final VoidCallback? onOpenLinked;
 
+  /// Ersatzzutaten-Knopf (⇄), falls die Zutat welche hat.
+  final Widget? trailing;
+
   const _IngredientRow({
     required this.text,
     this.note,
     required this.done,
     required this.onTap,
     this.onOpenLinked,
+    this.trailing,
   });
 
   @override
@@ -1587,7 +1598,7 @@ class _IngredientRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  InlineMarkdownText(
                     text,
                     style: TextStyle(
                       color: done ? context.appFgTertiary : context.appFg,
@@ -1603,6 +1614,7 @@ class _IngredientRow extends StatelessWidget {
                 ],
               ),
             ),
+            if (trailing != null) trailing!,
             if (onOpenLinked != null) _LinkedRecipeButton(onTap: onOpenLinked!),
           ],
         ),
@@ -2171,6 +2183,7 @@ class _StepView extends ConsumerWidget {
             ingredients: stepIngredientPriority(
                 recipe.recipeIngredient, step.ingredientRefs, section),
             multiplier: session.quantityMultiplier,
+            unitSystem: ref.watch(unitSystemProvider),
             dimmed: done,
             serverUrl: serverUrl,
           ),
@@ -2189,12 +2202,42 @@ class _StepView extends ConsumerWidget {
               child: _LinkedIngredientsCard(
                 ingredients: linked,
                 multiplier: session.quantityMultiplier,
+                unitSystem: ref.watch(unitSystemProvider),
                 dimmed: done,
                 l: l,
                 onOpenLinked: isGuest
                     ? null
                     : (ing) => _cookLinkedRecipe(
                         context, ref, ing, session.quantityMultiplier),
+              ),
+            );
+          }),
+          // Verknüpfte Notizen (Mealie 3.28) — im Kochmodus der Webapp
+          // direkt neben dem Schritt.
+          Builder(builder: (context) {
+            final notes = step.linkedNotes(recipe.notes);
+            if (notes.isEmpty) return const SizedBox.shrink();
+            return Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              decoration: BoxDecoration(
+                color: context.appSurface2,
+                borderRadius: BorderRadius.circular(AppTokens.rMd),
+                border: Border.all(color: context.appSeparator),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l.stepLinkedNotes.toUpperCase(),
+                      style: TextStyle(
+                          color: context.appFgTertiary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8)),
+                  const SizedBox(height: 8),
+                  StepLinkedNotesList(notes: notes, dimmed: done),
+                ],
               ),
             );
           }),
@@ -2219,6 +2262,7 @@ class _StepView extends ConsumerWidget {
 class _LinkedIngredientsCard extends StatelessWidget {
   final List<Ingredient> ingredients;
   final double multiplier;
+  final UnitSystem? unitSystem;
   final bool dimmed;
   final AppLocalizations l;
   final void Function(Ingredient)? onOpenLinked;
@@ -2226,6 +2270,7 @@ class _LinkedIngredientsCard extends StatelessWidget {
   const _LinkedIngredientsCard({
     required this.ingredients,
     required this.multiplier,
+    this.unitSystem,
     required this.dimmed,
     required this.l,
     this.onOpenLinked,
@@ -2269,8 +2314,8 @@ class _LinkedIngredientsCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    _scaledIngredientText(ing, multiplier),
+                  child: InlineMarkdownText(
+                    _scaledIngredientText(ing, multiplier, unitSystem),
                     style: TextStyle(
                       color: dimmed ? context.appFgSub : context.appFg,
                       fontSize: 15,
@@ -2278,6 +2323,11 @@ class _LinkedIngredientsCard extends StatelessWidget {
                       height: 1.35,
                     ),
                   ),
+                ),
+                IngredientSubstitutionsButton(
+                  ingredient: ing,
+                  multiplier: multiplier,
+                  lineText: _scaledIngredientText(ing, multiplier, unitSystem),
                 ),
                 if (onOpenLinked != null && _isLinkedRecipe(ing))
                   _LinkedRecipeButton(onTap: () => onOpenLinked!(ing)),
@@ -2519,18 +2569,12 @@ class _NavSquare extends StatelessWidget {
   }
 }
 
-// Führende Zahl aus einem (skalierten) Yield-Text, z. B. „4 Portionen" → „4",
-// „4" → „4". Null wenn keine Zahl enthalten (dann neutrale Überschrift).
-String? _yieldCount(String s) {
-  final m = RegExp(r'(\d+(?:[.,/]\d+)?)').firstMatch(s);
-  return m?.group(1);
-}
-
 // Skalierte Anzeige einer Zutat (z. B. „400 g Erdäpfel"). Verhält sich exakt
 // wie die Detailansicht: bei unparsten Zutaten (Menge steckt im Notiz-Text)
 // wird die führende Zahl IM Text skaliert (`_scaledNote`), sonst das
 // `quantity`-Feld.
-String _scaledIngredientText(Ingredient ing, double m) {
+String _scaledIngredientText(Ingredient ing, double m,
+    [UnitSystem? unitSystem]) {
   final hasQty = (ing.quantity ?? 0) > 0;
   final hasUnit = ing.unit?.name?.isNotEmpty == true;
   final hasFood = ing.food?.name?.isNotEmpty == true;
@@ -2541,7 +2585,8 @@ String _scaledIngredientText(Ingredient ing, double m) {
   }
   // Gleiche Darstellung wie die Detailansicht (Abkürzung/Bruch je Einheit,
   // Plural, verlinkte Rezepte).
-  final (:amount, :name) = ingredientDisplayParts(ing, m);
+  final (:amount, :name) =
+      ingredientDisplayParts(ing, m, unitSystem: unitSystem);
   return '$amount $name'.trim();
 }
 
@@ -2696,6 +2741,7 @@ class _IngredientList extends ConsumerWidget {
         .firstOrNull;
     if (session == null) return const SizedBox.shrink();
     final m = session.quantityMultiplier;
+    final unitSystem = ref.watch(unitSystemProvider);
     final ings = session.recipe.recipeIngredient;
     final hasFooter = footer != null;
 
@@ -2727,7 +2773,14 @@ class _IngredientList extends ConsumerWidget {
           onOpenLinked: (_isLinkedRecipe(ing) && !isGuest)
               ? () => _cookLinkedRecipe(context, ref, ing, m)
               : null,
-          text: _scaledIngredientText(ing, m),
+          text: _scaledIngredientText(ing, m, unitSystem),
+          trailing: ing.hasSubstitutions
+              ? IngredientSubstitutionsButton(
+                  ingredient: ing,
+                  multiplier: m,
+                  lineText: _scaledIngredientText(ing, m, unitSystem),
+                )
+              : null,
           note:
               ing.note?.isNotEmpty == true && ing.food?.name?.isNotEmpty == true
                   ? ing.note!
@@ -2842,10 +2895,9 @@ class _PrepView extends ConsumerWidget {
     final m = session.quantityMultiplier;
     // Portionszahl aus dem (skalierten) Yield ziehen. Das lokalisierte Wort
     // „Portionen" steckt bereits in der Übersetzung — hier nur die Zahl.
-    final yieldStr = (recipe.recipeYield ?? '').trim();
-    final servings = yieldStr.isEmpty
-        ? null
-        : _yieldCount(scaleYield(recipe.recipeYield!, m));
+    // Basis wie Mealie (Portionen, sonst Ergibt-Menge, sonst Zahl im Text).
+    final base = recipe.scaleBase;
+    final servings = base == null ? null : formatQuantity(base * m);
     final heading = servings != null
         ? l.prepareIngredientsFor(servings)
         : l.prepareIngredients;
@@ -3190,6 +3242,7 @@ class _StepText extends StatefulWidget {
   final String text;
   final List<Ingredient> ingredients;
   final double multiplier;
+  final UnitSystem? unitSystem;
   final bool dimmed;
 
   /// Basis für relative Markdown-Link-URLs.
@@ -3199,6 +3252,7 @@ class _StepText extends StatefulWidget {
     required this.text,
     required this.ingredients,
     required this.multiplier,
+    this.unitSystem,
     this.dimmed = false,
     this.serverUrl = '',
   });
@@ -3379,7 +3433,9 @@ class _StepTextState extends State<_StepText> {
               color: AppTokens.accentDeep, size: 20),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(_scaledIngredientText(ing, widget.multiplier),
+            child: Text(
+                _scaledIngredientText(
+                    ing, widget.multiplier, widget.unitSystem),
                 style: TextStyle(
                     color: context.appFg,
                     fontSize: 15,

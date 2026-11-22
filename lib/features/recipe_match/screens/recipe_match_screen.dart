@@ -1,3 +1,4 @@
+import '../../../core/utils/yield_format.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -653,7 +654,8 @@ class _CardFront extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final total = recipe.totalTime ?? 0;
-    final yieldText = recipe.recipeYield?.trim() ?? '';
+    // Portionen/Ergibt wie die Webapp getrennt (hier unskaliert).
+    final yieldText = recipeYieldParts(recipe, 1, l.servings).join(' · ');
     final ingCount = recipe.recipeIngredient.where((i) => i.hasContent).length;
     final rating = recipe.rating ?? 0;
     final chips = [
@@ -923,7 +925,10 @@ class _CardIngredients extends ConsumerWidget {
     final l = AppLocalizations.of(context)!;
     final scale =
         ref.watch(recipeMatchProvider.select((s) => s.scaleOf(recipe.id)));
-    final base = recipe.servings ?? 0;
+    // Wie Mealie: Portionen, sonst Ergibt-Menge.
+    final base = (recipe.servings ?? 0) > 0
+        ? recipe.servings!
+        : (recipe.yieldQuantity ?? 0);
 
     // Portionen: mit hinterlegter Zahl in ganzen Portionen, sonst Faktor.
     final String scaleLabel;

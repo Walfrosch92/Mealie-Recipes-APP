@@ -1,3 +1,4 @@
+import '../../../core/providers/permissions_provider.dart';
 import '../../../core/utils/platform_features.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -1068,22 +1069,33 @@ class _ImportRecipeScreenState extends ConsumerState<ImportRecipeScreen> {
                           spacing: 10,
                           runSpacing: 10,
                           children: [
-                            AsyncActionButton(
-                              icon: Icons.folder_zip_rounded,
-                              label: l.zipImportButton,
-                              showBusySpinner: false,
+                            // Gleiche Optik wie die beiden anderen Wege;
+                            // während des ZIP-Imports ein kleiner Ladekreis.
+                            OutlinedButton.icon(
                               onPressed: _isBusy ? null : _importZip,
+                              icon: _active == _ImportKind.zip
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2))
+                                  : const Icon(Icons.folder_zip_rounded),
+                              label: Text(l.zipImportButton),
                             ),
                             OutlinedButton.icon(
                               onPressed: () => context.push('/bulk-import'),
                               icon: const Icon(Icons.playlist_add_rounded),
                               label: Text(l.bulkImportTitle),
                             ),
-                            OutlinedButton.icon(
-                              onPressed: () => context.push('/migrations'),
-                              icon: const Icon(Icons.move_down_rounded),
-                              label: Text(l.migrationsTitle),
-                            ),
+                            // Wie die Webapp (create.vue) nur mit
+                            // „Erweiterte Funktionen“ — wie die Kachel.
+                            if (!ref.watch(userPermissionsProvider).known ||
+                                ref.watch(userPermissionsProvider).advanced)
+                              OutlinedButton.icon(
+                                onPressed: () => context.push('/migrations'),
+                                icon: const Icon(Icons.move_down_rounded),
+                                label: Text(l.migrationsTitle),
+                              ),
                           ],
                         ),
                         if (_active == _ImportKind.zip)

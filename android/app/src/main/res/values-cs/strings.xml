@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_mealplan_label">Jídelníček</string>
+    <string name="widget_shopping_label">Nákupní seznam</string>
+    <string name="widget_daily_recipe_label">Recept dne</string>
+    <string name="widget_mealplan_description">Zobrazuje jídelníček na dnes a zítra.</string>
+    <string name="widget_shopping_description">Zobrazuje otevřené položky nákupního seznamu.</string>
+    <string name="widget_daily_recipe_description">Každý den zobrazí nový náhodný recept.</string>
+</resources>

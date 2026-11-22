@@ -1,3 +1,4 @@
+import '../../../core/utils/app_languages.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -39,19 +40,7 @@ import '../widgets/account_tab.dart' show SavedAccountAvatar;
 //            (der Load läuft dann im Hintergrund weiter).
 // ---------------------------------------------------------------------------
 
-const _kSetupLanguages = [
-  'de',
-  'en',
-  'fr',
-  'fr_CA',
-  'es',
-  'hu',
-  'nl',
-  'nb',
-  'pl',
-  'pt',
-  'sl'
-];
+List<String> get _kSetupLanguages => kAppLanguageCodes;
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -374,17 +363,42 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       } catch (e) {
         lastError = e;
         LogManager.shared.log('❌ Login [$ver] fehlgeschlagen: $e');
+        // Abgelehnte Zugangsdaten (401) bzw. gesperrtes Konto (423) NICHT
+        // mit der zweiten API-Variante wiederholen: /api/auth/token ist bei
+        // beiden gleich, jeder Versuch zählt bei Mealie als Fehlversuch
+        // (5 → 24 h gesperrt). Vorher zählte jedes falsche Passwort doppelt.
+        if (_isLoginRejection(e)) break;
       }
     }
     if (!mounted) return;
-    setState(() => _error = _loginErrorMessage(lastError));
+    final message = await _loginErrorMessageFor(lastError);
+    if (!mounted) return;
+    setState(() => _error = message);
     LogManager.shared.log('❌ Setup-Login endgültig fehlgeschlagen'
         '${lastError != null ? ' — letzter Fehler: $lastError' : ''}');
   }
 
-  String _loginErrorMessage(Object? error) {
+  static bool _isLoginRejection(Object e) =>
+      e is DioException &&
+      (e.response?.statusCode == 401 || e.response?.statusCode == 423);
+
+  /// Wie die Webapp (login.vue): 423 = Konto gesperrt, 401 = falsche
+  /// Zugangsdaten — außer der Server hat die Passwort-Anmeldung ganz
+  /// abgeschaltet (`allowPasswordLogin`, dann blendet die Webapp das
+  /// Passwortfeld aus).
+  Future<String> _loginErrorMessageFor(Object? error) async {
     final l = AppLocalizations.of(context)!;
-    if (error is DioException && error.response?.statusCode == 401) {
+    final status = error is DioException ? error.response?.statusCode : null;
+    if (status == 423) return l.loginAccountLocked;
+    if (status == 401) {
+      try {
+        final info = await ApiService(
+                _buildSettings(version: 'v3').copyWith(apiToken: ''))
+            .fetchServerInfo();
+        if (info['allowPasswordLogin'] == false) {
+          return l.loginPasswordDisabled;
+        }
+      } catch (_) {}
       return l.loginInvalidCredentials;
     }
     return l.connectionFailedCheck;
@@ -511,19 +525,23 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         child: Column(
           children: [
             _StepIndicator(step: _step),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: switch (_step) {
-                  0 => _buildWelcomeStep(l),
-                  1 => _buildConnectStep(l),
-                  2 => _buildShoppingStep(l),
-                  3 => _buildExactModeStep(l),
-                  4 => _buildImportLanguageStep(l),
-                  _ => _buildCachingStep(l),
-                },
+            // Schritt 0 hat ein eigenes Layout: die (lange) Sprachliste
+            // scrollt, „Weiter“ bleibt fest am unteren Rand.
+            if (_step == 0)
+              Expanded(child: _buildWelcomeStep(l))
+            else
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: switch (_step) {
+                    1 => _buildConnectStep(l),
+                    2 => _buildShoppingStep(l),
+                    3 => _buildExactModeStep(l),
+                    4 => _buildImportLanguageStep(l),
+                    _ => _buildCachingStep(l),
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -531,7 +549,62 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   // ── Step 0: Welcome + language ──────────────────────────────────────────
+  // Seit 23 Sprachen ist die Liste länger als jeder Bildschirm: Kopf +
+  // Sprachen scrollen (ohne sichtbare Scrollleiste, nur mit weichem
+  // Ausblenden an den Kanten), die Knöpfe stehen fest am unteren Rand.
   Widget _buildWelcomeStep(AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (rect) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black,
+                Colors.black,
+                Colors.transparent,
+              ],
+              stops: [0.0, 0.03, 0.94, 1.0],
+            ).createShader(rect),
+            child: ScrollConfiguration(
+              behavior:
+                  ScrollConfiguration.of(context).copyWith(scrollbars: false),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: _welcomeHeaderAndLanguages(l),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GradientButton(
+                label: l.setupContinue,
+                onTap: () => setState(() => _step = 1),
+              ),
+              const SizedBox(height: 12),
+              // Skip server setup and jump straight to Cook with friends.
+              SecondaryButton(
+                label: l.guestMode,
+                icon: Icons.person_outline,
+                onTap: _continueAsGuest,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _welcomeHeaderAndLanguages(AppLocalizations l) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -579,19 +652,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             ),
           );
         }),
-        const SizedBox(height: 24),
-        GradientButton(
-          label: l.setupContinue,
-          onTap: () => setState(() => _step = 1),
-        ),
-        const SizedBox(height: 12),
-        // Skip server setup and jump straight to Cook with friends.
-        SecondaryButton(
-          label: l.guestMode,
-          icon: Icons.person_outline,
-          onTap: _continueAsGuest,
-        ),
-        const SizedBox(height: 24),
       ],
     );
   }
@@ -1206,35 +1266,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     );
   }
 
-  String _flagEmoji(String code) => switch (code) {
-        'de' => '🇩🇪',
-        'en' => '🇬🇧',
-        'fr' => '🇫🇷',
-        'fr_CA' => '🇨🇦',
-        'es' => '🇪🇸',
-        'hu' => '🇭🇺',
-        'nl' => '🇳🇱',
-        'nb' => '🇳🇴',
-        'pl' => '🇵🇱',
-        'pt' => '🇧🇷',
-        'sl' => '🇸🇮',
-        _ => '🌍',
-      };
+  String _flagEmoji(String code) => appLanguageFlag(code);
 
-  String _langName(String code) => switch (code) {
-        'de' => 'Deutsch',
-        'en' => 'English',
-        'fr' => 'Français',
-        'fr_CA' => 'Français (Canada)',
-        'es' => 'Español',
-        'hu' => 'Magyar',
-        'nl' => 'Nederlands',
-        'nb' => 'Norsk (bokmål)',
-        'pl' => 'Polski',
-        'pt' => 'Português (Brasil)',
-        'sl' => 'Slovenščina',
-        _ => code,
-      };
+  String _langName(String code) => appLanguageName(code);
 }
 
 // ---------------------------------------------------------------------------

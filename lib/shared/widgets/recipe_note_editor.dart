@@ -123,8 +123,14 @@ class _NoteEditorDialogState extends State<_NoteEditorDialog> {
                     Navigator.pop(context);
                     return;
                   }
-                  Navigator.pop(context,
-                      RecipeNote(title: _titleCtrl.text.trim(), text: text));
+                  // referenceId behalten — Schritte verweisen darüber auf
+                  // die Notiz (Mealie „Notiz-Links").
+                  Navigator.pop(
+                      context,
+                      RecipeNote(
+                          title: _titleCtrl.text.trim(),
+                          text: text,
+                          referenceId: widget.initial?.referenceId));
                 },
           child: Text(l.save),
         ),

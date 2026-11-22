@@ -1,3 +1,4 @@
+import 'features/users/screens/api_tokens_screen.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -460,6 +461,11 @@ final _routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/updates',
         pageBuilder: (ctx, state) => _animatedPage(state, const UpdateScreen()),
+      ),
+      GoRoute(
+        path: '/api-tokens',
+        pageBuilder: (ctx, state) =>
+            _animatedPage(state, const ApiTokensScreen()),
       ),
       GoRoute(
         path: '/ai-providers',

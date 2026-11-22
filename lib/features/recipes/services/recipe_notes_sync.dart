@@ -102,7 +102,12 @@ class RecipeNotesQueued implements Exception {
 const _kPendingNotes = 'pending_recipe_notes';
 
 List<Map<String, String>> _notesJson(List<RecipeNote> notes) => [
-      for (final n in notes) {'title': n.title, 'text': n.text}
+      for (final n in notes)
+        {
+          'title': n.title,
+          'text': n.text,
+          if (n.referenceId != null) 'referenceId': n.referenceId!,
+        }
     ];
 
 List<RecipeNote> _notesFrom(dynamic raw) => [
@@ -110,7 +115,8 @@ List<RecipeNote> _notesFrom(dynamic raw) => [
         if (n is Map)
           RecipeNote(
               title: n['title']?.toString() ?? '',
-              text: n['text']?.toString() ?? ''),
+              text: n['text']?.toString() ?? '',
+              referenceId: n['referenceId']?.toString()),
     ];
 
 Future<Map<String, dynamic>> _loadPending() async {
@@ -219,7 +225,9 @@ List<RecipeNote> mergeRecipeNotes({
   String key(RecipeNote n) => '${n.title}\u0000${n.text}';
   final baseKeys = base.map(key).toList();
   final serverKeys = server.map(key).toList();
-  if (_sameList(baseKeys, serverKeys)) return mine;
+  if (_sameList(baseKeys, serverKeys)) {
+    return _withServerIds(mine, base: base, server: server);
+  }
   final mineKeys = mine.map(key).toSet();
   final removed = {
     for (final k in baseKeys)
@@ -238,7 +246,44 @@ List<RecipeNote> mergeRecipeNotes({
   for (final n in added) {
     if (present.add(key(n))) result.add(n);
   }
-  return result;
+  return _withServerIds(result, base: base, server: server);
+}
+
+/// Fehlende `referenceId`s vom Server ergänzen (Cache-Stände vor dem
+/// Update kannten sie nicht). Ohne sie vergäbe Mealie beim Speichern allen
+/// Notizen neue IDs und die Notiz-Verweise der Schritte gingen verloren.
+/// Unveränderte Notizen: per Inhalt. Bearbeitete: die ID der Notiz, die an
+/// derselben Stelle stand und jetzt fehlt (also die bearbeitete war).
+List<RecipeNote> _withServerIds(List<RecipeNote> notes,
+    {required List<RecipeNote> base, required List<RecipeNote> server}) {
+  if (notes.every((n) => n.referenceId != null)) return notes;
+  String key(RecipeNote n) => '${n.title}\u0000${n.text}';
+  final serverIdByKey = <String, String>{
+    for (final n in server)
+      if (n.referenceId != null) key(n): n.referenceId!,
+  };
+  final noteKeys = notes.map(key).toSet();
+  final used = notes.map((n) => n.referenceId).whereType<String>().toSet();
+  final out = <RecipeNote>[];
+  var changed = false;
+  for (var i = 0; i < notes.length; i++) {
+    final n = notes[i];
+    if (n.referenceId != null) {
+      out.add(n);
+      continue;
+    }
+    var id = serverIdByKey[key(n)];
+    if (id == null && i < base.length && !noteKeys.contains(key(base[i]))) {
+      id = base[i].referenceId ?? serverIdByKey[key(base[i])];
+    }
+    if (id != null && used.add(id)) {
+      out.add(RecipeNote(title: n.title, text: n.text, referenceId: id));
+      changed = true;
+    } else {
+      out.add(n);
+    }
+  }
+  return changed ? out : notes;
 }
 
 bool _sameList(List<String> a, List<String> b) {

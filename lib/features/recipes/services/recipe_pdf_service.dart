@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../../core/utils/unit_conversion.dart' show UnitSystem;
 import '../../../shared/theme/app_colors.dart';
 import 'dart:typed_data';
 import 'dart:ui' show Rect;
@@ -14,7 +15,7 @@ import '../../../core/api/api_service.dart';
 import '../../../core/models/recipe_detail.dart';
 import '../../../core/utils/ingredient_display.dart';
 import '../../../core/utils/markdown_parse.dart'
-    show embeddedImageUrls, stripEmbeddedImages;
+    show embeddedImageUrls, markdownToPlainText, stripEmbeddedImages;
 import '../../../core/utils/yield_format.dart';
 import '../../../core/services/recipe_image_store.dart';
 
@@ -48,6 +49,10 @@ class RecipePdfLabels {
   final String notes;
   final String generatedBy;
 
+  /// „Alternativen" — Ersatzzutaten-Zeile unter einer Zutat (wie der
+  /// Webapp-Druck, dort standardmäßig an).
+  final String substitutions;
+
   const RecipePdfLabels({
     required this.servings,
     required this.time,
@@ -56,6 +61,7 @@ class RecipePdfLabels {
     required this.instructions,
     required this.notes,
     required this.generatedBy,
+    this.substitutions = 'Substitutions',
   });
 }
 
@@ -74,6 +80,7 @@ class RecipePdfService {
     required RecipeDetail recipe,
     required ApiService api,
     required double multiplier,
+    UnitSystem? unitSystem,
     required bool includeImage,
     required RecipePdfLabels labels,
     // Ursprung des Share-Popovers (mirrors SupportMailService.shareLogs) —
@@ -85,6 +92,7 @@ class RecipePdfService {
         recipe: recipe,
         api: api,
         multiplier: multiplier,
+        unitSystem: unitSystem,
         includeImage: includeImage,
         labels: labels);
     final dir = await getTemporaryDirectory();
@@ -105,6 +113,7 @@ class RecipePdfService {
     required RecipeDetail recipe,
     required ApiService api,
     required double multiplier,
+    UnitSystem? unitSystem,
     required bool includeImage,
     required RecipePdfLabels labels,
   }) =>
@@ -114,6 +123,7 @@ class RecipePdfService {
             recipe: recipe,
             api: api,
             multiplier: multiplier,
+            unitSystem: unitSystem,
             includeImage: includeImage,
             labels: labels),
       );
@@ -123,6 +133,7 @@ class RecipePdfService {
     required RecipeDetail recipe,
     required ApiService api,
     required double multiplier,
+    UnitSystem? unitSystem,
     required bool includeImage,
     required RecipePdfLabels labels,
   }) async {
@@ -202,6 +213,7 @@ class RecipePdfService {
       build: (context) => _buildContent(
         recipe: recipe,
         multiplier: multiplier,
+        unitSystem: unitSystem,
         imageBytes: imageBytes,
         stepImages: stepImages,
         noteImages: noteImages,
@@ -217,6 +229,7 @@ class RecipePdfService {
   static List<pw.Widget> _buildContent({
     required RecipeDetail recipe,
     required double multiplier,
+    UnitSystem? unitSystem,
     required Uint8List? imageBytes,
     Map<int, List<pw.ImageProvider>> stepImages = const {},
     Map<int, List<pw.ImageProvider>> noteImages = const {},
@@ -285,9 +298,9 @@ class RecipePdfService {
     if ((t ?? 0) > 0) {
       metaItems.add((labels.time, _fmtTime(t!)));
     }
-    if ((recipe.recipeYield ?? '').isNotEmpty) {
-      metaItems
-          .add((labels.servings, scaleYield(recipe.recipeYield!, multiplier)));
+    final yieldParts = recipeYieldParts(recipe, multiplier, labels.servings);
+    if (yieldParts.isNotEmpty) {
+      metaItems.add((labels.servings, yieldParts.join(' · ')));
     }
     if ((recipe.rating ?? 0) > 0) {
       metaItems.add((labels.rating, recipe.rating!.toStringAsFixed(1)));
@@ -339,7 +352,8 @@ class RecipePdfService {
           ));
         }
         if (!ing.hasContent) continue;
-        final (:amount, :name) = ingredientDisplayParts(ing, multiplier);
+        final (:amount, :name) =
+            ingredientDisplayParts(ing, multiplier, unitSystem: unitSystem);
         widgets.add(pw.Padding(
           padding: const pw.EdgeInsets.only(bottom: 6),
           child: pw.Row(
@@ -362,7 +376,8 @@ class RecipePdfService {
                               fontSize: 11,
                               color: _accentDeep)),
                     pw.TextSpan(
-                        text: name,
+                        // Markdown-Zeichen weg (Webapp-Druck rendert sie).
+                        text: markdownToPlainText(name),
                         style: pw.TextStyle(
                             font: baseFont, fontSize: 11, color: _textDark)),
                   ]),
@@ -371,6 +386,29 @@ class RecipePdfService {
             ],
           ),
         ));
+        // Ersatzzutaten wie im Webapp-Druck (ingredientSubstitutionSummary):
+        // erst die des Rezepts, dann die des Lebensmittels, „Name (Notiz)".
+        final plural = ingredientFoodPlural(ing, multiplier);
+        final subs = [
+          ...ing.substitutions,
+          ...?ing.food?.substitutions,
+        ]
+            .map((s) {
+              final f = s.foodLabel(plural: plural);
+              final n = s.note == null ? null : markdownToPlainText(s.note!);
+              if (f != null && (n?.isNotEmpty ?? false)) return '$f ($n)';
+              return f ?? n ?? '';
+            })
+            .where((t) => t.isNotEmpty)
+            .join(', ');
+        if (subs.isNotEmpty) {
+          widgets.add(pw.Padding(
+            padding: const pw.EdgeInsets.only(left: 12, bottom: 6),
+            child: pw.Text('${labels.substitutions}: $subs',
+                style: pw.TextStyle(
+                    font: baseFont, fontSize: 9.5, color: _textSub)),
+          ));
+        }
       }
       widgets.add(pw.SizedBox(height: 18));
     }
