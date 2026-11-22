@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import '../../../shared/widgets/step_linked_notes.dart';
 import '../providers/user_ratings_provider.dart';
 import '../../organizers/providers/organizers_provider.dart';
@@ -89,6 +90,12 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   late double _multiplier =
       (widget.initialScale ?? 0) > 0 ? widget.initialScale! : 1.0;
   int _detailTab = 0; // 0 = Zutaten, 1 = Zubereitung
+
+  /// Gemessene Höhe von Chips + Titel + Meta im Titelbild. Lange Titel
+  /// (3 Zeilen) samt „Zuletzt gemacht"/„Erstellt von" ragten sonst bei der
+  /// festen Höhe in die Knopfleiste (TestFlight-Feedback 2026-11-21).
+  final _heroContentKey = GlobalKey();
+  double _heroContentHeight = 0;
   final Set<int> _checkedIngredients = {};
 
   /// Abgehakte Utensilien (nur lokal, wie die Zutaten-Häkchen).
@@ -224,7 +231,25 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     // lag der Knopf halb hinter der Leiste.
     final bottomSafe = MediaQuery.paddingOf(context).bottom +
         (widget.embedded ? GlassTabBar.heightOf(context) : 0);
-    final heroHeight = LargeScreen.isWide(context) ? 460.0 : 320.0;
+    // Kopfbereich wächst mit dem Inhalt: Statusleiste + Knopfleiste (40) +
+    // Abstand + gemessener Titelblock + Unterkante (34). Kurze Titel bleiben
+    // bei der bisherigen Höhe.
+    final baseHero = LargeScreen.isWide(context) ? 460.0 : 320.0;
+    final heroHeight = math.max(
+        baseHero,
+        MediaQuery.paddingOf(context).top +
+            8 +
+            40 +
+            20 +
+            _heroContentHeight +
+            34);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final h = _heroContentKey.currentContext?.size?.height;
+      if (h != null && (h - _heroContentHeight).abs() > 0.5) {
+        setState(() => _heroContentHeight = h);
+      }
+    });
     const ctaBarHeight = 56.0;
     final ctaReserve = ctaBarHeight + bottomSafe + 30;
     final isFavorite =
@@ -274,6 +299,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                             : SystemUiOverlayStyle.dark
                                 .copyWith(statusBarColor: Colors.transparent),
                     flexibleSpace: _HeroHeader(
+                      contentKey: _heroContentKey,
                       recipe: recipe,
                       settings: settings,
                       multiplier: _multiplier,
@@ -2369,6 +2395,7 @@ class _PlanSheetState extends ConsumerState<_PlanSheet> {
 // ---------------------------------------------------------------------------
 
 class _HeroHeader extends StatelessWidget {
+  final Key? contentKey;
   final RecipeDetail recipe;
   final AppSettings? settings;
   final double multiplier;
@@ -2378,6 +2405,7 @@ class _HeroHeader extends StatelessWidget {
   final VoidCallback onFavorite;
 
   const _HeroHeader({
+    this.contentKey,
     required this.recipe,
     required this.settings,
     required this.multiplier,
@@ -2479,6 +2507,7 @@ class _HeroHeader extends StatelessWidget {
             right: 18,
             bottom: 34,
             child: Column(
+              key: contentKey,
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [

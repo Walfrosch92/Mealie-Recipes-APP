@@ -71,3 +71,6 @@ AENDERUNGEN_*.md
 /cloudkit/
 /ios/WATCH_SETUP.md
 /ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md
+
+# Kotlin-Compiler-Sitzungen (Build-Rest)
+.kotlin/
