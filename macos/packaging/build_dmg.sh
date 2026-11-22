@@ -32,7 +32,8 @@ ENTITLEMENTS="$ROOT/macos/Runner/Release.entitlements"
 SIGN_ID="${MAC_SIGN_IDENTITY:-}"
 
 echo "▸ Flutter-Release-Build (macOS, arm64) …"
-flutter build macos --release
+# MEALIE_BUILD_SHA (vom Release-Workflow): Commit in die App, für den Updater.
+flutter build macos --release ${MEALIE_BUILD_SHA:+--dart-define=MEALIE_BUILD_SHA=$MEALIE_BUILD_SHA}
 
 [ -d "$APP" ] || { echo "✗ App nicht gefunden: $APP" >&2; exit 1; }
 

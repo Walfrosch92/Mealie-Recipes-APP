@@ -74,7 +74,7 @@ jobs:
           fi
           cp "$MEALIE_KEY_PROPERTIES" android/key.properties
       - name: APK bauen
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=MEALIE_BUILD_SHA=${{ needs.version.outputs.sha }}
       - name: APK umbenennen + Signatur prüfen
         run: |
           v="${{ needs.version.outputs.version }}"
@@ -122,6 +122,9 @@ jobs:
           echo "MAC_SIGN_IDENTITY=$ID" >> "$GITHUB_ENV"
           echo "MAC_NOTARY_PROFILE=mealie-notary" >> "$GITHUB_ENV"
       - name: App + DMG bauen, signieren, notarisieren
+        env:
+          # Commit in die App: der Updater erkennt so eine ersetzte Beta mit gleicher Version.
+          MEALIE_BUILD_SHA: ${{ needs.version.outputs.sha }}
         run: bash macos/packaging/build_dmg.sh
       - name: DMG prüfen
         run: |
@@ -170,6 +173,8 @@ jobs:
           else { Write-Host "::warning::Keine VC-Laufzeit gefunden – Installer ohne mitgelieferte DLLs" }
       - name: Programm + Installer bauen
         shell: pwsh
+        env:
+          MEALIE_BUILD_SHA: ${{ needs.version.outputs.sha }}
         run: powershell -ExecutionPolicy Bypass -File windows\packaging\build_installer.ps1
       - name: Installer prüfen
         shell: pwsh

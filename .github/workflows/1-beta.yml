@@ -11,7 +11,7 @@
 #   - Desktop-Apps sehen die Beta nur mit dem Schalter „Beta-Versionen erhalten“ (Updates-Kachel).
 #   - Obtainium: „Include prereleases“ einschalten, um Betas zu bekommen.
 # Gibt es zu dieser Version schon eine Beta, wird sie ersetzt. Achtung: installierte Apps
-# erkennen nur eine HÖHERE Version – für eine neue Beta, die Tester bekommen sollen, Version erhöhen.
+# erkennen eine ersetzte Beta über den Commit (MEALIE_BUILD_SHA) – ab den Builds vom 22.11.2026.
 # Ist die Version schon regulär veröffentlicht, bricht der Workflow ab (erst Version erhöhen).
 # =====================================================================
 name: 1 · Beta bauen und veröffentlichen

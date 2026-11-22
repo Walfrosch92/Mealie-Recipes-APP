@@ -56,6 +56,10 @@ class AppRelease {
   final int assetSize;
   final bool prerelease;
 
+  /// Commit des Builds (GitHub `target_commitish`, die Workflows erzeugen
+  /// Releases mit `--target <sha>`). Leer, wenn unbekannt.
+  final String commit;
+
   const AppRelease({
     required this.version,
     required this.name,
@@ -66,7 +70,27 @@ class AppRelease {
     required this.assetUrl,
     required this.assetSize,
     this.prerelease = false,
+    this.commit = '',
   });
+}
+
+/// Commit, aus dem DIESE App gebaut wurde — setzen die Release-Workflows per
+/// `--dart-define=MEALIE_BUILD_SHA=<sha>`. Lokale Builds: leer.
+const kBuildCommit = String.fromEnvironment('MEALIE_BUILD_SHA');
+
+/// Ist [release] neuer als die installierte App ([current] + [buildCommit])?
+/// Höhere Version → ja. Gleiche Version → nur, wenn das Release aus einem
+/// anderen Commit stammt: eine Beta wird bei gleicher Versionsnummer ersetzt
+/// (z. B. Fix nachgeschoben), und das soll trotzdem ankommen. Ohne bekannten
+/// eigenen Commit (lokaler Build) bleibt es beim reinen Versionsvergleich.
+bool isReleaseNewer(AppRelease release, String current,
+    {String buildCommit = kBuildCommit}) {
+  final cmp = compareVersions(release.version, current);
+  if (cmp != 0) return cmp > 0;
+  final own = buildCommit.trim().toLowerCase();
+  final rel = release.commit.trim().toLowerCase();
+  if (own.isEmpty || rel.isEmpty) return false;
+  return !(rel.startsWith(own) || own.startsWith(rel));
 }
 
 /// -1 / 0 / 1 wie compareTo; nur „x.y.z" (Rest ignoriert).
@@ -222,8 +246,10 @@ class AppUpdateNotifier extends Notifier<UpdateState> {
           assetUrl: a['browser_download_url'].toString(),
           assetSize: (a['size'] as num?)?.toInt() ?? 0,
           prerelease: pre,
+          commit: _commitOf(r['target_commitish']),
         );
-        final cmp = best == null ? 1 : compareVersions(rel.version, best.version);
+        final cmp =
+            best == null ? 1 : compareVersions(rel.version, best.version);
         // Gleiche Version: reguläres Release vor Beta.
         if (cmp > 0 || (cmp == 0 && best!.prerelease && !pre)) {
           best = rel;
@@ -243,7 +269,7 @@ class AppUpdateNotifier extends Notifier<UpdateState> {
       final now = DateTime.now();
       await (await SharedPreferences.getInstance())
           .setString(_kLastCheck, now.toIso8601String());
-      if (latest == null || compareVersions(latest.version, current) <= 0) {
+      if (latest == null || !isReleaseNewer(latest, current)) {
         state = state.copyWith(
             status: UpdateStatus.upToDate,
             currentVersion: current,
@@ -442,4 +468,10 @@ rm -rf "$(dirname "$0")"
       return false;
     }
   }
+}
+
+/// Nur echte Commit-Hashes zählen (ein Release „auf main" o. Ä. nicht).
+String _commitOf(dynamic v) {
+  final s = v?.toString().trim() ?? '';
+  return RegExp(r'^[0-9a-fA-F]{7,40}$').hasMatch(s) ? s : '';
 }

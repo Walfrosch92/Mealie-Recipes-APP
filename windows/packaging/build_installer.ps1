@@ -20,7 +20,9 @@ $version = $line.Matches[0].Groups[1].Value
 Write-Host "> Version $version"
 
 Write-Host "> Flutter-Release-Build (Windows) …"
-flutter build windows --release
+# MEALIE_BUILD_SHA (vom Release-Workflow): Commit in die App, für den Updater.
+if ($env:MEALIE_BUILD_SHA) { flutter build windows --release "--dart-define=MEALIE_BUILD_SHA=$env:MEALIE_BUILD_SHA" }
+else { flutter build windows --release }
 if ($LASTEXITCODE -ne 0) { throw "flutter build windows fehlgeschlagen" }
 
 $iscc = @(
