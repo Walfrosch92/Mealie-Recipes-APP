@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "チェックしたものを削除",
   "shoppingCheckAllConfirm": "すべての項目をチェックしてもよろしいですか?",
   "shoppingUncheckAllConfirm": "すべてのアイテムのチェックを外してもよろしいですか？",
-  "shoppingItemCheckedOff": "{item} をチェックしました"
+  "shoppingItemCheckedOff": "{item} をチェックしました",
+  "updateGithubUnavailable": "GitHub が現在応答していません。数分後にもう一度お試しください。"
 }

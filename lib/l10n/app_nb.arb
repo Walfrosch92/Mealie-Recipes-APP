@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Fjern markerte elementer",
   "shoppingCheckAllConfirm": "Er du sikker på at du vil krysse av alle elementene?",
   "shoppingUncheckAllConfirm": "Er du sikker på at du vil fjerne avmerkingen fra alle elementene?",
-  "shoppingItemCheckedOff": "{item} er krysset av"
+  "shoppingItemCheckedOff": "{item} er krysset av",
+  "updateGithubUnavailable": "GitHub svarer ikke akkurat nå. Prøv igjen om noen minutter."
 }

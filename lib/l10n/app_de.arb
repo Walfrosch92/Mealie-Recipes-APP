@@ -1515,5 +1515,6 @@
   "shoppingDeleteChecked": "Erledigte löschen",
   "shoppingCheckAllConfirm": "Bist du sicher, dass du alle Elemente abhaken möchtest?",
   "shoppingUncheckAllConfirm": "Bist du sicher, dass du die Auswahl aller Elemente aufheben möchtest?",
-  "shoppingItemCheckedOff": "{item} erledigt"
+  "shoppingItemCheckedOff": "{item} erledigt",
+  "updateGithubUnavailable": "GitHub antwortet gerade nicht. Bitte versuche es in ein paar Minuten erneut."
 }

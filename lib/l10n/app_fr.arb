@@ -1515,5 +1515,6 @@
   "shoppingDeleteChecked": "Supprimer la sélection",
   "shoppingCheckAllConfirm": "Voulez-vous vraiment sélectionner tous les éléments ?",
   "shoppingUncheckAllConfirm": "Voulez-vous vraiment désélectionner tous les éléments ?",
-  "shoppingItemCheckedOff": "{item} coché"
+  "shoppingItemCheckedOff": "{item} coché",
+  "updateGithubUnavailable": "GitHub ne répond pas pour le moment. Réessaie dans quelques minutes."
 }

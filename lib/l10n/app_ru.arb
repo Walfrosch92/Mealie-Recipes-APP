@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Удалить отмеченные",
   "shoppingCheckAllConfirm": "Вы уверены, что хотите выбрать все элементы?",
   "shoppingUncheckAllConfirm": "Вы уверены, что хотите снять отметку со всех элементов?",
-  "shoppingItemCheckedOff": "Отмечено: {item}"
+  "shoppingItemCheckedOff": "Отмечено: {item}",
+  "updateGithubUnavailable": "GitHub сейчас не отвечает. Попробуйте ещё раз через несколько минут."
 }

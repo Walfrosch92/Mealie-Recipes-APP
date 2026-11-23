@@ -9161,6 +9161,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checked off {item}'**
   String shoppingItemCheckedOff(String item);
+
+  /// No description provided for @updateGithubUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub is not responding right now. Please try again in a few minutes.'**
+  String get updateGithubUnavailable;
 }
 
 class _AppLocalizationsDelegate

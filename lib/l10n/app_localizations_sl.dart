@@ -5270,4 +5270,8 @@ class AppLocalizationsSl extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return 'Odkljukano $item';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub se trenutno ne odziva. Poskusi znova čez nekaj minut.';
 }

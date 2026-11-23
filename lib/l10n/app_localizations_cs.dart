@@ -5263,4 +5263,8 @@ class AppLocalizationsCs extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return 'Odškrtnuta položka $item';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub právě neodpovídá. Zkus to znovu za pár minut.';
 }

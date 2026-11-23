@@ -5199,4 +5199,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return 'Checked off $item';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub is not responding right now. Please try again in a few minutes.';
 }

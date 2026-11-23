@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "İşaretleneni Sil",
   "shoppingCheckAllConfirm": "Tüm öğeleri işaretlemek istediğinizden emin misiniz?",
   "shoppingUncheckAllConfirm": "Tüm öğelerden işaretleri kaldırmak istediğinize emin misiniz?",
-  "shoppingItemCheckedOff": "{item} işaretlendi"
+  "shoppingItemCheckedOff": "{item} işaretlendi",
+  "updateGithubUnavailable": "GitHub şu anda yanıt vermiyor. Lütfen birkaç dakika sonra tekrar dene."
 }

@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Izbriši izbrano",
   "shoppingCheckAllConfirm": "Ali res želite izbrati vse elemente?",
   "shoppingUncheckAllConfirm": "Ali res ne želite izbrati vseh elementov?",
-  "shoppingItemCheckedOff": "Odkljukano {item}"
+  "shoppingItemCheckedOff": "Odkljukano {item}",
+  "updateGithubUnavailable": "GitHub se trenutno ne odziva. Poskusi znova čez nekaj minut."
 }

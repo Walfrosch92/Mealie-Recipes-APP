@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Odstranit vybrané",
   "shoppingCheckAllConfirm": "Opravdu chcete vybrat všechny položky?",
   "shoppingUncheckAllConfirm": "Opravdu chcete zrušit výběr všech položek?",
-  "shoppingItemCheckedOff": "Odškrtnuta položka {item}"
+  "shoppingItemCheckedOff": "Odškrtnuta položka {item}",
+  "updateGithubUnavailable": "GitHub právě neodpovídá. Zkus to znovu za pár minut."
 }

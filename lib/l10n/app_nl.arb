@@ -1515,5 +1515,6 @@
   "shoppingDeleteChecked": "Selectie verwijderen",
   "shoppingCheckAllConfirm": "Weet je zeker dat je alle items wilt selecteren?",
   "shoppingUncheckAllConfirm": "Weet je zeker dat je alle items wilt deselecteren?",
-  "shoppingItemCheckedOff": "{item} afgevinkt"
+  "shoppingItemCheckedOff": "{item} afgevinkt",
+  "updateGithubUnavailable": "GitHub reageert op dit moment niet. Probeer het over een paar minuten opnieuw."
 }

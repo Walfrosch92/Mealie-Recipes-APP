@@ -3351,5 +3351,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "updateGithubUnavailable": "GitHub is not responding right now. Please try again in a few minutes."
 }

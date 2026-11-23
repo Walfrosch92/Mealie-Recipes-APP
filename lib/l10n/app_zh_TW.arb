@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "刪除已勾選項目",
   "shoppingCheckAllConfirm": "確定要勾選所有項目嗎？",
   "shoppingUncheckAllConfirm": "確定要取消勾選所有項目嗎？",
-  "shoppingItemCheckedOff": "已勾除 {item}"
+  "shoppingItemCheckedOff": "已勾除 {item}",
+  "updateGithubUnavailable": "GitHub 目前沒有回應。請幾分鐘後再試。"
 }

@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Kijelöltek törlése",
   "shoppingCheckAllConfirm": "Biztos, hogy minden elemet be akar jelölni?",
   "shoppingUncheckAllConfirm": "Biztos, hogy minden elem kijelölését visszavonja?",
-  "shoppingItemCheckedOff": "{item} leellenőrzve"
+  "shoppingItemCheckedOff": "{item} leellenőrzve",
+  "updateGithubUnavailable": "A GitHub most nem válaszol. Próbáld újra néhány perc múlva."
 }

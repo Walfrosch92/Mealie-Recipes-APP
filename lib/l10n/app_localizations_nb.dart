@@ -5218,4 +5218,8 @@ class AppLocalizationsNb extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item er krysset av';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub svarer ikke akkurat nå. Prøv igjen om noen minutter.';
 }

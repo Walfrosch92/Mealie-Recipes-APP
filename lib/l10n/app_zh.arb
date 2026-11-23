@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "删除选中",
   "shoppingCheckAllConfirm": "您确定要选择所有项目吗？",
   "shoppingUncheckAllConfirm": "您确定要取消选中所有项目吗？",
-  "shoppingItemCheckedOff": "已勾除 {item}"
+  "shoppingItemCheckedOff": "已勾除 {item}",
+  "updateGithubUnavailable": "GitHub 目前没有响应。请几分钟后再试。"
 }

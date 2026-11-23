@@ -1522,5 +1522,6 @@
   "shoppingDeleteChecked": "Usuń zaznaczone",
   "shoppingCheckAllConfirm": "Czy na pewno chcesz zaznaczyć wszystkie elementy?",
   "shoppingUncheckAllConfirm": "Czy na pewno chcesz odznaczyć wszystkie elementy?",
-  "shoppingItemCheckedOff": "Zaznaczono {item}"
+  "shoppingItemCheckedOff": "Zaznaczono {item}",
+  "updateGithubUnavailable": "GitHub w tej chwili nie odpowiada. Spróbuj ponownie za kilka minut."
 }

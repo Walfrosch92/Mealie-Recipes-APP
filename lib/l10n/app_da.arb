@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Slet valgte",
   "shoppingCheckAllConfirm": "Er du sikker på, at du vil markere alle elementer?",
   "shoppingUncheckAllConfirm": "Er du sikker på, at du vil fjerne markeringen af alle elementer?",
-  "shoppingItemCheckedOff": "Krydsede {item} af"
+  "shoppingItemCheckedOff": "Krydsede {item} af",
+  "updateGithubUnavailable": "GitHub svarer ikke lige nu. Prøv igen om et par minutter."
 }

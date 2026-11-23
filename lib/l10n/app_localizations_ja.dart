@@ -5046,4 +5046,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item をチェックしました';
   }
+
+  @override
+  String get updateGithubUnavailable => 'GitHub が現在応答していません。数分後にもう一度お試しください。';
 }

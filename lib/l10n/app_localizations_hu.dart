@@ -5216,4 +5216,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item leellenőrzve';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'A GitHub most nem válaszol. Próbáld újra néhány perc múlva.';
 }

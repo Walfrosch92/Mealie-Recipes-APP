@@ -5271,4 +5271,8 @@ class AppLocalizationsUk extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return 'Позначено $item як куплене';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub зараз не відповідає. Спробуйте ще раз за кілька хвилин.';
 }

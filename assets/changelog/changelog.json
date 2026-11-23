@@ -7,6 +7,13 @@
         "New in the ⋮ menu of the shopping list: “Check All Items”, “Uncheck All Items” and “Delete Checked” – each with a confirmation, just like in Mealie's web app.",
         "Checking off an item now shows a short message with “Undo”, so an accidental tap is easy to take back."
       ]
+    },
+    {
+      "icon": "fix",
+      "title": "Fixes",
+      "items": [
+        "Android: the keyboard no longer pops up by itself when you return from a recipe to the recipe list, and scrolling the list or tapping outside the search field now closes it."
+      ]
     }
   ]
 }

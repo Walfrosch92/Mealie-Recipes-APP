@@ -5215,4 +5215,8 @@ class AppLocalizationsDa extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return 'Krydsede $item af';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub svarer ikke lige nu. Prøv igen om et par minutter.';
 }

@@ -5221,4 +5221,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item afgevinkt';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub reageert op dit moment niet. Probeer het over een paar minuten opnieuw.';
 }

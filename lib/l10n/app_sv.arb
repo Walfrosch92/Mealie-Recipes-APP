@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Ta bort avbockade varor",
   "shoppingCheckAllConfirm": "Vill du bocka av alla varor?",
   "shoppingUncheckAllConfirm": "Vill du avmarkera alla varor?",
-  "shoppingItemCheckedOff": "Kryssat av {item}"
+  "shoppingItemCheckedOff": "Kryssat av {item}",
+  "updateGithubUnavailable": "GitHub svarar inte just nu. Försök igen om några minuter."
 }

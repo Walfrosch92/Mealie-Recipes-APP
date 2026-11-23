@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "선택한 항목 삭제",
   "shoppingCheckAllConfirm": "모든 항목을 선택하시겠습니까?",
   "shoppingUncheckAllConfirm": "모든 항목을 선택 해제하시겠습니까?",
-  "shoppingItemCheckedOff": "{item} 선택됨"
+  "shoppingItemCheckedOff": "{item} 선택됨",
+  "updateGithubUnavailable": "GitHub가 지금 응답하지 않습니다. 몇 분 후에 다시 시도하세요."
 }

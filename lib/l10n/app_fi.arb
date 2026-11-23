@@ -1503,5 +1503,6 @@
   "shoppingDeleteChecked": "Poista valitut",
   "shoppingCheckAllConfirm": "Haluatko varmasti valita kaikki kohteet?",
   "shoppingUncheckAllConfirm": "Haluatko varmasti poistaa kaikki valinnat?",
-  "shoppingItemCheckedOff": "{item} valittu"
+  "shoppingItemCheckedOff": "{item} valittu",
+  "updateGithubUnavailable": "GitHub ei vastaa juuri nyt. Yritä uudelleen muutaman minuutin kuluttua."
 }

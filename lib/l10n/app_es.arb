@@ -1515,5 +1515,6 @@
   "shoppingDeleteChecked": "Eliminar marcados",
   "shoppingCheckAllConfirm": "¿Seguro que quieres seleccionar todos los elementos?",
   "shoppingUncheckAllConfirm": "¿Seguro que quieres de-seleccionar todos los elementos?",
-  "shoppingItemCheckedOff": "{item} marcado"
+  "shoppingItemCheckedOff": "{item} marcado",
+  "updateGithubUnavailable": "GitHub no responde en este momento. Inténtalo de nuevo en unos minutos."
 }

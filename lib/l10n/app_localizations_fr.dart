@@ -5254,6 +5254,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item coché';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub ne répond pas pour le moment. Réessaie dans quelques minutes.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -5557,4 +5561,8 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String shoppingItemCheckedOff(String item) {
     return '$item coché';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub ne répond pas pour le moment. Réessaie dans quelques minutes.';
 }

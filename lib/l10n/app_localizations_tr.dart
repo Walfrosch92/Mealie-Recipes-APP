@@ -5213,4 +5213,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item işaretlendi';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub şu anda yanıt vermiyor. Lütfen birkaç dakika sonra tekrar dene.';
 }

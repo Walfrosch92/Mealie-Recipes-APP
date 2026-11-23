@@ -5230,4 +5230,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item marcado';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub no responde en este momento. Inténtalo de nuevo en unos minutos.';
 }

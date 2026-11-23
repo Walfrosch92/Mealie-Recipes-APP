@@ -5231,4 +5231,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item marcado';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'O GitHub não está a responder neste momento. Tenta novamente dentro de alguns minutos.';
 }

@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -318,6 +319,11 @@ class _RecipeListScreenState extends ConsumerState<RecipeListScreen> {
                               )
                             : ListView.builder(
                                 padding: listPadding,
+                                // Android: Scrollen schließt die Tastatur
+                                // (Nutzer-Feedback: halbe Liste verdeckt).
+                                keyboardDismissBehavior: Platform.isAndroid
+                                    ? ScrollViewKeyboardDismissBehavior.onDrag
+                                    : ScrollViewKeyboardDismissBehavior.manual,
                                 itemCount: filtered.length,
                                 itemBuilder: (ctx, i) => EntranceOnce(
                                   id: 'recipe-${filtered[i].id}',
@@ -601,6 +607,14 @@ class _TopSearchBar extends StatelessWidget {
           border: InputBorder.none,
         ),
         onChanged: onChanged,
+        // Android: Tippen daneben (Rezeptkarte, Würfel …) schließt die
+        // Tastatur und löst den Fokus — sonst gibt Flutter ihn nach dem
+        // Zurückkehren aus einem Rezept dem Suchfeld zurück und die
+        // Tastatur springt ungefragt wieder auf (Zurück-Geste schließt
+        // nur die Tastatur, nicht den Fokus).
+        onTapOutside: Platform.isAndroid
+            ? (_) => FocusManager.instance.primaryFocus?.unfocus()
+            : null,
       ),
     );
   }
@@ -639,6 +653,8 @@ class RecipeCard extends ConsumerWidget {
     return BounceTap(
       onTap: () {
         HapticFeedback.selectionClick();
+        // Android: Fokus vor dem Öffnen lösen (siehe Suchfeld onTapOutside).
+        if (Platform.isAndroid) FocusManager.instance.primaryFocus?.unfocus();
         if (pane != null) {
           pane.onOpen(recipe.id);
         } else {

@@ -64,8 +64,11 @@ class UpdateScreen extends ConsumerWidget {
                   ok: st.status != UpdateStatus.error &&
                       st.status != UpdateStatus.manual,
                   title: statusText(),
+                  // GitHub kurz weg → verständlicher Satz statt Dio-Rohtext.
                   detail: st.status == UpdateStatus.error && st.error != null
-                      ? '${st.error}'
+                      ? (isGithubUnavailable(st.error!)
+                          ? l.updateGithubUnavailable
+                          : '${st.error}')
                       : null,
                 ),
               ),

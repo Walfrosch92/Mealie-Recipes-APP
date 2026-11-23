@@ -190,6 +190,24 @@ class BetaUpdateSetting extends AsyncNotifier<bool> {
   }
 }
 
+/// GitHub (API oder Download-Server) vorübergehend nicht erreichbar:
+/// Serverfehler 5xx, Zeitüberschreitung oder keine Verbindung.
+bool isGithubUnavailable(Object e) {
+  if (e is SocketException || e is TimeoutException) return true;
+  if (e is! DioException) return false;
+  final status = e.response?.statusCode;
+  if (status != null) return status >= 500;
+  return switch (e.type) {
+    DioExceptionType.connectionTimeout ||
+    DioExceptionType.sendTimeout ||
+    DioExceptionType.receiveTimeout ||
+    DioExceptionType.connectionError =>
+      true,
+    DioExceptionType.unknown => e.error is SocketException,
+    _ => false,
+  };
+}
+
 class AppUpdateNotifier extends Notifier<UpdateState> {
   final _dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 15),
@@ -217,13 +235,31 @@ class AppUpdateNotifier extends Notifier<UpdateState> {
         lastCheck: last == null ? null : DateTime.tryParse(last));
   }
 
+  /// GitHub antwortet gelegentlich kurz mit 502/503/504 oder gar nicht
+  /// (v. a. direkt nach dem Veröffentlichen eines Release) — bis zu zwei
+  /// weitere Versuche mit kurzer Pause, bevor ein Fehler angezeigt wird.
+  Future<T> _withRetry<T>(Future<T> Function() run) async {
+    const waits = [Duration(seconds: 2), Duration(seconds: 6)];
+    for (var attempt = 0;; attempt++) {
+      try {
+        return await run();
+      } catch (e) {
+        if (attempt >= waits.length || !isGithubUnavailable(e)) rethrow;
+        LogManager.shared
+            .log('⬆️ GitHub nicht erreichbar, neuer Versuch ${attempt + 2}: $e');
+        await Future<void>.delayed(waits[attempt]);
+      }
+    }
+  }
+
   Future<String> _current() async =>
       state.currentVersion ?? (await PackageInfo.fromPlatform()).version;
 
   /// Neuestes passendes Release (oder null, wenn keins mit Asset).
   Future<AppRelease?> _fetchLatest() async {
-    final resp = await _dio.get('https://api.github.com/repos/$_repo/releases',
-        queryParameters: {'per_page': 20});
+    final resp = await _withRetry(() => _dio.get(
+        'https://api.github.com/repos/$_repo/releases',
+        queryParameters: {'per_page': 20}));
     final beta = await ref.read(betaUpdatesEnabledProvider.future);
     AppRelease? best;
     for (final r in (resp.data as List? ?? const [])) {
@@ -300,15 +336,15 @@ class AppUpdateNotifier extends Notifier<UpdateState> {
       if (await dir.exists()) await dir.delete(recursive: true);
       await dir.create(recursive: true);
       final path = '${dir.path}/${rel.assetName}';
-      await _dio.download(
-        rel.assetUrl,
-        path,
-        options: Options(receiveTimeout: const Duration(minutes: 15)),
-        onReceiveProgress: (got, total) {
-          final t = total > 0 ? total : rel.assetSize;
-          if (t > 0) state = state.copyWith(progress: got / t);
-        },
-      );
+      await _withRetry(() => _dio.download(
+            rel.assetUrl,
+            path,
+            options: Options(receiveTimeout: const Duration(minutes: 15)),
+            onReceiveProgress: (got, total) {
+              final t = total > 0 ? total : rel.assetSize;
+              if (t > 0) state = state.copyWith(progress: got / t);
+            },
+          ));
       if (rel.assetSize > 0 && await File(path).length() != rel.assetSize) {
         throw const FileSystemException('Download incomplete');
       }

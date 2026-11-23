@@ -5205,4 +5205,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return 'Kryssat av $item';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub svarar inte just nu. Försök igen om några minuter.';
 }

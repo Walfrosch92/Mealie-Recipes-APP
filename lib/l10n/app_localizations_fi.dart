@@ -5214,4 +5214,8 @@ class AppLocalizationsFi extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item valittu';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub ei vastaa juuri nyt. Yritä uudelleen muutaman minuutin kuluttua.';
 }

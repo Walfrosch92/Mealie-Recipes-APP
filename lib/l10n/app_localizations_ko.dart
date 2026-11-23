@@ -5044,4 +5044,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '$item 선택됨';
   }
+
+  @override
+  String get updateGithubUnavailable =>
+      'GitHub가 지금 응답하지 않습니다. 몇 분 후에 다시 시도하세요.';
 }

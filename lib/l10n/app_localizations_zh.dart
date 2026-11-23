@@ -4986,6 +4986,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String shoppingItemCheckedOff(String item) {
     return '已勾除 $item';
   }
+
+  @override
+  String get updateGithubUnavailable => 'GitHub 目前没有响应。请几分钟后再试。';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -9974,4 +9977,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String shoppingItemCheckedOff(String item) {
     return '已勾除 $item';
   }
+
+  @override
+  String get updateGithubUnavailable => 'GitHub 目前沒有回應。請幾分鐘後再試。';
 }
