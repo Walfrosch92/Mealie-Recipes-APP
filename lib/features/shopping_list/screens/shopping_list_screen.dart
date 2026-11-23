@@ -330,6 +330,68 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     );
   }
 
+  bool _hasItems({required bool checked}) =>
+      (ref.read(shoppingListProvider).valueOrNull ?? const <ShoppingItem>[])
+          .any((i) => i.checked == checked);
+
+  /// „Alle abhaken“ / „Alle zurücksetzen“ aus dem ⋮-Menü — wie die Webapp mit
+  /// Rückfrage und für die ganze Liste (auch von der Suche versteckte).
+  void _confirmSetAllChecked(
+      BuildContext context, AppLocalizations l, bool checked) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: dialogCtx.appCard,
+        title: Text(checked ? l.shoppingCheckAll : l.shoppingUncheckAll,
+            style: TextStyle(color: dialogCtx.appFg)),
+        content: Text(
+            checked ? l.shoppingCheckAllConfirm : l.shoppingUncheckAllConfirm,
+            style: TextStyle(color: dialogCtx.appFgSub)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogCtx), child: Text(l.cancel)),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              HapticFeedback.mediumImpact();
+              final items =
+                  ref.read(shoppingListProvider).valueOrNull ?? const [];
+              ref
+                  .read(shoppingListProvider.notifier)
+                  .setCheckedMany(items, checked);
+            },
+            child: Text(l.ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Wie Mealie (itemCheckedToast): nach dem Abhaken eines offenen Artikels
+  /// 4 s „Artikel erledigt · Rückgängig“.
+  void _itemCheckedToast(ShoppingItem item) {
+    final l = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(l.shoppingItemCheckedOff(item.displayName)),
+        persist: false,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: l.undo,
+          onPressed: () {
+            final current = (ref.read(shoppingListProvider).valueOrNull ??
+                    const <ShoppingItem>[])
+                .where((i) => i.id == item.id && i.checked)
+                .firstOrNull;
+            if (current != null) {
+              ref.read(shoppingListProvider.notifier).toggleChecked(current);
+            }
+          },
+        ),
+      ));
+  }
+
   void _openSyncSheet(BuildContext context) {
     // rootNavigator: sonst landet die Seite im Tab-Branch-Navigator und
     // liegt hinter der fixen GlassTabBar.
@@ -481,9 +543,27 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         ref.read(shoppingListProvider).valueOrNull ?? const [],
                     otherLabel: l.unlabeledCategory,
                   );
+                case 'checkAll':
+                  _confirmSetAllChecked(context, l, true);
+                case 'uncheckAll':
+                  _confirmSetAllChecked(context, l, false);
+                case 'deleteChecked':
+                  _showArchiveConfirm(context, l);
               }
             },
             itemBuilder: (_) => [
+              // Wie das ⋮-Menü der Webapp; nur sichtbar, wenn es etwas gibt.
+              if (_hasItems(checked: false))
+                _menuItem(context, 'checkAll', Icons.done_all_rounded,
+                    l.shoppingCheckAll),
+              if (_hasItems(checked: true)) ...[
+                _menuItem(context, 'uncheckAll', Icons.remove_done_rounded,
+                    l.shoppingUncheckAll),
+                _menuItem(context, 'deleteChecked',
+                    Icons.delete_sweep_outlined, l.shoppingDeleteChecked),
+              ],
+              if (_hasItems(checked: false) || _hasItems(checked: true))
+                const PopupMenuDivider(),
               _menuItem(context, 'switch', Icons.swap_horiz_rounded,
                   l.switchListTitle),
               // Menü hat eigene Symbole → führendes Emoji des Titels weg.
@@ -571,9 +651,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                   settings?.shoppingCategoryOrder ?? [],
                               exactQuantities:
                                   settings?.addExactQuantities ?? false,
-                              onToggle: (item) => ref
-                                  .read(shoppingListProvider.notifier)
-                                  .toggleChecked(item),
+                              onToggle: (item) {
+                                ref
+                                    .read(shoppingListProvider.notifier)
+                                    .toggleChecked(item);
+                                if (!item.checked) _itemCheckedToast(item);
+                              },
                               onQuantityChange:
                                   (item, qty, {bool clearUnit = false}) => ref
                                       .read(shoppingListProvider.notifier)

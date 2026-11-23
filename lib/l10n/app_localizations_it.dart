@@ -5215,4 +5215,26 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Nessuna unità di questa ricetta può essere convertita. Serve una standardizzazione dell\'unità in Mealie (Alimenti e unità → unità → Standardizzazione).';
+
+  @override
+  String get shoppingCheckAll => 'Seleziona Tutti Gli Elementi';
+
+  @override
+  String get shoppingUncheckAll => 'Deseleziona tutti gli elementi';
+
+  @override
+  String get shoppingDeleteChecked => 'Elimina selezionati';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Sei sicuro di voler selezionare tutti gli elementi?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Sei sicuro di voler deselezionare tutti gli elementi?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item selezionato';
+  }
 }

@@ -78,5 +78,11 @@
   "unitSystemImperial": "Impérial",
   "unitSystemImperialHint": "Impérial (tasses, oz)",
   "unitSystemHint": "Affichage seulement – la recette elle-même ne change pas. Comme dans l'application web Mealie, le choix s'applique à toutes les recettes de cet appareil.",
-  "unitSystemUnavailable": "Aucune unité de cette recette ne peut être convertie. Il faut pour cela une standardisation de l'unité dans Mealie (Aliments et unités → unité → Standardisation)."
+  "unitSystemUnavailable": "Aucune unité de cette recette ne peut être convertie. Il faut pour cela une standardisation de l'unité dans Mealie (Aliments et unités → unité → Standardisation).",
+  "shoppingCheckAll": "Cocher tous les éléments",
+  "shoppingUncheckAll": "Décocher tous les éléments",
+  "shoppingDeleteChecked": "Supprimer la sélection",
+  "shoppingCheckAllConfirm": "Voulez-vous vraiment sélectionner tous les éléments ?",
+  "shoppingUncheckAllConfirm": "Voulez-vous vraiment désélectionner tous les éléments ?",
+  "shoppingItemCheckedOff": "{item} coché"
 }

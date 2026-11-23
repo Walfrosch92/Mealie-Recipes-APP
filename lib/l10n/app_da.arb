@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Amerikansk",
   "unitSystemImperialHint": "Amerikansk (kopper, ounces, etc.)",
   "unitSystemHint": "Kun visningen – selve opskriften ændres ikke. Som i Mealies webapp gælder valget alle opskrifter på denne enhed.",
-  "unitSystemUnavailable": "Ingen enheder i denne opskrift kan omregnes. Det kræver en standardisering af enheden i Mealie (Ingredienser og enheder → enhed → Standardisering)."
+  "unitSystemUnavailable": "Ingen enheder i denne opskrift kan omregnes. Det kræver en standardisering af enheden i Mealie (Ingredienser og enheder → enhed → Standardisering).",
+  "shoppingCheckAll": "Markér alle elementer",
+  "shoppingUncheckAll": "Fjern markering af alle elementer",
+  "shoppingDeleteChecked": "Slet valgte",
+  "shoppingCheckAllConfirm": "Er du sikker på, at du vil markere alle elementer?",
+  "shoppingUncheckAllConfirm": "Er du sikker på, at du vil fjerne markeringen af alle elementer?",
+  "shoppingItemCheckedOff": "Krydsede {item} af"
 }

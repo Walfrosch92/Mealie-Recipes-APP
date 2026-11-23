@@ -5249,4 +5249,26 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Жодну одиницю цього рецепта не можна перерахувати. Для цього одиниця в Mealie потребує стандартизації (Продукти й одиниці → одиниця → Стандартизація).';
+
+  @override
+  String get shoppingCheckAll => 'Відмітити всі елементи';
+
+  @override
+  String get shoppingUncheckAll => 'Зняти відмітку з усіх елементів';
+
+  @override
+  String get shoppingDeleteChecked => 'Видалити відмічене';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Ви впевнені, що хочете відмітити всі елементи?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Ви впевнені, що хочете зняти відмітку з усіх елементів?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Позначено $item як куплене';
+  }
 }

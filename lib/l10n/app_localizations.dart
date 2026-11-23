@@ -9125,6 +9125,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None of this recipe\'s units can be converted. Conversion needs a standardization on the unit in Mealie (Foods & Units → unit → Standardization).'**
   String get unitSystemUnavailable;
+
+  /// No description provided for @shoppingCheckAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Check All Items'**
+  String get shoppingCheckAll;
+
+  /// No description provided for @shoppingUncheckAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncheck All Items'**
+  String get shoppingUncheckAll;
+
+  /// No description provided for @shoppingDeleteChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Checked'**
+  String get shoppingDeleteChecked;
+
+  /// No description provided for @shoppingCheckAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to check all items?'**
+  String get shoppingCheckAllConfirm;
+
+  /// No description provided for @shoppingUncheckAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to uncheck all items?'**
+  String get shoppingUncheckAllConfirm;
+
+  /// No description provided for @shoppingItemCheckedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked off {item}'**
+  String shoppingItemCheckedOff(String item);
 }
 
 class _AppLocalizationsDelegate

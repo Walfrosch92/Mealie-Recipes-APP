@@ -5191,4 +5191,26 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Bu tarifin hiçbir birimi dönüştürülemez. Bunun için birimin Mealie\'de standartlaştırılmış olması gerekir (Yemekler ve birimler → birim → Standartlaştırma).';
+
+  @override
+  String get shoppingCheckAll => 'Tüm Öğeleri Kontrol Et';
+
+  @override
+  String get shoppingUncheckAll => 'Tüm Ögelerin İşaretini Kaldır';
+
+  @override
+  String get shoppingDeleteChecked => 'İşaretleneni Sil';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Tüm öğeleri işaretlemek istediğinizden emin misiniz?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Tüm öğelerden işaretleri kaldırmak istediğinize emin misiniz?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item işaretlendi';
+  }
 }

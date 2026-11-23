@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Emperyal",
   "unitSystemImperialHint": "Emperyal (cup, oz)",
   "unitSystemHint": "Yalnızca görünüm – tarifin kendisi değişmez. Mealie web uygulamasında olduğu gibi seçim bu cihazdaki tüm tarifler için geçerlidir.",
-  "unitSystemUnavailable": "Bu tarifin hiçbir birimi dönüştürülemez. Bunun için birimin Mealie'de standartlaştırılmış olması gerekir (Yemekler ve birimler → birim → Standartlaştırma)."
+  "unitSystemUnavailable": "Bu tarifin hiçbir birimi dönüştürülemez. Bunun için birimin Mealie'de standartlaştırılmış olması gerekir (Yemekler ve birimler → birim → Standartlaştırma).",
+  "shoppingCheckAll": "Tüm Öğeleri Kontrol Et",
+  "shoppingUncheckAll": "Tüm Ögelerin İşaretini Kaldır",
+  "shoppingDeleteChecked": "İşaretleneni Sil",
+  "shoppingCheckAllConfirm": "Tüm öğeleri işaretlemek istediğinizden emin misiniz?",
+  "shoppingUncheckAllConfirm": "Tüm öğelerden işaretleri kaldırmak istediğinize emin misiniz?",
+  "shoppingItemCheckedOff": "{item} işaretlendi"
 }

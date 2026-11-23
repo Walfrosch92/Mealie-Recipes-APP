@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "야드파운드법",
   "unitSystemImperialHint": "야드파운드법 (컵, oz)",
   "unitSystemHint": "표시만 바뀌어요 – 레시피 자체는 그대로예요. Mealie 웹 앱처럼 이 기기의 모든 레시피에 적용돼요.",
-  "unitSystemUnavailable": "이 레시피의 단위는 모두 변환할 수 없어요. 변환하려면 Mealie에서 단위에 표준화가 있어야 해요 (식품 및 단위 → 단위 → 표준화)."
+  "unitSystemUnavailable": "이 레시피의 단위는 모두 변환할 수 없어요. 변환하려면 Mealie에서 단위에 표준화가 있어야 해요 (식품 및 단위 → 단위 → 표준화).",
+  "shoppingCheckAll": "모든 항목 선택",
+  "shoppingUncheckAll": "모든 항목 선택 해제",
+  "shoppingDeleteChecked": "선택한 항목 삭제",
+  "shoppingCheckAllConfirm": "모든 항목을 선택하시겠습니까?",
+  "shoppingUncheckAllConfirm": "모든 항목을 선택 해제하시겠습니까?",
+  "shoppingItemCheckedOff": "{item} 선택됨"
 }

@@ -1509,5 +1509,11 @@
   "unitSystemImperial": "Imperiaal",
   "unitSystemImperialHint": "Imperiaal (kopjes, oz)",
   "unitSystemHint": "Alleen de weergave – het recept zelf blijft ongewijzigd. Net als in de Mealie-webapp geldt de keuze voor alle recepten op dit apparaat.",
-  "unitSystemUnavailable": "Geen enkele eenheid van dit recept kan worden omgerekend. Daarvoor heeft de eenheid in Mealie een standaardisatie nodig (Levensmiddelen en eenheden → eenheid → Standaardisatie)."
+  "unitSystemUnavailable": "Geen enkele eenheid van dit recept kan worden omgerekend. Daarvoor heeft de eenheid in Mealie een standaardisatie nodig (Levensmiddelen en eenheden → eenheid → Standaardisatie).",
+  "shoppingCheckAll": "Selecteer alle items",
+  "shoppingUncheckAll": "Deselecteer alle items",
+  "shoppingDeleteChecked": "Selectie verwijderen",
+  "shoppingCheckAllConfirm": "Weet je zeker dat je alle items wilt selecteren?",
+  "shoppingUncheckAllConfirm": "Weet je zeker dat je alle items wilt deselecteren?",
+  "shoppingItemCheckedOff": "{item} afgevinkt"
 }

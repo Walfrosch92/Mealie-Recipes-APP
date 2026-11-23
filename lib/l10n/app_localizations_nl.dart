@@ -5199,4 +5199,26 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Geen enkele eenheid van dit recept kan worden omgerekend. Daarvoor heeft de eenheid in Mealie een standaardisatie nodig (Levensmiddelen en eenheden → eenheid → Standaardisatie).';
+
+  @override
+  String get shoppingCheckAll => 'Selecteer alle items';
+
+  @override
+  String get shoppingUncheckAll => 'Deselecteer alle items';
+
+  @override
+  String get shoppingDeleteChecked => 'Selectie verwijderen';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Weet je zeker dat je alle items wilt selecteren?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Weet je zeker dat je alle items wilt deselecteren?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item afgevinkt';
+  }
 }

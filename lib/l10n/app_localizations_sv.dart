@@ -5185,4 +5185,24 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Ingen enhet i det här receptet kan räknas om. Det kräver en standardisering av enheten i Mealie (Livsmedel och enheter → enhet → Standardisering).';
+
+  @override
+  String get shoppingCheckAll => 'Bocka av alla varor';
+
+  @override
+  String get shoppingUncheckAll => 'Avmarkera alla varor';
+
+  @override
+  String get shoppingDeleteChecked => 'Ta bort avbockade varor';
+
+  @override
+  String get shoppingCheckAllConfirm => 'Vill du bocka av alla varor?';
+
+  @override
+  String get shoppingUncheckAllConfirm => 'Vill du avmarkera alla varor?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Kryssat av $item';
+  }
 }

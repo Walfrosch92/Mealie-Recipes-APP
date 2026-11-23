@@ -5026,4 +5026,24 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'このレシピの単位はどれも換算できません。換算には Mealie で単位の標準化が必要です（食材と単位 → 単位 → 標準化）。';
+
+  @override
+  String get shoppingCheckAll => 'すべての項目をチェック';
+
+  @override
+  String get shoppingUncheckAll => 'すべての項目のチェックを外す';
+
+  @override
+  String get shoppingDeleteChecked => 'チェックしたものを削除';
+
+  @override
+  String get shoppingCheckAllConfirm => 'すべての項目をチェックしてもよろしいですか?';
+
+  @override
+  String get shoppingUncheckAllConfirm => 'すべてのアイテムのチェックを外してもよろしいですか？';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item をチェックしました';
+  }
 }

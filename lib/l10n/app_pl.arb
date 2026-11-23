@@ -1516,5 +1516,11 @@
   "unitSystemImperial": "Imperialny",
   "unitSystemImperialHint": "Imperialny (cup, oz)",
   "unitSystemHint": "Tylko wyświetlanie – sam przepis się nie zmienia. Jak w aplikacji webowej Mealie wybór dotyczy wszystkich przepisów na tym urządzeniu.",
-  "unitSystemUnavailable": "Żadnej jednostki tego przepisu nie da się przeliczyć. Wymaga to standaryzacji jednostki w Mealie (Produkty i jednostki → jednostka → Standaryzacja)."
+  "unitSystemUnavailable": "Żadnej jednostki tego przepisu nie da się przeliczyć. Wymaga to standaryzacji jednostki w Mealie (Produkty i jednostki → jednostka → Standaryzacja).",
+  "shoppingCheckAll": "Zaznacz wszystko",
+  "shoppingUncheckAll": "Odznacz wszystko",
+  "shoppingDeleteChecked": "Usuń zaznaczone",
+  "shoppingCheckAllConfirm": "Czy na pewno chcesz zaznaczyć wszystkie elementy?",
+  "shoppingUncheckAllConfirm": "Czy na pewno chcesz odznaczyć wszystkie elementy?",
+  "shoppingItemCheckedOff": "Zaznaczono {item}"
 }

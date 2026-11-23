@@ -5258,4 +5258,26 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Żadnej jednostki tego przepisu nie da się przeliczyć. Wymaga to standaryzacji jednostki w Mealie (Produkty i jednostki → jednostka → Standaryzacja).';
+
+  @override
+  String get shoppingCheckAll => 'Zaznacz wszystko';
+
+  @override
+  String get shoppingUncheckAll => 'Odznacz wszystko';
+
+  @override
+  String get shoppingDeleteChecked => 'Usuń zaznaczone';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Czy na pewno chcesz zaznaczyć wszystkie elementy?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Czy na pewno chcesz odznaczyć wszystkie elementy?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Zaznaczono $item';
+  }
 }

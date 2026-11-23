@@ -5259,4 +5259,26 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Ни одну единицу этого рецепта нельзя пересчитать. Для этого у единицы в Mealie должна быть стандартизация (Продукты и единицы → единица → Стандартизация).';
+
+  @override
+  String get shoppingCheckAll => 'Выделить все элементы';
+
+  @override
+  String get shoppingUncheckAll => 'Снять выделение со всех элементов';
+
+  @override
+  String get shoppingDeleteChecked => 'Удалить отмеченные';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Вы уверены, что хотите выбрать все элементы?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Вы уверены, что хотите снять отметку со всех элементов?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Отмечено: $item';
+  }
 }

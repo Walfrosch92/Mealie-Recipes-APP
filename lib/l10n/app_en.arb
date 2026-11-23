@@ -3338,5 +3338,18 @@
   "unitSystemImperial": "Imperial",
   "unitSystemImperialHint": "Imperial (cups, oz)",
   "unitSystemHint": "Display only – the recipe itself stays unchanged. Like the Mealie web app, the choice applies to all recipes on this device.",
-  "unitSystemUnavailable": "None of this recipe's units can be converted. Conversion needs a standardization on the unit in Mealie (Foods & Units → unit → Standardization)."
+  "unitSystemUnavailable": "None of this recipe's units can be converted. Conversion needs a standardization on the unit in Mealie (Foods & Units → unit → Standardization).",
+  "shoppingCheckAll": "Check All Items",
+  "shoppingUncheckAll": "Uncheck All Items",
+  "shoppingDeleteChecked": "Delete Checked",
+  "shoppingCheckAllConfirm": "Are you sure you want to check all items?",
+  "shoppingUncheckAllConfirm": "Are you sure you want to uncheck all items?",
+  "shoppingItemCheckedOff": "Checked off {item}",
+  "@shoppingItemCheckedOff": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  }
 }

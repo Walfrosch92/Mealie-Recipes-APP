@@ -5196,4 +5196,26 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Ingen enheter i denne oppskriften kan regnes om. Det krever en standardisering av enheten i Mealie (Matvarer og enheter → enhet → Standardisering).';
+
+  @override
+  String get shoppingCheckAll => 'Marker alle elementer';
+
+  @override
+  String get shoppingUncheckAll => 'Fjern markering av alle elementer';
+
+  @override
+  String get shoppingDeleteChecked => 'Fjern markerte elementer';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Er du sikker på at du vil krysse av alle elementene?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Er du sikker på at du vil fjerne avmerkingen fra alle elementene?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item er krysset av';
+  }
 }

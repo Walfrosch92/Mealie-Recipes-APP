@@ -1509,5 +1509,11 @@
   "unitSystemImperial": "Imperial",
   "unitSystemImperialHint": "Imperial (Tassen, oz)",
   "unitSystemHint": "Nur die Anzeige – das Rezept selbst bleibt unverändert. Wie in der Mealie-Webapp gilt die Wahl für alle Rezepte auf diesem Gerät.",
-  "unitSystemUnavailable": "Keine Einheit dieses Rezepts lässt sich umrechnen. Dafür braucht die Einheit in Mealie eine Standardisierung (Lebensmittel & Einheiten → Einheit → Standardisierung)."
+  "unitSystemUnavailable": "Keine Einheit dieses Rezepts lässt sich umrechnen. Dafür braucht die Einheit in Mealie eine Standardisierung (Lebensmittel & Einheiten → Einheit → Standardisierung).",
+  "shoppingCheckAll": "Alle Einträge abhaken",
+  "shoppingUncheckAll": "Alle Einträge zurücksetzen",
+  "shoppingDeleteChecked": "Erledigte löschen",
+  "shoppingCheckAllConfirm": "Bist du sicher, dass du alle Elemente abhaken möchtest?",
+  "shoppingUncheckAllConfirm": "Bist du sicher, dass du die Auswahl aller Elemente aufheben möchtest?",
+  "shoppingItemCheckedOff": "{item} erledigt"
 }

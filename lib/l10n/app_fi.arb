@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Imperiaalinen",
   "unitSystemImperialHint": "Imperiaalinen (kupit, oz)",
   "unitSystemHint": "Vain näyttö – itse resepti ei muutu. Kuten Mealien verkkosovelluksessa, valinta koskee kaikkia tämän laitteen reseptejä.",
-  "unitSystemUnavailable": "Mitään tämän reseptin yksikköä ei voi muuntaa. Se vaatii yksikölle standardoinnin Mealiessa (Ruoat ja yksiköt → yksikkö → Standardointi)."
+  "unitSystemUnavailable": "Mitään tämän reseptin yksikköä ei voi muuntaa. Se vaatii yksikölle standardoinnin Mealiessa (Ruoat ja yksiköt → yksikkö → Standardointi).",
+  "shoppingCheckAll": "Valitse kaikki kohteet",
+  "shoppingUncheckAll": "Poista valinta kaikista kohdista",
+  "shoppingDeleteChecked": "Poista valitut",
+  "shoppingCheckAllConfirm": "Haluatko varmasti valita kaikki kohteet?",
+  "shoppingUncheckAllConfirm": "Haluatko varmasti poistaa kaikki valinnat?",
+  "shoppingItemCheckedOff": "{item} valittu"
 }

@@ -5193,4 +5193,26 @@ class AppLocalizationsDa extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Ingen enheder i denne opskrift kan omregnes. Det kræver en standardisering af enheden i Mealie (Ingredienser og enheder → enhed → Standardisering).';
+
+  @override
+  String get shoppingCheckAll => 'Markér alle elementer';
+
+  @override
+  String get shoppingUncheckAll => 'Fjern markering af alle elementer';
+
+  @override
+  String get shoppingDeleteChecked => 'Slet valgte';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Er du sikker på, at du vil markere alle elementer?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Er du sikker på, at du vil fjerne markeringen af alle elementer?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Krydsede $item af';
+  }
 }

@@ -5209,4 +5209,26 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Nenhuma unidade desta receita pode ser convertida. Para isso, a unidade precisa de uma padronização no Mealie (Alimentos e unidades → unidade → Padronização).';
+
+  @override
+  String get shoppingCheckAll => 'Marcar Todos os Itens';
+
+  @override
+  String get shoppingUncheckAll => 'Desmarcar Todos os Itens';
+
+  @override
+  String get shoppingDeleteChecked => 'Apagar Seleção';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Tem a certeza de que pretende selecionar todos os itens?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Tem a certeza de que pretende desmarcar todos os itens?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item marcado';
+  }
 }

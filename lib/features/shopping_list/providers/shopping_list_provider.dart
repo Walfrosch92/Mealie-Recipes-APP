@@ -1257,6 +1257,63 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
     }
   }
 
+  /// Mehrere Artikel auf einmal ab- bzw. anhaken (Kategorie-Haken, „Alle
+  /// abhaken“/„Alle zurücksetzen“). Wie toggleChecked: sofort lokal, dann
+  /// EIN Sammel-PUT wie die Webapp; ohne Netz je Artikel vormerken. Lehnt der
+  /// Server den Sammel-Aufruf ab, einzeln nachschieben.
+  Future<void> setCheckedMany(Iterable<ShoppingItem> items, bool checked) async {
+    final originals = items.where((i) => i.checked != checked).toList();
+    if (originals.isEmpty) return;
+    final now = DateTime.now().toUtc().toIso8601String();
+    final updated = [
+      for (final i in originals) i.copyWith(checked: checked, updatedAt: now)
+    ];
+    final byId = {for (final u in updated) u.id: u};
+    state.whenData((list) =>
+        state = AsyncData([for (final i in list) byId[i.id] ?? i]));
+    await _persistLocalCache();
+
+    final pending = ref.read(pendingShoppingChangesProvider.notifier);
+    // Offline angelegte Artikel kennt der Server noch nicht → nur vormerken.
+    final pendingAddIds =
+        ref.read(pendingShoppingChangesProvider).adds.map((a) => a.id).toSet();
+    for (final u in updated.where((u) => pendingAddIds.contains(u.id))) {
+      await pending
+          .addCheck(PendingCheckChange(itemId: u.id, checked: u.checked));
+    }
+    final toServer =
+        updated.where((u) => !pendingAddIds.contains(u.id)).toList();
+    if (toServer.isEmpty) return;
+
+    final api = ref.read(apiServiceProvider);
+    try {
+      _applyServerChangesMany(await api.updateShoppingItems(toServer),
+          toServer.map((u) => u.id).toSet());
+    } catch (e) {
+      if (isNetworkError(e)) {
+        for (final u in toServer) {
+          await pending
+              .addCheck(PendingCheckChange(itemId: u.id, checked: u.checked));
+        }
+        return;
+      }
+      // Sammel-Aufruf abgelehnt → einzeln wie toggleChecked.
+      for (final u in toServer) {
+        try {
+          _applyServerChanges(await api.updateShoppingItem(u), u.id);
+        } catch (e2) {
+          if (isNetworkError(e2)) {
+            await pending
+                .addCheck(PendingCheckChange(itemId: u.id, checked: u.checked));
+          } else {
+            _updateLocal(originals.firstWhere((o) => o.id == u.id));
+          }
+        }
+      }
+      await _persistLocalCache();
+    }
+  }
+
   // mirrors iOS updateQuantity(for:to:)
   // `clearUnit`: bei DEAKTIVIERTEN exakten Mengen zeigt die Liste Einheiten-
   // Artikel (z. B. Web-Add „150 g Joghurt") als 1x-Stückkauf — die erste
@@ -1510,7 +1567,11 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
   /// aktualisierte Artikel (Ziel einer Zusammenführung) übernehmen. Den
   /// gesendeten Artikel selbst nicht überschreiben — bei schnellen
   /// +/−-Taps wäre die Antwort eines älteren PUT sonst ein Rücksprung.
-  void _applyServerChanges(Map<String, dynamic>? resp, String sentId) {
+  void _applyServerChanges(Map<String, dynamic>? resp, String sentId) =>
+      _applyServerChangesMany(resp, {sentId});
+
+  void _applyServerChangesMany(
+      Map<String, dynamic>? resp, Set<String> sentIds) {
     if (resp == null) return;
     final deleted = <String>{
       for (final d in (resp['deletedItems'] as List?) ?? const [])
@@ -1521,7 +1582,7 @@ class ShoppingListNotifier extends AsyncNotifier<List<ShoppingItem>> {
       if (u is! Map) continue;
       try {
         final item = ShoppingItem.fromJson(Map<String, dynamic>.from(u));
-        if (item.id != sentId) updated[item.id] = item;
+        if (!sentIds.contains(item.id)) updated[item.id] = item;
       } catch (_) {}
     }
     if (deleted.isEmpty && updated.isEmpty) return;

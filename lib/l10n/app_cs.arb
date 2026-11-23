@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Imperiální",
   "unitSystemImperialHint": "Imperiální (šálky, unce)",
   "unitSystemHint": "Jen zobrazení – samotný recept zůstane beze změny. Jako ve webové aplikaci Mealie platí volba pro všechny recepty v tomto zařízení.",
-  "unitSystemUnavailable": "Žádnou jednotku tohoto receptu nelze převést. K tomu potřebuje jednotka v Mealie standardizaci (Potraviny a jednotky → jednotka → Standardizace)."
+  "unitSystemUnavailable": "Žádnou jednotku tohoto receptu nelze převést. K tomu potřebuje jednotka v Mealie standardizaci (Potraviny a jednotky → jednotka → Standardizace).",
+  "shoppingCheckAll": "Vybrat všechny položky",
+  "shoppingUncheckAll": "Zrušit výběr všech položek",
+  "shoppingDeleteChecked": "Odstranit vybrané",
+  "shoppingCheckAllConfirm": "Opravdu chcete vybrat všechny položky?",
+  "shoppingUncheckAllConfirm": "Opravdu chcete zrušit výběr všech položek?",
+  "shoppingItemCheckedOff": "Odškrtnuta položka {item}"
 }

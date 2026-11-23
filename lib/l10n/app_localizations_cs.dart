@@ -5241,4 +5241,26 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Žádnou jednotku tohoto receptu nelze převést. K tomu potřebuje jednotka v Mealie standardizaci (Potraviny a jednotky → jednotka → Standardizace).';
+
+  @override
+  String get shoppingCheckAll => 'Vybrat všechny položky';
+
+  @override
+  String get shoppingUncheckAll => 'Zrušit výběr všech položek';
+
+  @override
+  String get shoppingDeleteChecked => 'Odstranit vybrané';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Opravdu chcete vybrat všechny položky?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Opravdu chcete zrušit výběr všech položek?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Odškrtnuta položka $item';
+  }
 }

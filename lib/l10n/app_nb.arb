@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Britiske måleenheter",
   "unitSystemImperialHint": "Imperial (kopper, oz)",
   "unitSystemHint": "Kun visningen – selve oppskriften endres ikke. Som i Mealie-nettappen gjelder valget alle oppskrifter på denne enheten.",
-  "unitSystemUnavailable": "Ingen enheter i denne oppskriften kan regnes om. Det krever en standardisering av enheten i Mealie (Matvarer og enheter → enhet → Standardisering)."
+  "unitSystemUnavailable": "Ingen enheter i denne oppskriften kan regnes om. Det krever en standardisering av enheten i Mealie (Matvarer og enheter → enhet → Standardisering).",
+  "shoppingCheckAll": "Marker alle elementer",
+  "shoppingUncheckAll": "Fjern markering av alle elementer",
+  "shoppingDeleteChecked": "Fjern markerte elementer",
+  "shoppingCheckAllConfirm": "Er du sikker på at du vil krysse av alle elementene?",
+  "shoppingUncheckAllConfirm": "Er du sikker på at du vil fjerne avmerkingen fra alle elementene?",
+  "shoppingItemCheckedOff": "{item} er krysset av"
 }

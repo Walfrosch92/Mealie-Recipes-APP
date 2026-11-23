@@ -1600,5 +1600,11 @@
   "unitSystemImperial": "Imperial",
   "unitSystemImperialHint": "Imperial (copos, onças)",
   "unitSystemHint": "Apenas a exibição – a receita em si não muda. Como no app web do Mealie, a escolha vale para todas as receitas neste dispositivo.",
-  "unitSystemUnavailable": "Nenhuma unidade desta receita pode ser convertida. Para isso, a unidade precisa de uma padronização no Mealie (Alimentos e unidades → unidade → Padronização)."
+  "unitSystemUnavailable": "Nenhuma unidade desta receita pode ser convertida. Para isso, a unidade precisa de uma padronização no Mealie (Alimentos e unidades → unidade → Padronização).",
+  "shoppingCheckAll": "Marcar Todos os Itens",
+  "shoppingUncheckAll": "Desmarcar Todos os Itens",
+  "shoppingDeleteChecked": "Apagar Seleção",
+  "shoppingCheckAllConfirm": "Tem a certeza de que pretende selecionar todos os itens?",
+  "shoppingUncheckAllConfirm": "Tem a certeza de que pretende desmarcar todos os itens?",
+  "shoppingItemCheckedOff": "{item} marcado"
 }

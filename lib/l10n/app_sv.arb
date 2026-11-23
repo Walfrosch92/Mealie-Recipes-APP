@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Angloamerikanska mått",
   "unitSystemImperialHint": "Angloamerikanska mått (koppar, oz)",
   "unitSystemHint": "Bara visningen – själva receptet ändras inte. Som i Mealies webbapp gäller valet alla recept på den här enheten.",
-  "unitSystemUnavailable": "Ingen enhet i det här receptet kan räknas om. Det kräver en standardisering av enheten i Mealie (Livsmedel och enheter → enhet → Standardisering)."
+  "unitSystemUnavailable": "Ingen enhet i det här receptet kan räknas om. Det kräver en standardisering av enheten i Mealie (Livsmedel och enheter → enhet → Standardisering).",
+  "shoppingCheckAll": "Bocka av alla varor",
+  "shoppingUncheckAll": "Avmarkera alla varor",
+  "shoppingDeleteChecked": "Ta bort avbockade varor",
+  "shoppingCheckAllConfirm": "Vill du bocka av alla varor?",
+  "shoppingUncheckAllConfirm": "Vill du avmarkera alla varor?",
+  "shoppingItemCheckedOff": "Kryssat av {item}"
 }

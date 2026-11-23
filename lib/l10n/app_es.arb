@@ -1509,5 +1509,11 @@
   "unitSystemImperial": "Imperial",
   "unitSystemImperialHint": "Imperial (tazas, o",
   "unitSystemHint": "Solo la visualización: la receta no cambia. Como en la app web de Mealie, la elección se aplica a todas las recetas de este dispositivo.",
-  "unitSystemUnavailable": "Ninguna unidad de esta receta se puede convertir. Para ello, la unidad necesita una estandarización en Mealie (Alimentos y unidades → unidad → Estandarización)."
+  "unitSystemUnavailable": "Ninguna unidad de esta receta se puede convertir. Para ello, la unidad necesita una estandarización en Mealie (Alimentos y unidades → unidad → Estandarización).",
+  "shoppingCheckAll": "Marcar todos los elementos",
+  "shoppingUncheckAll": "Desmarcar todos los elementos",
+  "shoppingDeleteChecked": "Eliminar marcados",
+  "shoppingCheckAllConfirm": "¿Seguro que quieres seleccionar todos los elementos?",
+  "shoppingUncheckAllConfirm": "¿Seguro que quieres de-seleccionar todos los elementos?",
+  "shoppingItemCheckedOff": "{item} marcado"
 }

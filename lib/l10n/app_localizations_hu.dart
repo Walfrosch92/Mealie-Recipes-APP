@@ -5194,4 +5194,26 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'A recept egyik egysége sem váltható át. Ehhez az egységnek szabványosítás kell a Mealie-ben (Élelmiszerek és egységek → egység → Szabványosítás).';
+
+  @override
+  String get shoppingCheckAll => 'Minden tétel kijelölése';
+
+  @override
+  String get shoppingUncheckAll => 'Kijelölés megszüntetése';
+
+  @override
+  String get shoppingDeleteChecked => 'Kijelöltek törlése';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Biztos, hogy minden elemet be akar jelölni?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Biztos, hogy minden elem kijelölését visszavonja?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item leellenőrzve';
+  }
 }

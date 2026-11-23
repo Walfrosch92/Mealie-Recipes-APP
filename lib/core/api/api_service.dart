@@ -1447,7 +1447,36 @@ class ApiService {
   /// spiegelt das lokal (wie die Webapp per Neuladen). null = alter Server
   /// ohne Sammelantwort.
   Future<Map<String, dynamic>?> updateShoppingItem(ShoppingItem item) async {
-    final payload = <String, dynamic>{
+    final resp = await _dio.put(
+      _path('/api/households/shopping/items/${item.id}'),
+      data: _shoppingItemPayload(item),
+    );
+    final data = resp.data;
+    if (data is Map &&
+        (data.containsKey('updatedItems') || data.containsKey('deletedItems'))) {
+      return Map<String, dynamic>.from(data);
+    }
+    return null;
+  }
+
+  /// Mehrere Artikel in EINEM Aufruf speichern — wie die Webapp bei „Alle
+  /// abhaken“/„Alle zurücksetzen“ (PUT /households/shopping/items mit Liste).
+  Future<Map<String, dynamic>?> updateShoppingItems(
+      List<ShoppingItem> items) async {
+    final resp = await _dio.put(
+      _path('/api/households/shopping/items'),
+      data: [for (final i in items) _shoppingItemPayload(i)],
+    );
+    final data = resp.data;
+    if (data is Map &&
+        (data.containsKey('updatedItems') || data.containsKey('deletedItems'))) {
+      return Map<String, dynamic>.from(data);
+    }
+    return null;
+  }
+
+  Map<String, dynamic> _shoppingItemPayload(ShoppingItem item) {
+    return <String, dynamic>{
       'id': item.id,
       'shoppingListId': item.shoppingListId ?? settings.shoppingListId,
       'checked': item.checked,
@@ -1470,16 +1499,6 @@ class ApiService {
       if (item.position != null) 'position': item.position,
       if (item.extras != null) 'extras': item.extras,
     };
-    final resp = await _dio.put(
-      _path('/api/households/shopping/items/${item.id}'),
-      data: payload,
-    );
-    final data = resp.data;
-    if (data is Map &&
-        (data.containsKey('updatedItems') || data.containsKey('deletedItems'))) {
-      return Map<String, dynamic>.from(data);
-    }
-    return null;
   }
 
   Future<void> deleteShoppingItem(String itemId) async {

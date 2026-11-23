@@ -5192,4 +5192,26 @@ class AppLocalizationsFi extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Mitään tämän reseptin yksikköä ei voi muuntaa. Se vaatii yksikölle standardoinnin Mealiessa (Ruoat ja yksiköt → yksikkö → Standardointi).';
+
+  @override
+  String get shoppingCheckAll => 'Valitse kaikki kohteet';
+
+  @override
+  String get shoppingUncheckAll => 'Poista valinta kaikista kohdista';
+
+  @override
+  String get shoppingDeleteChecked => 'Poista valitut';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Haluatko varmasti valita kaikki kohteet?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Haluatko varmasti poistaa kaikki valinnat?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item valittu';
+  }
 }

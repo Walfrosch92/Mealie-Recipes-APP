@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "ヤード・ポンド法",
   "unitSystemImperialHint": "ヤード・ポンド法 (カップ, oz)",
   "unitSystemHint": "表示のみです – レシピ自体は変わりません。Mealie ウェブアプリと同じく、この端末のすべてのレシピに適用されます。",
-  "unitSystemUnavailable": "このレシピの単位はどれも換算できません。換算には Mealie で単位の標準化が必要です（食材と単位 → 単位 → 標準化）。"
+  "unitSystemUnavailable": "このレシピの単位はどれも換算できません。換算には Mealie で単位の標準化が必要です（食材と単位 → 単位 → 標準化）。",
+  "shoppingCheckAll": "すべての項目をチェック",
+  "shoppingUncheckAll": "すべての項目のチェックを外す",
+  "shoppingDeleteChecked": "チェックしたものを削除",
+  "shoppingCheckAllConfirm": "すべての項目をチェックしてもよろしいですか?",
+  "shoppingUncheckAllConfirm": "すべてのアイテムのチェックを外してもよろしいですか？",
+  "shoppingItemCheckedOff": "{item} をチェックしました"
 }

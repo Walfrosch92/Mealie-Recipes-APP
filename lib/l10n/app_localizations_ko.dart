@@ -5024,4 +5024,24 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       '이 레시피의 단위는 모두 변환할 수 없어요. 변환하려면 Mealie에서 단위에 표준화가 있어야 해요 (식품 및 단위 → 단위 → 표준화).';
+
+  @override
+  String get shoppingCheckAll => '모든 항목 선택';
+
+  @override
+  String get shoppingUncheckAll => '모든 항목 선택 해제';
+
+  @override
+  String get shoppingDeleteChecked => '선택한 항목 삭제';
+
+  @override
+  String get shoppingCheckAllConfirm => '모든 항목을 선택하시겠습니까?';
+
+  @override
+  String get shoppingUncheckAllConfirm => '모든 항목을 선택 해제하시겠습니까?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item 선택됨';
+  }
 }

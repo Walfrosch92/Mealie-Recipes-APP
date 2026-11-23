@@ -5232,6 +5232,28 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Aucune unité de cette recette ne peut être convertie. Il faut pour cela une standardisation de l\'unité dans Mealie (Aliments et unités → unité → Standardisation).';
+
+  @override
+  String get shoppingCheckAll => 'Cocher tous les éléments';
+
+  @override
+  String get shoppingUncheckAll => 'Décocher tous les éléments';
+
+  @override
+  String get shoppingDeleteChecked => 'Supprimer la sélection';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Voulez-vous vraiment sélectionner tous les éléments ?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Voulez-vous vraiment désélectionner tous les éléments ?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item coché';
+  }
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -5513,4 +5535,26 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String get unitSystemUnavailable =>
       'Aucune unité de cette recette ne peut être convertie. Il faut pour cela une standardisation de l\'unité dans Mealie (Aliments et unités → unité → Standardisation).';
+
+  @override
+  String get shoppingCheckAll => 'Cocher tous les éléments';
+
+  @override
+  String get shoppingUncheckAll => 'Décocher tous les éléments';
+
+  @override
+  String get shoppingDeleteChecked => 'Supprimer la sélection';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Voulez-vous vraiment sélectionner tous les éléments ?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Voulez-vous vraiment désélectionner tous les éléments ?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item coché';
+  }
 }

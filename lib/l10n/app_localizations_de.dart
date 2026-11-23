@@ -5206,4 +5206,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Keine Einheit dieses Rezepts lässt sich umrechnen. Dafür braucht die Einheit in Mealie eine Standardisierung (Lebensmittel & Einheiten → Einheit → Standardisierung).';
+
+  @override
+  String get shoppingCheckAll => 'Alle Einträge abhaken';
+
+  @override
+  String get shoppingUncheckAll => 'Alle Einträge zurücksetzen';
+
+  @override
+  String get shoppingDeleteChecked => 'Erledigte löschen';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Bist du sicher, dass du alle Elemente abhaken möchtest?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Bist du sicher, dass du die Auswahl aller Elemente aufheben möchtest?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '$item erledigt';
+  }
 }

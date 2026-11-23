@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Imperialni",
   "unitSystemImperialHint": "Imperialne enote (skodelice, unče)",
   "unitSystemHint": "Samo prikaz – sam recept ostane nespremenjen. Kot v spletni aplikaciji Mealie izbira velja za vse recepte v tej napravi.",
-  "unitSystemUnavailable": "Nobene enote tega recepta ni mogoče pretvoriti. Za to potrebuje enota v Mealie standardizacijo (Živila in enote → enota → Standardizacija)."
+  "unitSystemUnavailable": "Nobene enote tega recepta ni mogoče pretvoriti. Za to potrebuje enota v Mealie standardizacijo (Živila in enote → enota → Standardizacija).",
+  "shoppingCheckAll": "Označi vse postavke",
+  "shoppingUncheckAll": "Odznači vse postavke",
+  "shoppingDeleteChecked": "Izbriši izbrano",
+  "shoppingCheckAllConfirm": "Ali res želite izbrati vse elemente?",
+  "shoppingUncheckAllConfirm": "Ali res ne želite izbrati vseh elementov?",
+  "shoppingItemCheckedOff": "Odkljukano {item}"
 }

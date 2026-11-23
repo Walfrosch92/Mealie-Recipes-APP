@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "Angolszász",
   "unitSystemImperialHint": "Angolszász (bögre, uncia)",
   "unitSystemHint": "Csak a megjelenítés – maga a recept nem változik. A Mealie webalkalmazáshoz hasonlóan a választás az eszköz összes receptjére érvényes.",
-  "unitSystemUnavailable": "A recept egyik egysége sem váltható át. Ehhez az egységnek szabványosítás kell a Mealie-ben (Élelmiszerek és egységek → egység → Szabványosítás)."
+  "unitSystemUnavailable": "A recept egyik egysége sem váltható át. Ehhez az egységnek szabványosítás kell a Mealie-ben (Élelmiszerek és egységek → egység → Szabványosítás).",
+  "shoppingCheckAll": "Minden tétel kijelölése",
+  "shoppingUncheckAll": "Kijelölés megszüntetése",
+  "shoppingDeleteChecked": "Kijelöltek törlése",
+  "shoppingCheckAllConfirm": "Biztos, hogy minden elemet be akar jelölni?",
+  "shoppingUncheckAllConfirm": "Biztos, hogy minden elem kijelölését visszavonja?",
+  "shoppingItemCheckedOff": "{item} leellenőrzve"
 }

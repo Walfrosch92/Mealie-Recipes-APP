@@ -5249,4 +5249,25 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'Nobene enote tega recepta ni mogoče pretvoriti. Za to potrebuje enota v Mealie standardizacijo (Živila in enote → enota → Standardizacija).';
+
+  @override
+  String get shoppingCheckAll => 'Označi vse postavke';
+
+  @override
+  String get shoppingUncheckAll => 'Odznači vse postavke';
+
+  @override
+  String get shoppingDeleteChecked => 'Izbriši izbrano';
+
+  @override
+  String get shoppingCheckAllConfirm => 'Ali res želite izbrati vse elemente?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Ali res ne želite izbrati vseh elementov?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Odkljukano $item';
+  }
 }

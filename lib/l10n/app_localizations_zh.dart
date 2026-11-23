@@ -4966,6 +4966,26 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       '此食谱的单位都无法换算。换算需要在 Mealie 中为单位设置标准化（食品和单位 → 单位 → 标准化）。';
+
+  @override
+  String get shoppingCheckAll => '勾选所有项目';
+
+  @override
+  String get shoppingUncheckAll => '取消勾选所有项目';
+
+  @override
+  String get shoppingDeleteChecked => '删除选中';
+
+  @override
+  String get shoppingCheckAllConfirm => '您确定要选择所有项目吗？';
+
+  @override
+  String get shoppingUncheckAllConfirm => '您确定要取消选中所有项目吗？';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '已勾除 $item';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -9934,4 +9954,24 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   @override
   String get unitSystemUnavailable =>
       '此食譜的單位都無法換算。換算需要在 Mealie 中為單位設定標準化（食材與單位 → 單位 → 標準化）。';
+
+  @override
+  String get shoppingCheckAll => '勾選所有項目';
+
+  @override
+  String get shoppingUncheckAll => '取消勾選所有項目';
+
+  @override
+  String get shoppingDeleteChecked => '刪除已勾選項目';
+
+  @override
+  String get shoppingCheckAllConfirm => '確定要勾選所有項目嗎？';
+
+  @override
+  String get shoppingUncheckAllConfirm => '確定要取消勾選所有項目嗎？';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return '已勾除 $item';
+  }
 }

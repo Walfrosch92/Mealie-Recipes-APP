@@ -5177,4 +5177,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get unitSystemUnavailable =>
       'None of this recipe\'s units can be converted. Conversion needs a standardization on the unit in Mealie (Foods & Units → unit → Standardization).';
+
+  @override
+  String get shoppingCheckAll => 'Check All Items';
+
+  @override
+  String get shoppingUncheckAll => 'Uncheck All Items';
+
+  @override
+  String get shoppingDeleteChecked => 'Delete Checked';
+
+  @override
+  String get shoppingCheckAllConfirm =>
+      'Are you sure you want to check all items?';
+
+  @override
+  String get shoppingUncheckAllConfirm =>
+      'Are you sure you want to uncheck all items?';
+
+  @override
+  String shoppingItemCheckedOff(String item) {
+    return 'Checked off $item';
+  }
 }

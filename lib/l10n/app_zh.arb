@@ -1497,5 +1497,11 @@
   "unitSystemImperial": "英制",
   "unitSystemImperialHint": "英制 (杯, 盎司)",
   "unitSystemHint": "仅影响显示 – 食谱本身不变。与 Mealie 网页版一样，此选择适用于此设备上的所有食谱。",
-  "unitSystemUnavailable": "此食谱的单位都无法换算。换算需要在 Mealie 中为单位设置标准化（食品和单位 → 单位 → 标准化）。"
+  "unitSystemUnavailable": "此食谱的单位都无法换算。换算需要在 Mealie 中为单位设置标准化（食品和单位 → 单位 → 标准化）。",
+  "shoppingCheckAll": "勾选所有项目",
+  "shoppingUncheckAll": "取消勾选所有项目",
+  "shoppingDeleteChecked": "删除选中",
+  "shoppingCheckAllConfirm": "您确定要选择所有项目吗？",
+  "shoppingUncheckAllConfirm": "您确定要取消选中所有项目吗？",
+  "shoppingItemCheckedOff": "已勾除 {item}"
 }
