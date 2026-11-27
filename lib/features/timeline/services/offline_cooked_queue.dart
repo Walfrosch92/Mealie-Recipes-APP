@@ -16,7 +16,8 @@ import '../providers/timeline_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Offline-Warteschlange für „Ich hab's gekocht" (Detail-Sheet + Kochmodus-
-// Abschluss) und den Kommentar von der Kochmodus-Abschlussseite.
+// Abschluss), den Kommentar von der Kochmodus-Abschlussseite und die
+// Rezept-Aktionen aus Rezept-Match (#53).
 //
 // Ohne Verbindung gingen Zeitleisten-Eintrag, „Zuletzt gekocht", Foto und
 // Kommentar bisher still verloren. Jetzt: Eintrag in SharedPreferences, das
@@ -29,6 +30,7 @@ import '../providers/timeline_provider.dart';
 
 const _kPendingMade = 'pending_recipe_made';
 const _kPendingComments = 'pending_recipe_comments';
+const _kPendingActions = 'pending_recipe_action_triggers';
 
 Future<List<Map<String, dynamic>>> _load(String key) async {
   try {
@@ -114,6 +116,15 @@ Future<void> queueRecipeComment(String recipeId, String text) async {
   await _save(_kPendingComments, list);
 }
 
+/// „Post"-Rezept-Aktion vormerken (Rezept-Match-Rückmeldung, #53).
+Future<void> queueRecipeActionTrigger(
+    String actionId, String recipeSlug, double scale) async {
+  final list = await _load(_kPendingActions);
+  list.add({'actionId': actionId, 'slug': recipeSlug, 'scale': scale});
+  await _save(_kPendingActions, list);
+  LogManager.shared.log('⚡ Rezept-Aktion offline vorgemerkt ($recipeSlug)');
+}
+
 /// Endgültige Ablehnung → Eintrag verwerfen. Alles andere → behalten.
 bool _isFinal(Object e) {
   final status = e is DioException ? e.response?.statusCode : null;
@@ -193,6 +204,23 @@ Future<void> flushOfflineCooked(ProviderContainer container) async {
       }
       comments.removeAt(0);
       await _save(_kPendingComments, comments);
+    }
+
+    final actions = await _load(_kPendingActions);
+    while (actions.isNotEmpty) {
+      final a = actions.first;
+      try {
+        await api.triggerRecipeAction(
+            a['actionId'] as String? ?? '',
+            a['slug'] as String? ?? '',
+            (a['scale'] as num?)?.toDouble() ?? 1);
+        LogManager.shared.log('⚡ Rezept-Aktion nachgesendet (${a['slug']})');
+      } catch (err) {
+        if (!_isFinal(err)) break;
+        LogManager.shared.log('⚡ Offline-Rezept-Aktion verworfen: $err');
+      }
+      actions.removeAt(0);
+      await _save(_kPendingActions, actions);
     }
   } finally {
     _flushing = false;

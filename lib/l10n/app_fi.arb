@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Haluatko varmasti valita kaikki kohteet?",
   "shoppingUncheckAllConfirm": "Haluatko varmasti poistaa kaikki valinnat?",
   "shoppingItemCheckedOff": "{item} valittu",
-  "updateGithubUnavailable": "GitHub ei vastaa juuri nyt. Yritä uudelleen muutaman minuutin kuluttua."
+  "updateGithubUnavailable": "GitHub ei vastaa juuri nyt. Yritä uudelleen muutaman minuutin kuluttua.",
+  "recipeMatchActionOnKeep": "Kun pidät",
+  "recipeMatchActionOnSkip": "Kun ohitat",
+  "recipeMatchActionNone": "Ei mitään",
+  "recipeMatchActionsHint": "Mealie suorittaa valitun toiminnon aina, kun laitat reseptin tarjottimelle tai ohitat sen. Kumoa 5 sekunnin sisällä peruu sen.",
+  "recipeMatchActionsNoPost": "Kotitaloudellasi ei ole vielä tyypin ”{type}” reseptitoimintoa."
 }

@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "確定要勾選所有項目嗎？",
   "shoppingUncheckAllConfirm": "確定要取消勾選所有項目嗎？",
   "shoppingItemCheckedOff": "已勾除 {item}",
-  "updateGithubUnavailable": "GitHub 目前沒有回應。請幾分鐘後再試。"
+  "updateGithubUnavailable": "GitHub 目前沒有回應。請幾分鐘後再試。",
+  "recipeMatchActionOnKeep": "保留時",
+  "recipeMatchActionOnSkip": "略過時",
+  "recipeMatchActionNone": "無",
+  "recipeMatchActionsHint": "每次將食譜放到托盤上或略過時，Mealie 都會執行所選動作。5 秒內復原即可取消。",
+  "recipeMatchActionsNoPost": "你的家庭還沒有「{type}」類型的食譜動作。"
 }

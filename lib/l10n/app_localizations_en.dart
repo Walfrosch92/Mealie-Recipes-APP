@@ -5203,4 +5203,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub is not responding right now. Please try again in a few minutes.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'When keeping';
+
+  @override
+  String get recipeMatchActionOnSkip => 'When skipping';
+
+  @override
+  String get recipeMatchActionNone => 'None';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie runs the chosen action every time you put a recipe on the tray or skip it. Undo within 5 seconds cancels it.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Your household has no recipe action of type “$type” yet.';
+  }
 }

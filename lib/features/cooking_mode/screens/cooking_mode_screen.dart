@@ -1,3 +1,4 @@
+import '../../../shared/widgets/keyboard_aware_sheet.dart';
 import '../../../shared/widgets/step_linked_notes.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -296,6 +297,12 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
                                   session.recipe) ==
                               RecipeEditAccess.allowed);
                   break;
+                case 'comments':
+                  // Schreiben/Löschen nur auf dem eigenen Server — ein Gast
+                  // kocht das Rezept des Hosts (dort unbekannt) → nur lesen.
+                  _openCommentsSheet(context, session,
+                      readOnly: !canSyncLastMade);
+                  break;
                 case 'friends':
                   context.push('/cook-friends?slug=${session.recipe.id}');
                   break;
@@ -320,6 +327,14 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
                   value: 'notes',
                   child:
                       _menuRow(context, Icons.sticky_note_2_outlined, l.notes)),
+              // Wie in der Detailansicht: bei „Kommentare deaktiviert" weg;
+              // als Gast nur, wenn es überhaupt etwas zu lesen gibt.
+              if (!(session.recipe.settings?.disableComments ?? false) &&
+                  (canSyncLastMade || session.recipe.comments.isNotEmpty))
+                PopupMenuItem(
+                    value: 'comments',
+                    child: _menuRow(
+                        context, Icons.forum_outlined, l.commentsTitle)),
               PopupMenuItem(
                   value: 'friends',
                   child: _menuRow(
@@ -682,6 +697,21 @@ class _CookingModeScreenState extends ConsumerState<CookingModeScreen> {
             BorderRadius.vertical(top: Radius.circular(AppTokens.rXl)),
       ),
       builder: (_) => _NotesSheet(recipe: session.recipe, editable: editable),
+    );
+  }
+
+  // Kommentare als Sheet — wie die Notizen, ohne den Schritt zu verlassen.
+  void _openCommentsSheet(BuildContext context, CookingSession session,
+      {required bool readOnly}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTokens.rXl)),
+      ),
+      builder: (_) =>
+          _CommentsSheet(recipe: session.recipe, readOnly: readOnly),
     );
   }
 
@@ -3198,6 +3228,56 @@ class _NotesSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               child: RecipeNotesList(
                   recipe: recipe, editable: editable, showHeader: false),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CommentsSheet extends ConsumerWidget {
+  final RecipeDetail recipe;
+  final bool readOnly;
+  const _CommentsSheet({required this.recipe, required this.readOnly});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
+    // Die Session hält einen Schnappschuss vom Kochstart — auf dem eigenen
+    // Server den aktuellen Cache-Stand nehmen, damit zwischendurch (auch
+    // hier im Sheet) geschriebene Kommentare beim erneuten Öffnen da sind.
+    var current = recipe;
+    if (!readOnly) {
+      for (final r in ref.read(recipesProvider).valueOrNull ?? const []) {
+        if (r.id == recipe.id) current = r;
+      }
+    }
+    return KeyboardAwareSheet(
+      heightFactor: 0.6,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Center(child: SheetHandle()),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(l.commentsTitle,
+                style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    color: context.appFg,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3)),
+          ),
+          const SizedBox(height: 8),
+          Divider(color: context.appSeparator, height: 1),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                  16, 12, 16, 24 + MediaQuery.paddingOf(context).bottom),
+              child: RecipeCommentsSection(
+                  recipe: current, readOnly: readOnly, showHeader: false),
             ),
           ),
         ],

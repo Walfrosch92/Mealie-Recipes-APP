@@ -1516,5 +1516,10 @@
   "shoppingCheckAllConfirm": "Weet je zeker dat je alle items wilt selecteren?",
   "shoppingUncheckAllConfirm": "Weet je zeker dat je alle items wilt deselecteren?",
   "shoppingItemCheckedOff": "{item} afgevinkt",
-  "updateGithubUnavailable": "GitHub reageert op dit moment niet. Probeer het over een paar minuten opnieuw."
+  "updateGithubUnavailable": "GitHub reageert op dit moment niet. Probeer het over een paar minuten opnieuw.",
+  "recipeMatchActionOnKeep": "Bij bewaren",
+  "recipeMatchActionOnSkip": "Bij overslaan",
+  "recipeMatchActionNone": "Geen",
+  "recipeMatchActionsHint": "Mealie voert de gekozen actie uit telkens wanneer je een recept op het dienblad legt of overslaat. Ongedaan maken binnen 5 seconden annuleert hem.",
+  "recipeMatchActionsNoPost": "Je huishouden heeft nog geen receptactie van het type ‘{type}’."
 }

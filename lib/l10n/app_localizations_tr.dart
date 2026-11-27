@@ -5217,4 +5217,22 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub şu anda yanıt vermiyor. Lütfen birkaç dakika sonra tekrar dene.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Tutarken';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Geçerken';
+
+  @override
+  String get recipeMatchActionNone => 'Yok';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie, bir tarifi tepsiye koyduğunuzda veya geçtiğinizde seçilen eylemi her seferinde çalıştırır. 5 saniye içinde Geri al onu iptal eder.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Hanenizde henüz “$type” türünde bir tarif eylemi yok.';
+  }
 }

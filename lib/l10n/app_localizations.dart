@@ -9167,6 +9167,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'GitHub is not responding right now. Please try again in a few minutes.'**
   String get updateGithubUnavailable;
+
+  /// No description provided for @recipeMatchActionOnKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'When keeping'**
+  String get recipeMatchActionOnKeep;
+
+  /// No description provided for @recipeMatchActionOnSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'When skipping'**
+  String get recipeMatchActionOnSkip;
+
+  /// No description provided for @recipeMatchActionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get recipeMatchActionNone;
+
+  /// No description provided for @recipeMatchActionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mealie runs the chosen action every time you put a recipe on the tray or skip it. Undo within 5 seconds cancels it.'**
+  String get recipeMatchActionsHint;
+
+  /// No description provided for @recipeMatchActionsNoPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Your household has no recipe action of type “{type}” yet.'**
+  String recipeMatchActionsNoPost(String type);
 }
 
 class _AppLocalizationsDelegate

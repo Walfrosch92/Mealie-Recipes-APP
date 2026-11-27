@@ -1523,5 +1523,10 @@
   "shoppingCheckAllConfirm": "Czy na pewno chcesz zaznaczyć wszystkie elementy?",
   "shoppingUncheckAllConfirm": "Czy na pewno chcesz odznaczyć wszystkie elementy?",
   "shoppingItemCheckedOff": "Zaznaczono {item}",
-  "updateGithubUnavailable": "GitHub w tej chwili nie odpowiada. Spróbuj ponownie za kilka minut."
+  "updateGithubUnavailable": "GitHub w tej chwili nie odpowiada. Spróbuj ponownie za kilka minut.",
+  "recipeMatchActionOnKeep": "Przy zachowaniu",
+  "recipeMatchActionOnSkip": "Przy pominięciu",
+  "recipeMatchActionNone": "Brak",
+  "recipeMatchActionsHint": "Mealie wykonuje wybraną akcję za każdym razem, gdy kładziesz przepis na tacę lub go pomijasz. Cofnięcie w ciągu 5 sekund ją anuluje.",
+  "recipeMatchActionsNoPost": "Twoje gospodarstwo domowe nie ma jeszcze akcji przepisu typu „{type}”."
 }

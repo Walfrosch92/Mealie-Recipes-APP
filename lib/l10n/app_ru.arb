@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Вы уверены, что хотите выбрать все элементы?",
   "shoppingUncheckAllConfirm": "Вы уверены, что хотите снять отметку со всех элементов?",
   "shoppingItemCheckedOff": "Отмечено: {item}",
-  "updateGithubUnavailable": "GitHub сейчас не отвечает. Попробуйте ещё раз через несколько минут."
+  "updateGithubUnavailable": "GitHub сейчас не отвечает. Попробуйте ещё раз через несколько минут.",
+  "recipeMatchActionOnKeep": "При сохранении",
+  "recipeMatchActionOnSkip": "При пропуске",
+  "recipeMatchActionNone": "Нет",
+  "recipeMatchActionsHint": "Mealie выполняет выбранное действие каждый раз, когда вы кладёте рецепт на поднос или пропускаете его. Отмена в течение 5 секунд прерывает его.",
+  "recipeMatchActionsNoPost": "В вашем домохозяйстве пока нет действия рецепта типа «{type}»."
 }

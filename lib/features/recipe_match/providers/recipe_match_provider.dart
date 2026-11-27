@@ -22,6 +22,8 @@ import '../../recipes/providers/recipes_provider.dart';
 const _kOrder = 'recipe_match_order';
 const _kTray = 'recipe_match_tray';
 const _kFilters = 'recipe_match_filters';
+const _kKeepAction = 'recipe_match_keep_action';
+const _kSkipAction = 'recipe_match_skip_action';
 
 /// Wählbare Höchstdauern (Minuten), `null` = jede Dauer.
 const kRecipeMatchMaxTimes = <int?>[null, 30, 60];
@@ -106,24 +108,43 @@ class RecipeMatchState {
 
   final RecipeMatchFilters filters;
 
+  /// Optionale „Post"-Rezept-Aktion des Haushalts fürs Behalten bzw.
+  /// Überspringen (#53) — `null` = keine (Standard).
+  final String? keepActionId;
+  final String? skipActionId;
+
   const RecipeMatchState({
     this.order = const [],
     this.tray = const [],
     this.scales = const {},
     this.filters = const RecipeMatchFilters(),
+    this.keepActionId,
+    this.skipActionId,
   });
 
+  static const _keep = Object();
+
+  /// Aktionen mit [_keep] als „unverändert", damit `null` (= keine)
+  /// gesetzt werden kann.
   RecipeMatchState copyWith({
     List<String>? order,
     List<String>? tray,
     Map<String, double>? scales,
     RecipeMatchFilters? filters,
+    Object? keepActionId = _keep,
+    Object? skipActionId = _keep,
   }) =>
       RecipeMatchState(
         order: order ?? this.order,
         tray: tray ?? this.tray,
         scales: scales ?? this.scales,
         filters: filters ?? this.filters,
+        keepActionId: identical(keepActionId, _keep)
+            ? this.keepActionId
+            : keepActionId as String?,
+        skipActionId: identical(skipActionId, _keep)
+            ? this.skipActionId
+            : skipActionId as String?,
       );
 
   double scaleOf(String id) => scales[id] ?? 1;
@@ -186,6 +207,8 @@ class RecipeMatchNotifier extends Notifier<RecipeMatchState> {
               .where((id) => !state.tray.contains(id)),
         ],
         filters: filters,
+        keepActionId: prefs.getString(_kKeepAction),
+        skipActionId: prefs.getString(_kSkipAction),
       );
     } catch (_) {}
     _loaded = true;
@@ -270,6 +293,23 @@ class RecipeMatchNotifier extends Notifier<RecipeMatchState> {
   void setFilters(RecipeMatchFilters filters) {
     state = state.copyWith(filters: filters);
     _save();
+  }
+
+  /// Rezept-Aktion fürs Behalten ([keep] = true) bzw. Überspringen setzen;
+  /// `null` = keine.
+  Future<void> setAction({required bool keep, String? actionId}) async {
+    state = keep
+        ? state.copyWith(keepActionId: actionId)
+        : state.copyWith(skipActionId: actionId);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = keep ? _kKeepAction : _kSkipAction;
+      if (actionId == null) {
+        await prefs.remove(key);
+      } else {
+        await prefs.setString(key, actionId);
+      }
+    } catch (_) {}
   }
 
   Future<void> _save() async {

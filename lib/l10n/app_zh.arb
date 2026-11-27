@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "您确定要选择所有项目吗？",
   "shoppingUncheckAllConfirm": "您确定要取消选中所有项目吗？",
   "shoppingItemCheckedOff": "已勾除 {item}",
-  "updateGithubUnavailable": "GitHub 目前没有响应。请几分钟后再试。"
+  "updateGithubUnavailable": "GitHub 目前没有响应。请几分钟后再试。",
+  "recipeMatchActionOnKeep": "保留时",
+  "recipeMatchActionOnSkip": "跳过时",
+  "recipeMatchActionNone": "无",
+  "recipeMatchActionsHint": "每次将食谱放到托盘上或跳过时，Mealie 都会执行所选操作。5 秒内撤销即可取消。",
+  "recipeMatchActionsNoPost": "你的家庭还没有“{type}”类型的食谱操作。"
 }

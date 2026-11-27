@@ -5274,4 +5274,22 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub se trenutno ne odziva. Poskusi znova čez nekaj minut.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Ob ohranitvi';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Ob preskoku';
+
+  @override
+  String get recipeMatchActionNone => 'Brez';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie izvede izbrano dejanje vsakič, ko recept položiš na pladenj ali ga preskočiš. Razveljavitev v 5 sekundah ga prekliče.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Tvoje gospodinjstvo še nima dejanja recepta vrste »$type«.';
+  }
 }

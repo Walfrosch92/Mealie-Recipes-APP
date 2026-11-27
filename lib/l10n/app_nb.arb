@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Er du sikker på at du vil krysse av alle elementene?",
   "shoppingUncheckAllConfirm": "Er du sikker på at du vil fjerne avmerkingen fra alle elementene?",
   "shoppingItemCheckedOff": "{item} er krysset av",
-  "updateGithubUnavailable": "GitHub svarer ikke akkurat nå. Prøv igjen om noen minutter."
+  "updateGithubUnavailable": "GitHub svarer ikke akkurat nå. Prøv igjen om noen minutter.",
+  "recipeMatchActionOnKeep": "Ved beholding",
+  "recipeMatchActionOnSkip": "Ved hopping",
+  "recipeMatchActionNone": "Ingen",
+  "recipeMatchActionsHint": "Mealie kjører den valgte handlingen hver gang du legger en oppskrift på brettet eller hopper over den. Angre innen 5 sekunder avbryter den.",
+  "recipeMatchActionsNoPost": "Husholdningen din har ingen oppskriftshandling av typen «{type}» ennå."
 }

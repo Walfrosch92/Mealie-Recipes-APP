@@ -3352,5 +3352,17 @@
       }
     }
   },
-  "updateGithubUnavailable": "GitHub is not responding right now. Please try again in a few minutes."
+  "updateGithubUnavailable": "GitHub is not responding right now. Please try again in a few minutes.",
+  "recipeMatchActionOnKeep": "When keeping",
+  "recipeMatchActionOnSkip": "When skipping",
+  "recipeMatchActionNone": "None",
+  "recipeMatchActionsHint": "Mealie runs the chosen action every time you put a recipe on the tray or skip it. Undo within 5 seconds cancels it.",
+  "recipeMatchActionsNoPost": "Your household has no recipe action of type “{type}” yet.",
+  "@recipeMatchActionsNoPost": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  }
 }

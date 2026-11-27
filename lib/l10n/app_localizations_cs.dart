@@ -5267,4 +5267,22 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub právě neodpovídá. Zkus to znovu za pár minut.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Při ponechání';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Při přeskočení';
+
+  @override
+  String get recipeMatchActionNone => 'Žádná';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie provede zvolenou akci pokaždé, když recept položíte na tác nebo ho přeskočíte. Zpět do 5 sekund ji zruší.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Vaše domácnost zatím nemá žádnou akci receptu typu „$type“.';
+  }
 }

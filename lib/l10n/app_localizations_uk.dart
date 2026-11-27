@@ -5275,4 +5275,22 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub зараз не відповідає. Спробуйте ще раз за кілька хвилин.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Під час збереження';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Під час пропуску';
+
+  @override
+  String get recipeMatchActionNone => 'Немає';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie виконує вибрану дію щоразу, коли ви кладете рецепт на тацю або пропускаєте його. Скасування протягом 5 секунд перериває її.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'У вашому домогосподарстві ще немає дії рецепта типу «$type».';
+  }
 }

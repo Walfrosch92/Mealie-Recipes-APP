@@ -5285,4 +5285,22 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub сейчас не отвечает. Попробуйте ещё раз через несколько минут.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'При сохранении';
+
+  @override
+  String get recipeMatchActionOnSkip => 'При пропуске';
+
+  @override
+  String get recipeMatchActionNone => 'Нет';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie выполняет выбранное действие каждый раз, когда вы кладёте рецепт на поднос или пропускаете его. Отмена в течение 5 секунд прерывает его.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'В вашем домохозяйстве пока нет действия рецепта типа «$type».';
+  }
 }

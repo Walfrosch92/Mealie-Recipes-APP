@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "すべての項目をチェックしてもよろしいですか?",
   "shoppingUncheckAllConfirm": "すべてのアイテムのチェックを外してもよろしいですか？",
   "shoppingItemCheckedOff": "{item} をチェックしました",
-  "updateGithubUnavailable": "GitHub が現在応答していません。数分後にもう一度お試しください。"
+  "updateGithubUnavailable": "GitHub が現在応答していません。数分後にもう一度お試しください。",
+  "recipeMatchActionOnKeep": "キープ時",
+  "recipeMatchActionOnSkip": "スキップ時",
+  "recipeMatchActionNone": "なし",
+  "recipeMatchActionsHint": "レシピをトレイに置くかスキップするたびに、Mealie が選択したアクションを実行します。5 秒以内に元に戻すと取り消されます。",
+  "recipeMatchActionsNoPost": "世帯にはまだ「{type}」タイプのレシピアクションがありません。"
 }

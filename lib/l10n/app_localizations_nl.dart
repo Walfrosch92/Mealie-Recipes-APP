@@ -5225,4 +5225,22 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub reageert op dit moment niet. Probeer het over een paar minuten opnieuw.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Bij bewaren';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Bij overslaan';
+
+  @override
+  String get recipeMatchActionNone => 'Geen';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie voert de gekozen actie uit telkens wanneer je een recept op het dienblad legt of overslaat. Ongedaan maken binnen 5 seconden annuleert hem.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Je huishouden heeft nog geen receptactie van het type ‘$type’.';
+  }
 }

@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Ali res želite izbrati vse elemente?",
   "shoppingUncheckAllConfirm": "Ali res ne želite izbrati vseh elementov?",
   "shoppingItemCheckedOff": "Odkljukano {item}",
-  "updateGithubUnavailable": "GitHub se trenutno ne odziva. Poskusi znova čez nekaj minut."
+  "updateGithubUnavailable": "GitHub se trenutno ne odziva. Poskusi znova čez nekaj minut.",
+  "recipeMatchActionOnKeep": "Ob ohranitvi",
+  "recipeMatchActionOnSkip": "Ob preskoku",
+  "recipeMatchActionNone": "Brez",
+  "recipeMatchActionsHint": "Mealie izvede izbrano dejanje vsakič, ko recept položiš na pladenj ali ga preskočiš. Razveljavitev v 5 sekundah ga prekliče.",
+  "recipeMatchActionsNoPost": "Tvoje gospodinjstvo še nima dejanja recepta vrste »{type}«."
 }

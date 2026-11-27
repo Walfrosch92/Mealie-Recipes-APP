@@ -9,6 +9,21 @@
       ]
     },
     {
+      "icon": "recipe",
+      "title": "Comments in cooking mode",
+      "items": [
+        "The ⋮ menu in cooking mode now has “Comments”: read the recipe's comments, write new ones or delete your own – without leaving the current step."
+      ]
+    },
+    {
+      "icon": "send",
+      "title": "Recipe Match feedback",
+      "items": [
+        "Recipe Match can now run one of your household's “Post” recipe actions when you keep or skip a recipe – pick them in the new ⋮ menu → Recipe Actions (both off by default).",
+        "Undo within 5 seconds cancels the action, so an accidental swipe sends nothing; swipes made offline are sent once you're back online."
+      ]
+    },
+    {
       "icon": "fix",
       "title": "Fixes",
       "items": [

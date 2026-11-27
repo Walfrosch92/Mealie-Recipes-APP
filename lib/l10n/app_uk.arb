@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Ви впевнені, що хочете відмітити всі елементи?",
   "shoppingUncheckAllConfirm": "Ви впевнені, що хочете зняти відмітку з усіх елементів?",
   "shoppingItemCheckedOff": "Позначено {item} як куплене",
-  "updateGithubUnavailable": "GitHub зараз не відповідає. Спробуйте ще раз за кілька хвилин."
+  "updateGithubUnavailable": "GitHub зараз не відповідає. Спробуйте ще раз за кілька хвилин.",
+  "recipeMatchActionOnKeep": "Під час збереження",
+  "recipeMatchActionOnSkip": "Під час пропуску",
+  "recipeMatchActionNone": "Немає",
+  "recipeMatchActionsHint": "Mealie виконує вибрану дію щоразу, коли ви кладете рецепт на тацю або пропускаєте його. Скасування протягом 5 секунд перериває її.",
+  "recipeMatchActionsNoPost": "У вашому домогосподарстві ще немає дії рецепта типу «{type}»."
 }

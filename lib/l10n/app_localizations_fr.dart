@@ -5258,6 +5258,24 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub ne répond pas pour le moment. Réessaie dans quelques minutes.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'En gardant';
+
+  @override
+  String get recipeMatchActionOnSkip => 'En passant';
+
+  @override
+  String get recipeMatchActionNone => 'Aucune';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie exécute l’action choisie chaque fois que vous posez une recette sur le plateau ou la passez. Annuler dans les 5 secondes l’interrompt.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Votre foyer n’a pas encore d’action de recette de type « $type ».';
+  }
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).

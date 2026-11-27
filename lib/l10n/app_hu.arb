@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Biztos, hogy minden elemet be akar jelölni?",
   "shoppingUncheckAllConfirm": "Biztos, hogy minden elem kijelölését visszavonja?",
   "shoppingItemCheckedOff": "{item} leellenőrzve",
-  "updateGithubUnavailable": "A GitHub most nem válaszol. Próbáld újra néhány perc múlva."
+  "updateGithubUnavailable": "A GitHub most nem válaszol. Próbáld újra néhány perc múlva.",
+  "recipeMatchActionOnKeep": "Megtartáskor",
+  "recipeMatchActionOnSkip": "Kihagyáskor",
+  "recipeMatchActionNone": "Nincs",
+  "recipeMatchActionsHint": "A Mealie minden alkalommal lefuttatja a választott műveletet, amikor egy receptet a tálcára teszel vagy kihagysz. A visszavonás 5 másodpercen belül megszakítja.",
+  "recipeMatchActionsNoPost": "A háztartásodnak még nincs „{type}” típusú receptművelete."
 }

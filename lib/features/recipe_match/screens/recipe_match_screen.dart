@@ -20,6 +20,10 @@ import '../../organizers/providers/organizers_provider.dart';
 import '../../recipes/providers/recipes_provider.dart';
 import '../../shopping_list/providers/shopping_list_provider.dart';
 import '../providers/recipe_match_provider.dart';
+import '../../webapp_tools/screens/recipe_actions_screen.dart'
+    show recipeActionsProvider;
+import '../services/recipe_match_feedback.dart';
+import 'recipe_match_actions_sheet.dart';
 import 'recipe_match_tray_sheet.dart';
 import '../../../shared/widgets/empty_state_view.dart';
 import '../../../shared/widgets/app_chip.dart';
@@ -55,7 +59,7 @@ class RecipeMatchScreen extends ConsumerStatefulWidget {
 }
 
 class _RecipeMatchScreenState extends ConsumerState<RecipeMatchScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   /// Versatz der obersten Karte (Ziehen bzw. Wegfliegen).
   Offset _drag = Offset.zero;
   bool _dragging = false;
@@ -78,21 +82,62 @@ class _RecipeMatchScreenState extends ConsumerState<RecipeMatchScreen>
   /// es wieder oben auf den Stapel.
   String? _lastSkipped;
 
+  /// Ausstehende Rezept-Aktion des letzten ✕ (#53) — „Zurück" verwirft sie,
+  /// solange sie noch nicht gesendet ist.
+  int? _lastSkippedToken;
+
+  late final RecipeMatchFeedback _feedback;
+
   /// „Im Haushalt vorrätig" (wie beim Hinzufügen zur Einkaufsliste).
   bool Function(Ingredient)? _onHand;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _feedback =
+        RecipeMatchFeedback(ProviderScope.containerOf(context, listen: false))
+          ..onFailed = () {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content:
+                    Text(AppLocalizations.of(context)!.recipeActionFailed)));
+          };
+    // Rezept-Aktionen vorladen (Cache-first) — zum Prüfen der gewählten.
+    ref.read(recipeActionsProvider);
     ref.read(shoppingListProvider.notifier).onHandChecker().then((f) {
       if (mounted) setState(() => _onHand = f);
     }).catchError((_) {});
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Im Hintergrund laufen Timer nicht verlässlich weiter → sofort senden.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _feedback.flushAll();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _feedback
+      ..onFailed = null
+      ..flushAll();
     _fly.dispose();
     super.dispose();
+  }
+
+  /// Gewählte Rezept-Aktion fürs Behalten/Überspringen verzögert auslösen.
+  int? _scheduleFeedback(String id, {required bool keep}) {
+    final st = ref.read(recipeMatchProvider);
+    String slug = '';
+    for (final r in ref.read(recipesProvider).valueOrNull ?? const []) {
+      if (r.id == id) slug = r.slug;
+    }
+    return _feedback.schedule(
+        keep ? st.keepActionId : st.skipActionId, slug, st.scaleOf(id));
   }
 
   void _onFlyTick() {
@@ -111,19 +156,25 @@ class _RecipeMatchScreenState extends ConsumerState<RecipeMatchScreen>
       return;
     }
     final n = ref.read(recipeMatchProvider.notifier);
-    if (id != null && kind == _Fly.next) n.next(id);
+    int? skipToken;
+    if (id != null && kind == _Fly.next) {
+      skipToken = _scheduleFeedback(id, keep: false);
+      n.next(id);
+    }
     if (id != null && kind == _Fly.keep) {
+      final token = _scheduleFeedback(id, keep: true);
       n.keep(id);
-      _showKeptSnack(id);
+      _showKeptSnack(id, token);
     }
     setState(() {
       _drag = Offset.zero;
       _turns = 0;
       _lastSkipped = kind == _Fly.next ? id : null;
+      _lastSkippedToken = skipToken;
     });
   }
 
-  void _showKeptSnack(String id) {
+  void _showKeptSnack(String id, int? feedbackToken) {
     final l = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
     messenger.showSnackBar(SnackBar(
@@ -134,8 +185,10 @@ class _RecipeMatchScreenState extends ConsumerState<RecipeMatchScreen>
       duration: const Duration(seconds: 5),
       action: SnackBarAction(
         label: l.undo,
-        onPressed: () =>
-            ref.read(recipeMatchProvider.notifier).restoreToTop(id),
+        onPressed: () {
+          _feedback.cancel(feedbackToken);
+          ref.read(recipeMatchProvider.notifier).restoreToTop(id);
+        },
       ),
     ));
   }
@@ -233,6 +286,24 @@ class _RecipeMatchScreenState extends ConsumerState<RecipeMatchScreen>
                     ref.read(recipeMatchProvider.notifier).shuffle();
                   },
           ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            color: context.appCard,
+            onSelected: (v) {
+              if (v == 'actions') showRecipeMatchActionsSheet(context);
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'actions',
+                child: Row(children: [
+                  Icon(Icons.send_rounded, size: 20, color: context.appFg),
+                  const SizedBox(width: 12),
+                  Text(l.recipeActionsTitle,
+                      style: TextStyle(color: context.appFg)),
+                ]),
+              ),
+            ],
+          ),
         ],
       ),
       body: SafeArea(
@@ -284,11 +355,13 @@ class _RecipeMatchScreenState extends ConsumerState<RecipeMatchScreen>
                                 HapticFeedback.selectionClick();
                                 final id = _lastSkipped;
                                 if (id == null) return;
+                                _feedback.cancel(_lastSkippedToken);
                                 ref
                                     .read(recipeMatchProvider.notifier)
                                     .restoreToTop(id);
                                 setState(() {
                                   _lastSkipped = null;
+                                  _lastSkippedToken = null;
                                   _turns = 0;
                                 });
                               },
@@ -1272,7 +1345,7 @@ class _TrayHandle extends StatefulWidget {
 }
 
 class _TrayHandleState extends State<_TrayHandle>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _bob = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 1100))
     ..repeat(reverse: true);

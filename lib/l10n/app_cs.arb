@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Opravdu chcete vybrat všechny položky?",
   "shoppingUncheckAllConfirm": "Opravdu chcete zrušit výběr všech položek?",
   "shoppingItemCheckedOff": "Odškrtnuta položka {item}",
-  "updateGithubUnavailable": "GitHub právě neodpovídá. Zkus to znovu za pár minut."
+  "updateGithubUnavailable": "GitHub právě neodpovídá. Zkus to znovu za pár minut.",
+  "recipeMatchActionOnKeep": "Při ponechání",
+  "recipeMatchActionOnSkip": "Při přeskočení",
+  "recipeMatchActionNone": "Žádná",
+  "recipeMatchActionsHint": "Mealie provede zvolenou akci pokaždé, když recept položíte na tác nebo ho přeskočíte. Zpět do 5 sekund ji zruší.",
+  "recipeMatchActionsNoPost": "Vaše domácnost zatím nemá žádnou akci receptu typu „{type}“."
 }

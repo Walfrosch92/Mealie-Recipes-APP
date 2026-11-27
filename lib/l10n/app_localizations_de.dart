@@ -5232,4 +5232,22 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub antwortet gerade nicht. Bitte versuche es in ein paar Minuten erneut.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Beim Behalten';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Beim Überspringen';
+
+  @override
+  String get recipeMatchActionNone => 'Keine';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie führt die gewählte Aktion jedes Mal aus, wenn du ein Rezept aufs Tablett legst oder überspringst. „Rückgängig“ innerhalb von 5 Sekunden bricht sie ab.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Dein Haushalt hat noch keine Rezept-Aktion vom Typ „$type“.';
+  }
 }

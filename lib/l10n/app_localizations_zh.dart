@@ -4989,6 +4989,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get updateGithubUnavailable => 'GitHub 目前没有响应。请几分钟后再试。';
+
+  @override
+  String get recipeMatchActionOnKeep => '保留时';
+
+  @override
+  String get recipeMatchActionOnSkip => '跳过时';
+
+  @override
+  String get recipeMatchActionNone => '无';
+
+  @override
+  String get recipeMatchActionsHint =>
+      '每次将食谱放到托盘上或跳过时，Mealie 都会执行所选操作。5 秒内撤销即可取消。';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return '你的家庭还没有“$type”类型的食谱操作。';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -9980,4 +9998,22 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get updateGithubUnavailable => 'GitHub 目前沒有回應。請幾分鐘後再試。';
+
+  @override
+  String get recipeMatchActionOnKeep => '保留時';
+
+  @override
+  String get recipeMatchActionOnSkip => '略過時';
+
+  @override
+  String get recipeMatchActionNone => '無';
+
+  @override
+  String get recipeMatchActionsHint =>
+      '每次將食譜放到托盤上或略過時，Mealie 都會執行所選動作。5 秒內復原即可取消。';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return '你的家庭還沒有「$type」類型的食譜動作。';
+  }
 }

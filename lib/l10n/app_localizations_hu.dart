@@ -5220,4 +5220,22 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'A GitHub most nem válaszol. Próbáld újra néhány perc múlva.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Megtartáskor';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Kihagyáskor';
+
+  @override
+  String get recipeMatchActionNone => 'Nincs';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'A Mealie minden alkalommal lefuttatja a választott műveletet, amikor egy receptet a tálcára teszel vagy kihagysz. A visszavonás 5 másodpercen belül megszakítja.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'A háztartásodnak még nincs „$type” típusú receptművelete.';
+  }
 }

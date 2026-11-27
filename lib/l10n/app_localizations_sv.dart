@@ -5209,4 +5209,22 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub svarar inte just nu. Försök igen om några minuter.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'När du behåller';
+
+  @override
+  String get recipeMatchActionOnSkip => 'När du hoppar över';
+
+  @override
+  String get recipeMatchActionNone => 'Ingen';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie kör den valda åtgärden varje gång du lägger ett recept på brickan eller hoppar över det. Ångra inom 5 sekunder avbryter den.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Ditt hushåll har ännu ingen receptåtgärd av typen ”$type”.';
+  }
 }

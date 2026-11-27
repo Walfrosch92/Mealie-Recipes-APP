@@ -5218,4 +5218,22 @@ class AppLocalizationsFi extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub ei vastaa juuri nyt. Yritä uudelleen muutaman minuutin kuluttua.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Kun pidät';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Kun ohitat';
+
+  @override
+  String get recipeMatchActionNone => 'Ei mitään';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie suorittaa valitun toiminnon aina, kun laitat reseptin tarjottimelle tai ohitat sen. Kumoa 5 sekunnin sisällä peruu sen.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Kotitaloudellasi ei ole vielä tyypin ”$type” reseptitoimintoa.';
+  }
 }

@@ -1516,5 +1516,10 @@
   "shoppingCheckAllConfirm": "Voulez-vous vraiment sélectionner tous les éléments ?",
   "shoppingUncheckAllConfirm": "Voulez-vous vraiment désélectionner tous les éléments ?",
   "shoppingItemCheckedOff": "{item} coché",
-  "updateGithubUnavailable": "GitHub ne répond pas pour le moment. Réessaie dans quelques minutes."
+  "updateGithubUnavailable": "GitHub ne répond pas pour le moment. Réessaie dans quelques minutes.",
+  "recipeMatchActionOnKeep": "En gardant",
+  "recipeMatchActionOnSkip": "En passant",
+  "recipeMatchActionNone": "Aucune",
+  "recipeMatchActionsHint": "Mealie exécute l’action choisie chaque fois que vous posez une recette sur le plateau ou la passez. Annuler dans les 5 secondes l’interrompt.",
+  "recipeMatchActionsNoPost": "Votre foyer n’a pas encore d’action de recette de type « {type} »."
 }

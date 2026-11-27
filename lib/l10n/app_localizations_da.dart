@@ -5219,4 +5219,22 @@ class AppLocalizationsDa extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub svarer ikke lige nu. Prøv igen om et par minutter.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Ved behold';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Ved spring over';
+
+  @override
+  String get recipeMatchActionNone => 'Ingen';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie udfører den valgte handling, hver gang du lægger en opskrift på bakken eller springer den over. Fortryd inden for 5 sekunder annullerer den.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Din husstand har endnu ingen opskriftshandling af typen “$type”.';
+  }
 }

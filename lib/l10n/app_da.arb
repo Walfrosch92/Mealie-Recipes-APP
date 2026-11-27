@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Er du sikker på, at du vil markere alle elementer?",
   "shoppingUncheckAllConfirm": "Er du sikker på, at du vil fjerne markeringen af alle elementer?",
   "shoppingItemCheckedOff": "Krydsede {item} af",
-  "updateGithubUnavailable": "GitHub svarer ikke lige nu. Prøv igen om et par minutter."
+  "updateGithubUnavailable": "GitHub svarer ikke lige nu. Prøv igen om et par minutter.",
+  "recipeMatchActionOnKeep": "Ved behold",
+  "recipeMatchActionOnSkip": "Ved spring over",
+  "recipeMatchActionNone": "Ingen",
+  "recipeMatchActionsHint": "Mealie udfører den valgte handling, hver gang du lægger en opskrift på bakken eller springer den over. Fortryd inden for 5 sekunder annullerer den.",
+  "recipeMatchActionsNoPost": "Din husstand har endnu ingen opskriftshandling af typen “{type}”."
 }

@@ -45,8 +45,15 @@ class RecipeCommentsSection extends ConsumerStatefulWidget {
   /// Löschen.
   final bool readOnly;
 
+  /// Aufklappbare Überschrift (Detailansicht). Im Kochmodus-Sheet aus — dort
+  /// trägt das Sheet den Titel und die Liste ist immer offen.
+  final bool showHeader;
+
   const RecipeCommentsSection(
-      {super.key, required this.recipe, this.readOnly = false});
+      {super.key,
+      required this.recipe,
+      this.readOnly = false,
+      this.showHeader = true});
 
   @override
   ConsumerState<RecipeCommentsSection> createState() =>
@@ -142,9 +149,10 @@ class _RecipeCommentsSectionState extends ConsumerState<RecipeCommentsSection> {
     final canSend = _ctrl.text.trim().isNotEmpty && !_sending;
 
     final readOnly = widget.readOnly;
+    final withHeader = widget.showHeader && !readOnly;
     final expanded =
-        readOnly || isDetailSectionExpanded(ref, DetailSection.comments);
-    final header = readOnly
+        !withHeader || isDetailSectionExpanded(ref, DetailSection.comments);
+    final header = !withHeader
         ? null
         : SectionHeader(
             icon: Icons.forum_rounded,

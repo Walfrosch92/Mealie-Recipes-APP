@@ -1504,5 +1504,10 @@
   "shoppingCheckAllConfirm": "Tüm öğeleri işaretlemek istediğinizden emin misiniz?",
   "shoppingUncheckAllConfirm": "Tüm öğelerden işaretleri kaldırmak istediğinize emin misiniz?",
   "shoppingItemCheckedOff": "{item} işaretlendi",
-  "updateGithubUnavailable": "GitHub şu anda yanıt vermiyor. Lütfen birkaç dakika sonra tekrar dene."
+  "updateGithubUnavailable": "GitHub şu anda yanıt vermiyor. Lütfen birkaç dakika sonra tekrar dene.",
+  "recipeMatchActionOnKeep": "Tutarken",
+  "recipeMatchActionOnSkip": "Geçerken",
+  "recipeMatchActionNone": "Yok",
+  "recipeMatchActionsHint": "Mealie, bir tarifi tepsiye koyduğunuzda veya geçtiğinizde seçilen eylemi her seferinde çalıştırır. 5 saniye içinde Geri al onu iptal eder.",
+  "recipeMatchActionsNoPost": "Hanenizde henüz “{type}” türünde bir tarif eylemi yok."
 }

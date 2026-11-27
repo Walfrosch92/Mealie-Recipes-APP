@@ -1516,5 +1516,10 @@
   "shoppingCheckAllConfirm": "Bist du sicher, dass du alle Elemente abhaken möchtest?",
   "shoppingUncheckAllConfirm": "Bist du sicher, dass du die Auswahl aller Elemente aufheben möchtest?",
   "shoppingItemCheckedOff": "{item} erledigt",
-  "updateGithubUnavailable": "GitHub antwortet gerade nicht. Bitte versuche es in ein paar Minuten erneut."
+  "updateGithubUnavailable": "GitHub antwortet gerade nicht. Bitte versuche es in ein paar Minuten erneut.",
+  "recipeMatchActionOnKeep": "Beim Behalten",
+  "recipeMatchActionOnSkip": "Beim Überspringen",
+  "recipeMatchActionNone": "Keine",
+  "recipeMatchActionsHint": "Mealie führt die gewählte Aktion jedes Mal aus, wenn du ein Rezept aufs Tablett legst oder überspringst. „Rückgängig“ innerhalb von 5 Sekunden bricht sie ab.",
+  "recipeMatchActionsNoPost": "Dein Haushalt hat noch keine Rezept-Aktion vom Typ „{type}“."
 }

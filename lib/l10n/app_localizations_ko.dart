@@ -5048,4 +5048,22 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub가 지금 응답하지 않습니다. 몇 분 후에 다시 시도하세요.';
+
+  @override
+  String get recipeMatchActionOnKeep => '보관할 때';
+
+  @override
+  String get recipeMatchActionOnSkip => '건너뛸 때';
+
+  @override
+  String get recipeMatchActionNone => '없음';
+
+  @override
+  String get recipeMatchActionsHint =>
+      '레시피를 트레이에 놓거나 건너뛸 때마다 Mealie가 선택한 작업을 실행합니다. 5초 안에 실행 취소하면 취소됩니다.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return '가구에 아직 \'$type\' 유형의 레시피 작업이 없습니다.';
+  }
 }

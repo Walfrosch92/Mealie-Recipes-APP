@@ -5222,4 +5222,22 @@ class AppLocalizationsNb extends AppLocalizations {
   @override
   String get updateGithubUnavailable =>
       'GitHub svarer ikke akkurat nå. Prøv igjen om noen minutter.';
+
+  @override
+  String get recipeMatchActionOnKeep => 'Ved beholding';
+
+  @override
+  String get recipeMatchActionOnSkip => 'Ved hopping';
+
+  @override
+  String get recipeMatchActionNone => 'Ingen';
+
+  @override
+  String get recipeMatchActionsHint =>
+      'Mealie kjører den valgte handlingen hver gang du legger en oppskrift på brettet eller hopper over den. Angre innen 5 sekunder avbryter den.';
+
+  @override
+  String recipeMatchActionsNoPost(String type) {
+    return 'Husholdningen din har ingen oppskriftshandling av typen «$type» ennå.';
+  }
 }
